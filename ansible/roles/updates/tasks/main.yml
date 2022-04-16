@@ -1,0 +1,20 @@
+- name: Wait for apt to unlock
+  shell:  while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done;
+
+- name: Update APT package cache
+  become: true
+  apt: update_cache=yes cache_valid_time=3600
+
+- name: Upgrade APT to the latest packages
+  become: true
+  apt: upgrade=safe
+
+- name: Install unattended-upgrades
+  become: true
+  apt:
+    name: unattended-upgrades
+    state: latest
+
+- name: Adjust APT update intervals
+  become: true
+  copy: src=../files/apt_periodic dest=/etc/apt/apt.conf.d/10periodic

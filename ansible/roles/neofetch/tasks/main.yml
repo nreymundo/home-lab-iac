@@ -1,0 +1,16 @@
+---
+- name: Install neofetch
+  become: true
+  apt:
+    name: neofetch
+    update_cache: yes
+    state: latest
+
+- name: Add needed entries to .zshrc
+  blockinfile:
+    dest: "{{ ansible_env.HOME }}/.zshrc"
+    block: |
+      neofetch
+    marker: '# {mark} ANSIBLE MANAGED BLOCK - Misc'
+    insertbefore: EOF
+    create: yes 

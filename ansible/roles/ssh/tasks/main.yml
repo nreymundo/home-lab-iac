@@ -1,0 +1,11 @@
+  - name: Disable password and root login for SSH
+    become: true
+    blockinfile:
+      dest: "/etc/ssh/ssh_config"
+      block: |
+        PasswordAuthentication no
+        PermitRootLogin no
+      insertbefore: EOF
+      create: yes 
+    notify:
+      - restart sshd
