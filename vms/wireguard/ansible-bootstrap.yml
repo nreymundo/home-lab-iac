@@ -1,0 +1,49 @@
+- hosts: all
+  name: wireguard
+  become: yes
+  
+  roles:
+    - ../../ansible/roles/updates
+    - ../../ansible/roles/zsh
+    - ../../ansible/roles/neofetch
+    - ../../ansible/roles/ssh
+
+  tasks:
+    - name: install wireguard package
+      apt:
+        name: wireguard
+        state: present
+        update_cache: yes
+
+    - name: generate private key
+      shell:
+        cmd: umask 077 && wg genkey | tee privatekey | wg pubkey > publickey
+        chdir: /etc/wireguard
+        creates: /etc/wireguard/publickey
+
+    - name: get private key
+      command: cat /etc/wireguard/privatekey
+      register: pivkey_contents
+      changed_when: False
+
+    - name: create server wireguard config
+      template:
+        dest: /etc/wireguard/wg0.conf
+        src: server_wg0.conf.j2
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: enable and persist ip forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: "1"
+        state: present
+        sysctl_set: yes
+        reload: yes
+
+    - name: start wireguard and enable on boot
+      systemd:
+        name: wg-quick@wg0
+        enabled: yes
+        state: started

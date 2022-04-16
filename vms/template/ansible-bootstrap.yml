@@ -1,0 +1,8 @@
+- hosts: all
+  name: template
+  
+  roles:
+    - ../../ansible/roles/updates
+    - ../../ansible/roles/zsh
+    - ../../ansible/roles/neofetch
+    - ../../ansible/roles/ssh
