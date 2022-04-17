@@ -8,8 +8,7 @@
     oh_my_zsh_plugins:
       - git
     users:
-      # Yes yes, I know hardcoding usernames sucks. 
-      - username: nico
+      - username: "{{ ozh_username }}"
 
 - name: Install spaceship prompt
   git:

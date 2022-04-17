@@ -4,7 +4,8 @@
   
   roles:
     - ../../ansible/roles/updates
-    - ../../ansible/roles/zsh
+    - role: ../../ansible/roles/zsh
+      ozh_username: nico
     - ../../ansible/roles/neofetch
     - ../../ansible/roles/ssh
 
