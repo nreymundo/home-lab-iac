@@ -73,6 +73,7 @@ crash.log
 ### Packer Patch ###
 # ignore temporary output files
 output-*/
+**/downloaded_iso_path
 
 ### Terraform ###
 # Local .terraform directories
