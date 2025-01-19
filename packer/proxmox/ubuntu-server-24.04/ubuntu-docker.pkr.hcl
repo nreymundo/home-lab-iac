@@ -4,7 +4,7 @@ source "proxmox-iso" "ubuntu-docker" {
     username = "${var.proxmox_api_token_id}"
     token = "${var.proxmox_api_token_secret}"
     insecure_skip_tls_verify = var.proxmox_skip_tls_verify
-    tags = "packer;docker"
+    tags = "packer;docker;test"
     
     # VM Settings
     vm_id = "8001"
