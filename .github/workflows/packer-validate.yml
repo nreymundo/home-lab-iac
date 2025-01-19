@@ -1,0 +1,35 @@
+name: Packer Validate
+
+on:
+  pull_request:
+    paths:
+      - 'packer/proxmox/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: "latest"
+
+      - name: Find Packer directories
+        id: find-dirs
+        run: |
+          DIRS=$(find packer/proxmox -type f -name "*.pkr.hcl" -exec dirname {} \; | sort -u)
+          echo "packer_dirs=$(echo $DIRS | tr ' ' ',')" >> $GITHUB_OUTPUT
+
+      - name: Initialize and Validate Packer Templates
+        run: |
+          IFS=',' read -ra DIRS <<< "${{ steps.find-dirs.outputs.packer_dirs }}"
+          for dir in "${DIRS[@]}"; do
+            echo "Validating Packer templates in $dir"
+            cd $GITHUB_WORKSPACE
+            packer init "$dir"
+            packer validate -var-file="packer/proxmox/variables-example.pkrvars.hcl" "$dir"
+          done
