@@ -6,7 +6,7 @@ on:
       - 'packer/proxmox/**'
 
 jobs:
-  validate:
+  packer_validate:
     runs-on: ubuntu-latest
     
     steps:
