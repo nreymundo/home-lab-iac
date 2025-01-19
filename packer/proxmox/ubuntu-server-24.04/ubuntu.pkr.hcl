@@ -56,3 +56,31 @@ source "proxmox-iso" "ubuntu" {
 
     boot_command = local.boot_command
 }
+
+build {
+    name = "ubuntu"
+    sources = ["source.proxmox-iso.ubuntu"]
+
+    provisioner "ansible" {
+        playbook_file = "${path.root}/../../../ansible/playbooks/ubuntu/base-provisioning.yml"
+        use_proxy = false
+    }
+
+    provisioner "ansible" {
+        playbook_file = local.ansible_playbook_base
+        use_proxy = local.ansible_use_proxy
+    }
+    
+    provisioner "shell" {
+        inline = local.cloud_init_cleanup
+    }
+    
+    provisioner "file" {
+        source = local.cloud_init_cleanup_file
+        destination = "/tmp/99-pve.cfg"
+    }
+    
+    provisioner "shell" {
+        inline = local.cloud_init_cleanup_shell
+    }
+}

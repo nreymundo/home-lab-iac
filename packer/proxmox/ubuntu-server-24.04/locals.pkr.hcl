@@ -40,4 +40,23 @@ locals {
         "autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---<wait>",
         "<f10><wait>"
     ]
+
+    # Provisioning
+    ansible_use_proxy = false
+    ansible_playbook_base = "${path.root}/../../../ansible/playbooks/ubuntu/base-provisioning.yml"
+
+    cloud_init_cleanup = [
+        "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init...'; sleep 1; done",
+        "sudo rm /etc/ssh/ssh_host_*",
+        "sudo truncate -s 0 /etc/machine-id",
+        "sudo apt -y autoremove --purge",
+        "sudo apt -y clean",
+        "sudo apt -y autoclean",
+        "sudo cloud-init clean",
+        "sudo rm -f /etc/cloud/cloud.cfg.d/subiquity-disable-cloudinit-networking.cfg",
+        "sudo rm -f /etc/netplan/00-installer-config.yaml",
+        "sudo sync"
+    ]
+    cloud_init_cleanup_file = "${path.root}/files/99-pve.cfg"
+    cloud_init_cleanup_shell = ["sudo cp /tmp/99-pve.cfg /etc/cloud/cloud.cfg.d/99-pve.cfg"]
 }

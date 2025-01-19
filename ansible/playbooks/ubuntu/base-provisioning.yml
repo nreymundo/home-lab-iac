@@ -33,6 +33,13 @@
       become: false
       shell: touch ~/.hushlogin
 
+      # Install some basic packages
+    - name: Installing base packages
+      ansible.builtin.apt:
+      name: 
+        - vim
+      state: present
+
     # Installs Prometheus Node Exporter to expose metrics
     - name: Install Prometheus Node Exporter
       ansible.builtin.apt:

@@ -9,4 +9,4 @@ ssh_public_key = "public ssh key string here"
 ssh_private_key_file = "~/.ssh/id_rsa"
 
 # Misc
-local_http_address = "192.168.1.40"
+local_http_address = "192.168.1.1"

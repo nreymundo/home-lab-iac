@@ -66,6 +66,7 @@ crash.log
 # subject to change depending on the environment.
 #
 *.pkrvars.hcl
+!variables-example.pkrvars.hcl
 
 # For built boxes
 *.box
