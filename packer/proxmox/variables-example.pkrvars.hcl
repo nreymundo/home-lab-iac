@@ -6,7 +6,7 @@ proxmox_api_token_secret = "api-secret-here"
 # User and SSH info
 ssh_username = "username"
 ssh_public_key = "public ssh key string here"
-ssh_private_key_file = "~/.ssh/id_rsa"
+ssh_private_key_file = ""
 
 # Misc
 local_http_address = "192.168.1.1"

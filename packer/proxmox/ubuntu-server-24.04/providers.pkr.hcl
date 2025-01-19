@@ -4,5 +4,9 @@ packer {
       version = "~> 1"
       source = "github.com/hashicorp/ansible"
     }
+    proxmox = {
+      version = "~> 1"
+      source  = "github.com/hashicorp/proxmox"
+    }
   }
 }
