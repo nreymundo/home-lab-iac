@@ -4,8 +4,8 @@ proxmox_api_token_id     = "token-id-here"
 proxmox_api_token_secret = "api-secret-here"
 
 # User and SSH info
-ssh_username = "username"
-ssh_public_key = "public ssh key string here"
+ssh_username         = "username"
+ssh_public_key       = "public ssh key string here"
 ssh_private_key_file = ""
 
 # Misc
