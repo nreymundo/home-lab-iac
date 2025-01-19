@@ -1,4 +1,4 @@
-name: Packer Validate
+name: Packer Checks
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - 'packer/proxmox/**'
 
 jobs:
-  packer_validate:
+  packer_checks:
     runs-on: ubuntu-latest
     
     steps:
@@ -23,6 +23,15 @@ jobs:
         run: |
           DIRS=$(find packer/proxmox -type f -name "*.pkr.hcl" -exec dirname {} \; | sort -u)
           echo "packer_dirs=$(echo $DIRS | tr ' ' ',')" >> $GITHUB_OUTPUT
+
+      - name: Check Packer Formatting
+        run: |
+          IFS=',' read -ra DIRS <<< "${{ steps.find-dirs.outputs.packer_dirs }}"
+          for dir in "${DIRS[@]}"; do
+            echo "Checking format in $dir"
+            cd $GITHUB_WORKSPACE
+            packer fmt -check "$dir"
+          done
 
       - name: Initialize and Validate Packer Templates
         run: |
