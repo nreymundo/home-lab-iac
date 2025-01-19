@@ -1,0 +1,46 @@
+- name: Base settings and packages
+  hosts: default
+  become: true
+  roles:
+       # https://github.com/hifis-net/ansible-collection-toolkit/tree/main/roles/unattended_upgrades
+       # ansible-galaxy collection install hifis.toolkit
+     - role: hifis.toolkit.unattended_upgrades
+       unattended_systemd_timer_override: false # (default)
+       # apt-daily timer
+       unattended_apt_daily_oncalendar: "*-*-* 6,18:00" # (default)
+       unattended_apt_daily_randomizeddelaysec: "12h" # (default)
+       # apt-daily-upgrade timer
+       unattended_apt_daily_upgrade_oncalendar: "*-*-* 6:00" # (default)
+       unattended_apt_daily_upgrade_randomizeddelaysec: "60m" # (default)
+       unattended_origins_patterns:
+         - 'origin=Ubuntu,archive=${distro_codename}-security'
+        # Uncomment lines below to auto-upgrade more than just security packages
+        #  - 'o=Ubuntu,a=${distro_codename}' 
+        #  - 'o=Ubuntu,a=${distro_codename}-updates'
+        #  - 'o=Ubuntu,a=${distro_codename}-proposed-updates'
+  tasks:
+    # These updates are most likely redundant since the Packer process already updates everything on creation but still. 
+    - name: Update APT package cache
+      apt: update_cache=yes cache_valid_time=3600
+
+    - name: Upgrade APT to the latest packages
+      apt: upgrade=safe
+
+    - name: Performs a dist-upgrade
+      apt: upgrade=dist
+
+    - name: Remove login welcome message
+      become: false
+      shell: touch ~/.hushlogin
+
+    # Installs Prometheus Node Exporter to expose metrics
+    - name: Install Prometheus Node Exporter
+      ansible.builtin.apt:
+        name: prometheus-node-exporter
+        state: present
+
+    - name: Ensure Node Exporter is enabled and started
+      ansible.builtin.systemd:
+        name: prometheus-node-exporter
+        enabled: true
+        state: started

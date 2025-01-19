@@ -1,0 +1,7 @@
+# ansible-galaxy role install geerlingguy.docker
+
+- name: Install Docker
+  hosts: default
+  become: true
+  roles:
+     - geerlingguy.docker # https://github.com/geerlingguy/ansible-role-docker/tree/master
