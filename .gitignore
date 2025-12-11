@@ -26,6 +26,7 @@ venv/
 terraform.tfstate.*
 *.plan
 packer_cache/
+*.auto.pkrvars.hcl
 
 # Tests and tooling
 .coverage

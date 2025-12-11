@@ -24,3 +24,11 @@ repos:
         always_run: false
         additional_dependencies:
           - ansible==9.4.0
+  - repo: local
+    hooks:
+      - id: packer-fmt
+        name: Packer fmt
+        entry: packer fmt -recursive
+        language: system
+        files: ^packer/.*\.pkr\.hcl$
+        pass_filenames: false
