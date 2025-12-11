@@ -21,5 +21,6 @@ repos:
         files: ^ansible/.*\.(ya?ml|j2|cfg|ini)$
         args: ["--project-dir", "ansible"]
         pass_filenames: true
+        always_run: false
         additional_dependencies:
           - ansible==9.4.0
