@@ -1,0 +1,39 @@
+# Editor and OS metadata
+.DS_Store
+.idea/
+.vscode/
+.direnv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+.venv/
+venv/
+.env
+
+# Ansible
+*.retry
+*.log
+.ansible/cp
+
+# Terraform / Packer / Kube
+.terraform/
+*.tfstate
+*.tfstate.backup
+terraform.tfstate.*
+*.plan
+packer_cache/
+
+# Tests and tooling
+.coverage
+.tox/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Others
+*.swp
+*.swo
