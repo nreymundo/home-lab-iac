@@ -20,5 +20,6 @@ repos:
         entry: env ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint
         files: ^ansible/.*\.(ya?ml|j2|cfg|ini)$
         args: ["--project-dir", "ansible"]
+        pass_filenames: true
         additional_dependencies:
           - ansible==9.4.0
