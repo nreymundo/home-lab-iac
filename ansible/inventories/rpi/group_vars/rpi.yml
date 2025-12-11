@@ -1,5 +1,5 @@
 ---
-# Default user present on Raspberry Pi OS; override if using a different account.
+# Common role overrides for Raspberry Pi hosts. Full list in roles/common/defaults/main.yml.
 common_user: "{{ ansible_user | default('pi') }}"
 
 common_authorized_keys:
@@ -7,7 +7,7 @@ common_authorized_keys:
   - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK7zi2/TiNLXy9MtIVrChiXTHw5jlMFAAkHiJXPaFrMn laptop"
   - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOKnc8+Hx6sb2jzxMNRkultwBfIBa2ZfXv6WkIE2Zcjd dev-vm"
 
-# Packages installed on every Raspberry Pi host.
+# Packages installed on every Raspberry Pi host (list replaces role defaults).
 common_packages:
   - curl
   - vim
@@ -21,8 +21,6 @@ common_sshd_hardening:
   PasswordAuthentication: "no"
   ChallengeResponseAuthentication: "no"
   UsePAM: "yes"
-
-common_enable_unattended_upgrades: true
 
 # Ensure Ansible uses the desired interpreter on Raspberry Pi hosts.
 ansible_python_interpreter: /usr/bin/python3
