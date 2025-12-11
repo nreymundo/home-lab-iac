@@ -1,0 +1,28 @@
+---
+# Default user present on Raspberry Pi OS; override if using a different account.
+common_user: "{{ ansible_user | default('pi') }}"
+
+common_authorized_keys:
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICuRNLs/Xvp/uNKF13JF0NNNDVS37bc72e47Y4yF0xSr desktop"
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK7zi2/TiNLXy9MtIVrChiXTHw5jlMFAAkHiJXPaFrMn laptop"
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOKnc8+Hx6sb2jzxMNRkultwBfIBa2ZfXv6WkIE2Zcjd dev-vm"
+
+# Packages installed on every Raspberry Pi host.
+common_packages:
+  - curl
+  - vim
+  - git
+  - htop
+  - wireless-tools
+
+# SSH daemon hardening applied to all Pi hosts.
+common_sshd_hardening:
+  PermitRootLogin: "no"
+  PasswordAuthentication: "no"
+  ChallengeResponseAuthentication: "no"
+  UsePAM: "yes"
+
+common_enable_unattended_upgrades: true
+
+# Ensure Ansible uses the desired interpreter on Raspberry Pi hosts.
+ansible_python_interpreter: /usr/bin/python3

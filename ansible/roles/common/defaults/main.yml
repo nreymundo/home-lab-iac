@@ -1,0 +1,30 @@
+---
+common_user: "pi"
+common_authorized_keys: []
+common_enable_unattended_upgrades: true
+common_unattended_upgrades_auto_reboot: false
+common_unattended_upgrades_reboot_time: "06:00"
+common_extra_packages: []
+
+common_packages:
+  - curl
+  - vim
+  - git
+
+common_sshd_hardening:
+  PermitRootLogin: "no"
+  PasswordAuthentication: "no"
+  ChallengeResponseAuthentication: "no"
+
+# Optional netplan configuration. Set as a mapping matching netplan schema to manage /etc/netplan/01-main.yaml.
+common_netplan_config: {}
+
+# NTP servers for systemd-timesyncd.
+common_ntp_servers:
+  - "0.de.pool.ntp.org"
+  - "1.de.pool.ntp.org"
+  - "2.de.pool.ntp.org"
+  - "3.de.pool.ntp.org"
+
+# System timezone to enforce.
+common_timezone: "Europe/Berlin"

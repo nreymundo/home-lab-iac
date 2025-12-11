@@ -1,0 +1,27 @@
+---
+common_extra_packages:
+  - corosync
+  - linux-raspi
+
+common_netplan_config:
+  network:
+    version: 2
+    renderer: networkd
+    ethernets:
+      eth0:
+        addresses:
+          - 192.168.1.6/24
+        gateway4: 192.168.1.1
+        nameservers:
+          addresses:
+            - 192.168.1.1
+    vlans:
+      vlan10:
+        id: 10
+        link: eth0
+        addresses:
+          - 192.168.10.6/24
+        gateway4: 192.168.10.1
+        nameservers:
+          addresses:
+            - 192.168.10.1

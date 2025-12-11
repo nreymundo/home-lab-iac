@@ -1,0 +1,28 @@
+// /etc/apt/apt.conf.d/50unattended-upgrades
+// Managed by Ansible
+
+Unattended-Upgrade::Origins-Pattern {
+        // Codename based matching:
+        // This will follow the migration of a release through different archives
+        // (e.g. from testing to stable)
+        "origin=Debian,codename=${distro_codename},label=Debian";
+        "origin=Debian,codename=${distro_codename},label=Debian-Security";
+        "origin=Raspbian,codename=${distro_codename},label=Raspbian";
+        "origin=Raspberry Pi Foundation,codename=${distro_codename},label=Raspberry Pi Foundation";
+
+        // Ubuntu
+        "origin=Ubuntu,archive=${distro_codename}-security";
+        "origin=Ubuntu,archive=${distro_codename}-updates";
+};
+
+Unattended-Upgrade::Package-Blacklist {
+    // "vim";
+    // "libc6";
+    // "libc6-dev";
+    // "libc6-i686";
+};
+
+Unattended-Upgrade::Automatic-Reboot "{{ common_unattended_upgrades_auto_reboot | default(false) | bool | lower }}";
+Unattended-Upgrade::Automatic-Reboot-Time "{{ common_unattended_upgrades_reboot_time | default('02:00') }}";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";

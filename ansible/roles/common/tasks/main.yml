@@ -1,0 +1,182 @@
+---
+- name: Update apt cache and upgrade packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Check cloud-init config directory
+  ansible.builtin.stat:
+    path: /etc/cloud/cloud.cfg.d
+  register: common_cloud_cfg_dir
+  changed_when: false
+
+- name: Check current timezone
+  ansible.builtin.command: timedatectl show -p Timezone --value
+  register: common_timezone_status
+  changed_when: false
+  failed_when: false
+
+- name: Set hostname via hostnamectl
+  ansible.builtin.command: hostnamectl set-hostname "{{ inventory_hostname }}"
+  when:
+    - not ansible_check_mode
+    - ansible_hostname != inventory_hostname
+  changed_when: true
+
+- name: Ensure /etc/hostname matches inventory name
+  ansible.builtin.copy:
+    content: "{{ inventory_hostname }}\n"
+    dest: /etc/hostname
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure 127.0.1.1 maps to hostname
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^127\\.0\\.1\\.1\\s+"
+    line: "127.0.1.1 {{ inventory_hostname }}"
+    state: present
+    create: true
+    mode: "0644"
+
+- name: Ensure cloud-init preserves hostname
+  ansible.builtin.copy:
+    content: "preserve_hostname: true\n"
+    dest: /etc/cloud/cloud.cfg.d/99-preserve-hostname.cfg
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - common_cloud_cfg_dir.stat.isdir | default(false)
+
+- name: Ensure timezone is set
+  ansible.builtin.command: timedatectl set-timezone {{ common_timezone }}
+  when:
+    - common_timezone is defined
+    - common_timezone_status.stdout != common_timezone
+  changed_when: true
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+  when: common_packages | length > 0
+
+- name: Install host-specific packages
+  ansible.builtin.apt:
+    name: "{{ common_extra_packages }}"
+    state: present
+  when: common_extra_packages | default([]) | length > 0
+
+- name: Harden sshd configuration
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^{{ item.key }}\\s+"
+    line: "{{ item.key }} {{ item.value }}"
+    validate: "/usr/sbin/sshd -t -f %s"
+    create: false
+    state: present
+    backup: true
+  loop: "{{ common_sshd_hardening | dict2items }}"
+  notify: Restart sshd
+
+- name: Ensure authorized SSH keys are present
+  ansible.posix.authorized_key:
+    user: "{{ common_user }}"
+    state: present
+    key: "{{ item }}"
+  loop: "{{ common_authorized_keys }}"
+  when: common_authorized_keys | length > 0
+
+- name: Ensure hush login file exists
+  ansible.builtin.file:
+    path: "/home/{{ common_user }}/.hushlogin"
+    state: file
+    owner: "{{ common_user }}"
+    group: "{{ common_user }}"
+    mode: "0644"
+
+- name: Ensure systemd-timesyncd is installed
+  ansible.builtin.apt:
+    name: systemd-timesyncd
+    state: present
+  when: common_ntp_servers | length > 0
+
+- name: Ensure systemd-timesyncd service is enabled
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    enabled: true
+    state: started
+  when:
+    - common_ntp_servers | length > 0
+    - not ansible_check_mode
+
+- name: Ensure timesyncd config directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/timesyncd.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: common_ntp_servers | length > 0
+
+- name: Configure systemd-timesyncd NTP servers
+  ansible.builtin.template:
+    src: timesyncd.conf.j2
+    dest: /etc/systemd/timesyncd.conf.d/20-ansible.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_ntp_servers | length > 0
+  notify: Restart systemd-timesyncd
+
+- name: Configure netplan when provided
+  ansible.builtin.template:
+    src: netplan.yaml.j2
+    dest: /etc/netplan/01-main.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_netplan_config | length > 0
+  notify: Apply netplan
+
+- name: Install unattended upgrade dependencies
+  ansible.builtin.apt:
+    name:
+      - unattended-upgrades
+      - apt-listchanges
+    state: present
+  when: common_enable_unattended_upgrades | bool
+
+- name: Configure unattended-upgrades origins and blacklist
+  ansible.builtin.template:
+    src: 50unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_enable_unattended_upgrades | bool
+
+- name: Configure unattended-upgrades frequency
+  ansible.builtin.template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_enable_unattended_upgrades | bool
+
+- name: Enable unattended-upgrades service
+  ansible.builtin.systemd:
+    name: unattended-upgrades
+    state: started
+    enabled: true
+  when: common_enable_unattended_upgrades | bool
+
+- name: Refresh sshd to pick up config changes
+  ansible.builtin.meta: flush_handlers

@@ -1,0 +1,19 @@
+---
+- name: Restart sshd
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+
+- name: Apply netplan
+  ansible.builtin.command: netplan apply
+  changed_when: false
+
+- name: Restart systemd-timesyncd
+  ansible.builtin.service:
+    name: systemd-timesyncd
+    state: restarted
+  changed_when: false
+  failed_when: false
+  when:
+    - ansible_facts.services is defined
+    - "'systemd-timesyncd.service' in ansible_facts.services or 'systemd-timesyncd' in ansible_facts.services"

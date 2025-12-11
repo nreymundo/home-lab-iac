@@ -1,0 +1,6 @@
+---
+- name: Provision Raspberry Pi hosts
+  hosts: rpi
+  become: true
+  roles:
+    - common
