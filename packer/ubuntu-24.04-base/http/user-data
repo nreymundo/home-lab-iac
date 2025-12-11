@@ -1,0 +1,45 @@
+---
+#cloud-config
+# TEMPORARY BUILD CREDENTIALS (removed post-provision by Ansible)
+# Password hash below: ubuntu:ubuntu - used only during Packer build
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  refresh-installer:
+    update: no
+  ssh:
+    install-server: true
+    allow-pw: true
+
+  network:
+    version: 2
+    ethernets:
+      ens18:
+        dhcp4: true
+
+  storage:
+    layout:
+      name: lvm
+
+  identity:
+    hostname: k3s-template
+    username: ubuntu
+    password: "$6$lTibK6LFXvC0r62A$y095SQTewUiiBss9lA/LM/ZODa5P5uSNVwXBsIG6aHZz8gxn5/nMbBnl5HORlvSU9ns6jb4GI9OH0kH35higc0"
+
+  timezone: Europe/Berlin
+
+  packages:
+    - openssh-server
+    - qemu-guest-agent
+
+  late-commands:
+    - echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/ubuntu
+    - curtin in-target --target=/target -- chmod 440 /etc/sudoers.d/ubuntu
+    - curtin in-target --target=/target -- systemctl enable ssh
+    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent
+    - curtin in-target --target=/target -- sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    - curtin in-target --target=/target -- sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+  shutdown: reboot

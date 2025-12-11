@@ -28,7 +28,7 @@ repos:
     hooks:
       - id: packer-fmt
         name: Packer fmt
-        entry: packer fmt -recursive
+        entry: packer fmt -recursive packer/
         language: system
         files: ^packer/.*\.pkr\.hcl$
         pass_filenames: false
