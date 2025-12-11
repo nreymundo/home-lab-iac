@@ -35,3 +35,15 @@ variable "iso_storage_pool" {
   default     = "unraid"
   description = "The Proxmox storage pool where the ISO is located."
 }
+
+# --- SSH Configuraton ---
+
+variable "ssh_username" {
+  type        = string
+  description = "The SSH username to connect with"
+}
+
+variable "ssh_password" {
+  type        = string
+  description = "The SSH password to connect with"
+}

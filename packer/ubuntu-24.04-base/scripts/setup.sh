@@ -16,7 +16,6 @@ apt-get upgrade -y
 
 # VM tools and essential packages
 apt-get install -y \
-    qemu-guest-agent \
     cloud-init \
     nfs-common \
     open-iscsi \
@@ -78,7 +77,7 @@ rm -rf /var/tmp/*
 
 # Clear bash history
 history -c
-cat /dev/null > ~/.bash_history
+cat /dev/null > /home/ubuntu/.bash_history
 
 echo "==> Base image preparation complete!"
 echo "==> This image is ready for Ansible provisioning with k3s_server or k3s_agent roles"

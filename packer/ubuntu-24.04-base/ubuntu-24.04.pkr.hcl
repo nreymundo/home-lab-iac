@@ -42,8 +42,8 @@ locals {
   ]
 
   # SSH configuration
-  vm_ssh_username           = "ubuntu"
-  vm_ssh_password           = "ubuntu"
+  vm_ssh_username           = var.ssh_username
+  vm_ssh_password           = var.ssh_password
   vm_ssh_timeout            = "20m"
   vm_ssh_handshake_attempts = 100
 
@@ -198,7 +198,7 @@ build {
   provisioner "shell" {
     inline = [
       "chmod +x /tmp/setup.sh",
-      "echo 'ubuntu' | sudo -S /tmp/setup.sh"
+      "sudo -S /tmp/setup.sh"
     ]
   }
 }
