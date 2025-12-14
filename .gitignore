@@ -17,7 +17,7 @@ venv/
 # Ansible
 *.retry
 *.log
-.ansible/cp
+.ansible
 
 # Terraform / Packer / Kube
 .terraform/
@@ -26,6 +26,9 @@ venv/
 terraform.tfstate.*
 *.plan
 packer_cache/
+packer/**/*.auto.pkrvars.hcl
+packer/**/*.pkrvars.hcl
+!packer/**/*.pkrvars.hcl.example
 
 # Tests and tooling
 .coverage
