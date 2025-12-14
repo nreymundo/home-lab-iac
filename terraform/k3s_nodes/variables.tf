@@ -9,6 +9,11 @@ variable "proxmox_api_url" {
 variable "ssh_public_keys" {
   type        = list(string)
   description = "List of public SSH keys to inject into VMs"
+  default     = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICuRNLs/Xvp/uNKF13JF0NNNDVS37bc72e47Y4yF0xSr desktop",
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK7zi2/TiNLXy9MtIVrChiXTHw5jlMFAAkHiJXPaFrMn laptop",
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOKnc8+Hx6sb2jzxMNRkultwBfIBa2ZfXv6WkIE2Zcjd dev-vm"
+  ]
   validation {
     condition     = length(var.ssh_public_keys) > 0
     error_message = "At least one SSH public key must be provided."
