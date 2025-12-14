@@ -187,7 +187,7 @@
     enabled: false
   when:
     - not common_enable_unattended_upgrades | bool
-    - "unattended-upgrades.service" in ansible_facts.services
+    - "'unattended-upgrades.service' in ansible_facts.services"
 
 - name: Refresh sshd to pick up config changes
   ansible.builtin.meta: flush_handlers
