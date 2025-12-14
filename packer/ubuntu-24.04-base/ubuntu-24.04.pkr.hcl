@@ -7,6 +7,37 @@ packer {
   }
 }
 
+locals {
+  vm_name              = "ubuntu-24.04-base"
+  template_desc_prefix = "Ubuntu 24.04 LTS Base Image for"
+  template_desc_suffix = "- Built on ${timestamp()}"
+  cores                = 2
+  memory               = 2048
+  scsi_controller      = "virtio-scsi-pci"
+  disk_size            = "20G"
+  disk_format          = "raw"
+  disk_storage_pool    = "ssd-zfs"
+  disk_type            = "scsi"
+  disk_discard         = true
+  disk_ssd             = true
+  network_model        = "virtio"
+  network_bridge       = "vmbr0"
+  network_firewall     = false
+  cloud_init_storage   = "ssd-zfs"
+  boot_wait            = "10s"
+  boot_command = [
+    "<wait>c<wait>",
+    "linux /casper/vmlinuz autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---",
+    "<enter><wait>",
+    "initrd /casper/initrd",
+    "<enter><wait>",
+    "boot<enter>"
+  ]
+  ssh_timeout            = "20m"
+  ssh_handshake_attempts = 100
+  http_directory         = "${path.root}/${var.http_directory}"
+}
+
 # ------------------------------------------------------------------------------
 # Source 1: Template on pve1
 # ------------------------------------------------------------------------------
@@ -21,48 +52,41 @@ source "proxmox-iso" "ubuntu-base-pve1" {
 
   # --- VM Configuration ---
   vm_id                = "9000"
-  vm_name              = "ubuntu-24.04-base"
-  template_description = "Ubuntu 24.04 LTS Base Image for pve1 - Built on ${timestamp()}"
-  tags                 = "packer"
+  vm_name              = local.vm_name
+  template_description = "${local.template_desc_prefix} pve1 ${local.template_desc_suffix}"
+  tags                 = "packer;pve1"
 
   # --- Common Hardware & Build Config (shared between sources) ---
-  cores           = 2
-  memory          = 2048
-  scsi_controller = "virtio-scsi-pci"
+  cores           = local.cores
+  memory          = local.memory
+  scsi_controller = local.scsi_controller
   disks {
-    disk_size    = "20G"
-    format       = "raw"
-    storage_pool = "ssd-zfs"
-    type         = "scsi"
-    discard      = true
-    ssd          = true
+    disk_size    = local.disk_size
+    format       = local.disk_format
+    storage_pool = local.disk_storage_pool
+    type         = local.disk_type
+    discard      = local.disk_discard
+    ssd          = local.disk_ssd
   }
   network_adapters {
-    model    = "virtio"
-    bridge   = "vmbr0"
-    firewall = false
+    model    = local.network_model
+    bridge   = local.network_bridge
+    firewall = local.network_firewall
   }
   cloud_init              = true
-  cloud_init_storage_pool = "ssd-zfs"
+  cloud_init_storage_pool = local.cloud_init_storage
   boot_iso {
     type     = "scsi"
     iso_file = "${var.iso_storage_pool}:iso/${var.iso_name}"
     unmount  = true
   }
-  boot_wait = "10s"
-  boot_command = [
-    "<wait>c<wait>",
-    "linux /casper/vmlinuz autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---",
-    "<enter><wait>",
-    "initrd /casper/initrd",
-    "<enter><wait>",
-    "boot<enter>"
-  ]
+  boot_wait              = local.boot_wait
+  boot_command           = local.boot_command
   ssh_username           = "ubuntu"
   ssh_private_key_file   = var.ssh_private_key_file
-  ssh_timeout            = "20m"
-  ssh_handshake_attempts = 100
-  http_directory         = "${path.root}/${var.http_directory}"
+  ssh_timeout            = local.ssh_timeout
+  ssh_handshake_attempts = local.ssh_handshake_attempts
+  http_directory         = local.http_directory
   qemu_agent             = true
 }
 
@@ -80,48 +104,41 @@ source "proxmox-iso" "ubuntu-base-pve2" {
 
   # --- VM Configuration ---
   vm_id                = "9001"
-  vm_name              = "ubuntu-24.04-base"
-  template_description = "Ubuntu 24.04 LTS Base Image for pve2 - Built on ${timestamp()}"
-  tags                 = "packer"
+  vm_name              = local.vm_name
+  template_description = "${local.template_desc_prefix} pve2 ${local.template_desc_suffix}"
+  tags                 = "packer;pve2"
 
   # --- Common Hardware & Build Config (shared between sources) ---
-  cores           = 2
-  memory          = 2048
-  scsi_controller = "virtio-scsi-pci"
+  cores           = local.cores
+  memory          = local.memory
+  scsi_controller = local.scsi_controller
   disks {
-    disk_size    = "20G"
-    format       = "raw"
-    storage_pool = "ssd-zfs"
-    type         = "scsi"
-    discard      = true
-    ssd          = true
+    disk_size    = local.disk_size
+    format       = local.disk_format
+    storage_pool = local.disk_storage_pool
+    type         = local.disk_type
+    discard      = local.disk_discard
+    ssd          = local.disk_ssd
   }
   network_adapters {
-    model    = "virtio"
-    bridge   = "vmbr0"
-    firewall = false
+    model    = local.network_model
+    bridge   = local.network_bridge
+    firewall = local.network_firewall
   }
   cloud_init              = true
-  cloud_init_storage_pool = "ssd-zfs"
+  cloud_init_storage_pool = local.cloud_init_storage
   boot_iso {
     type     = "scsi"
     iso_file = "${var.iso_storage_pool}:iso/${var.iso_name}"
     unmount  = true
   }
-  boot_wait = "10s"
-  boot_command = [
-    "<wait>c<wait>",
-    "linux /casper/vmlinuz autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---",
-    "<enter><wait>",
-    "initrd /casper/initrd",
-    "<enter><wait>",
-    "boot<enter>"
-  ]
+  boot_wait              = local.boot_wait
+  boot_command           = local.boot_command
   ssh_username           = "ubuntu"
   ssh_private_key_file   = var.ssh_private_key_file
-  ssh_timeout            = "20m"
-  ssh_handshake_attempts = 100
-  http_directory         = "${path.root}/${var.http_directory}"
+  ssh_timeout            = local.ssh_timeout
+  ssh_handshake_attempts = local.ssh_handshake_attempts
+  http_directory         = local.http_directory
   qemu_agent             = true
 }
 

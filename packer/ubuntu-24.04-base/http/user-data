@@ -5,9 +5,9 @@ autoinstall:
   version: 1
 
   identity:
-    hostname: k3s-template
+    hostname: ubuntu-base
     username: ubuntu
-    password: "$6$lTibK6LFXvC0r62A$y095SQTewUiiBss9lA/LM/ZODa5P5uSNVwXBsIG6aHZz8gxn5/nMbBnl5HORlvSU9ns6jb4GI9OH0kH35higc0"
+    password: "$6$VnVWNLfqWLvPfAHw$vGxJus8Mt4DcE8E5/TNSXJi0zg/o5c.h3GptSpav9gpCRKpPWF3eaW4pj1hfeS0j6nd/D3tnIW27lpH5dCv4X."  # locked placeholder; SSH is key-only
 
   locale: en_US.UTF-8
   keyboard:
