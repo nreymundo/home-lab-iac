@@ -4,6 +4,8 @@ common_authorized_keys: []
 common_enable_unattended_upgrades: true
 common_unattended_upgrades_auto_reboot: false
 common_unattended_upgrades_reboot_time: "06:00"
+common_run_upgrade: true
+common_enable_hushlogin: true
 common_extra_packages: []
 
 common_packages:

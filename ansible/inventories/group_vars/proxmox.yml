@@ -1,0 +1,18 @@
+---
+# Common role overrides for Proxmox hosts.
+common_user: "{{ ansible_user | default('root') }}"
+
+common_enable_unattended_upgrades: false
+common_unattended_upgrades_auto_reboot: false
+common_run_upgrade: false
+common_enable_hushlogin: false
+
+common_packages:
+  - htop
+  - iftop
+  - iperf3
+
+# Allow root login with keys for Proxmox, but disable passwords.
+common_sshd_hardening:
+  PermitRootLogin: "prohibit-password"
+  PasswordAuthentication: "no"

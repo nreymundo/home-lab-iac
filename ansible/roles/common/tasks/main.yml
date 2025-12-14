@@ -4,6 +4,7 @@
     update_cache: true
     upgrade: dist
     cache_valid_time: 3600
+  when: common_run_upgrade | bool
 
 - name: Gather service facts
   ansible.builtin.service_facts:
@@ -100,6 +101,7 @@
     owner: "{{ common_user }}"
     group: "{{ common_user }}"
     mode: "0644"
+  when: common_enable_hushlogin | bool
 
 - name: Ensure systemd-timesyncd is installed
   ansible.builtin.apt:
@@ -177,6 +179,15 @@
     state: started
     enabled: true
   when: common_enable_unattended_upgrades | bool
+
+- name: Disable unattended-upgrades service
+  ansible.builtin.systemd:
+    name: unattended-upgrades
+    state: stopped
+    enabled: false
+  when:
+    - not common_enable_unattended_upgrades | bool
+    - "'unattended-upgrades.service' in ansible_facts.services"
 
 - name: Refresh sshd to pick up config changes
   ansible.builtin.meta: flush_handlers

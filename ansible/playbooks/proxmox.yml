@@ -1,0 +1,6 @@
+---
+- name: Provision Proxmox hosts
+  hosts: proxmox
+  become: true
+  roles:
+    - common
