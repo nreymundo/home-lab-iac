@@ -10,6 +10,12 @@ variable "proxmox_api_url" {
   description = "The URL for the Proxmox VE API."
 }
 
+# --- Proxmox API Credentials (Sensitive) ---
+# These variables should be provided via environment variables for security.
+# Example:
+# export PKR_VAR_proxmox_api_token_id="your-token-id"
+# export PKR_VAR_proxmox_api_token_secret="your-secret"
+
 variable "proxmox_api_token_id" {
   type        = string
   sensitive   = true
@@ -21,6 +27,7 @@ variable "proxmox_api_token_secret" {
   sensitive   = true
   description = "The secret of the Proxmox API token."
 }
+
 
 # --- ISO Configuration ---
 
@@ -34,16 +41,4 @@ variable "iso_storage_pool" {
   type        = string
   default     = "unraid"
   description = "The Proxmox storage pool where the ISO is located."
-}
-
-# --- SSH Configuraton ---
-
-variable "ssh_username" {
-  type        = string
-  description = "The SSH username to connect with"
-}
-
-variable "ssh_password" {
-  type        = string
-  description = "The SSH password to connect with"
 }

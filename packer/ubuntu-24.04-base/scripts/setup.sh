@@ -1,9 +1,5 @@
 #!/bin/bash
-set -euo pipefail
-
-# Dependencies: apt-get, modprobe, sysctl, cloud-init, timedatectl, passwd
-# Purpose: Prepare Ubuntu 24.04 base template for K3s deployment
-# Requires: sudo privileges, internet connectivity
+set -e
 
 # Non-interactive mode
 export DEBIAN_FRONTEND=noninteractive

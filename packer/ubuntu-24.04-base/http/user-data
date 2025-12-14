@@ -1,17 +1,18 @@
----
 #cloud-config
-# TEMPORARY BUILD CREDENTIALS (removed post-provision by Ansible)
-# Password hash below: ubuntu:ubuntu - used only during Packer build
+# Autoinstall seed for k3s template; password auth left on for Packer. Switch to key-only via ssh.authorized-keys + ssh_pwauth: false when ready.
+
 autoinstall:
   version: 1
+
+  identity:
+    hostname: k3s-template
+    username: ubuntu
+    password: "$6$lTibK6LFXvC0r62A$y095SQTewUiiBss9lA/LM/ZODa5P5uSNVwXBsIG6aHZz8gxn5/nMbBnl5HORlvSU9ns6jb4GI9OH0kH35higc0"
+
   locale: en_US.UTF-8
   keyboard:
     layout: us
-  refresh-installer:
-    update: no
-  ssh:
-    install-server: true
-    allow-pw: true
+  timezone: Europe/Berlin
 
   network:
     version: 2
@@ -23,22 +24,26 @@ autoinstall:
     layout:
       name: lvm
 
-  identity:
-    hostname: k3s-template
-    username: ubuntu
-    password: "$6$lTibK6LFXvC0r62A$y095SQTewUiiBss9lA/LM/ZODa5P5uSNVwXBsIG6aHZz8gxn5/nMbBnl5HORlvSU9ns6jb4GI9OH0kH35higc0"
+  ssh:
+    install-server: true
+    allow-pw: true  # required for initial Packer SSH; tighten later if desired
+    # authorized-keys:
+    #   - ssh-ed25519 AAAAC3Nza... user@example
+    # ssh_pwauth: false
 
-  timezone: Europe/Berlin
+  refresh-installer:
+    update: no
 
-  packages:
+  packages:  # package upgrades handled later in setup.sh
     - openssh-server
     - qemu-guest-agent
 
   late-commands:
-    - echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/ubuntu
-    - curtin in-target --target=/target -- chmod 440 /etc/sudoers.d/ubuntu
-    - curtin in-target --target=/target -- systemctl enable ssh
-    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent
-    - curtin in-target --target=/target -- sed -i -E 's/^#?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    - echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/ubuntu  # allow passwordless sudo
+    - curtin in-target --target=/target -- chmod 440 /etc/sudoers.d/ubuntu  # sudoers file mode
+    - curtin in-target --target=/target -- systemctl enable ssh  # enable sshd
+    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent  # enable qga
+    - curtin in-target --target=/target -- sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config  # allow PW auth
+    - curtin in-target --target=/target -- sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config  # allow PW auth
 
   shutdown: reboot
