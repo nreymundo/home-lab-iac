@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Non-interactive mode
 export DEBIAN_FRONTEND=noninteractive
@@ -10,24 +10,19 @@ echo "==> 1. System Update & Essential Packages"
 apt-get update
 apt-get upgrade -y
 
-# VM tools and essential packages
+# VM tools, essential packages, NTP, and GPU support tools
 apt-get install -y \
     cloud-init \
     nfs-common \
     open-iscsi \
     curl \
     ca-certificates \
-    fail2ban
-
-# NTP for time synchronization (timezone configured by Ansible)
-apt-get install -y systemd-timesyncd
-timedatectl set-ntp true
-
-# GPU support (Intel iGPU - i915/xe drivers)
-# These build tools enable GPU compute workloads in Kubernetes
-apt-get install -y \
+    fail2ban \
+    systemd-timesyncd \
     libdrm-dev \
     libelf-dev
+
+timedatectl set-ntp true
 
 echo "==> 2. K3s Prerequisites: Kernel Modules"
 # These are required by K3s and should be in the base image
@@ -72,8 +67,9 @@ rm -rf /tmp/*
 rm -rf /var/tmp/*
 
 # Clear bash history
+rm -f /root/.bash_history
+> /home/ubuntu/.bash_history
 history -c
-cat /dev/null > /home/ubuntu/.bash_history
 
 echo "==> Base image preparation complete!"
 echo "==> This image is ready for Ansible provisioning with k3s_server or k3s_agent roles"
