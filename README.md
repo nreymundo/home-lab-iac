@@ -13,5 +13,10 @@ Configuration management for existing servers.
 Image builder for creating standardized VM templates.
 - **Current Images:** Ubuntu 24.04 Base.
 
+### Terraform (`terraform/`)
+Infrastructure provisioning for K3s Kubernetes nodes.
+- **Targets:** Proxmox VE.
+- **Features:** VM cloning, static IP assignment, and Ansible inventory generation.
+
 ## Usage
 Refer to the `README.md` inside each directory for specific instructions.
