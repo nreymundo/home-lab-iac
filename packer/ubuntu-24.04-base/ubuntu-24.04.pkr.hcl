@@ -59,10 +59,10 @@ source "proxmox-iso" "ubuntu-base-pve1" {
     "boot<enter>"
   ]
   ssh_username           = "ubuntu"
-  ssh_password           = "ubuntu"
+  ssh_private_key_file   = var.ssh_private_key_file
   ssh_timeout            = "20m"
   ssh_handshake_attempts = 100
-  http_directory         = "http"
+  http_directory         = "${path.root}/${var.http_directory}"
   qemu_agent             = true
 }
 
@@ -118,10 +118,10 @@ source "proxmox-iso" "ubuntu-base-pve2" {
     "boot<enter>"
   ]
   ssh_username           = "ubuntu"
-  ssh_password           = "ubuntu"
+  ssh_private_key_file   = var.ssh_private_key_file
   ssh_timeout            = "20m"
   ssh_handshake_attempts = 100
-  http_directory         = "http"
+  http_directory         = "${path.root}/${var.http_directory}"
   qemu_agent             = true
 }
 
@@ -136,14 +136,22 @@ build {
   ]
 
   provisioner "file" {
-    source      = "scripts/setup.sh"
+    source      = "${path.root}/scripts/setup.sh"
     destination = "/tmp/setup.sh"
   }
 
   provisioner "shell" {
+    execute_command = "sudo -E sh -c '{{ .Vars }} {{ .Path }}'"
     inline = [
       "chmod +x /tmp/setup.sh",
-      "echo 'ubuntu' | sudo -S /tmp/setup.sh"
+      "/tmp/setup.sh"
+    ]
+  }
+
+  provisioner "shell" {
+    execute_command = "sudo -E sh -c '{{ .Vars }} {{ .Path }}'"
+    inline = [
+      "rm -rf /root/.ssh || true"
     ]
   }
 }

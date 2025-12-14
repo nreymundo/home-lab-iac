@@ -28,9 +28,6 @@ variable "proxmox_api_token_secret" {
   description = "The secret of the Proxmox API token."
 }
 
-
-# --- ISO Configuration ---
-
 variable "iso_name" {
   type        = string
   default     = "ubuntu-24.04.3-live-server-amd64.iso"
@@ -41,4 +38,17 @@ variable "iso_storage_pool" {
   type        = string
   default     = "unraid"
   description = "The Proxmox storage pool where the ISO is located."
+}
+
+
+variable "http_directory" {
+  type        = string
+  default     = "http"
+  description = "Directory served by Packer's HTTP server for autoinstall seed files."
+}
+
+variable "ssh_private_key_file" {
+  type        = string
+  default     = "~/.ssh/id_ed25519"
+  description = "Private SSH key used by Packer to connect to the guest."
 }

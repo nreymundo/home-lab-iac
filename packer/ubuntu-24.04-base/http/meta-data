@@ -1,2 +1,2 @@
 instance-id: ubuntu-2404-base
-local-hostname: k3s-template
+local-hostname: ubuntu-base

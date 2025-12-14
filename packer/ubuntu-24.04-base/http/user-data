@@ -1,5 +1,5 @@
 #cloud-config
-# Autoinstall seed for k3s template; password auth left on for Packer. Switch to key-only via ssh.authorized-keys + ssh_pwauth: false when ready.
+# Autoinstall seed for k3s template; password auth is disabled. Replace placeholder keys with your own.
 
 autoinstall:
   version: 1
@@ -26,10 +26,12 @@ autoinstall:
 
   ssh:
     install-server: true
-    allow-pw: true  # required for initial Packer SSH; tighten later if desired
-    # authorized-keys:
-    #   - ssh-ed25519 AAAAC3Nza... user@example
-    # ssh_pwauth: false
+    allow-pw: false
+    authorized-keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICuRNLs/Xvp/uNKF13JF0NNNDVS37bc72e47Y4yF0xSr desktop"
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK7zi2/TiNLXy9MtIVrChiXTHw5jlMFAAkHiJXPaFrMn laptop"
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOKnc8+Hx6sb2jzxMNRkultwBfIBa2ZfXv6WkIE2Zcjd dev-vm"
+    ssh_pwauth: false
 
   refresh-installer:
     update: no
@@ -43,7 +45,7 @@ autoinstall:
     - curtin in-target --target=/target -- chmod 440 /etc/sudoers.d/ubuntu  # sudoers file mode
     - curtin in-target --target=/target -- systemctl enable ssh  # enable sshd
     - curtin in-target --target=/target -- systemctl enable qemu-guest-agent  # enable qga
-    - curtin in-target --target=/target -- sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config  # allow PW auth
-    - curtin in-target --target=/target -- sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config  # allow PW auth
+    - curtin in-target --target=/target -- sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config  # enforce key-only
+    - curtin in-target --target=/target -- sed -i 's/^PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config  # enforce key-only
 
   shutdown: reboot
