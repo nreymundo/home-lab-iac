@@ -1,0 +1,26 @@
+# SSH Public Keys - Add your SSH public keys here
+# You can add as many keys as needed
+ssh_public_keys = [
+  "ssh-ed25519 YOUR_PUBLIC_KEY_HERE",
+  # "ssh-rsa YOUR_SECOND_KEY_HERE",
+]
+
+# --- Main Configuration ---
+# Number of node VMs to create
+node_count    = 3
+# Starting IP for the first node. This will be incremented.
+node_ip_start = "192.168.10.50"
+
+# --- Optional: Advanced Overrides ---
+# proxmox_api_url = "https://192.168.1.100:8006/api2/json"
+# proxmox_nodes   = ["pve1", "pve2", "pve3"]
+# node_vmid_start = 180
+# vm_cores        = 4
+# vm_memory_mb    = 4096
+# vm_disk_size_gb = 32
+# ip_prefix_len   = 24
+# vlan_id         = 10
+# gateway_ip      = "192.168.10.1"
+# dns_server      = "192.168.10.1"
+# storage_pool    = "ssd-zfs"
+# template_name   = "ubuntu-24.04-base"
