@@ -39,5 +39,5 @@ The `common` role behaves differently based on the target group:
 Notes:
 - `common_timezone` sets the system timezone via `timedatectl`.
 - `common_ntp_servers` installs/enables systemd-timesyncd.
-- `common_netplan_config` (optional) renders `/etc/netplan/01-main.yaml` when provided.
+- `common_netplan_config` (optional) renders `/etc/netplan/01-main.yaml` when provided and triggers `netplan apply`.
 - Hostname is set to match the inventory name (`inventory_hostname`) during provisioning.
