@@ -4,17 +4,17 @@
 
 # --- Proxmox API Configuration ---
 
-variable "proxmox_api_url" {
-  type        = string
-  default     = "https://192.168.1.4:8006/api2/json"
-  description = "The URL for the Proxmox VE API."
-}
-
 # --- Proxmox API Credentials (Sensitive) ---
 # These variables should be provided via environment variables for security.
 # Example:
+# export PKR_VAR_proxmox_api_url="https://url:port/api2/json"
 # export PKR_VAR_proxmox_api_token_id="your-token-id"
 # export PKR_VAR_proxmox_api_token_secret="your-secret"
+
+variable "proxmox_api_url" {
+  type        = string
+  description = "The URL for the Proxmox VE API."
+}
 
 variable "proxmox_api_token_id" {
   type        = string
