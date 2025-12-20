@@ -6,6 +6,9 @@ all:
         main-rpi4:
           ansible_host: 192.168.1.6
           ansible_user: nico
+    baremetal_k3s:
+      hosts:
+        main-rpi4:
     proxmox:
       hosts:
         pve1:
