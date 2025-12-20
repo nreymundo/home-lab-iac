@@ -1,0 +1,149 @@
+---
+- name: Install K3s dependencies
+  ansible.builtin.apt:
+    name:
+      - curl
+      - open-iscsi
+      - nfs-common
+    state: present
+    update_cache: true
+
+- name: Enable cgroups for Raspberry Pi
+  when: "'rpi' in group_names"
+  block:
+    - name: Read cmdline.txt
+      ansible.builtin.slurp:
+        src: /boot/firmware/cmdline.txt
+      register: rpi_cmdline_b64
+      ignore_errors: true
+
+    - name: Fallback to /boot/cmdline.txt if firmware path fails
+      ansible.builtin.slurp:
+        src: /boot/cmdline.txt
+      register: rpi_cmdline_legacy_b64
+      when: rpi_cmdline_b64.failed
+
+    - name: Set cmdline path fact
+      ansible.builtin.set_fact:
+        rpi_cmdline_path: >-
+          {{
+            '/boot/firmware/cmdline.txt' if not rpi_cmdline_b64.failed else '/boot/cmdline.txt'
+          }}
+        rpi_cmdline_content: >-
+          {{
+            (rpi_cmdline_b64.content if not rpi_cmdline_b64.failed else rpi_cmdline_legacy_b64.content)
+            | b64decode
+            | trim
+          }}
+
+    - name: Add cgroup settings to cmdline.txt
+      ansible.builtin.lineinfile:
+        path: "{{ rpi_cmdline_path }}"
+        backrefs: true
+        regexp: '^(.*(?<!cgroup_memory=1))$'
+        line: '\1 cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1'
+      register: rpi_cgroup_update
+      notify: Reboot RPi for cgroups
+
+- name: Identify K3s seed node
+  ansible.builtin.set_fact:
+    k3s_seed_host: "{{ groups['k3s_nodes'][0] }}"
+  run_once: true
+
+- name: Ensure K3s interface is set
+  ansible.builtin.assert:
+    that:
+      - (k3s_iface | default('')) | length > 0
+    fail_msg: "k3s_iface is empty; set it to the interface carrying k3s_node_ip"
+
+- name: Download K3s installer script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /tmp/k3s-install.sh
+    mode: "0755"
+
+- name: Install K3s on Seed Node
+  when: inventory_hostname == k3s_seed_host
+  block:
+    - name: Run K3s installer (Seed)
+      ansible.builtin.command: >
+        /tmp/k3s-install.sh
+        server
+        --cluster-init
+        --node-ip {{ k3s_node_ip }}
+        --flannel-iface {{ k3s_iface }}
+      args:
+        creates: /etc/rancher/k3s/k3s.yaml
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+
+    - name: Wait for K3s to be ready
+      ansible.builtin.command: k3s kubectl get nodes
+      register: k3s_ready
+      until: k3s_ready.rc == 0
+      retries: 30
+      delay: 5
+      changed_when: false
+
+    - name: Get K3s token
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: k3s_token_b64
+      when: not ansible_check_mode
+
+    - name: Register token fact
+      ansible.builtin.set_fact:
+        k3s_cluster_token: "{{ k3s_token_b64.content | b64decode | trim }}"
+      when: not ansible_check_mode and k3s_token_b64 is success
+
+    - name: Fetch Kubeconfig
+      ansible.builtin.fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "{{ playbook_dir }}/../../k3s.yaml"
+        flat: true
+      when: not ansible_check_mode
+
+    - name: Update Kubeconfig server address
+      ansible.builtin.replace:
+        path: "{{ playbook_dir }}/../../k3s.yaml"
+        regexp: '127.0.0.1'
+        replace: "{{ k3s_node_ip | default(ansible_host) }}"
+      delegate_to: localhost
+      become: false
+      when: not ansible_check_mode
+
+- name: Distribute K3s token to other nodes
+  ansible.builtin.set_fact:
+    k3s_cluster_token: >-
+      {{
+        hostvars[k3s_seed_host]['k3s_cluster_token'] | default('check_mode_token_placeholder')
+      }}
+    k3s_seed_ip: >-
+      {{
+        hostvars[k3s_seed_host]['k3s_node_ip']
+        | default(hostvars[k3s_seed_host]['ansible_host'])
+        | default('127.0.0.1')
+      }}
+  when: inventory_hostname != k3s_seed_host
+
+- name: Install K3s on Secondary Nodes
+  when: inventory_hostname != k3s_seed_host
+  block:
+    - name: Wait for Seed Node API
+      ansible.builtin.wait_for:
+        host: "{{ k3s_seed_ip }}"
+        port: 6443
+        timeout: 600
+
+    - name: Run K3s installer (Secondary)
+      ansible.builtin.command: >
+        /tmp/k3s-install.sh
+        server
+        --server https://{{ k3s_seed_ip }}:6443
+        --token {{ k3s_cluster_token }}
+        --node-ip {{ k3s_node_ip }}
+        --flannel-iface {{ k3s_iface }}
+      args:
+        creates: /etc/rancher/k3s/k3s.yaml
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
