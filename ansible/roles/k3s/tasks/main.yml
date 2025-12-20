@@ -1,0 +1,222 @@
+---
+- name: Install K3s dependencies
+  ansible.builtin.apt:
+    name:
+      - curl
+      - open-iscsi
+      - nfs-common
+    state: present
+    update_cache: true
+
+- name: Enable cgroups for Raspberry Pi
+  when: "'rpi' in group_names"
+  block:
+    - name: Check for firmware cmdline path
+      ansible.builtin.stat:
+        path: /boot/firmware/cmdline.txt
+      register: k3s_rpi_firmware_cmdline
+
+    - name: Set cmdline path fact
+      ansible.builtin.set_fact:
+        k3s_rpi_cmdline_path: >-
+          {{
+            '/boot/firmware/cmdline.txt' if k3s_rpi_firmware_cmdline.stat.exists else '/boot/cmdline.txt'
+          }}
+
+    - name: Ensure cgroup settings in cmdline.txt
+      ansible.builtin.lineinfile:
+        path: "{{ k3s_rpi_cmdline_path }}"
+        backrefs: true
+        regexp: '^(?!.*\b{{ item }}\b)(.*)$'
+        line: '\1 {{ item }}'
+      loop:
+        - cgroup_enable=cpuset
+        - cgroup_enable=memory
+        - cgroup_memory=1
+      notify: Reboot RPi for cgroups
+
+- name: Compute K3s seed nodes
+  ansible.builtin.set_fact:
+    k3s_seed_nodes: >-
+      {{
+        hostvars
+        | dict2items
+        | selectattr('value.k3s_is_seed', 'defined')
+        | selectattr('value.k3s_is_seed', 'equalto', true)
+        | map(attribute='key')
+        | list
+      }}
+  run_once: true
+
+- name: Validate K3s seed node configuration
+  ansible.builtin.assert:
+    that:
+      - k3s_seed_nodes | length <= 1
+      - (groups['k3s_nodes'] | default([])) | length > 0
+    fail_msg: >-
+          Multiple K3s seed nodes found ({{ k3s_seed_nodes | join(', ') }}).
+          Ensure at least one host belongs to k3s_nodes.
+  run_once: true
+
+- name: Identify K3s seed node
+  ansible.builtin.set_fact:
+    k3s_seed_host: "{{ (k3s_seed_nodes | first) | default(groups['k3s_nodes'] | first) }}"
+  run_once: true
+
+- name: Ensure K3s interface is set
+  ansible.builtin.assert:
+    that:
+      - (k3s_iface | default('')) | length > 0
+    fail_msg: "k3s_iface is empty; set it to the interface carrying k3s_node_ip"
+
+- name: Create K3s installation directory
+  ansible.builtin.file:
+    path: /usr/local/bin
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Download K3s binary
+  ansible.builtin.get_url:
+    url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/{{ item.name }}"
+    dest: /usr/local/bin/k3s
+    mode: "0755"
+    checksum: "sha256:{{ item.checksum }}"
+    timeout: 120
+  become: true
+  loop:
+    - { arch: 'x86_64', name: 'k3s', checksum: "{{ k3s_amd64_checksum }}" }
+    - { arch: 'aarch64', name: 'k3s-arm64', checksum: "{{ k3s_arm64_checksum }}" }
+  when: ansible_architecture == item.arch
+
+- name: Create K3s symlink
+  ansible.builtin.file:
+    src: /usr/local/bin/k3s
+    dest: /usr/local/bin/kubectl
+    state: link
+  become: true
+
+- name: Install K3s on Seed Node
+  when: inventory_hostname == k3s_seed_host
+  block:
+    - name: Create K3s systemd service
+      ansible.builtin.template:
+        src: k3s.service.j2
+        dest: /etc/systemd/system/k3s.service
+        mode: "0644"
+      become: true
+      vars:
+        k3s_exec_args: >
+          server
+          --cluster-init
+          --node-ip {{ k3s_node_ip }}
+          --flannel-iface {{ k3s_iface }}
+          --write-kubeconfig-mode 644
+          --disable traefik
+          --disable metrics-server
+
+    - name: Enable and start K3s service (Seed)
+      ansible.builtin.systemd:
+        name: k3s
+        state: started
+        enabled: true
+        daemon_reload: true
+      become: true
+
+    - name: Wait for K3s to be ready
+      ansible.builtin.command: /usr/local/bin/k3s kubectl get nodes
+      register: k3s_ready
+      until: k3s_ready.rc == 0
+      retries: 30
+      delay: 5
+      changed_when: false
+
+    - name: Get K3s token
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: k3s_token_b64
+      changed_when: false
+      when: not ansible_check_mode
+      no_log: true
+
+    - name: Fail when K3s token is unavailable
+      ansible.builtin.fail:
+        msg: Unable to retrieve K3s cluster token from seed node
+      when:
+        - not ansible_check_mode
+        - (k3s_token_b64 is failed) or (k3s_token_b64.content is not defined)
+
+    - name: Register token fact
+      ansible.builtin.set_fact:
+        k3s_cluster_token: "{{ k3s_token_b64.content | b64decode | trim }}"
+      when:
+        - not ansible_check_mode
+        - k3s_token_b64.content is defined
+        - k3s_token_b64 is succeeded
+      no_log: true
+
+    - name: Fetch Kubeconfig to ansible directory
+      ansible.builtin.fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "{{ playbook_dir }}/k3s.yaml"
+        flat: true
+      when: not ansible_check_mode
+
+    - name: Update Kubeconfig server address
+      ansible.builtin.replace:
+        path: "{{ playbook_dir }}/k3s.yaml"
+        regexp: 'https://127.0.0.1:6443'
+        replace: "https://{{ k3s_node_ip | default(ansible_host) }}:6443"
+      delegate_to: localhost
+      become: false
+      when: not ansible_check_mode
+
+- name: Validate K3s token is available on secondary nodes
+  ansible.builtin.assert:
+    that:
+      - hostvars[k3s_seed_host]['k3s_cluster_token'] is defined
+      - hostvars[k3s_seed_host]['k3s_cluster_token'] | length > 0
+    fail_msg: >-
+          K3s cluster token is not available from seed node {{ k3s_seed_host }}.
+          Ensure seed node installation succeeded.
+  when: inventory_hostname != k3s_seed_host
+
+- name: Distribute K3s token to other nodes
+  ansible.builtin.set_fact:
+    k3s_cluster_token: "{{ hostvars[k3s_seed_host]['k3s_cluster_token'] }}"
+    k3s_seed_ip: "{{ hostvars[k3s_seed_host]['ansible_host'] }}"
+  when: inventory_hostname != k3s_seed_host
+  no_log: true
+
+- name: Install K3s on Secondary Nodes
+  when: inventory_hostname != k3s_seed_host
+  block:
+    - name: Wait for Seed Node API
+      ansible.builtin.wait_for:
+        host: "{{ k3s_seed_ip }}"
+        port: 6443
+        timeout: 600
+
+    - name: Create K3s systemd service
+      ansible.builtin.template:
+        src: k3s.service.j2
+        dest: /etc/systemd/system/k3s.service
+        mode: "0644"
+      become: true
+      vars:
+        k3s_exec_args: >
+          server
+          --server https://{{ k3s_seed_ip }}:6443
+          --token {{ k3s_cluster_token }}
+          --node-ip {{ k3s_node_ip }}
+          --flannel-iface {{ k3s_iface }}
+          --disable traefik
+          --disable metrics-server
+
+    - name: Enable and start K3s service (Secondary)
+      ansible.builtin.systemd:
+        name: k3s
+        state: started
+        enabled: true
+        daemon_reload: true
+      become: true

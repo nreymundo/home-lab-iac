@@ -1,0 +1,8 @@
+---
+- name: Provision K3s HA Cluster
+  hosts: k3s_cluster
+  become: true
+  gather_facts: true
+  roles:
+    - common
+    - k3s

@@ -1,0 +1,8 @@
+---
+- name: Restart k3s
+  ansible.builtin.service:
+    name: k3s
+    state: restarted
+
+- name: Reboot RPi for cgroups
+  ansible.builtin.reboot:
