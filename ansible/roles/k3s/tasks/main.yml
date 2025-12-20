@@ -37,13 +37,8 @@
       ansible.builtin.lineinfile:
         path: "{{ k3s_rpi_cmdline_path }}"
         backrefs: true
-        regexp: '^(?!.*\b{{ item }}\b).*$'
-        line: '\0 {{ item }}'
-      loop:
-        - 'cgroup_enable=cpuset'
-        - 'cgroup_enable=memory'
-        - 'cgroup_memory=1'
-      register: k3s_rpi_cgroup_update
+        regexp: '^(?!.*(?:cgroup_enable=cpuset|cgroup_enable=memory|cgroup_memory=1)).*$'
+        line: '\0 cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1'
       notify: Reboot RPi for cgroups
 
 - name: Compute K3s seed nodes
