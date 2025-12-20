@@ -189,7 +189,7 @@
 - name: Distribute K3s token to other nodes
   ansible.builtin.set_fact:
     k3s_cluster_token: "{{ hostvars[k3s_seed_host]['k3s_cluster_token'] }}"
-    k3s_seed_ip: "{{ hostvars[k3s_seed_host].k3s_node_ip }}"
+    k3s_seed_ip: "{{ hostvars[k3s_seed_host]['ansible_host'] }}"
   when: inventory_hostname != k3s_seed_host
 
 - name: Install K3s on Secondary Nodes
