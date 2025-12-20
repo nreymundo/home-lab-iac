@@ -1,5 +1,5 @@
 ---
-- name: Ensure growpart and LVM tools are present
+- name: Ensure disk expansion tools are present
   ansible.builtin.apt:
     name:
       - cloud-guest-utils
@@ -28,16 +28,16 @@
   changed_when: >-
     'resized' in (vm_disk_expand_rootfs_pvresize.stdout | lower | default(''))
     or 'resized' in (vm_disk_expand_rootfs_pvresize.stderr | lower | default(''))
-    or (vm_disk_expand_rootfs_growpart is defined and vm_disk_expand_rootfs_growpart.changed)
+    or (vm_disk_expand_rootfs_growpart is defined and (vm_disk_expand_rootfs_growpart.changed | default(false)))
   when:
     - vm_disk_expand_rootfs_expand | default(false) | bool
     - vm_disk_expand_rootfs_growpart is not failed
   failed_when: vm_disk_expand_rootfs_pvresize.rc not in [0]
 
 - name: Extend root logical volume to free space
-  ansible.builtin.command: >-
-    lvextend -r -l +100%FREE /dev/{{ vm_disk_expand_rootfs_vg }}/{{ vm_disk_expand_rootfs_lv }}
-  register: vm_disk_expand_rootfs_lvextend
-  changed_when: vm_disk_expand_rootfs_lvextend.rc == 0
-  failed_when: vm_disk_expand_rootfs_lvextend.rc not in [0]
+  community.general.lvol:
+    vg: "{{ vm_disk_expand_rootfs_vg }}"
+    lv: "{{ vm_disk_expand_rootfs_lv }}"
+    size: +100%FREE
+    resizefs: true
   when: vm_disk_expand_rootfs_expand | default(false) | bool
