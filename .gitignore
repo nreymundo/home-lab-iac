@@ -35,8 +35,6 @@ terraform.tfvars
 *_override.tf
 *_override.tf.json
 crash.log
-# Generated artifacts
-ansible/inventories/k3s-nodes.yml
 
 # Security
 *.pem
