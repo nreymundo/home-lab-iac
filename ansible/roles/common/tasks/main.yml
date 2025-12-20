@@ -93,6 +93,7 @@
     owner: "{{ common_user }}"
     group: "{{ common_user }}"
     mode: "0755"
+  when: common_user | lower != 'root'
 
 - name: Ensure authorized SSH keys are present
   ansible.posix.authorized_key:
@@ -109,7 +110,9 @@
     owner: "{{ common_user }}"
     group: "{{ common_user }}"
     mode: "0644"
-  when: common_enable_hushlogin | bool
+  when:
+    - common_enable_hushlogin | bool
+    - common_user | lower != 'root'
 
 - name: Ensure systemd-timesyncd is installed
   ansible.builtin.apt:
