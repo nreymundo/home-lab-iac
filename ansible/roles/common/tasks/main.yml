@@ -94,10 +94,19 @@
   loop: "{{ common_authorized_keys }}"
   when: common_authorized_keys | length > 0
 
+- name: Ensure user home exists
+  ansible.builtin.file:
+    path: "/home/{{ common_user }}"
+    state: directory
+    owner: "{{ common_user }}"
+    group: "{{ common_user }}"
+    mode: "0755"
+  when: common_enable_hushlogin | bool
+
 - name: Ensure hush login file exists
   ansible.builtin.file:
     path: "/home/{{ common_user }}/.hushlogin"
-    state: file
+    state: touch
     owner: "{{ common_user }}"
     group: "{{ common_user }}"
     mode: "0644"
