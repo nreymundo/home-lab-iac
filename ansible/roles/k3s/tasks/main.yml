@@ -11,73 +11,67 @@
 - name: Enable cgroups for Raspberry Pi
   when: "'rpi' in group_names"
   block:
-    - name: Read cmdline.txt
-      ansible.builtin.slurp:
-        src: /boot/firmware/cmdline.txt
-      register: rpi_cmdline_b64
-      ignore_errors: true
-
-    - name: Fallback to /boot/cmdline.txt if firmware path fails
-      ansible.builtin.slurp:
-        src: /boot/cmdline.txt
-      register: rpi_cmdline_legacy_b64
-      when: rpi_cmdline_b64.failed
+    - name: Check for firmware cmdline path
+      ansible.builtin.stat:
+        path: /boot/firmware/cmdline.txt
+      register: k3s_rpi_firmware_cmdline
 
     - name: Set cmdline path fact
       ansible.builtin.set_fact:
-        rpi_cmdline_path: >-
+        k3s_rpi_cmdline_path: >-
           {{
-            '/boot/firmware/cmdline.txt' if not rpi_cmdline_b64.failed else '/boot/cmdline.txt'
+            '/boot/firmware/cmdline.txt' if k3s_rpi_firmware_cmdline.stat.exists else '/boot/cmdline.txt'
           }}
-        rpi_cmdline_content: >-
-          {{
-            (rpi_cmdline_b64.content if not rpi_cmdline_b64.failed else rpi_cmdline_legacy_b64.content)
-            | b64decode
-            | trim
-          }}
+
+    - name: Read cmdline.txt
+      ansible.builtin.slurp:
+        src: "{{ k3s_rpi_cmdline_path }}"
+      register: k3s_rpi_cmdline_b64
+
+    - name: Set cmdline content fact
+      ansible.builtin.set_fact:
+        k3s_rpi_cmdline_content: >-
+          {{ k3s_rpi_cmdline_b64.content | b64decode | trim }}
 
     - name: Add cgroup settings to cmdline.txt
       ansible.builtin.lineinfile:
-        path: "{{ rpi_cmdline_path }}"
+        path: "{{ k3s_rpi_cmdline_path }}"
         backrefs: true
-        regexp: '^(?!.*(?:cgroup_enable=cpuset|cgroup_enable=memory|cgroup_memory=1)).*$'
-        line: '\0 cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1'
-      register: rpi_cgroup_update
+        regexp: '^(?!.*\b{{ item }}\b).*$'
+        line: '\0 {{ item }}'
+      loop:
+        - 'cgroup_enable=cpuset'
+        - 'cgroup_enable=memory'
+        - 'cgroup_memory=1'
+      register: k3s_rpi_cgroup_update
       notify: Reboot RPi for cgroups
+
+- name: Compute K3s seed nodes
+  ansible.builtin.set_fact:
+    k3s_seed_nodes: >-
+      {{
+        hostvars
+        | dict2items
+        | selectattr('value.k3s_is_seed', 'defined')
+        | selectattr('value.k3s_is_seed', 'equalto', true)
+        | map(attribute='key')
+        | list
+      }}
+  run_once: true
 
 - name: Validate K3s seed node configuration
   ansible.builtin.assert:
     that:
-      - seed_nodes | length <= 1
+      - k3s_seed_nodes | length <= 1
     fail_msg: >-
-          Multiple K3s seed nodes found ({{ seed_nodes | join(', ') }}).
+          Multiple K3s seed nodes found ({{ k3s_seed_nodes | join(', ') }}).
           Please ensure exactly one host has k3s_is_seed: true.
   run_once: true
-  vars:
-    seed_nodes: >-
-          {{
-            hostvars
-            | dict2items
-            | selectattr('value.k3s_is_seed', 'defined')
-            | selectattr('value.k3s_is_seed', 'equalto', true)
-            | map(attribute='key')
-            | list
-          }}
 
 - name: Identify K3s seed node
   ansible.builtin.set_fact:
-    k3s_seed_host: "{{ (seed_nodes | first) if (seed_nodes | length > 0) else (groups['k3s_nodes'][0]) }}"
+    k3s_seed_host: "{{ (k3s_seed_nodes | first) if (k3s_seed_nodes | length > 0) else (groups['k3s_nodes'][0]) }}"
   run_once: true
-  vars:
-    seed_nodes: >-
-          {{
-            hostvars
-            | dict2items
-            | selectattr('value.k3s_is_seed', 'defined')
-            | selectattr('value.k3s_is_seed', 'equalto', true)
-            | map(attribute='key')
-            | list
-          }}
 
 - name: Ensure K3s interface is set
   ansible.builtin.assert:
@@ -198,7 +192,6 @@
       {{
         hostvars[k3s_seed_host]['k3s_node_ip']
         | default(hostvars[k3s_seed_host]['ansible_host'])
-        | default('127.0.0.1')
       }}
   when: inventory_hostname != k3s_seed_host
 
