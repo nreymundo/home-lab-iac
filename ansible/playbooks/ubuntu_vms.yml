@@ -1,0 +1,7 @@
+---
+- name: Provision base configuration on VMs
+  hosts: all_vms
+  become: true
+  roles:
+    - common
+    - vm_disk_expand

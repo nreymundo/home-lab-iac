@@ -1,0 +1,14 @@
+---
+# Baseline settings for all VM targets provisioned with the common role.
+common_user: "{{ ansible_user | default('ubuntu') }}"
+
+common_enable_unattended_upgrades: true
+common_unattended_upgrades_auto_reboot: true
+common_unattended_upgrades_reboot_time: "06:00"
+
+# Root filesystem expansion (LVM on /dev/sda3 by default)
+vm_disk_expand_rootfs_expand: true
+vm_disk_expand_rootfs_device: /dev/sda
+vm_disk_expand_rootfs_partition: 3
+vm_disk_expand_rootfs_vg: ubuntu-vg
+vm_disk_expand_rootfs_lv: ubuntu-lv

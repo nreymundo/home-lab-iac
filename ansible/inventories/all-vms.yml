@@ -1,0 +1,6 @@
+---
+all:
+  children:
+    all_vms:
+      children:
+        k3s_nodes: {}
