@@ -144,6 +144,7 @@
       register: k3s_token_b64
       changed_when: false
       when: not ansible_check_mode
+      no_log: true
 
     - name: Fail when K3s token is unavailable
       ansible.builtin.fail:
@@ -159,6 +160,7 @@
         - not ansible_check_mode
         - k3s_token_b64.content is defined
         - k3s_token_b64 is succeeded
+      no_log: true
 
     - name: Fetch Kubeconfig to ansible directory
       ansible.builtin.fetch:
@@ -191,6 +193,7 @@
     k3s_cluster_token: "{{ hostvars[k3s_seed_host]['k3s_cluster_token'] }}"
     k3s_seed_ip: "{{ hostvars[k3s_seed_host]['ansible_host'] }}"
   when: inventory_hostname != k3s_seed_host
+  no_log: true
 
 - name: Install K3s on Secondary Nodes
   when: inventory_hostname != k3s_seed_host
