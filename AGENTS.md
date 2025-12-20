@@ -10,7 +10,8 @@ Syntax check only: `ansible-playbook -i inventories/rpi/hosts.yml playbooks/rpi.
 Lint: `ansible-lint playbooks/rpi.yml` and `yamllint .` (config in `.yamllint`).
 Single-host check: `ansible-playbook -i inventories/rpi/hosts.yml playbooks/rpi.yml --check --limit <host>`.
 Packer: `packer fmt -recursive packer/` and `packer validate packer/<template>/` before submitting.
-Run `pre-commit run --all-files` before submitting (hooks: ansible-lint, yamllint, packer-fmt, etc.).
+Terraform: `terraform fmt` (run from repo root with `-chdir=terraform`) before submitting when terraform/ changes.
+Run `pre-commit run --all-files` before submitting (hooks: ansible-lint, yamllint, packer-fmt, terraform-fmt, etc.).
 `common_user` defaults to `ansible_user` else `pi`; set per-host in inventory/host_vars; `ansible_user` can be set in hosts.yml.
 Prefer idempotent changes; never commit secrets or host-specific keys; use vault/sops and .gitignore.
 YAML/HCL/JSON: spaces only, newline at EOF, keep lines ≲120 chars.

@@ -32,3 +32,9 @@ repos:
         language: system
         files: ^packer/.*\.pkr\.hcl$
         pass_filenames: false
+      - id: terraform-fmt
+        name: Terraform fmt
+        entry: terraform -chdir=terraform fmt
+        language: system
+        files: ^terraform/.*\.tf$
+        pass_filenames: false

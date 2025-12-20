@@ -29,6 +29,18 @@ packer_cache/
 packer/**/*.auto.pkrvars.hcl
 packer/**/*.pkrvars.hcl
 !packer/**/*.pkrvars.hcl.example
+# Terraform overrides and variable definitions
+*.auto.tfvars
+terraform.tfvars
+*_override.tf
+*_override.tf.json
+crash.log
+
+# Security
+*.pem
+*.key
+id_rsa
+id_ed25519
 
 # Tests and tooling
 .coverage
