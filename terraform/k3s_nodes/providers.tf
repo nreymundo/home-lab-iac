@@ -6,6 +6,13 @@ terraform {
     }
   }
   required_version = ">= 1.3"
+
+  cloud {
+    organization = "home-lab-iac"
+    workspaces {
+      name = "k3s-nodes"
+    }
+  }
 }
 
 provider "proxmox" {

@@ -1,0 +1,11 @@
+---
+# Aggregates Terraform-generated K3s nodes and selected baremetal hosts.
+
+all:
+  children:
+    k3s_cluster:
+      children:
+        k3s_server:
+          children:
+            k3s_nodes: {}
+            baremetal_k3s: {}
