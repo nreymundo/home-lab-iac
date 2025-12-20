@@ -76,25 +76,18 @@
     mode: "0755"
   become: true
 
-- name: Download K3s binary (amd64)
+- name: Download K3s binary
   ansible.builtin.get_url:
-    url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s
+    url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/{{ item.name }}"
     dest: /usr/local/bin/k3s
     mode: "0755"
-    checksum: "sha256:{{ k3s_amd64_checksum }}"
+    checksum: "sha256:{{ item.checksum }}"
     timeout: 120
   become: true
-  when: ansible_architecture == "x86_64"
-
-- name: Download K3s binary (arm64)
-  ansible.builtin.get_url:
-    url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
-    dest: /usr/local/bin/k3s
-    mode: "0755"
-    checksum: "sha256:{{ k3s_arm64_checksum }}"
-    timeout: 120
-  become: true
-  when: ansible_architecture == "aarch64"
+  loop:
+    - { arch: 'x86_64', name: 'k3s', checksum: "{{ k3s_amd64_checksum }}" }
+    - { arch: 'aarch64', name: 'k3s-arm64', checksum: "{{ k3s_arm64_checksum }}" }
+  when: ansible_architecture == item.arch
 
 - name: Create K3s symlink
   ansible.builtin.file:
