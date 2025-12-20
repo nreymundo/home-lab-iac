@@ -1,19 +1,26 @@
 ---
 all:
+# Listing all bare metal hosts here
+  hosts:
+    main-rpi4:
+      ansible_host: 192.168.1.6
+      ansible_user: nico
+    pve1:
+      ansible_host: 192.168.1.4
+      ansible_user: root
+    pve2:
+      ansible_host: 192.168.1.5
+      ansible_user: root
+
+# Here we group the hosts defined above based on type/functionality
   children:
     rpi:
       hosts:
-        main-rpi4:
-          ansible_host: 192.168.1.6
-          ansible_user: nico
+        main-rpi4: {}
     baremetal_k3s:
       hosts:
-        main-rpi4:
+        main-rpi4: {}
     proxmox:
       hosts:
-        pve1:
-          ansible_host: 192.168.1.4
-          ansible_user: root
-        pve2:
-          ansible_host: 192.168.1.5
-          ansible_user: root
+        pve1: {}
+        pve2: {}
