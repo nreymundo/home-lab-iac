@@ -1,43 +1,41 @@
 ---
-- name: Ensure disk expansion tools are present
-  ansible.builtin.apt:
-    name:
-      - cloud-guest-utils
-      - lvm2
-    state: present
-    update_cache: true
+- name: Expand root filesystem
   when: vm_disk_expand_rootfs_expand | default(false) | bool
+  block:
+    - name: Ensure disk expansion tools are present
+      ansible.builtin.apt:
+        name:
+          - cloud-guest-utils
+          - lvm2
+        state: present
+        update_cache: true
 
-- name: Expand root partition to fill disk
-  ansible.builtin.command: >-
-    growpart {{ vm_disk_expand_rootfs_device }} {{ vm_disk_expand_rootfs_partition }}
-  register: vm_disk_expand_rootfs_growpart
-  changed_when: >-
-    'NOCHANGE' not in (vm_disk_expand_rootfs_growpart.stdout | default('') | upper)
-  failed_when:
-    - vm_disk_expand_rootfs_growpart.rc not in [0, 1]
-    - vm_disk_expand_rootfs_growpart.rc == 1 and
-      'NOCHANGE' not in (vm_disk_expand_rootfs_growpart.stdout | default('') | upper)
-  when: vm_disk_expand_rootfs_expand | default(false) | bool
+    - name: Expand root partition to fill disk
+      ansible.builtin.command: >-
+        growpart {{ vm_disk_expand_rootfs_device }} {{ vm_disk_expand_rootfs_partition }}
+      register: vm_disk_expand_rootfs_growpart
+      changed_when: >-
+        'NOCHANGE' not in (vm_disk_expand_rootfs_growpart.stdout | default('') | upper)
+      failed_when:
+        - vm_disk_expand_rootfs_growpart.rc not in [0, 1]
+        - vm_disk_expand_rootfs_growpart.rc == 1 and
+          'NOCHANGE' not in (vm_disk_expand_rootfs_growpart.stdout | default('') | upper)
 
-- name: Resize physical volume to use expanded partition
-  ansible.builtin.command: >-
-    pvresize {{ vm_disk_expand_rootfs_partition_device
-    | default(vm_disk_expand_rootfs_device ~ vm_disk_expand_rootfs_partition) }}
-  register: vm_disk_expand_rootfs_pvresize
-  changed_when: >-
-    'resized' in (vm_disk_expand_rootfs_pvresize.stdout | lower | default(''))
-    or 'resized' in (vm_disk_expand_rootfs_pvresize.stderr | lower | default(''))
-    or (vm_disk_expand_rootfs_growpart is defined and (vm_disk_expand_rootfs_growpart.changed | default(false)))
-  when:
-    - vm_disk_expand_rootfs_expand | default(false) | bool
-    - vm_disk_expand_rootfs_growpart is not failed
-  failed_when: vm_disk_expand_rootfs_pvresize.rc not in [0]
+    - name: Resize physical volume to use expanded partition
+      ansible.builtin.command: >-
+        pvresize {{ vm_disk_expand_rootfs_partition_device
+        | default(vm_disk_expand_rootfs_device ~ vm_disk_expand_rootfs_partition) }}
+      register: vm_disk_expand_rootfs_pvresize
+      changed_when: >-
+        'resized' in (vm_disk_expand_rootfs_pvresize.stdout | lower | default(''))
+        or 'resized' in (vm_disk_expand_rootfs_pvresize.stderr | lower | default(''))
+        or (vm_disk_expand_rootfs_growpart is defined and (vm_disk_expand_rootfs_growpart.changed | default(false)))
+      when: vm_disk_expand_rootfs_growpart is not failed
+      failed_when: vm_disk_expand_rootfs_pvresize.rc not in [0]
 
-- name: Extend root logical volume to free space
-  community.general.lvol:
-    vg: "{{ vm_disk_expand_rootfs_vg }}"
-    lv: "{{ vm_disk_expand_rootfs_lv }}"
-    size: +100%FREE
-    resizefs: true
-  when: vm_disk_expand_rootfs_expand | default(false) | bool
+    - name: Extend root logical volume to free space
+      community.general.lvol:
+        vg: "{{ vm_disk_expand_rootfs_vg }}"
+        lv: "{{ vm_disk_expand_rootfs_lv }}"
+        size: +100%FREE
+        resizefs: true
