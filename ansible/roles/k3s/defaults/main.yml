@@ -5,6 +5,10 @@ k3s_cluster_init: false
 k3s_server_args: ""
 k3s_agent_args: ""
 
-# Default to the inventory IP, but allow overrides (e.g. for VLANs)
+# Checksums for K3s binaries - ensures integrity verification
+k3s_amd64_checksum: "74897e4af26ea383ce50f445752f40ca63a0aef0d90994fb74073c43063eeeb2"
+k3s_arm64_checksum: "eff4cc82c8c057bd2dc432025b933616637dcf3df91e9e06720d9208743640d3"
+
+# Default to inventory IP, but allow overrides (e.g. for VLANs)
 k3s_node_ip: "{{ ansible_host }}"
 k3s_iface: "{{ ansible_default_ipv4.interface | default('') }}"
