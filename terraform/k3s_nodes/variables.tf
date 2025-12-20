@@ -1,19 +1,17 @@
+# Environment inputs:
+# - Provider auth/endpoint: PM_API_URL, PM_API_TOKEN_ID, PM_API_TOKEN_SECRET
+# - Terraform variables: TF_VAR_proxmox_api_url (optional override) and TF_VAR_ssh_public_keys
+
 # Proxmox API Configuration
 variable "proxmox_api_url" {
   type        = string
   description = "Proxmox VE API URL"
-  default     = "https://192.168.1.4:8006/api2/json"
 }
 
 # SSH Public Keys - LIST VARIABLE
 variable "ssh_public_keys" {
   type        = list(string)
   description = "List of public SSH keys to inject into VMs"
-  default     = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICuRNLs/Xvp/uNKF13JF0NNNDVS37bc72e47Y4yF0xSr desktop",
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK7zi2/TiNLXy9MtIVrChiXTHw5jlMFAAkHiJXPaFrMn laptop",
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOKnc8+Hx6sb2jzxMNRkultwBfIBa2ZfXv6WkIE2Zcjd dev-vm"
-  ]
   validation {
     condition     = length(var.ssh_public_keys) > 0
     error_message = "At least one SSH public key must be provided."
@@ -66,7 +64,7 @@ variable "network_bridge" {
 variable "node_count" {
   type        = number
   description = "Number of K3s node VMs to create"
-  default     = 3
+  default     = 2
   validation {
     condition     = var.node_count >= 1
     error_message = "At least one node is required."

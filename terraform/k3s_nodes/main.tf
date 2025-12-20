@@ -13,7 +13,7 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
   clone      = var.template_name
   full_clone = true
 
-  scsihw = "virtio-scsi-pci"
+  scsihw = "virtio-scsi-single"
 
   cpu {
     type    = "host"
