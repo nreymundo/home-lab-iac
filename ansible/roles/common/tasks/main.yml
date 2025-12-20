@@ -86,14 +86,6 @@
   loop: "{{ common_sshd_hardening | dict2items }}"
   notify: Restart sshd
 
-- name: Ensure authorized SSH keys are present
-  ansible.posix.authorized_key:
-    user: "{{ common_user }}"
-    state: present
-    key: "{{ item }}"
-  loop: "{{ common_authorized_keys }}"
-  when: common_authorized_keys | length > 0
-
 - name: Ensure user home exists
   ansible.builtin.file:
     path: "/home/{{ common_user }}"
@@ -101,7 +93,14 @@
     owner: "{{ common_user }}"
     group: "{{ common_user }}"
     mode: "0755"
-  when: common_enable_hushlogin | bool
+
+- name: Ensure authorized SSH keys are present
+  ansible.posix.authorized_key:
+    user: "{{ common_user }}"
+    state: present
+    key: "{{ item }}"
+  loop: "{{ common_authorized_keys }}"
+  when: common_authorized_keys | length > 0
 
 - name: Ensure hush login file exists
   ansible.builtin.file:
