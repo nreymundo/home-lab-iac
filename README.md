@@ -58,6 +58,11 @@ Infrastructure provisioning for Kubernetes nodes. Handles VM cloning, load balan
 
 **[Read Terraform Documentation](terraform/README.md)**
 
+### ☸️ Kubernetes (`kubernetes/`)
+Flux-managed GitOps configuration for cluster charts, manifests, and installs.
+
+**[Read Kubernetes Documentation](kubernetes/README.md)**
+
 ## Repository Structure
 
 ```
@@ -70,6 +75,7 @@ home-lab-iac/
 │   └── ubuntu-24.04-base/    # Ubuntu base template
 ├── terraform/                 # Infrastructure provisioning
 │   └── k3s_nodes/            # K3s cluster configuration
+├── kubernetes/               # Flux GitOps configuration
 ├── .github/                   # CI/CD workflows
 ├── .pre-commit-config.yaml    # Pre-commit hooks
 └── AGENTS.md                  # Development guidelines
