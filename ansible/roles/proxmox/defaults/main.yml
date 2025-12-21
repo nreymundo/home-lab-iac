@@ -1,0 +1,5 @@
+---
+proxmox_zfs_thin_pools:
+  - ssd-zfs
+proxmox_zfs_thin_enforce: false
+proxmox_zfs_thin_audit: true

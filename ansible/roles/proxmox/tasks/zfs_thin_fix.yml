@@ -1,0 +1,77 @@
+---
+- name: Check if there are datasets to fix
+  ansible.builtin.set_fact:
+    datasets_to_fix_exist: "{{ (proxmox_zfs_thin_datasets_to_fix | default([]) | length) > 0 }}"
+
+- name: Skip fix if no datasets need thin provisioning
+  ansible.builtin.debug:
+    msg: "No datasets require refreservation changes."
+  when: not datasets_to_fix_exist
+  changed_when: false
+
+- name: Enforce thin provisioning by removing refreservation (ONLINE pools only)
+  ansible.builtin.shell: |
+    set -eo pipefail
+    ds="{{ item.name }}"
+
+    # Safety check
+    if [ -z "$ds" ]; then
+      echo "Error: empty dataset name derived from item: '{{ item }}'" >&2
+      exit 1
+    fi
+
+    pool="${ds%%/*}"
+    health="$(zpool list -H -o health "$pool")"
+    if [ "$health" != "ONLINE" ]; then
+      echo "Refusing to modify $ds because pool $pool health is $health" >&2
+      exit 2
+    fi
+    zfs set refreservation=none "$ds"
+  args:
+    executable: /bin/bash
+  loop: "{{ proxmox_zfs_thin_datasets_to_fix | default([]) }}"
+  when:
+    - datasets_to_fix_exist
+    - not ansible_check_mode
+  changed_when: true
+
+- name: Inform about check mode skip
+  ansible.builtin.debug:
+    msg: |
+      Check mode: would set refreservation=none for {{ proxmox_zfs_thin_datasets_to_fix | default([]) | length }}
+      datasets.
+      Run without --check to apply changes.
+  when:
+    - datasets_to_fix_exist
+    - ansible_check_mode
+  changed_when: false
+
+- name: Post-check refreservation (datasets only)
+  ansible.builtin.shell: |
+    set -eo pipefail
+    pool="{{ item }}"
+    zfs get -r -H -o name,value refreservation "${pool}" | \
+    awk '$2 != "none" && $2 != "-" {print $0}'
+  args:
+    executable: /bin/bash
+  loop: "{{ proxmox_zfs_thin_pools }}"
+  register: proxmox_zfs_postcheck
+  changed_when: false
+  when: datasets_to_fix_exist
+
+- name: Post-check report
+  ansible.builtin.debug:
+    msg: |
+      Post-check:
+
+      {% set remaining = proxmox_zfs_postcheck.results | map(attribute='stdout') | reject('equalto', '') | list %}
+      {% if remaining | length == 0 %}
+      - All managed datasets are thin-provisioned (refreservation=none).
+      {% else %}
+      - Remaining datasets with refreservation != none:
+      {% for blk in remaining %}
+      {{ blk }}
+      {% endfor %}
+      {% endif %}
+  changed_when: false
+  when: datasets_to_fix_exist
