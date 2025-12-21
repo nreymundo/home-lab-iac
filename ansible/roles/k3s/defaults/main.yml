@@ -12,3 +12,4 @@ k3s_arm64_checksum: "eff4cc82c8c057bd2dc432025b933616637dcf3df91e9e06720d9208743
 # Default to inventory IP, but allow overrides (e.g. for VLANs)
 k3s_node_ip: "{{ ansible_host }}"
 k3s_iface: "{{ ansible_default_ipv4.interface | default('') }}"
+k3s_allow_workloads: true
