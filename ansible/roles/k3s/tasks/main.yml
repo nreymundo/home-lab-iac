@@ -114,6 +114,7 @@
           --write-kubeconfig-mode 644
           --disable traefik
           --disable metrics-server
+      notify: Restart k3s
 
     - name: Enable and start K3s service (Seed)
       ansible.builtin.systemd:
@@ -214,9 +215,52 @@
           --disable metrics-server
 
     - name: Enable and start K3s service (Secondary)
+
       ansible.builtin.systemd:
         name: k3s
         state: started
         enabled: true
         daemon_reload: true
       become: true
+
+- name: Reconcile Node Taints
+  when:
+    - not ansible_check_mode
+  run_once: true
+  delegate_to: "{{ k3s_seed_host }}"
+  become: true
+  block:
+    - name: Wait for node to be registered
+      ansible.builtin.command: >-
+        /usr/local/bin/k3s kubectl get node {{ item }}
+        -o jsonpath='{.metadata.name}'
+      register: _k3s_node_check
+      until: _k3s_node_check.rc == 0
+      retries: 60
+      delay: 2
+      loop: "{{ groups['k3s_cluster'] }}"
+      changed_when: false
+
+    - name: Apply workload taints
+      ansible.builtin.command: >-
+        /usr/local/bin/k3s kubectl taint node {{ item }}
+        workloads=disabled:NoSchedule --overwrite
+      loop: "{{ groups['k3s_cluster'] }}"
+      when: not (hostvars[item]['k3s_allow_workloads'] | default(true) | bool)
+      register: _taint_add
+      changed_when: "'tainted' in _taint_add.stdout"
+      failed_when:
+        - _taint_add.rc != 0
+        - "'already has' not in _taint_add.stderr"
+
+    - name: Remove workload taints
+      ansible.builtin.command: >-
+        /usr/local/bin/k3s kubectl taint node {{ item }}
+        workloads=disabled:NoSchedule-
+      loop: "{{ groups['k3s_cluster'] }}"
+      when: (hostvars[item]['k3s_allow_workloads'] | default(true) | bool)
+      register: _taint_remove
+      changed_when: "'untainted' in _taint_remove.stdout"
+      failed_when:
+        - _taint_remove.rc != 0
+        - "'not found' not in _taint_remove.stderr"
