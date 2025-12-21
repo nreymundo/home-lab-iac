@@ -114,6 +114,7 @@
           --write-kubeconfig-mode 644
           --disable traefik
           --disable metrics-server
+          --disable servicelb
       notify: Restart k3s
 
     - name: Enable and start K3s service (Seed)
@@ -213,6 +214,7 @@
           --flannel-iface {{ k3s_iface }}
           --disable traefik
           --disable metrics-server
+          --disable servicelb
 
     - name: Enable and start K3s service (Secondary)
 
