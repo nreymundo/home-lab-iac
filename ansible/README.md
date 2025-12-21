@@ -36,11 +36,13 @@ ansible/
 ├── playbooks/
 │   ├── rpi.yml                  # Raspberry Pi configuration
 │   ├── proxmox.yml              # Proxmox VE management
-│   └── ubuntu_vms.yml           # Ubuntu VM configuration
+│   ├── ubuntu_vms.yml           # Ubuntu VM configuration
+│   └── k3s_essentials.yml      # K3s cluster addons
 ├── roles/
 │   ├── common/                  # Base system setup
 │   ├── vm_disk_expand/          # LVM disk expansion
-│   └── k3s/                     # K3s Kubernetes setup
+│   ├── k3s/                     # K3s Kubernetes setup
+│   └── metallb/                 # MetalLB load balancer
 └── ansible.cfg                  # Ansible configuration
 ```
 
@@ -86,6 +88,18 @@ ansible-playbook -i inventories/all-vms.yml -i inventories/k3s-nodes.yml playboo
 - QEMU guest agent setup
 - Cloud-init integration
 - K3s prerequisites
+
+### ☸️ K3s Essentials (`k3s_essentials.yml`)
+Installs cluster-wide addons and essential services:
+
+```bash
+ansible-playbook -i inventories/k3s-cluster.yml playbooks/k3s_essentials.yml
+```
+
+**Features:**
+- MetalLB load balancer with configurable IP address pools
+- L2 advertisement for services
+- Extensible role-based design for future addons
 
 ## Inventory Management
 
@@ -159,6 +173,16 @@ Installs and configures K3s Kubernetes distribution:
 - `k3s_version`: K3s release version
 - `k3s_server_config`: Server configuration options
 - `k3s_cluster_config`: Cluster-wide settings
+
+### 🌐 MetalLB Role
+Installs MetalLB load balancer for bare-metal Kubernetes clusters:
+
+**Configuration Options:**
+- `metallb_version`: MetalLB release version (default: v0.15.3)
+- `metallb_namespace`: Installation namespace (default: metallb-system)
+- `metallb_address_pools`: List of IP address ranges (default: ['192.168.10.200-192.168.10.240'])
+- `metallb_ipaddresspool_name`: Name of the IPAddressPool (default: default)
+- `metallb_l2advertisement_name`: Name of the L2Advertisement (default: default)
 
 ## Platform Behavior Matrix
 

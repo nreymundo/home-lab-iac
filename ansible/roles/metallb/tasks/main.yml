@@ -1,0 +1,90 @@
+---
+- name: Compute K3s seed nodes
+  ansible.builtin.set_fact:
+    metallb_k3s_seed_nodes: >-
+      {{
+        hostvars
+        | dict2items
+        | selectattr('value.k3s_is_seed', 'defined')
+        | selectattr('value.k3s_is_seed', 'equalto', true)
+        | map(attribute='key')
+        | list
+      }}
+  run_once: true
+
+- name: Identify K3s seed host
+  ansible.builtin.set_fact:
+    metallb_k3s_seed_host: "{{ (metallb_k3s_seed_nodes | first) | default(groups['k3s_cluster'] | first) }}"
+  run_once: true
+
+- name: Install MetalLB manifests
+  ansible.builtin.command:
+    cmd: >-
+      /usr/local/bin/k3s kubectl apply -f {{ metallb_manifest_url }}
+  register: _metallb_install
+  changed_when: >-
+    _metallb_install.stdout is search("created|configured")
+  delegate_to: "{{ metallb_k3s_seed_host }}"
+  run_once: true
+
+- name: Wait for MetalLB CRDs
+  ansible.builtin.command:
+    cmd: >-
+      /usr/local/bin/k3s kubectl get crd ipaddresspools.metallb.io
+  register: _metallb_crd_check
+  until: _metallb_crd_check.rc == 0
+  retries: 30
+  delay: 2
+  changed_when: false
+  delegate_to: "{{ metallb_k3s_seed_host }}"
+  run_once: true
+
+- name: Wait for MetalLB webhook service
+  ansible.builtin.command:
+    cmd: >-
+      /usr/local/bin/k3s kubectl -n {{ metallb_namespace }} get endpoints metallb-webhook-service
+      -o jsonpath='{.subsets[*].addresses[*].ip}'
+  register: _metallb_webhook_check
+  until: _metallb_webhook_check.stdout | length > 0
+  retries: 30
+  delay: 5
+  changed_when: false
+  delegate_to: "{{ metallb_k3s_seed_host }}"
+  run_once: true
+
+- name: Apply MetalLB configuration
+  ansible.builtin.command:
+    cmd: >-
+      /usr/local/bin/k3s kubectl apply -f -
+    stdin: "{{ lookup('template', 'metallb-config.yaml.j2') }}"
+  register: _metallb_config
+  changed_when: >-
+    _metallb_config.stdout is search("created|configured")
+  delegate_to: "{{ metallb_k3s_seed_host }}"
+  run_once: true
+
+- name: Wait for MetalLB controller
+  ansible.builtin.command:
+    cmd: >-
+      /usr/local/bin/k3s kubectl -n {{ metallb_namespace }} rollout status deploy/controller
+      --timeout=300s
+  register: _metallb_controller_rollout
+  until: _metallb_controller_rollout.rc == 0
+  retries: 30
+  delay: 10
+  changed_when: false
+  delegate_to: "{{ metallb_k3s_seed_host }}"
+  run_once: true
+
+- name: Wait for MetalLB speaker
+  ansible.builtin.command:
+    cmd: >-
+      /usr/local/bin/k3s kubectl -n {{ metallb_namespace }} rollout status ds/speaker
+      --timeout=300s
+  register: _metallb_speaker_rollout
+  until: _metallb_speaker_rollout.rc == 0
+  retries: 30
+  delay: 10
+  changed_when: false
+  delegate_to: "{{ metallb_k3s_seed_host }}"
+  run_once: true

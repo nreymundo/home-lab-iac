@@ -12,8 +12,8 @@ Home Lab Infrastructure as Code (IaC) repository implementing a GitOps workflow.
     - `inventories/baremetal.yml` (Manually managed Physical hosts)
     - `inventories/k3s-nodes.yml` (Terraform-generated - **DO NOT EDIT**)
     - `inventories/all-vms.yml` (VM Group definitions)
-  - Playbooks: `playbooks/rpi.yml`, `playbooks/proxmox.yml`, `playbooks/ubuntu_vms.yml`
-  - Roles: `roles/common`, `roles/vm_disk_expand`, `roles/k3s`
+  - Playbooks: `playbooks/rpi.yml`, `playbooks/proxmox.yml`, `playbooks/ubuntu_vms.yml`, `playbooks/k3s_essentials.yml`
+  - Roles: `roles/common`, `roles/vm_disk_expand`, `roles/k3s`, `roles/metallb`
 - **Packer**: `packer/ubuntu-24.04-base/`
 - **Terraform**: `terraform/k3s_nodes/`
 

@@ -1,0 +1,9 @@
+---
+metallb_version: "v0.15.3"
+metallb_manifest_url: >-
+  https://raw.githubusercontent.com/metallb/metallb/{{ metallb_version }}/config/manifests/metallb-native.yaml
+metallb_namespace: "metallb-system"
+metallb_ipaddresspool_name: "default"
+metallb_address_pools:
+  - "192.168.10.200-192.168.10.240"
+metallb_l2advertisement_name: "default"
