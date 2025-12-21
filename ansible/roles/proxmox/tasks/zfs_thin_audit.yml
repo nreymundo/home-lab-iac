@@ -1,0 +1,96 @@
+---
+- name: Verify required ZFS CLI tools exist
+  ansible.builtin.command: "{{ item }}"
+  args:
+    executable: /bin/bash
+  loop:
+    - zfs
+    - zpool
+  register: proxmox_zfs_cli_check
+  changed_when: false
+  failed_when: "'command not found' in proxmox_zfs_cli_check.stderr"
+
+- name: Verify all configured pools exist
+  ansible.builtin.command: zpool list -H -o name "{{ item }}"
+  args:
+    executable: /bin/bash
+  loop: "{{ proxmox_zfs_thin_pools }}"
+  register: proxmox_zfs_pool_exists
+  changed_when: false
+  failed_when: "'No such pool' in proxmox_zfs_pool_exists.stderr"
+
+- name: Show ZFS version for troubleshooting
+  ansible.builtin.command: zfs version
+  register: proxmox_zfs_version
+  changed_when: false
+
+- name: Show ZFS version output
+  ansible.builtin.debug:
+    var: proxmox_zfs_version.stdout_lines
+
+- name: Collect pool health for all managed pools
+  ansible.builtin.command: zpool list -H -o name,health "{{ item }}"
+  args:
+    executable: /bin/bash
+  loop: "{{ proxmox_zfs_thin_pools }}"
+  register: proxmox_zfs_pool_health
+  changed_when: false
+
+- name: Collect pool capacity for all managed pools (informational)
+  ansible.builtin.command: zpool list -H -o name,cap "{{ item }}"
+  args:
+    executable: /bin/bash
+  loop: "{{ proxmox_zfs_thin_pools }}"
+  register: proxmox_zfs_pool_capacity
+  changed_when: false
+
+- name: Report pool status summary
+  ansible.builtin.debug:
+    msg: |
+      Pool summary:
+      {% for i in range(proxmox_zfs_thin_pools | length) %}
+      {% set health_out = proxmox_zfs_pool_health.results[i].stdout | default('') %}
+      {% set cap_out = proxmox_zfs_pool_capacity.results[i].stdout | default('') %}
+      - {{ proxmox_zfs_thin_pools[i] }}: Health={{ health_out.split('\t')[-1] | default('Unknown') }},
+        Capacity={{ cap_out.split('\t')[-1] | default('Unknown') }}
+      {% endfor %}
+
+- name: Discover datasets/zvols with refreservation != none (excluding snapshots)
+  ansible.builtin.shell: |
+    set -eo pipefail
+    pool="{{ item }}"
+    zfs get -r -H -o name,value refreservation "${pool}" | \
+    awk '$2 != "none" && $2 != "-" {print $0}'
+  args:
+    executable: /bin/bash
+  loop: "{{ proxmox_zfs_thin_pools }}"
+  register: proxmox_zfs_refreservation_findings
+  changed_when: false
+
+- name: Build consolidated findings list
+  ansible.builtin.set_fact:
+    proxmox_zfs_thin_datasets_to_fix: >-
+      {{ proxmox_zfs_refreservation_findings.results
+         | selectattr('stdout_lines', 'defined')
+         | map(attribute='stdout_lines')
+         | sum(start=[]) }}
+
+
+- name: Audit report (non-thin datasets)
+  ansible.builtin.debug:
+    msg: |
+      ZFS thin-provisioning audit:
+      {% if (proxmox_zfs_thin_datasets_to_fix | default([]) | length) == 0 %}
+      - No datasets with refreservation set (thin provisioning already in effect).
+      {% else %}
+      - The following datasets/zvols have refreservation != none (NOT thin):
+      {% for line in proxmox_zfs_thin_datasets_to_fix %}
+      {% set parts = line.split('\t') %}
+      {% if parts | length >= 2 %}
+        * {{ parts[0] }} (refreservation={{ parts[1] }})
+      {% else %}
+        * {{ line }} (parse error: expected tab-separated output)
+      {% endif %}
+      {% endfor %}
+      {% endif %}
+  changed_when: false

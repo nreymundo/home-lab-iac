@@ -1,0 +1,9 @@
+---
+
+- name: Include Proxmox ZFS thin provisioning audit
+  ansible.builtin.include_tasks: zfs_thin_audit.yml
+  when: proxmox_zfs_thin_enforce | default(false) | bool or proxmox_zfs_thin_audit | default(true) | bool
+
+- name: Include Proxmox ZFS thin provisioning fix
+  ansible.builtin.include_tasks: zfs_thin_fix.yml
+  when: proxmox_zfs_thin_enforce | default(false) | bool

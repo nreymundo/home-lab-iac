@@ -1,0 +1,8 @@
+---
+- name: Enforce Proxmox ZFS thin provisioning
+  hosts: proxmox
+  become: true
+  roles:
+    - role: proxmox
+      vars:
+        proxmox_zfs_thin_enforce: true
