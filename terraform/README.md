@@ -1,59 +1,70 @@
-# Terraform: K3s Node Provisioning
+# Terraform – K3s Infrastructure Provisioning
 
-This Terraform configuration provisions generic K3s node VMs on Proxmox using the `telmate/proxmox` provider. It clones the Packer-built `ubuntu-24.04-base` template and generates an Ansible inventory alongside the rest of the repo.
+Provisioning layer for the K3s Kubernetes cluster on Proxmox VE. This module handles the creation of virtual machines using the Packer-built templates and generates the necessary Ansible inventory.
 
-## Automation Features
+## 🏗️ Architecture
 
-- **Cloning**: Creates VMs from the `ubuntu-24.04-base` template.
-- **Load balancing**: Distributes VMs across the provided Proxmox nodes list (e.g., `pve1`, `pve2`).
-- **Dynamic inventory**: Writes `ansible/inventories/k3s-nodes.yml` with hostnames, IPs, and `ansible_user: ubuntu` for the created VMs.
+- **Provider:** `telmate/proxmox` (Proxmox VE)
+- **Source:** Clones from `ubuntu-24.04-base` template
+- **Output:**
+  - Virtual Machines on Proxmox
+  - Dynamic Ansible Inventory (`ansible/inventories/k3s-nodes.yml`)
 
-## Configuration
+## 🚀 Quick Start
 
 ### Prerequisites
-- A Packer-built template named `ubuntu-24.04-base` available on the target Proxmox nodes.
+1. **Packer Template:** Ensure `ubuntu-24.04-base` has been built and is available on the Proxmox storage.
+2. **Terraform:** v1.0+ installed.
+3. **Proxmox Credentials:** API token ID and Secret.
 
-### Variables
-
-Use environment variables instead of tfvars for sensitive and connection data:
+### 1. Environment Configuration
+Terraform requires credentials to communicate with Proxmox. Use environment variables to keep them secure:
 
 ```bash
-# Proxmox provider (required)
-export PM_API_URL="https://192.168.1.100:8006/api2/json"
-export PM_API_TOKEN_ID="user@pam!terraform"
-export PM_API_TOKEN_SECRET="your-token"
+export PM_API_URL="https://192.168.1.10:8006/api2/json"
+export PM_API_TOKEN_ID="terraform@pam!terraform"
+export PM_API_TOKEN_SECRET="your-secret-token"
 
-# Terraform inputs (TF_VAR_*)
-export TF_VAR_ssh_public_keys='["ssh-ed25519 AAAAC3Nz..."]'
-# Optional: explicitly set the module variable instead of PM_API_URL
-# export TF_VAR_proxmox_api_url="https://192.168.1.100:8006/api2/json"
+# Optional: SSH Keys for VM access (if not using defaults)
+export TF_VAR_ssh_public_keys='["ssh-ed25519 AAAAC3..."]'
 ```
 
-Other variables keep their defaults; see `variables.tf` for all options (e.g., `node_count`, `node_ip_start`, `vm_*` sizing, networking). Defaults target the 192.168.10.0/24 subnet; adjust `ip_prefix_len` and related values if your network differs.
+### 2. Initialize and Apply
 
-## Usage
+```bash
+cd terraform/k3s_nodes
 
-1. **Navigate to the directory**:
-   ```bash
-   cd terraform/k3s_nodes
-   ```
-2. **Initialize Terraform**:
-   ```bash
-   terraform init
-   ```
-3. **Plan the deployment**:
-   ```bash
-   terraform plan
-   ```
-4. **Apply changes**:
-   ```bash
-   terraform apply
-   ```
+# Initialize Terraform (download providers)
+terraform init
 
-## Generated Inventory
+# Review execution plan
+terraform plan
 
-After `terraform apply`, check `ansible/inventories/k3s-nodes.yml`. It will look like:
+# Apply changes to infrastructure
+terraform apply
+```
 
+## ⚙️ Configuration Variables
+
+Key variables defined in `variables.tf`. You can override these via `TF_VAR_` environment variables or a `terraform.tfvars` file.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `node_count` | Number of K3s nodes to provision | `2` |
+| `pm_node` | Proxmox node to deploy VMs on | `pve1` |
+| `template_name` | Name of the Packer template | `ubuntu-24.04-base` |
+| `vm_memory` | RAM per VM (MB) | `4096` |
+| `vm_cores` | CPU cores per VM | `2` |
+| `ip_prefix_len` | Network CIDR prefix | `24` |
+| `node_ip_start` | Starting IP octet | `50` (e.g., 192.168.10.50) |
+
+## 🔗 Integration with Ansible
+
+This Terraform module includes a `local_file` resource that automatically generates an Ansible inventory file.
+
+**Generated File:** `ansible/inventories/k3s-nodes.yml`
+
+**Example Output:**
 ```yaml
 all:
   children:
@@ -66,3 +77,13 @@ all:
           ansible_host: 192.168.10.51
           ansible_user: ubuntu
 ```
+
+This integration allows for a seamless workflow:
+1. `terraform apply` -> Creates VMs + Updates Inventory
+2. `ansible-playbook` -> Configures the new VMs immediately
+
+## 🛠️ State Management
+
+Terraform state is currently stored **locally** (`terraform.tfstate`).
+- **Backup:** Ensure this file is backed up if working in a team or across multiple machines.
+- **Locking:** No remote locking is configured. Avoid concurrent runs.
