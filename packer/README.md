@@ -1,39 +1,89 @@
-# Packer Build: Ubuntu 24.04 Base Image
+# Packer Templates for Proxmox VE
 
-This directory contains the Packer configuration to build a standardized **Ubuntu 24.04 LTS** VM template on Proxmox VE.
+This directory contains Packer configurations for building standardized virtual machine templates for Proxmox VE. The current focus is on **Ubuntu 24.04 LTS**.
 
-## Prerequisites & Layout
-- Tools: Packer (>=1.10) and the `hashicorp/proxmox` plugin (installed via `packer init`).
-- Template: `ubuntu-24.04-base/ubuntu-24.04.pkr.hcl` with supporting vars in the same directory.
-- Cloud-init seeds: `ubuntu-24.04-base/http/user-data` and `ubuntu-24.04-base/http/meta-data`.
-- Provisioner: `ubuntu-24.04-base/scripts/setup.sh` runs inside the guest.
+## 🏗️ Architecture
 
-## Features
-- Cloud-init enabled for SSH keys, users, and networking at provision time.
-- QEMU guest agent installed and enabled for Proxmox integration.
-- Setup script handles updates, essentials, and K3s prerequisites.
+The build process uses the `proxmox-iso` builder to:
+1. Boot from an official Ubuntu Server ISO.
+2. Automate installation via **Cloud-Init** (Autoinstall).
+3. Provision the system using shell scripts.
+4. Convert the VM into a Proxmox template.
 
-## Variables & Secrets
-- You can create `ubuntu-24.04-base/variables.auto.pkrvars.hcl` and fill values or override the defaults.
-- Required fields: `proxmox_api_url`, `proxmox_api_token_id`, `proxmox_api_token_secret`.
-- Keep secrets out of git; you can also supply sensitive values via `PKR_VAR_` environment variables.
+## 🚀 Quick Start
 
-## Cloud-Init Seeds
-- `http/user-data`: autoinstall seed with placeholder hostname, timezone, and authorized_keys. Replace these placeholders with your own values before building (use a copied variant if you prefer).
-- `http/meta-data`: placeholder instance-id and hostname; update to match your naming.
+### Prerequisites
+- **Packer** (v1.10+)
+- **Proxmox VE** (with API access)
+- **Proxmox API Token** (ID and Secret)
 
-## Quickstart
-1) `cd packer/ubuntu-24.04-base`
-2) Prepare vars: `cp variables.auto.pkrvars.hcl.example variables.auto.pkrvars.hcl` and replace placeholders (or set `PKR_VAR_` env vars).
-3) Update cloud-init placeholders in `http/user-data` (and `http/meta-data` if needed).
-4) `packer init .`
-5) `packer fmt -recursive .` (optional) and `packer validate .`
-6) `packer build .`
+### 1. Configure Credentials
+Create a variable file `ubuntu-24.04-base/variables.auto.pkrvars.hcl` based on the example:
 
-## Multi-Node Builds
-- Sources for `pve1` and `pve2` are defined and run in parallel.
-- To add a node: duplicate a `proxmox-iso` source, set `node`, `vm_id`, `template_description`, and add it to `build.sources`, then run fmt/validate.
+```hcl
+proxmox_api_url = "https://192.168.1.10:8006/api2/json"
+proxmox_api_token_id = "packer@pam!packer"
+proxmox_api_token_secret = "your-secret-token"
+```
 
-## Output & Safety
-- Resulting template name: `ubuntu-24.04-base`; IDs follow the `vm_id` values per node on the configured storage pool.
-- Verify the ISO exists on the target storage before building, and avoid committing real tokens or SSH keys.
+> **⚠️ Security Note:** Never commit `variables.auto.pkrvars.hcl` to version control. It is git-ignored by default.
+
+### 2. Customize Cloud-Init
+Review and update the cloud-init user-data if necessary:
+- `ubuntu-24.04-base/http/user-data`: Controls the autoinstall process, including default user, timezone, and SSH keys.
+
+### 3. Build the Template
+Navigate to the template directory and run the build:
+
+```bash
+cd ubuntu-24.04-base
+
+# Initialize Packer plugins
+packer init .
+
+# Validate configuration
+packer validate .
+
+# Build the template
+packer build .
+```
+
+## 📂 Directory Structure
+
+```
+packer/
+├── ubuntu-24.04-base/
+│   ├── http/
+│   │   ├── meta-data          # Cloud-init meta-data
+│   │   └── user-data          # Autoinstall configuration
+│   ├── scripts/
+│   │   └── setup.sh           # Provisioning script (updates, qemu-guest-agent)
+│   ├── ubuntu-24.04.pkr.hcl   # Main Packer configuration
+│   ├── variables.pkr.hcl      # Variable definitions
+│   └── variables.auto.pkrvars.hcl.example # Example variables
+└── README.md
+```
+
+## ⚙️ Configuration Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `proxmox_api_url` | URL of the Proxmox API | Required |
+| `proxmox_api_token_id` | API Token ID | Required |
+| `proxmox_api_token_secret` | API Token Secret | Required |
+| `proxmox_node` | Target Proxmox Node | `pve1` |
+| `iso_file` | Path to Ubuntu ISO on Proxmox storage | `local:iso/ubuntu-24.04-live-server-amd64.iso` |
+
+## 🔧 Customization
+
+### Adding Packages
+Modify `ubuntu-24.04-base/scripts/setup.sh` to install additional software or perform system configuration during the build process.
+
+### Changing VM Hardware
+Adjust resource allocation (CPU, RAM, Disk) in `ubuntu-24.04-base/ubuntu-24.04.pkr.hcl` within the `source "proxmox-iso"` block.
+
+## 🛠️ Troubleshooting
+
+- **Build freezes at boot:** Check VNC output in Proxmox console. Often caused by incorrect boot commands or cloud-init syntax errors.
+- **API Authentication Failed:** Verify token permissions. The user needs `VM.Allocate`, `VM.Config.Disk`, `VM.Config.CPU`, `VM.Config.Memory`, `Datastore.AllocateSpace`.
+- **ISO Not Found:** Ensure the `iso_file` path matches exactly where the ISO is stored on your Proxmox node.

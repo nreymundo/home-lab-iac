@@ -18,6 +18,8 @@ venv/
 *.retry
 *.log
 .ansible
+ansible-facts/
+ansible_collections/
 
 # Terraform / Packer / Kube
 .terraform/
@@ -35,6 +37,8 @@ terraform.tfvars
 *_override.tf
 *_override.tf.json
 crash.log
+# Ignored per user preference/workflow
+.terraform.lock.hcl
 terraform/**/.terraform.lock.hcl
 
 # Security
@@ -42,6 +46,12 @@ terraform/**/.terraform.lock.hcl
 *.key
 id_rsa
 id_ed25519
+.proxmox-token
+
+# ISOs and Artifacts
+*.iso
+*.qcow2
+*.img
 
 # Tests and tooling
 .coverage

@@ -11,4 +11,8 @@ code_review:
     summary: false
     code_review: true
     include_drafts: false
-ignore_patterns: []
+ignore_patterns:
+  - "ansible/inventories/k3s-nodes.yml"
+  - "**/.terraform/"
+  - "**/*.tfstate"
+  - "**/*.tfstate.backup"

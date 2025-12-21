@@ -1,25 +1,72 @@
 # AGENTS.md
-Use Ansible to provision Raspberry Pi hosts; keep changes minimal and reproducible.
-Key paths: ansible/playbooks/rpi.yml; ansible/inventories/rpi/**/*; ansible/roles/common/*.
-Commands run from ansible/ unless noted; set `ANSIBLE_CONFIG=ansible/ansible.cfg` if needed.
-Install deps: ansible, ansible-lint, yamllint, shfmt, shellcheck, pre-commit.
-Always run `ansible-lint` and `ansible-playbook --check` before considering a task done.
-Dry-run full: `ansible-playbook -i inventories/rpi/hosts.yml playbooks/rpi.yml --check`.
-Apply full: `ansible-playbook -i inventories/rpi/hosts.yml playbooks/rpi.yml`.
-Syntax check only: `ansible-playbook -i inventories/rpi/hosts.yml playbooks/rpi.yml --syntax-check`.
-Lint: `ansible-lint playbooks/rpi.yml` and `yamllint .` (config in `.yamllint`).
-Single-host check: `ansible-playbook -i inventories/rpi/hosts.yml playbooks/rpi.yml --check --limit <host>`.
-Packer: `packer fmt -recursive packer/` and `packer validate packer/<template>/` before submitting.
-Terraform: `terraform fmt` (run from repo root with `-chdir=terraform`) before submitting when terraform/ changes.
-Run `pre-commit run --all-files` before submitting (hooks: ansible-lint, yamllint, packer-fmt, terraform-fmt, etc.).
-`common_user` defaults to `ansible_user` else `pi`; set per-host in inventory/host_vars; `ansible_user` can be set in hosts.yml.
-Prefer idempotent changes; never commit secrets or host-specific keys; use vault/sops and .gitignore.
-YAML/HCL/JSON: spaces only, newline at EOF, keep lines ≲120 chars.
-Keep comments minimal and purposeful; document new components with nearby README snippets.
-Ansible: keep defaults in roles, host/group vars per env; avoid redefining defaults unnecessarily.
-Maintain role structure (tasks/handlers/defaults/templates); favor handlers for restarts.
-Scripts: POSIX-sh, explicit deps at top, `set -euo pipefail` when sensible.
-Naming: descriptive, lowercase with hyphens/underscores; inventory hostnames match actual hostnames.
-Error handling: fail fast; avoid blindly ignoring tasks; surface why changes are made.
-No Cursor/Copilot rules present as of this file.
-If unsure about infra impact, propose the plan before applying.
+
+## Project Overview
+Home Lab Infrastructure as Code (IaC) repository implementing a GitOps workflow.
+- **Ansible**: Configuration management for Raspberry Pi edge devices, Proxmox hosts, and Ubuntu VMs.
+- **Packer**: Automated VM template generation (Ubuntu 24.04).
+- **Terraform**: Infrastructure provisioning (K3s nodes on Proxmox) and dynamic inventory generation.
+
+## Key Paths
+- **Ansible**: `ansible/`
+  - Inventories:
+    - `inventories/baremetal.yml` (Manually managed Physical hosts)
+    - `inventories/k3s-nodes.yml` (Terraform-generated - **DO NOT EDIT**)
+    - `inventories/all-vms.yml` (VM Group definitions)
+  - Playbooks: `playbooks/rpi.yml`, `playbooks/proxmox.yml`, `playbooks/ubuntu_vms.yml`
+  - Roles: `roles/common`, `roles/vm_disk_expand`, `roles/k3s`
+- **Packer**: `packer/ubuntu-24.04-base/`
+- **Terraform**: `terraform/k3s_nodes/`
+
+## Development Guidelines
+
+### Ansible
+- **Working Directory**: Run all commands from `ansible/`.
+- **Configuration**: `ANSIBLE_CONFIG=ansible/ansible.cfg` is set automatically if running from dir.
+- **Dependencies**: `ansible`, `ansible-lint`, `yamllint`.
+- **Verification Commands**:
+  - **Syntax Check**: `ansible-playbook -i inventories/baremetal.yml playbooks/rpi.yml --syntax-check`
+  - **Dry Run (RPi)**: `ansible-playbook -i inventories/baremetal.yml playbooks/rpi.yml --check`
+  - **Dry Run (VMs)**: `ansible-playbook -i inventories/all-vms.yml -i inventories/k3s-nodes.yml playbooks/ubuntu_vms.yml --check`
+  - **Lint**: `ansible-lint playbooks/*.yml`
+- **Style**:
+  - Keep defaults in `roles/`.
+  - Use `group_vars` for environment specifics (`all.yml`, `rpi.yml`, `proxmox.yml`).
+  - **Security**: SSH keys are currently committed in `group_vars/all.yml` (per user instruction).
+  - **Task Names**: Descriptive and capitalized.
+
+### Packer
+- **Working Directory**: `packer/ubuntu-24.04-base/`.
+- **Commands**:
+  - `packer init .`
+  - `packer validate .`
+  - `packer build .`
+- **Formatting**: `packer fmt -recursive .`
+- **Secrets**: Use `variables.auto.pkrvars.hcl` for local secrets (git-ignored).
+
+### Terraform
+- **Working Directory**: `terraform/k3s_nodes/`.
+- **Commands**:
+  - `terraform init`
+  - `terraform fmt`
+  - `terraform plan`
+  - `terraform apply`
+- **Integration**: `terraform apply` automatically updates `ansible/inventories/k3s-nodes.yml`.
+
+## Quality Assurance
+- **Pre-commit**: **MANDATORY**. Run `pre-commit run --all-files` before submitting.
+  - Includes: `trailing-whitespace`, `end-of-file-fixer`, `yamllint`, `ansible-lint`, `packer-fmt`, `terraform-fmt`.
+- **Formatting**:
+  - **Newlines**: All files MUST end with a single newline character (`\n`).
+  - YAML: 2 spaces indent, no tabs, ~120 char line limit.
+  - HCL: Standard Terraform/Packer formatting.
+  - Shell: POSIX-sh compliant, `set -euo pipefail`.
+
+## General Rules
+- **Idempotency**: All scripts and playbooks must be idempotent.
+- **Naming**: Descriptive, lowercase with hyphens/underscores (e.g., `k3s-node-01`).
+- **Error Handling**: Fail fast. Surface errors immediately.
+- **Generated Files**: **NEVER** manually modify `ansible/inventories/k3s-nodes.yml` or `terraform.tfstate`.
+
+## Environment
+- **Platform**: Linux
+- **Tools**: Ansible Core, Packer >=1.10, Terraform >=1.0
