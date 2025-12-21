@@ -1,18 +1,18 @@
 ---
+- name: Check if there are datasets to fix
+  ansible.builtin.set_fact:
+    datasets_to_fix_exist: "{{ (proxmox_zfs_thin_datasets_to_fix | default([]) | length) > 0 }}"
+
 - name: Skip fix if no datasets need thin provisioning
   ansible.builtin.debug:
     msg: "No datasets require refreservation changes."
-  when:
-    - proxmox_zfs_thin_datasets_to_fix | default([]) | length == 0
+  when: not datasets_to_fix_exist
   changed_when: false
 
 - name: Enforce thin provisioning by removing refreservation (ONLINE pools only)
   ansible.builtin.shell: |
     set -eo pipefail
-
-    # Using AWK to reliably extract the first field (dataset name) regardless of tabs/spaces
-    full_item="{{ item }}"
-    ds=$(echo "$full_item" | awk '{print $1}')
+    ds="{{ item.name }}"
 
     # Safety check
     if [ -z "$ds" ]; then
@@ -31,7 +31,7 @@
     executable: /bin/bash
   loop: "{{ proxmox_zfs_thin_datasets_to_fix | default([]) }}"
   when:
-    - (proxmox_zfs_thin_datasets_to_fix | default([]) | length) > 0
+    - datasets_to_fix_exist
     - not ansible_check_mode
   changed_when: true
 
@@ -42,7 +42,7 @@
       datasets.
       Run without --check to apply changes.
   when:
-    - (proxmox_zfs_thin_datasets_to_fix | default([]) | length) > 0
+    - datasets_to_fix_exist
     - ansible_check_mode
   changed_when: false
 
@@ -50,14 +50,14 @@
   ansible.builtin.shell: |
     set -eo pipefail
     pool="{{ item }}"
-    zfs get -r -H -o name,value refreservation "${pool}"
+    zfs get -r -H -o name,value refreservation "${pool}" | \
+    awk '$2 != "none" && $2 != "-" {print $0}'
   args:
     executable: /bin/bash
   loop: "{{ proxmox_zfs_thin_pools }}"
   register: proxmox_zfs_postcheck
   changed_when: false
-  when:
-    - (proxmox_zfs_thin_datasets_to_fix | default([]) | length) > 0
+  when: datasets_to_fix_exist
 
 - name: Post-check report
   ansible.builtin.debug:
@@ -74,5 +74,4 @@
       {% endfor %}
       {% endif %}
   changed_when: false
-  when:
-    - (proxmox_zfs_thin_datasets_to_fix | default([]) | length) > 0
+  when: datasets_to_fix_exist

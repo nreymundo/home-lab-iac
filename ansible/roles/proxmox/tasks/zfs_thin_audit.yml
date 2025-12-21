@@ -48,11 +48,11 @@
   ansible.builtin.debug:
     msg: |
       Pool summary:
-      {% for i in range(proxmox_zfs_thin_pools | length) %}
-      {% set health_out = proxmox_zfs_pool_health.results[i].stdout | default('') %}
-      {% set cap_out = proxmox_zfs_pool_capacity.results[i].stdout | default('') %}
-      - {{ proxmox_zfs_thin_pools[i] }}: Health={{ health_out.split('\t')[-1] | default('Unknown') }},
-        Capacity={{ cap_out.split('\t')[-1] | default('Unknown') }}
+      {% for pool, health_res, cap_res in
+         proxmox_zfs_thin_pools | zip(proxmox_zfs_pool_health.results, proxmox_zfs_pool_capacity.results) %}
+      - {{ pool }}:
+          Health={{ (health_res.stdout.split('\t')[-1]) | default('Unknown') }},
+          Capacity={{ (cap_res.stdout.split('\t')[-1]) | default('Unknown') }}
       {% endfor %}
 
 - name: Discover datasets/zvols with refreservation != none (excluding snapshots)
@@ -69,12 +69,17 @@
 
 - name: Build consolidated findings list
   ansible.builtin.set_fact:
-    proxmox_zfs_thin_datasets_to_fix: >-
-      {{ proxmox_zfs_refreservation_findings.results
-         | selectattr('stdout_lines', 'defined')
-         | map(attribute='stdout_lines')
-         | sum(start=[]) }}
-
+    proxmox_zfs_thin_datasets_to_fix: "{{ findings }}"
+  vars:
+    findings: >-
+      {%- set results = [] -%}
+      {%- for res in proxmox_zfs_refreservation_findings.results -%}
+        {%- for line in res.stdout_lines -%}
+          {%- set parts = line.split('\t') -%}
+          {%- set _ = results.append({'name': parts[0], 'value': parts[1]}) -%}
+        {%- endfor -%}
+      {%- endfor -%}
+      {{ results }}
 
 - name: Audit report (non-thin datasets)
   ansible.builtin.debug:
@@ -84,13 +89,8 @@
       - No datasets with refreservation set (thin provisioning already in effect).
       {% else %}
       - The following datasets/zvols have refreservation != none (NOT thin):
-      {% for line in proxmox_zfs_thin_datasets_to_fix %}
-      {% set parts = line.split('\t') %}
-      {% if parts | length >= 2 %}
-        * {{ parts[0] }} (refreservation={{ parts[1] }})
-      {% else %}
-        * {{ line }} (parse error: expected tab-separated output)
-      {% endif %}
+      {% for item in proxmox_zfs_thin_datasets_to_fix %}
+        * {{ item.name }} (refreservation={{ item.value }})
       {% endfor %}
       {% endif %}
   changed_when: false
