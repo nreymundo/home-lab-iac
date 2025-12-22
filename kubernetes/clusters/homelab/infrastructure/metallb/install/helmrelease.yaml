@@ -7,9 +7,10 @@ spec:
   interval: 30m
   targetNamespace: metallb-system
   install:
-    createNamespace: true
+    crds: Create
   upgrade:
     cleanupOnFail: true
+    crds: CreateReplace
   chart:
     spec:
       chart: metallb
