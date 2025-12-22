@@ -6,3 +6,4 @@ resources:
 - sources-kustomization.yaml
 - metallb-install-kustomization.yaml
 - metallb-config-kustomization.yaml
+- traefik-install-kustomization.yaml
