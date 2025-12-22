@@ -14,9 +14,16 @@ spec:
         name: traefik
         namespace: flux-system
       interval: 30m
-      version: "*"
+      version: "38.x"
   install:
     createNamespace: true
   values:
+    ingressClass:
+      enabled: true
+      isDefaultClass: true
+      name: traefik
+    providers:
+      kubernetesIngress:
+        ingressClass: traefik
     service:
       type: LoadBalancer
