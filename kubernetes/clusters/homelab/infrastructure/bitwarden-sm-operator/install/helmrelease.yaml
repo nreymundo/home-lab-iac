@@ -6,7 +6,8 @@ metadata:
   namespace: flux-system
 spec:
   interval: 30m
-  targetNamespace: sm-operator-system
+  releaseName: bitwarden-sop
+  targetNamespace: bitwarden-sop-system
   chart:
     spec:
       chart: sm-operator
