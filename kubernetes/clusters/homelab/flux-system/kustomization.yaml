@@ -7,3 +7,4 @@ resources:
 - metallb-install-kustomization.yaml
 - metallb-config-kustomization.yaml
 - traefik-install-kustomization.yaml
+- bitwarden-sm-operator-install-kustomization.yaml
