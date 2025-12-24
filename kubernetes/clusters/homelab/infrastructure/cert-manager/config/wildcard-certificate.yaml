@@ -6,6 +6,9 @@ metadata:
   namespace: cert-manager
 spec:
   secretName: wildcard-tls
+  secretTemplate:
+    annotations:
+      replicator.v1.mittwald.de/replicate-to: traefik
   duration: 2160h
   renewBefore: 720h
   dnsNames:
