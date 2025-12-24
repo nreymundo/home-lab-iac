@@ -7,15 +7,15 @@ I know the files take IDs and not the actual secrets or credentials and should t
 
 ## Cert Manager Secrets
 
-Creates `cert-manager-secrets` in the `cert-manager` namespace via the Bitwarden operator.
-Flux substitutions for cert-manager config read from this Secret via `substituteFrom.namespace`,
-and cert-manager reads the Cloudflare API token from the same Secret at runtime.
+Creates `cert-manager-secrets` in both `cert-manager` and `flux-system` via the Bitwarden operator.
+Flux substitutions for cert-manager config read from the `flux-system` Secret,
+and cert-manager reads the Cloudflare API token from the `cert-manager` Secret at runtime.
 
 Steps:
 
 - Copy `bitwarden-cert-manager-secrets.sample.yaml` to `bitwarden-cert-manager-secrets.yaml`.
 - Edit `bitwarden-cert-manager-secrets.yaml` and replace the placeholder IDs.
-- Ensure the Bitwarden auth token Secret exists in `cert-manager`.
+- Ensure the Bitwarden auth token Secret exists in both `cert-manager` and `flux-system`.
 - We're using Kubernetes Replicator to share the machine user for Bitwarden accross namespaces, annotate the source Secret to include `cert-manager` as a target, for example: `replicator.v1.mittwald.de/replicate-to: flux-system,cert-manager`.
 - `kubectl apply -f bitwarden-cert-manager-secrets.yaml`
 
