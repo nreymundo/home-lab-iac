@@ -5,6 +5,8 @@ metadata:
   name: kubernetes-replicator
   namespace: flux-system
 spec:
+  dependsOn:
+    - name: sources
   interval: 10m
   path: ./kubernetes/clusters/homelab/infrastructure/kubernetes-replicator
   prune: true
