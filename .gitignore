@@ -54,7 +54,8 @@ id_ed25519
 *.img
 
 # Kubernetes
-kubernetes/clusters/homelab/infrastructure/cert-manager/config/params.env
+# Manual secrets manifests
+kubernetes/clusters/homelab/secrets/bitwarden-cert-manager-secrets.yaml
 
 # Tests and tooling
 .coverage

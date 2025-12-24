@@ -17,3 +17,4 @@ spec:
     substituteFrom:
       - kind: Secret
         name: cert-manager-secrets
+        namespace: cert-manager
