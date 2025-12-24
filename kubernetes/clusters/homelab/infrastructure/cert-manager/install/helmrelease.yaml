@@ -18,6 +18,10 @@ spec:
       version: "v1.19.*"
   install:
     crds: Create
+    remediation:
+      retries: 3
   upgrade:
     cleanupOnFail: true
     crds: CreateReplace
+    remediation:
+      retries: 3
