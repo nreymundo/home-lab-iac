@@ -10,6 +10,8 @@ I know the files take IDs and not the actual secrets or credentials and should t
 Creates `cert-manager-secrets` in both `cert-manager` and `flux-system` via the Bitwarden operator.
 Flux substitutions for cert-manager config read from the `flux-system` Secret,
 and cert-manager reads the Cloudflare API token from the `cert-manager` Secret at runtime.
+The `flux-system` Secret uses `ACME_EMAIL` and `DOMAIN_NAME` keys because Flux envsubst
+requires variable names without hyphens.
 
 Steps:
 
