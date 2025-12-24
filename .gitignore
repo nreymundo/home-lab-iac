@@ -53,6 +53,9 @@ id_ed25519
 *.qcow2
 *.img
 
+# Kubernetes
+kubernetes/clusters/homelab/infrastructure/cert-manager/config/params.env
+
 # Tests and tooling
 .coverage
 .tox/
