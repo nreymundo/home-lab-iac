@@ -53,6 +53,10 @@ id_ed25519
 *.qcow2
 *.img
 
+# Kubernetes
+# Manual secrets manifests
+kubernetes/clusters/homelab/secrets/bitwarden-cert-manager-secrets.yaml
+
 # Tests and tooling
 .coverage
 .tox/
