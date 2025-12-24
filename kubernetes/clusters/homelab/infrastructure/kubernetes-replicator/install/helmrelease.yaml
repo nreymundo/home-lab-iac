@@ -25,7 +25,5 @@ spec:
     # Adding some default values for guidance
     serviceAccount:
       create: true
-      name: ""
-      annotations: {}
     rbac:
       create: true
