@@ -14,6 +14,8 @@ spec:
   dnsNames:
     - "${DOMAIN_NAME}"
     - "*.${DOMAIN_NAME}"
+    - "lan.${DOMAIN_NAME}"
+    - "*.lan.${DOMAIN_NAME}"
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
