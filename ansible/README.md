@@ -39,7 +39,8 @@ ansible/
 │   └── ubuntu_vms.yml           # Ubuntu VM configuration
 ├── roles/
 │   ├── common/                  # Base system setup
-│   ├── vm_disk_expand/          # LVM disk expansion
+│   ├── vms/                     # VM-specific roles
+│   │   └── disk_expand/         # LVM disk expansion
 │   └── k3s/                     # K3s Kubernetes setup
 └── ansible.cfg                  # Ansible configuration
 ```
@@ -146,11 +147,11 @@ Provides baseline system configuration with feature toggles:
 Expands LVM-based root filesystems:
 
 **Key Variables:**
-- `vm_disk_expand_rootfs_expand`: Enable/disable expansion
-- `vm_disk_expand_rootfs_device`: Root disk device
-- `vm_disk_expand_rootfs_partition`: Root partition number
-- `vm_disk_expand_rootfs_vg`: LVM volume group name
-- `vm_disk_expand_rootfs_lv`: LVM logical volume name
+- `disk_expand_rootfs_expand`: Enable/disable expansion
+- `disk_expand_rootfs_device`: Root disk device
+- `disk_expand_rootfs_partition`: Root partition number
+- `disk_expand_rootfs_vg`: LVM volume group name
+- `disk_expand_rootfs_lv`: LVM logical volume name
 
 ### ☸️ K3s Role
 Installs and configures K3s Kubernetes distribution:

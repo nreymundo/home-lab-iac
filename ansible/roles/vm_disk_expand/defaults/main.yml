@@ -1,8 +1,0 @@
----
-# Root filesystem expansion (disabled by default; override per-group)
-# Partition grows via growpart, PV via pvresize, LV/FS via community.general.lvol
-vm_disk_expand_rootfs_expand: false
-vm_disk_expand_rootfs_device: /dev/sda
-vm_disk_expand_rootfs_partition: 3
-vm_disk_expand_rootfs_vg: ubuntu-vg
-vm_disk_expand_rootfs_lv: ubuntu-lv
