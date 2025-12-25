@@ -4,6 +4,7 @@ resources:
   - bitwarden-helmrepo.yaml
   - cert-manager-helmrepo.yaml
   - external-dns-helmrepo.yaml
+  - longhorn-helmrepo.yaml
   - metallb-helmrepo.yaml
   - mittwald-helmrepo.yaml
   - traefik-helmrepo.yaml

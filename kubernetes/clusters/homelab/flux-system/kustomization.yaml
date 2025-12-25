@@ -15,3 +15,5 @@ resources:
   - cert-manager-install-kustomization.yaml
   - cert-manager-config-kustomization.yaml
   - external-dns-install-kustomization.yaml
+  - longhorn-install-kustomization.yaml
+  - longhorn-config-kustomization.yaml
