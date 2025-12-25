@@ -1,12 +1,12 @@
 ---
 - name: Check if there are datasets to fix
   ansible.builtin.set_fact:
-    datasets_to_fix_exist: "{{ (proxmox_zfs_thin_datasets_to_fix | default([]) | length) > 0 }}"
+    proxmox_datasets_to_fix_exist: "{{ (proxmox_zfs_thin_datasets_to_fix | default([]) | length) > 0 }}"
 
 - name: Skip fix if no datasets need thin provisioning
   ansible.builtin.debug:
     msg: "No datasets require refreservation changes."
-  when: not datasets_to_fix_exist
+  when: not proxmox_datasets_to_fix_exist
   changed_when: false
 
 - name: Enforce thin provisioning by removing refreservation (ONLINE pools only)
@@ -31,7 +31,7 @@
     executable: /bin/bash
   loop: "{{ proxmox_zfs_thin_datasets_to_fix | default([]) }}"
   when:
-    - datasets_to_fix_exist
+    - proxmox_datasets_to_fix_exist
     - not ansible_check_mode
   changed_when: true
 
@@ -42,7 +42,7 @@
       datasets.
       Run without --check to apply changes.
   when:
-    - datasets_to_fix_exist
+    - proxmox_datasets_to_fix_exist
     - ansible_check_mode
   changed_when: false
 
@@ -57,7 +57,7 @@
   loop: "{{ proxmox_zfs_thin_pools }}"
   register: proxmox_zfs_postcheck
   changed_when: false
-  when: datasets_to_fix_exist
+  when: proxmox_datasets_to_fix_exist
 
 - name: Post-check report
   ansible.builtin.debug:
@@ -74,4 +74,4 @@
       {% endfor %}
       {% endif %}
   changed_when: false
-  when: datasets_to_fix_exist
+  when: proxmox_datasets_to_fix_exist
