@@ -26,4 +26,3 @@ spec:
   tls:
     - hosts:
         - longhorn.lan.${DOMAIN_NAME}
-      secretName: wildcard-tls
