@@ -27,3 +27,5 @@ spec:
         ingressClass: traefik
     service:
       type: LoadBalancer
+      spec:
+        externalTrafficPolicy: Local
