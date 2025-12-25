@@ -35,7 +35,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
     traefik.ingress.kubernetes.io/service.serversscheme: https
-    traefik.ingress.kubernetes.io/service.serverstransport: lan-https-insecure@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:

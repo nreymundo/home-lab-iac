@@ -13,12 +13,12 @@ repos:
         alias: check-yaml-secrets
         name: check-yaml (manual secrets)
         args: ["--allow-multiple-documents"]
-        files: ^kubernetes/clusters/homelab/secrets/
+        files: ^kubernetes/clusters/homelab/secrets/.*\.ya?ml$
       - id: check-yaml
         alias: check-yaml-external-proxy
         name: check-yaml (external proxy)
         args: ["--allow-multiple-documents"]
-        files: ^kubernetes/clusters/homelab/apps/external-proxy/
+        files: ^kubernetes/clusters/homelab/apps/external-proxy/.*\.ya?ml$
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
     hooks:
