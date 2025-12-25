@@ -1,12 +1,5 @@
 # Environment inputs:
-# - Provider auth/endpoint: PM_API_URL, PM_API_TOKEN_ID, PM_API_TOKEN_SECRET
-# - Terraform variables: TF_VAR_proxmox_api_url (optional override) and TF_VAR_ssh_public_keys
-
-# Proxmox API Configuration
-variable "proxmox_api_url" {
-  type        = string
-  description = "Proxmox VE API URL"
-}
+# - Terraform variables: TF_VAR_ssh_public_keys
 
 # SSH Public Keys - LIST VARIABLE
 variable "ssh_public_keys" {
