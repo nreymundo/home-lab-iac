@@ -6,9 +6,9 @@ metadata:
   namespace: external-proxy
 spec:
   ports:
-    - name: https
-      port: 443
-      targetPort: 443
+    - name: http
+      port: 80
+      targetPort: 80
 ---
 apiVersion: v1
 kind: Endpoints
@@ -46,7 +46,7 @@ spec:
               service:
                 name: pihole
                 port:
-                  name: https
+                  name: http
   tls:
     - hosts:
         - pihole.lan.${DOMAIN_NAME}
