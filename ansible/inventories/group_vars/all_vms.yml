@@ -12,3 +12,7 @@ disk_expand_rootfs_device: /dev/sda
 disk_expand_rootfs_partition: 3
 disk_expand_rootfs_vg: ubuntu-vg
 disk_expand_rootfs_lv: ubuntu-lv
+
+# Extra packages for all VMs
+common_extra_packages:
+  - nfs-common

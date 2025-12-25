@@ -86,7 +86,7 @@ ansible-playbook -i inventories/all-vms.yml -i inventories/k3s-nodes.yml playboo
 - Automatic root filesystem expansion
 - QEMU guest agent setup
 - Cloud-init integration
-- K3s prerequisites
+- NFS client support
 
 ## Inventory Management
 
@@ -160,6 +160,10 @@ Installs and configures K3s Kubernetes distribution:
 - `k3s_version`: K3s release version
 - `k3s_server_config`: Server configuration options
 - `k3s_cluster_config`: Cluster-wide settings
+
+**Storage Dependencies:**
+- Installs `open-iscsi`, `cryptsetup`, and `iscsid` service for CSI storage support
+- NFS support provided by `nfs-common` package (installed on all VMs)
 
 ## Platform Behavior Matrix
 
