@@ -4,6 +4,9 @@ kind: Service
 metadata:
   name: pihole
   namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
 spec:
   ports:
     - name: https
@@ -34,7 +37,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
-    traefik.ingress.kubernetes.io/service.serverstransports: traefik-lan-https-insecure@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
