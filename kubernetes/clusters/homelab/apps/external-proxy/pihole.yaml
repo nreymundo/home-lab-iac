@@ -37,14 +37,13 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
-    traefik.ingress.kubernetes.io/service.serverstransports: traefik-lan-https-insecure@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
     - host: pihole.lan.${DOMAIN_NAME}
       http:
         paths:
-          - path: /admin/
+          - path: /
             pathType: Prefix
             backend:
               service:
