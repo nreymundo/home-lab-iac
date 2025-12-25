@@ -34,7 +34,7 @@ spec:
     extraArgs:
       - --ingress-class=traefik
       - --label-filter=external-dns=internal
-      - --pihole-server=https://192.168.10.2/api
+      - --pihole-server=https://192.168.10.2
       - --pihole-api-version=6
       - --pihole-tls-skip-verify
     env:
