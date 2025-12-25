@@ -25,6 +25,14 @@ spec:
     providers:
       kubernetesIngress:
         ingressClass: traefik
+      kubernetesCRD:
+        allowCrossNamespace: true
+    ports:
+      web:
+        expose:
+          default: false
+    additionalArguments:
+      - --entrypoints.web.address=:0
     service:
       type: LoadBalancer
       spec:
