@@ -9,7 +9,7 @@
     update_cache: true
 
 - name: Enable and start iscsid service
-  ansible.builtin.systemd:
+  ansible.builtin.systemd_service:
     name: iscsid
     state: started
     enabled: true
@@ -125,7 +125,7 @@
       notify: Restart k3s
 
     - name: Enable and start K3s service (Seed)
-      ansible.builtin.systemd:
+      ansible.builtin.systemd_service:
         name: k3s
         state: started
         enabled: true
@@ -225,7 +225,7 @@
 
     - name: Enable and start K3s service (Secondary)
 
-      ansible.builtin.systemd:
+      ansible.builtin.systemd_service:
         name: k3s
         state: started
         enabled: true
@@ -256,11 +256,11 @@
         workloads=disabled:NoSchedule --overwrite
       loop: "{{ groups['k3s_cluster'] }}"
       when: not (hostvars[item]['k3s_allow_workloads'] | default(true) | bool)
-      register: _taint_add
-      changed_when: "'tainted' in _taint_add.stdout"
+      register: k3s_taint_add
+      changed_when: "'tainted' in k3s_taint_add.stdout"
       failed_when:
-        - _taint_add.rc != 0
-        - "'already has' not in _taint_add.stderr"
+        - k3s_taint_add.rc != 0
+        - "'already has' not in k3s_taint_add.stderr"
 
     - name: Remove workload taints
       ansible.builtin.command: >-
@@ -268,8 +268,8 @@
         workloads=disabled:NoSchedule-
       loop: "{{ groups['k3s_cluster'] }}"
       when: (hostvars[item]['k3s_allow_workloads'] | default(true) | bool)
-      register: _taint_remove
-      changed_when: "'untainted' in _taint_remove.stdout"
+      register: k3s_taint_remove
+      changed_when: "'untainted' in k3s_taint_remove.stdout"
       failed_when:
-        - _taint_remove.rc != 0
-        - "'not found' not in _taint_remove.stderr"
+        - k3s_taint_remove.rc != 0
+        - "'not found' not in k3s_taint_remove.stderr"
