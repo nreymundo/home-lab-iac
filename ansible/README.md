@@ -40,7 +40,8 @@ ansible/
 ├── roles/
 │   ├── common/                  # Base system setup
 │   ├── vms/                     # VM-specific roles
-│   │   └── disk_expand/         # LVM disk expansion
+│   │   ├── disk_expand/         # LVM rootfs expansion
+│   │   └── secondary_disk/      # Secondary data disk setup
 │   └── k3s/                     # K3s Kubernetes setup
 └── ansible.cfg                  # Ansible configuration
 ```
@@ -152,6 +153,24 @@ Expands LVM-based root filesystems:
 - `disk_expand_rootfs_partition`: Root partition number
 - `disk_expand_rootfs_vg`: LVM volume group name
 - `disk_expand_rootfs_lv`: LVM logical volume name
+
+### 💾 Secondary Disk Setup
+Configures secondary data disk for K3s Longhorn storage:
+
+**Key Variables:**
+- `secondary_disk_device`: Secondary disk device path (default: /dev/sdb)
+- `secondary_disk_partition`: Partition device path (default: /dev/sdb1)
+- `secondary_disk_mountpoint`: Mount point (default: /var/lib/longhorn)
+- `secondary_disk_fstype`: Filesystem type (default: ext4)
+- `secondary_disk_mountopts`: Mount options (default: defaults,noatime)
+- `secondary_disk_fs_label`: Filesystem label (default: longhorn)
+
+**Features:**
+- Idempotent partition creation
+- Filesystem type verification (avoids reformatting)
+- UUID-based fstab mounting
+- Automatic mount point creation
+- Only runs on k3s_nodes (Proxmox VMs)
 
 ### ☸️ K3s Role
 Installs and configures K3s Kubernetes distribution:

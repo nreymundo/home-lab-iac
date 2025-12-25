@@ -1,0 +1,8 @@
+---
+# Secondary disk configuration for K3s Longhorn storage
+secondary_disk_device: "/dev/sdb"
+secondary_disk_partition: "/dev/sdb1"
+secondary_disk_mountpoint: "/var/lib/longhorn"
+secondary_disk_fstype: "ext4"
+secondary_disk_mountopts: "defaults,noatime"
+secondary_disk_fs_label: "longhorn"
