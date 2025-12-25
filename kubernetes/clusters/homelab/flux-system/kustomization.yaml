@@ -13,3 +13,4 @@ resources:
   - kubernetes-replicator-install-kustomization.yaml
   - cert-manager-install-kustomization.yaml
   - cert-manager-config-kustomization.yaml
+  - external-dns-install-kustomization.yaml

@@ -1,9 +1,20 @@
 # Manual secrets
 
-This folder stores sample manifests for secrets that must be created manually in the cluster.
+This folder stores sample manifests for secrets that must be created manually in cluster.
 Values in these files are placeholders.
 
 I know the files take IDs and not the actual secrets or credentials and should therefore be safe to commit but I'm just being extra paranoid on this.
+
+## Bitwarden Auth Token Replication
+
+We use mittwald Kubernetes Replicator to copy the `bw-access-token` Secret into any namespace that needs Bitwarden secrets. Annotate the source Secret to include all required targets, for example:
+
+```sh
+kubectl -n <source-namespace> annotate secret bw-access-token \
+  'replicator.v1.mittwald.de/replicate-to=flux-system,cert-manager,external-dns' --overwrite
+```
+
+Update the list as you add/remove namespaces that need Bitwarden-managed secrets.
 
 ## Cert Manager Secrets
 
@@ -18,7 +29,6 @@ Steps:
 - Copy `bitwarden-cert-manager-secrets.sample.yaml` to `bitwarden-cert-manager-secrets.yaml`.
 - Edit `bitwarden-cert-manager-secrets.yaml` and replace the placeholder IDs.
 - Ensure the Bitwarden auth token Secret exists in both `cert-manager` and `flux-system`.
-- We're using Kubernetes Replicator to share the machine user for Bitwarden accross namespaces, annotate the source Secret to include `cert-manager` as a target, for example: `replicator.v1.mittwald.de/replicate-to: flux-system,cert-manager`.
 - `kubectl apply -f bitwarden-cert-manager-secrets.yaml`
 
 Example:
@@ -27,4 +37,23 @@ cp bitwarden-cert-manager-secrets.sample.yaml bitwarden-cert-manager-secrets.yam
 vim bitwarden-cert-manager-secrets.yaml
 kubectl apply -f bitwarden-cert-manager-secrets.yaml
 kubectl -n cert-manager get secret cert-manager-secrets
+```
+
+## ExternalDNS Pi-hole Secret
+
+Creates `external-dns-pihole` in `external-dns` via the Bitwarden operator to supply the Pi-hole admin password for ExternalDNS.
+
+Steps:
+
+- Copy `bitwarden-external-dns-pihole.sample.yaml` to `bitwarden-external-dns-pihole.yaml`.
+- Edit `bitwarden-external-dns-pihole.yaml` and replace the placeholder Bitwarden organization/secret IDs.
+- Ensure the Bitwarden auth token Secret exists in the `external-dns` namespace.
+- `kubectl apply -f bitwarden-external-dns-pihole.yaml`
+
+Example:
+```sh
+cp bitwarden-external-dns-pihole.sample.yaml bitwarden-external-dns-pihole.yaml
+vim bitwarden-external-dns-pihole.yaml
+kubectl apply -f bitwarden-external-dns-pihole.yaml
+kubectl -n external-dns get secret external-dns-pihole
 ```
