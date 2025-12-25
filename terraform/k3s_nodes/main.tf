@@ -50,6 +50,19 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
           emulatessd = true
         }
       }
+      dynamic "scsi1" {
+        for_each = var.secondary_disk_enabled ? [1] : []
+        content {
+          disk {
+            storage    = var.secondary_disk_storage_pool
+            size       = "${var.secondary_disk_size_gb}G"
+            cache      = "writeback"
+            iothread   = true
+            discard    = true
+            emulatessd = true
+          }
+        }
+      }
     }
     ide {
       ide3 {
