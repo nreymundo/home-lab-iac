@@ -14,7 +14,7 @@ spec:
         name: external-dns
         namespace: flux-system
       interval: 30m
-      version: "1.20.x"
+      version: "1.19.0"
   values:
     provider:
       name: pihole
