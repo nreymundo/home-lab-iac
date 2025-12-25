@@ -4,4 +4,4 @@
   become: true
   roles:
     - common
-    - vm_disk_expand
+    - disk_expand

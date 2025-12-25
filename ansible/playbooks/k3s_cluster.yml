@@ -5,4 +5,5 @@
   gather_facts: true
   roles:
     - common
+    - { role: secondary_disk, when: "'k3s_nodes' in group_names" }
     - k3s

@@ -4,9 +4,16 @@
     name:
       - curl
       - open-iscsi
-      - nfs-common
+      - cryptsetup
     state: present
     update_cache: true
+
+- name: Enable and start iscsid service
+  ansible.builtin.systemd:
+    name: iscsid
+    state: started
+    enabled: true
+    daemon_reload: true
 
 - name: Enable cgroups for Raspberry Pi
   when: "'rpi' in group_names"

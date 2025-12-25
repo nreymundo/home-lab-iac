@@ -1,0 +1,101 @@
+---
+- name: Configure secondary disk for Longhorn storage
+  block:
+    - name: Check if disk device exists
+      ansible.builtin.stat:
+        path: "{{ secondary_disk_device }}"
+      register: secondary_disk_stat
+
+    - name: Skip disk configuration if device doesn't exist
+      ansible.builtin.debug:
+        msg: "Disk {{ secondary_disk_device }} not found, skipping secondary disk configuration"
+      when: not secondary_disk_stat.stat.exists
+
+    - name: Fail if disk should exist but doesn't
+      ansible.builtin.fail:
+        msg: "Secondary disk {{ secondary_disk_device }} is required but not found on this host"
+      when:
+        - not secondary_disk_stat.stat.exists
+        - "'k3s_nodes' in group_names"
+
+    - name: Read partition information
+      community.general.parted:
+        device: "{{ secondary_disk_device }}"
+        unit: GiB
+      register: secondary_disk_parted_info
+      changed_when: false
+      when: secondary_disk_stat.stat.exists
+
+    - name: Check if partition 1 exists
+      community.general.parted:
+        device: "{{ secondary_disk_device }}"
+        number: 1
+        unit: GiB
+      register: secondary_disk_partition_info
+      changed_when: false
+      failed_when: false
+      when: secondary_disk_stat.stat.exists
+
+    - name: Create partition using entire disk
+      community.general.parted:
+        device: "{{ secondary_disk_device }}"
+        number: 1
+        label: gpt
+        state: present
+        part_start: "0%"
+        part_end: "100%"
+        align: optimal
+      when:
+        - secondary_disk_stat.stat.exists
+        - secondary_disk_partition_info.partitions is not defined
+          or secondary_disk_partition_info.partitions | length == 0
+
+    - name: Wait for device node to be ready
+      ansible.builtin.command:
+        cmd: udevadm settle
+      changed_when: false
+      when: secondary_disk_stat.stat.exists
+
+    - name: Check current filesystem type
+      ansible.builtin.command:
+        cmd: "blkid -s TYPE -o value {{ secondary_disk_partition }}"
+      register: secondary_disk_current_fs
+      changed_when: false
+      failed_when: false
+      when: secondary_disk_stat.stat.exists
+
+    - name: Format partition as ext4 with label
+      community.general.filesystem:
+        dev: "{{ secondary_disk_partition }}"
+        fstype: "{{ secondary_disk_fstype }}"
+        opts: "-L {{ secondary_disk_fs_label }}"
+      when:
+        - secondary_disk_stat.stat.exists
+        - secondary_disk_current_fs.stdout != secondary_disk_fstype or secondary_disk_current_fs.rc != 0
+
+    - name: Get disk UUID
+      ansible.builtin.command:
+        cmd: "blkid -s UUID -o value {{ secondary_disk_partition }}"
+      register: secondary_disk_uuid
+      changed_when: false
+      when: secondary_disk_stat.stat.exists
+
+    - name: Create mount point directory
+      ansible.builtin.file:
+        path: "{{ secondary_disk_mountpoint }}"
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+      when: secondary_disk_stat.stat.exists
+
+    - name: Configure fstab and mount disk
+      ansible.posix.mount:
+        path: "{{ secondary_disk_mountpoint }}"
+        src: "UUID={{ secondary_disk_uuid.stdout }}"
+        fstype: "{{ secondary_disk_fstype }}"
+        opts: "{{ secondary_disk_mountopts }}"
+        state: mounted
+        dump: '0'
+        passno: '2'
+      when: secondary_disk_stat.stat.exists
