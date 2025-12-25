@@ -8,15 +8,17 @@ repos:
       - id: mixed-line-ending
       - id: check-added-large-files
       - id: check-yaml
-        exclude: ^kubernetes/clusters/homelab/(secrets|flux-system)/
+        exclude: ^kubernetes/clusters/homelab/(secrets|flux-system|apps/external-proxy)/
       - id: check-yaml
+        alias: check-yaml-secrets
         name: check-yaml (manual secrets)
         args: ["--allow-multiple-documents"]
-        files: ^kubernetes/clusters/homelab/secrets/.*\\.ya?ml$
+        files: ^kubernetes/clusters/homelab/secrets/
       - id: check-yaml
+        alias: check-yaml-external-proxy
         name: check-yaml (external proxy)
         args: ["--allow-multiple-documents"]
-        files: ^kubernetes/clusters/homelab/apps/external-proxy/.*\\.ya?ml$
+        files: ^kubernetes/clusters/homelab/apps/external-proxy/
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
     hooks:

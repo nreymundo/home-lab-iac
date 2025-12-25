@@ -9,6 +9,7 @@ resources:
   - metallb-config-kustomization.yaml
   - traefik-install-kustomization.yaml
   - traefik-config-kustomization.yaml
+  - external-proxy-kustomization.yaml
   - bitwarden-sm-operator-install-kustomization.yaml
   - kubernetes-replicator-install-kustomization.yaml
   - cert-manager-install-kustomization.yaml

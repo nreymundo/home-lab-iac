@@ -4,3 +4,5 @@ kind: Kustomization
 
 resources:
   - tlsstore-default.yaml
+  - lan-allowlist-middleware.yaml
+  - lan-https-insecure.yaml
