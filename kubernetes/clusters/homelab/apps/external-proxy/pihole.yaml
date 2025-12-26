@@ -36,7 +36,9 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      traefik-lan-allowlist@kubernetescrd,
+      traefik-authentik@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
