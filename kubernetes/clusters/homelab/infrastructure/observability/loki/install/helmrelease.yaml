@@ -1,0 +1,88 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: loki
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: observability
+  chart:
+    spec:
+      chart: loki
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 30m
+      version: "6.49.0"
+  values:
+    deploymentMode: SingleBinary
+    fullnameOverride: loki
+    loki:
+      storage:
+        type: filesystem
+      commonConfig:
+        replication_factor: 1
+        retention_period: 72h
+        reject_old_samples: true
+        reject_old_samples_max_age: 72h
+      rulerConfig:
+        enable_alertmanager_discovery: false
+      schemaConfig:
+        configs:
+          - from: "2024-01-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: loki_index_
+              period: 24h
+      compactor:
+        retention_enabled: true
+        delete_request_cancel_period: 24h
+        retention_delete_delay: 2h
+    singleBinary:
+      replicas: 1
+      persistence:
+        storageClass: longhorn
+        size: 20Gi
+        annotations:
+          longhorn.io/numberOfReplicas: "1"
+      # Resources - uncomment if needed for production
+      # resources:
+      #   limits:
+      #     cpu: 1000m
+      #     memory: 1Gi
+      #   requests:
+      #     cpu: 100m
+      #     memory: 256Mi
+      extraArgs:
+        - "-config.expand-env=true"
+    # Zero out replica counts for other deployment modes to enforce singleBinary
+    backend:
+      replicas: 0
+    read:
+      replicas: 0
+    write:
+      replicas: 0
+    ingester:
+      replicas: 0
+    querier:
+      replicas: 0
+    queryFrontend:
+      replicas: 0
+    queryScheduler:
+      replicas: 0
+    distributor:
+      replicas: 0
+    compactor:
+      replicas: 0
+    indexGateway:
+      replicas: 0
+    bloomCompactor:
+      replicas: 0
+    bloomGateway:
+      replicas: 0
+    test:
+      enabled: false
