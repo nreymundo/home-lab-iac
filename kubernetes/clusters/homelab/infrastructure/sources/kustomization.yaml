@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - bitwarden-helmrepo.yaml
   - cert-manager-helmrepo.yaml
+  - cloudnative-pg-helmrepo.yaml
   - external-dns-helmrepo.yaml
   - longhorn-helmrepo.yaml
   - metallb-helmrepo.yaml
