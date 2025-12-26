@@ -1,0 +1,98 @@
+# proxy_external_service_with_ssl.yaml
+#
+# Generic pattern for proxying an external HTTPS service through Traefik,
+# including support for self-signed certificates.
+#
+# Creates:
+# - Namespace
+# - ServersTransport (skip upstream TLS verification)
+# - Service + Endpoints (manual external backend)
+# - Ingress (Traefik, websecure, TLS)
+#
+# Replace:
+# - <APP_NAME>          (e.g. pihole, proxmox, unraid)
+# - <UPSTREAM_IP>       (e.g. 192.168.10.2)
+# - <UPSTREAM_PORT>     (e.g. 443, 8006, 8443)
+#
+# Apply: kubectl apply -f proxy_external_service_with_ssl.yaml
+# Clean: kubectl delete -f proxy_external_service_with_ssl.yaml
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-proxy
+
+---
+# Traefik ServersTransport to allow HTTPS upstreams with self-signed certs
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: lan-https-insecure
+  namespace: traefik
+spec:
+  insecureSkipVerify: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: <APP_NAME>
+  namespace: external-proxy
+  annotations:
+    # Tell Traefik to use HTTPS when talking to the upstream
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+
+    # Reference the ServersTransport above (namespace-name@kubernetescrd)
+    traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
+spec:
+  ports:
+    - name: https
+      port: 443
+      targetPort: <UPSTREAM_PORT>
+
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: <APP_NAME>
+  namespace: external-proxy
+subsets:
+  - addresses:
+      - ip: <UPSTREAM_IP>
+    ports:
+      - name: https
+        port: <UPSTREAM_PORT>
+        protocol: TCP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: <APP_NAME>
+  namespace: external-proxy
+  labels:
+    # Lets ExternalDNS pick this up via label selectors if desired
+    external-dns: internal
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+
+    # LAN-only access (assumes middleware already exists)
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: <APP_NAME>.lan.${DOMAIN_NAME}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: <APP_NAME>
+                port:
+                  name: https
+  tls:
+    - hosts:
+        - <APP_NAME>.lan.${DOMAIN_NAME}
