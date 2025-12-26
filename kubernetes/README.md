@@ -13,3 +13,22 @@ If the cluster needs to be recreated from scratch, bootstrap Flux manually using
       --private-key-file=<path-to-your-ssh-key>
 
 For more information, see the [Flux bootstrap documentation](https://fluxcd.io/flux/cmd/flux_bootstrap_github/).
+
+## Naming Conventions
+
+When adding new Helm releases, always include `fullnameOverride` in the `values` section to prevent redundant resource names (e.g., to avoid `traefik-traefik`).
+
+```yaml
+values:
+  fullnameOverride: <APP_NAME>
+```
+
+See `kubernetes/samples/helm_release_template.yaml` for a complete example.
+
+## Samples
+
+Check the `kubernetes/samples/` directory for templates:
+- `helm_release_template.yaml`: Standard Flux HelmRelease.
+- `stateless_web_app.yaml`: Deployment + Service + Ingress (SSL/LAN-only).
+- `proxy_external_service*.yaml`: Expose external IPs via Traefik Ingress.
+- `db_with_cloudnativepg.yaml`: Postgres cluster with labels.

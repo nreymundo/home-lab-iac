@@ -5,9 +5,8 @@
 #
 # Creates:
 # - Namespace
-# - ServersTransport (skip upstream TLS verification)
 # - Service + Endpoints (manual external backend)
-# - Ingress (Traefik, websecure, TLS)
+# - Ingress (Traefik, websecure, TLS, LAN Allowlist)
 #
 # Replace:
 # - <APP_NAME>          (e.g. pihole, proxmox, unraid)
@@ -24,16 +23,6 @@ metadata:
   name: external-proxy
 
 ---
-# Traefik ServersTransport to allow HTTPS upstreams with self-signed certs
-apiVersion: traefik.io/v1alpha1
-kind: ServersTransport
-metadata:
-  name: lan-https-insecure
-  namespace: traefik
-spec:
-  insecureSkipVerify: true
-
----
 apiVersion: v1
 kind: Service
 metadata:
@@ -43,7 +32,8 @@ metadata:
     # Tell Traefik to use HTTPS when talking to the upstream
     traefik.ingress.kubernetes.io/service.serversscheme: https
 
-    # Reference the ServersTransport above (namespace-name@kubernetescrd)
+    # Reference the shared ServersTransport (skip upstream TLS verification)
+    # This resource is managed in infrastructure/traefik/config
     traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
 spec:
   ports:
@@ -78,7 +68,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
 
-    # LAN-only access (assumes middleware already exists)
+    # LAN-only access
     traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
 spec:
   ingressClassName: traefik
