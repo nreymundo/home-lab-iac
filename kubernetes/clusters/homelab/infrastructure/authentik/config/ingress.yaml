@@ -20,9 +20,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: authentik
+                name: authentik-authentik-server
                 port:
-                  number: 9000
+                  number: 80
   tls:
     - hosts:
         - auth.lan.${DOMAIN_NAME}
