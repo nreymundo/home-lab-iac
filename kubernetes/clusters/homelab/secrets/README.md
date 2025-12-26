@@ -58,38 +58,50 @@ kubectl apply -f bitwarden-external-dns-pihole.yaml
 kubectl -n external-dns get secret external-dns-pihole
 ```
 
- ## Authentik Database Secrets
+  ## Authentik Secrets
 
-Creates PostgreSQL credentials and Authentik-specific secrets, reused by both CNPG (database) and Authentik application.
+Two separate BitwardenSecrets manage Authentik credentials:
 
-Three Bitwarden secrets are needed:
-- PostgreSQL username (stored as static value: "authentik")
-- PostgreSQL password (generated secure password)
-- Authentik secret key (generated with `openssl rand -base64 48`)
+1. **PostgreSQL credentials** (`postgres-creds`):
+   - Used by CNPG to create the `authentik` database user
+   - Used by Authentik to connect to the database
+   - Contains: `username` (static value: "authentik"), `password` (generated secure password)
 
-Single Kubernetes secret `postgres-creds` is created with username, password, and secret_key:
-- CNPG uses username and password to create the `authentik` database user
-- Authentik uses username and password to connect to the database
-- Authentik uses secret_key for cookie signing and JWT token generation
+2. **Authentik application secret** (`authentik-secret`):
+   - Used by Authentik for cookie signing, JWT token generation, and cryptographic operations
+   - Contains: `secret_key` (generate with: `openssl rand -base64 48`)
 
-Steps:
+### Steps:
 
-- Generate Authentik secret key: `openssl rand -base64 48`
-- Create secret in Bitwarden with ID `authentik-secret-key` and the generated value
-- Copy `bitwarden-authentik-db-secret.sample.yaml` to `bitwarden-authentik-db-secret.yaml`.
-- Edit and replace placeholder Bitwarden organization/secret IDs:
-  - `REPLACE_ME_BITWARDEN_ORG_ID`
-  - `REPLACE_ME_POSTGRES_USERNAME_SECRET_ID`
-  - `REPLACE_ME_POSTGRES_PASSWORD_SECRET_ID`
-  - `REPLACE_ME_AUTHENTIK_SECRET_KEY_ID`
-- Ensure the Bitwarden auth token Secret exists in the `authentik` namespace.
-- `kubectl apply -f bitwarden-authentik-db-secret.yaml`
+1. Generate Authentik secret key:
+   ```sh
+   openssl rand -base64 48
+   ```
 
-Example:
-```sh
-openssl rand -base64 48
-cp bitwarden-authentik-db-secret.sample.yaml bitwarden-authentik-db-secret.yaml
-vim bitwarden-authentik-db-secret.yaml
-kubectl apply -f bitwarden-authentik-db-secret.yaml
-kubectl -n authentik get secret postgres-creds
-```
+2. Create secrets in Bitwarden:
+   - PostgreSQL username secret with ID (value: "authentik")
+   - PostgreSQL password secret with ID (generate secure password)
+   - Authentik secret key secret with ID (use generated value from step 1)
+
+3. Update the sample file:
+   ```sh
+   vim kubernetes/clusters/homelab/secrets/bitwarden-authentik-secret.sample.yaml
+   ```
+   Replace placeholder IDs:
+   - `REPLACE_ME_BITWARDEN_ORG_ID`
+   - `REPLACE_ME_POSTGRES_USERNAME_SECRET_ID`
+   - `REPLACE_ME_POSTGRES_PASSWORD_SECRET_ID`
+   - `REPLACE_ME_AUTHENTIK_SECRET_KEY_ID`
+
+4. Apply the secrets:
+   ```sh
+   kubectl apply -f kubernetes/clusters/homelab/secrets/bitwarden-authentik-secret.yaml
+   ```
+
+5. Verify:
+   ```sh
+   kubectl -n authentik get secret postgres-creds
+   kubectl -n authentik get secret authentik-secret
+   ```
+
+Flux will automatically reconcile the HelmRelease changes, and Authentik pods should restart and come up successfully.

@@ -20,6 +20,7 @@ spec:
       log_level: info
       error_reporting:
         enabled: false
+      secret_key: file:///authentik-secret/secret_key
       postgresql:
         host: authentik-db-rw.authentik.svc.cluster.local
         user: "authentik"
@@ -33,9 +34,15 @@ spec:
         - name: postgres-creds
           secret:
             secretName: postgres-creds
+        - name: authentik-secret
+          secret:
+            secretName: authentik-secret
       volumeMounts:
         - name: postgres-creds
           mountPath: /postgres-creds
+          readOnly: true
+        - name: authentik-secret
+          mountPath: /authentik-secret
           readOnly: true
       resources:
         requests:
@@ -50,9 +57,15 @@ spec:
         - name: postgres-creds
           secret:
             secretName: postgres-creds
+        - name: authentik-secret
+          secret:
+            secretName: authentik-secret
       volumeMounts:
         - name: postgres-creds
           mountPath: /postgres-creds
+          readOnly: true
+        - name: authentik-secret
+          mountPath: /authentik-secret
           readOnly: true
       resources:
         requests:

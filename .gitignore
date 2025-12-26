@@ -57,7 +57,7 @@ id_ed25519
 # Manual secrets manifests
 kubernetes/clusters/homelab/secrets/bitwarden-cert-manager-secrets.yaml
 kubernetes/clusters/homelab/secrets/bitwarden-external-dns-pihole.yaml
-kubernetes/clusters/homelab/secrets/bitwarden-authentik-db-secret.yaml
+kubernetes/clusters/homelab/secrets/bitwarden-authentik-secret.yaml
 
 # Tests and tooling
 .coverage
