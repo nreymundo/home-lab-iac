@@ -19,3 +19,5 @@ spec:
         name: metallb
         namespace: flux-system
       interval: 30m
+  values:
+    fullnameOverride: metallb
