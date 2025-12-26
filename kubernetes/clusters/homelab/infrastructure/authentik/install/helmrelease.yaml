@@ -17,6 +17,7 @@ spec:
       interval: 30m
   values:
     authentik:
+      fullnameOverride: authentik
       log_level: info
       error_reporting:
         enabled: false
