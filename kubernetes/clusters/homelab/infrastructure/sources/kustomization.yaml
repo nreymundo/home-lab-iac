@@ -6,6 +6,7 @@ resources:
   - cert-manager-helmrepo.yaml
   - cloudnative-pg-helmrepo.yaml
   - external-dns-helmrepo.yaml
+  - grafana-helmrepo.yaml
   - longhorn-helmrepo.yaml
   - metallb-helmrepo.yaml
   - mittwald-helmrepo.yaml
