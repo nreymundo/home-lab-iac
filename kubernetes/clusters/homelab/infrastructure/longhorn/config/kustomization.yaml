@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - ingress.yaml
   - setting-default-replica-count.yaml
+  - local-path-not-default.yaml
