@@ -1,0 +1,28 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: authentik
+  namespace: authentik
+  labels:
+    external-dns: internal
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: auth.lan.${DOMAIN_NAME}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: authentik
+                port:
+                  number: 9000
+  tls:
+    - hosts:
+        - auth.lan.${DOMAIN_NAME}

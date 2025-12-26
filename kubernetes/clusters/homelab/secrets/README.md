@@ -11,7 +11,7 @@ We use mittwald Kubernetes Replicator to copy the `bw-access-token` Secret into 
 
 ```sh
 kubectl -n <source-namespace> annotate secret bw-access-token \
-  'replicator.v1.mittwald.de/replicate-to=flux-system,cert-manager,external-dns' --overwrite
+  'replicator.v1.mittwald.de/replicate-to=flux-system,cert-manager,external-dns,authentik' --overwrite
 ```
 
 Update the list as you add/remove namespaces that need Bitwarden-managed secrets.
@@ -56,4 +56,34 @@ cp bitwarden-external-dns-pihole.sample.yaml bitwarden-external-dns-pihole.yaml
 vim bitwarden-external-dns-pihole.yaml
 kubectl apply -f bitwarden-external-dns-pihole.yaml
 kubectl -n external-dns get secret external-dns-pihole
+```
+
+## Authentik Database Secrets
+
+Creates PostgreSQL credentials for Authentik, reused by both CNPG (database) and Authentik application.
+
+Two Bitwarden secrets are needed:
+- PostgreSQL username (stored as static value: "authentik")
+- PostgreSQL password (generated secure password)
+
+Single Kubernetes secret `postgres-creds` is created with both username and password:
+- CNPG uses it to create the `authentik` database user
+- Authentik uses it to connect to the database
+
+Steps:
+
+- Copy `bitwarden-authentik-db-secret.sample.yaml` to `bitwarden-authentik-db-secret.yaml`.
+- Edit and replace placeholder Bitwarden organization/secret IDs:
+  - `REPLACE_ME_BITWARDEN_ORG_ID`
+  - `REPLACE_ME_POSTGRES_USERNAME_SECRET_ID`
+  - `REPLACE_ME_POSTGRES_PASSWORD_SECRET_ID`
+- Ensure the Bitwarden auth token Secret exists in the `authentik` namespace.
+- `kubectl apply -f bitwarden-authentik-db-secret.yaml`
+
+Example:
+```sh
+cp bitwarden-authentik-db-secret.sample.yaml bitwarden-authentik-db-secret.yaml
+vim bitwarden-authentik-db-secret.yaml
+kubectl apply -f bitwarden-authentik-db-secret.yaml
+kubectl -n authentik get secret postgres-creds
 ```
