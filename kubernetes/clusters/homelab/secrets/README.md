@@ -58,30 +58,36 @@ kubectl apply -f bitwarden-external-dns-pihole.yaml
 kubectl -n external-dns get secret external-dns-pihole
 ```
 
-## Authentik Database Secrets
+ ## Authentik Database Secrets
 
-Creates PostgreSQL credentials for Authentik, reused by both CNPG (database) and Authentik application.
+Creates PostgreSQL credentials and Authentik-specific secrets, reused by both CNPG (database) and Authentik application.
 
-Two Bitwarden secrets are needed:
+Three Bitwarden secrets are needed:
 - PostgreSQL username (stored as static value: "authentik")
 - PostgreSQL password (generated secure password)
+- Authentik secret key (generated with `openssl rand -base64 48`)
 
-Single Kubernetes secret `postgres-creds` is created with both username and password:
-- CNPG uses it to create the `authentik` database user
-- Authentik uses it to connect to the database
+Single Kubernetes secret `postgres-creds` is created with username, password, and secret_key:
+- CNPG uses username and password to create the `authentik` database user
+- Authentik uses username and password to connect to the database
+- Authentik uses secret_key for cookie signing and JWT token generation
 
 Steps:
 
+- Generate Authentik secret key: `openssl rand -base64 48`
+- Create secret in Bitwarden with ID `authentik-secret-key` and the generated value
 - Copy `bitwarden-authentik-db-secret.sample.yaml` to `bitwarden-authentik-db-secret.yaml`.
 - Edit and replace placeholder Bitwarden organization/secret IDs:
   - `REPLACE_ME_BITWARDEN_ORG_ID`
   - `REPLACE_ME_POSTGRES_USERNAME_SECRET_ID`
   - `REPLACE_ME_POSTGRES_PASSWORD_SECRET_ID`
+  - `REPLACE_ME_AUTHENTIK_SECRET_KEY_ID`
 - Ensure the Bitwarden auth token Secret exists in the `authentik` namespace.
 - `kubectl apply -f bitwarden-authentik-db-secret.yaml`
 
 Example:
 ```sh
+openssl rand -base64 48
 cp bitwarden-authentik-db-secret.sample.yaml bitwarden-authentik-db-secret.yaml
 vim bitwarden-authentik-db-secret.yaml
 kubectl apply -f bitwarden-authentik-db-secret.yaml
