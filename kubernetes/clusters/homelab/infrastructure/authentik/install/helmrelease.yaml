@@ -30,6 +30,13 @@ spec:
         host: authentik-redis-master.authentik.svc.cluster.local
     server:
       replicas: 1
+      resources:
+        requests:
+          cpu: 1000m
+          memory: 1Gi
+        limits:
+          cpu: 2000m
+          memory: 2Gi
       livenessProbe:
         timeoutSeconds: 10
         periodSeconds: 15
@@ -53,6 +60,13 @@ spec:
           readOnly: true
     worker:
       replicas: 2
+      resources:
+        requests:
+          cpu: 1000m
+          memory: 1Gi
+        limits:
+          cpu: 2000m
+          memory: 2Gi
       livenessProbe:
         timeoutSeconds: 10
         periodSeconds: 15
