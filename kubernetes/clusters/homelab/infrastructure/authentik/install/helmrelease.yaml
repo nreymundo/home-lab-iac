@@ -30,6 +30,13 @@ spec:
         host: authentik-redis-master.authentik.svc.cluster.local
     server:
       replicas: 1
+      livenessProbe:
+        timeoutSeconds: 10
+        periodSeconds: 15
+        failureThreshold: 5
+      readinessProbe:
+        timeoutSeconds: 10
+        periodSeconds: 15
       volumes:
         - name: postgres-creds
           secret:
@@ -46,6 +53,13 @@ spec:
           readOnly: true
     worker:
       replicas: 2
+      livenessProbe:
+        timeoutSeconds: 10
+        periodSeconds: 15
+        failureThreshold: 5
+      readinessProbe:
+        timeoutSeconds: 10
+        periodSeconds: 15
       volumes:
         - name: postgres-creds
           secret:
