@@ -37,9 +37,8 @@ The outpost is used for forward authentication with Traefik.
 2. **Configure Outpost Settings**
    - **Authentik Host**: Use the internal Kubernetes service URL
      - `http://authentik-server.authentik.svc.cluster.local`
-   - **Authentik Web URL**: Use the public-facing domain
-     - Current: `https://auth.lan.${DOMAIN_NAME}`
-     - Future (after removing lan. subdomain): `https://auth.${DOMAIN_NAME}`
+    - **Authentik Web URL**: Use the public-facing domain
+      - Current: `https://sso.${DOMAIN_NAME}`
 
 ## Integration Notes
 
@@ -51,7 +50,7 @@ The outpost is used for forward authentication with Traefik.
 ## Current Configuration
 
 - **Ingress**: `config/ingress.yaml`
-  - Host: `auth.lan.${DOMAIN_NAME}`
+  - Host: `sso.${DOMAIN_NAME}`
   - Entry point: `websecure`
   - Middleware: `traefik-lan-allowlist@kubernetescrd`
 

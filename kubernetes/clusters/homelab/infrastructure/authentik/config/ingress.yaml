@@ -13,7 +13,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: auth.lan.${DOMAIN_NAME}
+    - host: sso.${DOMAIN_NAME}
       http:
         paths:
           - path: /
@@ -25,4 +25,4 @@ spec:
                   number: 80
   tls:
     - hosts:
-        - auth.lan.${DOMAIN_NAME}
+        - sso.${DOMAIN_NAME}
