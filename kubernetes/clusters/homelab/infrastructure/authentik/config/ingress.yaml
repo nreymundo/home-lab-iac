@@ -22,7 +22,7 @@ spec:
               service:
                 name: authentik
                 port:
-                  number: 80
+                  number: 9000
   tls:
     - hosts:
         - auth.lan.${DOMAIN_NAME}

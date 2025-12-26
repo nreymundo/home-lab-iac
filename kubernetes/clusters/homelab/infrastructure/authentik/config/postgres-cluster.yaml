@@ -20,14 +20,11 @@ spec:
     initdb:
       database: authentik
       owner: authentik
-  managed:
+    managed:
     roles:
       - name: authentik
         ensure: present
         login: true
         superuser: false
-        inRoles:
-          - pg_read_all_data
-          - pg_write_all_data
         passwordSecret:
           name: postgres-creds
