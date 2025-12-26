@@ -30,5 +30,7 @@ See `kubernetes/samples/helm_release_template.yaml` for a complete example.
 Check the `kubernetes/samples/` directory for templates:
 - `helm_release_template.yaml`: Standard Flux HelmRelease.
 - `stateless_web_app.yaml`: Deployment + Service + Ingress (SSL/LAN-only).
+- `stateless_web_app_with_authentik.yaml`: Deployment + Service + Ingress (SSL/LAN-only/Authentik).
 - `proxy_external_service*.yaml`: Expose external IPs via Traefik Ingress.
+- `proxy_external_service_with_ssl_and_authentik.yaml`: Expose external HTTPS IPs with Authentik authentication.
 - `db_with_cloudnativepg.yaml`: Postgres cluster with labels.
