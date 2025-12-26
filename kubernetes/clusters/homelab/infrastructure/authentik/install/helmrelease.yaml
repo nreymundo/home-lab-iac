@@ -1,0 +1,68 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: authentik
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: authentik
+  chart:
+    spec:
+      chart: authentik
+      sourceRef:
+        kind: HelmRepository
+        name: authentik
+        namespace: flux-system
+      interval: 30m
+  values:
+    authentik:
+      log_level: info
+      error_reporting:
+        enabled: false
+      postgresql:
+        host: authentik-db-rw.authentik.svc.cluster.local
+        user: "authentik"
+        password: file:///postgres-creds/password
+        database: "authentik"
+      redis:
+        host: authentik-redis-master.authentik.svc.cluster.local
+    server:
+      replicas: 1
+      volumes:
+        - name: postgres-creds
+          secret:
+            secretName: postgres-creds
+      volumeMounts:
+        - name: postgres-creds
+          mountPath: /postgres-creds
+          readOnly: true
+      resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    worker:
+      replicas: 2
+      volumes:
+        - name: postgres-creds
+          secret:
+            secretName: postgres-creds
+      volumeMounts:
+        - name: postgres-creds
+          mountPath: /postgres-creds
+          readOnly: true
+      resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    redis:
+      enabled: true
+      master:
+        persistence:
+          enabled: false
