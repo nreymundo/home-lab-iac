@@ -18,6 +18,7 @@ spec:
   install:
     createNamespace: true
   values:
+    fullnameOverride: traefik
     ingressClass:
       enabled: true
       isDefaultClass: true
