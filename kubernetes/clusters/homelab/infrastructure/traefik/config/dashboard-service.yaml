@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-dashboard
+  namespace: traefik
+  labels:
+    external-dns: internal
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: traefik.lan.${DOMAIN_NAME}
+spec:
+  type: ExternalName
+  externalName: traefik.lan.${DOMAIN_NAME}
+  ports:
+    - port: 80

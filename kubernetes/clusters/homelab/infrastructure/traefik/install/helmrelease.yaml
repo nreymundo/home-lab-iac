@@ -32,6 +32,9 @@ spec:
       web:
         expose:
           default: false
+      websecure:
+        expose:
+          default: true
     additionalArguments:
       - --entrypoints.web.address=:0
     service:

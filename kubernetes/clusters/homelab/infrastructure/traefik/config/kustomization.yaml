@@ -8,3 +8,4 @@ resources:
   - lan-https-insecure.yaml
   - authentik-middleware.yaml
   - dashboard-ingressroute.yaml
+  - dashboard-service.yaml
