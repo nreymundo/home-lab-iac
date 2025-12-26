@@ -14,6 +14,6 @@ spec:
         - name: api@internal
           kind: TraefikService
       middlewares:
-        - name: traefik-lan-allowlist
-        - name: traefik-authentik
+        - name: lan-allowlist
+        - name: authentik
   tls: {}
