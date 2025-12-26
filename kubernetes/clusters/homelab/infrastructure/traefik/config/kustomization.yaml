@@ -7,3 +7,4 @@ resources:
   - lan-allowlist-middleware.yaml
   - lan-https-insecure.yaml
   - authentik-middleware.yaml
+  - dashboard-ingressroute.yaml
