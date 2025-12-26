@@ -29,9 +29,6 @@ spec:
     server:
       replicas: 1
       resources:
-        requests:
-          cpu: 1000m
-          memory: 1Gi
         limits:
           cpu: 2000m
           memory: 2Gi
@@ -50,13 +47,10 @@ spec:
           mountPath: /authentik-secret
           readOnly: true
     worker:
-      replicas: 2
+      replicas: 1
       resources:
-        requests:
-          cpu: 1000m
-          memory: 1Gi
         limits:
-          cpu: 2000m
+          cpu: 1000m
           memory: 2Gi
       volumes:
         - name: postgres-creds
