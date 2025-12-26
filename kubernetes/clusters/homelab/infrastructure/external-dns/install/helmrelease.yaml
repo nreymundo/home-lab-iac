@@ -22,6 +22,7 @@ spec:
     remediation:
       retries: 3
   values:
+    fullnameOverride: external-dns
     provider:
       name: pihole
     sources:
