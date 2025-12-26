@@ -44,13 +44,6 @@ spec:
         - name: authentik-secret
           mountPath: /authentik-secret
           readOnly: true
-      resources:
-        requests:
-          cpu: 200m
-          memory: 256Mi
-        limits:
-          cpu: 500m
-          memory: 512Mi
     worker:
       replicas: 2
       volumes:
@@ -67,13 +60,6 @@ spec:
         - name: authentik-secret
           mountPath: /authentik-secret
           readOnly: true
-      resources:
-        requests:
-          cpu: 200m
-          memory: 256Mi
-        limits:
-          cpu: 500m
-          memory: 512Mi
     redis:
       enabled: true
       master:
