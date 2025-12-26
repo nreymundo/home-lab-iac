@@ -26,8 +26,6 @@ spec:
         user: "authentik"
         password: file:///postgres-creds/password
         database: "authentik"
-      redis:
-        host: authentik-redis-master.authentik.svc.cluster.local
     server:
       replicas: 1
       resources:
@@ -37,13 +35,6 @@ spec:
         limits:
           cpu: 2000m
           memory: 2Gi
-      livenessProbe:
-        timeoutSeconds: 10
-        periodSeconds: 15
-        failureThreshold: 5
-      readinessProbe:
-        timeoutSeconds: 10
-        periodSeconds: 15
       volumes:
         - name: postgres-creds
           secret:
@@ -67,13 +58,6 @@ spec:
         limits:
           cpu: 2000m
           memory: 2Gi
-      livenessProbe:
-        timeoutSeconds: 10
-        periodSeconds: 15
-        failureThreshold: 5
-      readinessProbe:
-        timeoutSeconds: 10
-        periodSeconds: 15
       volumes:
         - name: postgres-creds
           secret:
@@ -88,8 +72,3 @@ spec:
         - name: authentik-secret
           mountPath: /authentik-secret
           readOnly: true
-    redis:
-      enabled: true
-      master:
-        persistence:
-          enabled: false
