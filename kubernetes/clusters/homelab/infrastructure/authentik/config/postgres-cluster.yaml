@@ -20,7 +20,7 @@ spec:
     initdb:
       database: authentik
       owner: authentik
-    managed:
+  managed:
     roles:
       - name: authentik
         ensure: present
