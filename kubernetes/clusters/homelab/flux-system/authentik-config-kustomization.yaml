@@ -13,3 +13,7 @@ spec:
     name: flux-system
   dependsOn:
     - name: authentik-install
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: cert-manager-secrets
