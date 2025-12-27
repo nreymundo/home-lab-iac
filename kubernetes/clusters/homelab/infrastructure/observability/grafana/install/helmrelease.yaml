@@ -90,6 +90,35 @@ spec:
             url: http://loki.observability.svc.cluster.local:3100
             editable: false
 
+    # Provision dashboards from grafana.com
+    dashboards:
+      default:
+        # Kubernetes Cluster Metrics
+        k8s-views-global:
+          gnetId: 16573
+          datasource: Prometheus
+        k8s-views-nodes:
+          gnetId: 16574
+          datasource: Prometheus
+        k8s-views-pods:
+          gnetId: 16575
+          datasource: Prometheus
+        k8s-views-namespaces:
+          gnetId: 16577
+          datasource: Prometheus
+        # Loki Logs
+        loki-logs:
+          gnetId: 15324
+          datasource: Loki
+        # Traefik Metrics
+        traefik:
+          gnetId: 17346
+          datasource: Prometheus
+        # CloudNative-PG Metrics
+        cloudnative-pg:
+          gnetId: 20417
+          datasource: Prometheus
+
     resources:
       requests:
         cpu: 50m
