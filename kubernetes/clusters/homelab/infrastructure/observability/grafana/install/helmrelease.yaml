@@ -119,6 +119,17 @@ spec:
           gnetId: 20417
           datasource: Prometheus
 
+    dashboardProviders:
+      providers:
+        - name: 'default'
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+
     resources:
       requests:
         cpu: 50m
