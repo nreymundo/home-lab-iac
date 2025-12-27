@@ -91,6 +91,19 @@ spec:
             editable: false
 
     # Provision dashboards from grafana.com
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: default
+            orgId: 1
+            folder: ""
+            type: file
+            disableDeletion: false
+            editable: false
+            options:
+              path: /var/lib/grafana/dashboards/default
+
     dashboards:
       default:
         # Kubernetes Cluster Metrics
@@ -119,12 +132,10 @@ spec:
           gnetId: 20417
           datasource: Prometheus
 
-    # Enable dashboard sidecar to manage dashboard providers
+    # Dashboard provider uses downloaded files; sidecar not needed
     sidecar:
       dashboards:
-        enabled: true
-        SCProvider: true
-        folder: /var/lib/grafana/dashboards/default
+        enabled: false
 
     resources:
       requests:
