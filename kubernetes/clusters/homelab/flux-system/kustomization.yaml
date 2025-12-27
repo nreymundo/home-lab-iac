@@ -23,3 +23,4 @@ resources:
   - observability-common-kustomization.yaml
   - observability-loki-install-kustomization.yaml
   - observability-prometheus-install-kustomization.yaml
+  - observability-alloy-install-kustomization.yaml
