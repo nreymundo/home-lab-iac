@@ -124,6 +124,7 @@ spec:
       dashboards:
         enabled: true
         SCProvider: true
+        folder: /var/lib/grafana/dashboards/default
 
     resources:
       requests:
