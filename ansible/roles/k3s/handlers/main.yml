@@ -6,3 +6,30 @@
 
 - name: Reboot RPi for cgroups
   ansible.builtin.reboot:
+
+- name: Re-execute systemd daemon
+  ansible.builtin.systemd:
+    daemon_reexec: true
+  become: true
+
+- name: Reload systemd configuration
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
+- name: Reload sysctl
+  ansible.builtin.command: sysctl --system
+  become: true
+  changed_when: true
+
+- name: Restart containerd
+  ansible.builtin.service:
+    name: containerd
+    state: restarted
+  become: true
+
+- name: Restart kubelet
+  ansible.builtin.service:
+    name: kubelet
+    state: restarted
+  become: true

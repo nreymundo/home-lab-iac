@@ -8,6 +8,10 @@
     state: present
     update_cache: true
 
+- name: Apply OS tuning
+  ansible.builtin.include_tasks: os-tuning.yml
+  when: k3s_os_tuning_enabled | bool
+
 - name: Enable and start iscsid service
   ansible.builtin.systemd_service:
     name: iscsid
