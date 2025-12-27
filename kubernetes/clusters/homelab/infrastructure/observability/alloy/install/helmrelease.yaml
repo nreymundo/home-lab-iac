@@ -65,7 +65,7 @@ spec:
 
             # Fallback for unstructured logs
             stage.drop {
-              expression = "regexp(\"(?i)\\\\b(debug|trace)\\\\b\", .message)"
+              expression = "level == nil && regexp(\"(?i)\\\\b(debug|trace)\\\\b\", .message)"
               drop_counter_reason = "drop_regex_debug_trace"
             }
 
