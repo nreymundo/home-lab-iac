@@ -35,6 +35,8 @@ spec:
       websecure:
         expose:
           default: true
+      metrics:
+        expose: true
     additionalArguments:
       - --entrypoints.web.address=:0
     service:
