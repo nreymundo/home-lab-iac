@@ -119,16 +119,11 @@ spec:
           gnetId: 20417
           datasource: Prometheus
 
-    dashboardProviders:
-      providers:
-        - name: 'default'
-          orgId: 1
-          folder: ''
-          type: file
-          disableDeletion: false
-          editable: false
-          options:
-            path: /var/lib/grafana/dashboards/default
+    # Enable dashboard sidecar to manage dashboard providers
+    sidecar:
+      dashboards:
+        enabled: true
+        SCProvider: true
 
     resources:
       requests:
