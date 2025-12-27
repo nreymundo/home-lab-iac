@@ -13,3 +13,10 @@ k3s_arm64_checksum: "2e1db0e54a8b0d0ab8a264a119c9c617561f9290e7bb2722d795f8bc91b
 k3s_node_ip: "{{ ansible_host }}"
 k3s_iface: "{{ ansible_default_ipv4.interface | default('') }}"
 k3s_allow_workloads: true
+
+# OS Tuning
+k3s_os_tuning_enabled: true
+k3s_fs_inotify_max_user_watches: 1048576
+k3s_fs_inotify_max_user_instances: 1024
+k3s_fs_inotify_max_queued_events: 32768
+k3s_nofile_limit: 1048576
