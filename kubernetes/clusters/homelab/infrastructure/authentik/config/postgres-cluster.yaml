@@ -16,6 +16,9 @@ spec:
     size: 5Gi
     storageClass: longhorn
   enableSuperuserAccess: false
+  monitoring:
+    enablePodMonitor: true
+    disableDefaultQueries: false
   bootstrap:
     initdb:
       database: authentik
