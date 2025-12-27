@@ -7,12 +7,12 @@
 - name: Reboot RPi for cgroups
   ansible.builtin.reboot:
 
-- name: Reload systemd daemon
+- name: Re-execute systemd daemon
   ansible.builtin.systemd:
     daemon_reexec: true
   become: true
 
-- name: Systemd daemon-reload
+- name: Reload systemd configuration
   ansible.builtin.systemd:
     daemon_reload: true
   become: true

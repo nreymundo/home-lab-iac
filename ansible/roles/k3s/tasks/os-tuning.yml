@@ -66,7 +66,7 @@
     content: |
       [Manager]
       DefaultLimitNOFILE={{ k3s_nofile_limit }}
-  notify: Reload systemd daemon
+  notify: Re-execute systemd daemon
   become: true
 
 # ---------------------------------------------------------------------------
@@ -80,54 +80,54 @@
   register: k3s_containerd_unit
   become: true
 
-- name: Ensure containerd override dir exists
-  ansible.builtin.file:
-    path: /etc/systemd/system/containerd.service.d
-    state: directory
-    mode: "0755"
+- name: Configure containerd service overrides
   when: k3s_containerd_unit.stat.exists
   become: true
+  block:
+    - name: Ensure containerd override dir exists
+      ansible.builtin.file:
+        path: /etc/systemd/system/containerd.service.d
+        state: directory
+        mode: "0755"
 
-- name: Set containerd LimitNOFILE
-  ansible.builtin.copy:
-    dest: /etc/systemd/system/containerd.service.d/99-nofile.conf
-    mode: "0644"
-    content: |
-      [Service]
-      LimitNOFILE={{ k3s_nofile_limit }}
-  when: k3s_containerd_unit.stat.exists
-  notify:
-    - Systemd daemon-reload
-    - Restart containerd
-  become: true
+    - name: Set containerd LimitNOFILE
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/containerd.service.d/99-nofile.conf
+        mode: "0644"
+        content: |
+          [Service]
+          LimitNOFILE={{ k3s_nofile_limit }}
+      notify:
+        - Reload systemd configuration
+        - Restart containerd
 
 # k3s (single-binary service; embedded containerd)
 - name: Check if k3s systemd unit exists
   ansible.builtin.stat:
     path: /lib/systemd/system/k3s.service
-  register: _k3s_unit
+  register: k3s_unit
   become: true
 
-- name: Ensure k3s override dir exists
-  ansible.builtin.file:
-    path: /etc/systemd/system/k3s.service.d
-    state: directory
-    mode: "0755"
-  when: _k3s_unit.stat.exists
+- name: Configure k3s service overrides
+  when: k3s_unit.stat.exists
   become: true
+  block:
+    - name: Ensure k3s override dir exists
+      ansible.builtin.file:
+        path: /etc/systemd/system/k3s.service.d
+        state: directory
+        mode: "0755"
 
-- name: Set k3s LimitNOFILE
-  ansible.builtin.copy:
-    dest: /etc/systemd/system/k3s.service.d/99-nofile.conf
-    mode: "0644"
-    content: |
-      [Service]
-      LimitNOFILE={{ k3s_nofile_limit }}
-  when: _k3s_unit.stat.exists
-  notify:
-    - Systemd daemon-reload
-    - Restart k3s
-  become: true
+    - name: Set k3s LimitNOFILE
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/k3s.service.d/99-nofile.conf
+        mode: "0644"
+        content: |
+          [Service]
+          LimitNOFILE={{ k3s_nofile_limit }}
+      notify:
+        - Reload systemd configuration
+        - Restart k3s
 
 # kubelet (only if present; safe no-op on pure k3s)
 - name: Check if kubelet systemd unit exists
@@ -136,23 +136,23 @@
   register: k3s_kubelet_unit
   become: true
 
-- name: Ensure kubelet override dir exists
-  ansible.builtin.file:
-    path: /etc/systemd/system/kubelet.service.d
-    state: directory
-    mode: "0755"
+- name: Configure kubelet service overrides
   when: k3s_kubelet_unit.stat.exists
   become: true
+  block:
+    - name: Ensure kubelet override dir exists
+      ansible.builtin.file:
+        path: /etc/systemd/system/kubelet.service.d
+        state: directory
+        mode: "0755"
 
-- name: Set kubelet LimitNOFILE
-  ansible.builtin.copy:
-    dest: /etc/systemd/system/kubelet.service.d/99-nofile.conf
-    mode: "0644"
-    content: |
-      [Service]
-      LimitNOFILE={{ k3s_nofile_limit }}
-  when: k3s_kubelet_unit.stat.exists
-  notify:
-    - Systemd daemon-reload
-    - Restart kubelet
-  become: true
+    - name: Set kubelet LimitNOFILE
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/kubelet.service.d/99-nofile.conf
+        mode: "0644"
+        content: |
+          [Service]
+          LimitNOFILE={{ k3s_nofile_limit }}
+      notify:
+        - Reload systemd configuration
+        - Restart kubelet
