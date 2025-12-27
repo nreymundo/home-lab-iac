@@ -20,7 +20,7 @@ spec:
     fullnameOverride: prometheus
     alertmanager:
       enabled: false
-    pushgateway:
+    prometheus-pushgateway:
       enabled: false
     server:
       replicaCount: 1
