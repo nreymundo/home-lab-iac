@@ -11,7 +11,7 @@ We use mittwald Kubernetes Replicator to copy the `bw-access-token` Secret into 
 
 ```sh
 kubectl -n <source-namespace> annotate secret bw-access-token \
-  'replicator.v1.mittwald.de/replicate-to=flux-system,cert-manager,external-dns,authentik' --overwrite
+  'replicator.v1.mittwald.de/replicate-to=flux-system,cert-manager,external-dns,authentik,observability' --overwrite
 ```
 
 Update the list as you add/remove namespaces that need Bitwarden-managed secrets.
@@ -104,4 +104,25 @@ Two separate BitwardenSecrets manage Authentik credentials:
    kubectl -n authentik get secret authentik-secret
    ```
 
-Flux will automatically reconcile the HelmRelease changes, and Authentik pods should restart and come up successfully.
+
+  ## Grafana Secrets
+
+  Creates `grafana-admin` in `observability` via the Bitwarden operator to supply the initial admin credentials for Grafana.
+
+  Steps:
+
+  - Copy `bitwarden-grafana-admin.sample.yaml` to `bitwarden-grafana-admin.yaml`.
+  - Edit `bitwarden-grafana-admin.yaml` and replace the placeholder IDs:
+    - `REPLACE_ME_BITWARDEN_ORG_ID`
+    - `REPLACE_ME_GRAFANA_ADMIN_USER_SECRET_ID` (Username)
+    - `REPLACE_ME_GRAFANA_ADMIN_PASSWORD_SECRET_ID` (Password)
+  - Ensure the Bitwarden auth token Secret exists in the `observability` namespace (via replication).
+  - `kubectl apply -f bitwarden-grafana-admin.yaml`
+
+  Example:
+  ```sh
+  cp bitwarden-grafana-admin.sample.yaml bitwarden-grafana-admin.yaml
+  vim bitwarden-grafana-admin.yaml
+  kubectl apply -f bitwarden-grafana-admin.yaml
+  kubectl -n observability get secret grafana-admin
+  ```
