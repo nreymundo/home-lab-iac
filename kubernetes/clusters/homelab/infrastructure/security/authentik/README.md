@@ -26,7 +26,15 @@ The outpost is the "proxy" that sits between Traefik and the Server.
     - **Name:** `internal-auth-outpost`
     - **Type:** `Proxy`
     - **Integration:** `Kubernetes Service` (select `Local Kubernetes Cluster`)
+    - **Authentik host:** `http://authentik-server.authentik.svc.cluster.local`
+    - **Browser URL:** `https://sso.<DOMAIN>` (public URL users reach)
     - **Applications:** Select apps you want to protect.
+
+> Note: The outpost controller creates its own Service/Ingress in the
+> `authentik` namespace. If you use the same host (`sso.<DOMAIN>`) for the
+> Authentik server ingress, make sure callbacks under
+> `/outpost.goauthentik.io/` are routed to the outpost; otherwise you'll see a
+> 404 "not found" after login.
 
 ### 3. Create a Proxy Provider
 For generic forward auth (protecting apps that don't support OIDC):

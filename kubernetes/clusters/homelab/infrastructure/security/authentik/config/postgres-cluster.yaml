@@ -10,7 +10,7 @@ metadata:
     owner: authentik
     postgres-major: "16"
 spec:
-  instances: 1
+  instances: 2
   imageName: ghcr.io/cloudnative-pg/postgresql:16.6
   storage:
     size: 5Gi
