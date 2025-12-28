@@ -1,0 +1,110 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: observability
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      version: "68.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+      interval: 30m
+  values:
+    # Disable components we handle elsewhere or don't need
+    alertmanager:
+      enabled: false
+
+    # Prometheus Operator Configuration
+    prometheusOperator:
+      createCustomResource: true
+      # Enable if you want to use existing ServiceMonitors from other namespaces
+      # prometheusConfigReloader:
+      #   resources:
+      #     limits:
+      #       cpu: 200m
+      #       memory: 50Mi
+      #     requests:
+      #       cpu: 100m
+      #       memory: 25Mi
+
+    # Prometheus Server Configuration
+    prometheus:
+      prometheusSpec:
+        # Retention
+        retention: 7d
+        # Storage
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: longhorn
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 20Gi
+        # Enable PodMonitor discovery (fixes the original issue!)
+        podMonitorSelectorNilUsesHelmValues: false
+        serviceMonitorSelectorNilUsesHelmValues: false
+        ruleSelectorNilUsesHelmValues: false
+
+    # Grafana Configuration
+    grafana:
+      enabled: true
+      fullnameOverride: grafana
+
+      # Admin Credentials (Reuse existing secret)
+      admin:
+        existingSecret: grafana-admin
+        userKey: admin-user
+        passwordKey: admin-password
+
+      # Ingress (Traefik)
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        annotations:
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.tls: "true"
+          traefik.ingress.kubernetes.io/router.middlewares: >-
+            traefik-lan-allowlist@kubernetescrd,
+            traefik-authentik@kubernetescrd
+        hosts:
+          - grafana.lan.${DOMAIN_NAME}
+        path: /
+        pathType: Prefix
+        tls:
+          - hosts:
+              - grafana.lan.${DOMAIN_NAME}
+
+      # Persistence
+      persistence:
+        enabled: true
+        type: pvc
+        storageClassName: longhorn
+        accessModes:
+          - ReadWriteOnce
+        size: 5Gi
+
+      # Auto-configure Loki Data Source
+      additionalDataSources:
+        - name: Loki
+          type: loki
+          url: http://loki.observability.svc.cluster.local:3100
+          access: proxy
+          isDefault: false
+          jsonData:
+            derivedFields:
+              - datasourceUid: Prometheus
+                matcherRegex: "traceID=(\\w+)"
+                name: TraceID
+                url: "$${__value.raw}"
+
+    # Node Exporter (Standard host metrics)
+    nodeExporter:
+      enabled: true
