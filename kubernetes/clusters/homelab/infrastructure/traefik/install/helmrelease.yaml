@@ -36,10 +36,16 @@ spec:
         expose:
           default: true
       metrics:
-        expose: true
+        expose:
+          default: true
     additionalArguments:
       - --entrypoints.web.address=:0
     service:
       type: LoadBalancer
       spec:
         externalTrafficPolicy: Local
+    logs:
+      access:
+        enabled: true
+        format: json
+        bufferingSize: 100
