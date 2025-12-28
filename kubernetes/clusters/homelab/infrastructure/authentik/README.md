@@ -1,63 +1,70 @@
-# Authentik Manual Setup
+# Authentik Manual Setup & Architecture
 
-This directory contains the Helm-based installation of Authentik. Some components require manual configuration through the Authentik UI after deployment.
+Authentik is our Identity Provider (IdP). It handles Single Sign-On (SSO) for internal services.
 
-## Initial Setup
+## Architecture
 
-1. **Access Initial Setup URL**
-   - After the first deployment, access the setup URL to create the admin account
-   - Follow the web-based setup wizard
+```mermaid
+graph TD
+    User[User] -->|Request| Traefik
+    Traefik -->|Forward Auth| Outpost[Authentik Outpost]
+    Outpost -->|Check Session| Redis
+    Outpost --|Valid|--> Traefik
+    Outpost --|Invalid|--> Traefik -->|Redirect| AuthServer[Authentik Server]
+```
 
-2. **Create Admin Account**
-   - Set your admin username and password
-   - Complete the initial configuration
+## Initial Setup Guide
 
-## Application & Provider Configuration
+### 1. Access Initial Setup
+After deployment, go to `https://sso.lan.<DOMAIN>/if/flow/initial-setup/`.
+- Set the `akadmin` password.
 
-1. **Create a New Application**
-   - Navigate to: Applications → Applications → Create
-   - Type: Choose based on your needs (e.g., OAuth2 / OIDC Provider, or Proxy Provider)
-   - Configure the application settings
-   - Set appropriate callback URLs
+### 2. Create the Outpost
+The outpost is the "proxy" that sits between Traefik and the Server.
+1.  **Admin Interface** -> Applications -> Outposts.
+2.  **Create New Outpost**:
+    - **Name:** `internal-auth-outpost`
+    - **Type:** `Proxy`
+    - **Integration:** `Kubernetes Service` (select `Local Kubernetes Cluster`)
+    - **Applications:** Select apps you want to protect.
 
-2. **Configure Provider Settings**
-   - Link the provider to your application
-   - Set authentication flow and authorization settings as needed
+### 3. Create a Proxy Provider
+For generic forward auth (protecting apps that don't support OIDC):
+1.  **Applications** -> Providers -> Create `Proxy Provider`.
+2.  **Name:** `generic-forward-auth`.
+3.  **Forward Auth Mode:** `Single Application` or `Domain Level` (Domain level allows sso for `*.lan.domain`).
+4.  **External Host:** `https://app.lan.<DOMAIN>`.
 
-## Outpost Configuration
+### 4. Create an Application
+1.  **Applications** -> Applications -> Create.
+2.  **Name:** `My App`.
+3.  **Slug:** `my-app`.
+4.  **Provider:** Select the provider created above.
 
-The outpost is used for forward authentication with Traefik.
+## Integration with Traefik
 
-1. **Create a New Outpost**
-   - Navigate to: Applications → Outposts → Create
-   - **Type**: Proxy
-   - **Provider**: Select the Proxy Provider created above
-   - **Name**: Choose a name (e.g., `internal-auth-outpost`)
+We use a Middleware in Traefik to enforce auth.
 
-2. **Configure Outpost Settings**
-   - **Authentik Host**: Use the internal Kubernetes service URL
-     - `http://authentik-server.authentik.svc.cluster.local`
-    - **Authentik Web URL**: Use the public-facing domain
-      - Current: `https://sso.${DOMAIN_NAME}`
+**File:** `kubernetes/clusters/homelab/infrastructure/traefik/config/authentik-middleware.yaml`
 
-## Integration Notes
+```yaml
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: authentik
+spec:
+  forwardAuth:
+    address: http://ak-outpost-internal-auth-outpost.authentik.svc.cluster.local:9000/outpost.goauthentik.io/auth/traefik
+    # ... headers ...
+```
 
-- The outpost is currently managed manually through the Authentik UI
-- The Traefik middleware (`../../traefik/config/authentik-middleware.yaml`) references the outpost service directly
-- Outpost service name format: `ak-outpost-<outpost-name>`
-- If you rename the outpost in the UI, update the middleware configuration accordingly
+**Usage:**
+Add annotation to Ingress:
+```yaml
+traefik.ingress.kubernetes.io/router.middlewares: traefik-authentik@kubernetescrd
+```
 
-## Current Configuration
-
-- **Ingress**: `config/ingress.yaml`
-  - Host: `sso.${DOMAIN_NAME}`
-  - Entry point: `websecure`
-  - Middleware: `traefik-lan-allowlist@kubernetescrd`
-
-- **Database**: CloudNative-PG managed PostgreSQL
-  - Cluster name: `authentik-db`
-  - Service: `authentik-db-rw.authentik.svc.cluster.local`
-
-- **Helm Values**: `install/helmrelease.yaml`
-  - Server replicas: 1
-  - Worker replicas: 1
+## Database
+Authentik uses **PostgreSQL** (managed by CloudNative-PG).
+- **Credentials:** Managed by Bitwarden secrets.
+- **Backup:** PG backups configured in CNPG cluster definition.

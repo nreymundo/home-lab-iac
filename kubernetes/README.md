@@ -1,36 +1,89 @@
 # Kubernetes GitOps
 
-This folder is managed with Flux. Charts, configs, and other installs are defined in Git
-and continuously reconciled to the cluster in a GitOps workflow.
+This directory is the heart of the cluster. It is managed by **Flux CD**.
 
-If the cluster needs to be recreated from scratch, bootstrap Flux manually using the Flux CLI to re-establish the GitOps sync. For example:
+## 🏗️ GitOps Workflow
 
-    flux bootstrap github \
-      --owner=nreymundo \
-      --repository=home-lab-iac \
-      --branch=master \
-      --path=./kubernetes/clusters/homelab \
-      --private-key-file=<path-to-your-ssh-key>
-
-For more information, see the [Flux bootstrap documentation](https://fluxcd.io/flux/cmd/flux_bootstrap_github/).
-
-## Naming Conventions
-
-When adding new Helm releases, always include `fullnameOverride` in the `values` section to prevent redundant resource names (e.g., to avoid `traefik-traefik`).
-
-```yaml
-values:
-  fullnameOverride: <APP_NAME>
+```mermaid
+graph LR
+    Git[Git Repository] --Sync--> Flux[Flux Controller]
+    Flux --Apply--> K3s[K3s Cluster]
+    Flux --Watch--> Helm[Helm Charts]
 ```
 
-See `kubernetes/samples/helm_release_template.yaml` for a complete example.
+Everything in this folder is applied to the cluster automatically. **Do not run `kubectl apply` manually** for anything in this folder (except secrets), or Flux will overwrite your changes.
 
-## Samples
+## 📂 Directory Structure
 
-Check the `kubernetes/samples/` directory for templates:
-- `helm_release_template.yaml`: Standard Flux HelmRelease.
-- `stateless_web_app.yaml`: Deployment + Service + Ingress (SSL/LAN-only).
-- `stateless_web_app_with_authentik.yaml`: Deployment + Service + Ingress (SSL/LAN-only/Authentik).
-- `proxy_external_service*.yaml`: Expose external IPs via Traefik Ingress.
-- `proxy_external_service_with_ssl_and_authentik.yaml`: Expose external HTTPS IPs with Authentik authentication.
-- `db_with_cloudnativepg.yaml`: Postgres cluster with labels.
+```
+kubernetes/
+├── clusters/
+│   └── homelab/              # The definition of MY cluster
+│       ├── apps/             # User applications (whoami, media, etc.)
+│       ├── flux-system/      # Flux configuration (gotk-components, sync)
+│       ├── infrastructure/   # Core services (Traefik, Cert-Manager, etc.)
+│       └── secrets/          # Secret definitions (Bitwarden)
+└── samples/                  # Templates for new apps
+```
+
+## 🚀 How to Add a New Application
+
+### 1. Choose a Type
+- **Helm Chart:** Use `HelmRelease` (preferred).
+- **Plain YAML:** Use standard Kubernetes manifests.
+
+### 2. Create the Manifest
+Use the template in `kubernetes/samples/helm_release_template.yaml`.
+
+**Example `apps/my-app.yaml`:**
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: my-app
+  namespace: flux-system
+spec:
+  targetNamespace: my-app
+  interval: 30m
+  chart:
+    spec:
+      chart: my-app-chart
+      sourceRef:
+        kind: HelmRepository
+        name: my-repo
+        namespace: flux-system
+  values:
+    # App config...
+```
+
+### 3. Commit and Push
+```bash
+git add .
+git commit -m "Add my-app"
+git push
+```
+
+### 4. Wait or Force Sync
+Flux checks every 10 minutes. To force it:
+```bash
+flux reconcile source git flux-system
+```
+
+## 🔐 Secret Management
+
+We use **Bitwarden Secrets Manager**.
+
+1.  **Do not commit secrets.**
+2.  Create secret in Bitwarden.
+3.  Create `BitwardenSecret` CRD (see `secrets/README.md`).
+4.  Flux applies CRD -> Operator creates Secret -> App uses Secret.
+
+## 🛠️ Infrastructure Components
+
+Each major component has its own documentation:
+
+- [**Traefik**](clusters/homelab/infrastructure/traefik/README.md) - Ingress & Routing
+- [**Authentik**](clusters/homelab/infrastructure/authentik/README.md) - SSO & Identity
+- [**Observability**](clusters/homelab/infrastructure/observability/README.md) - Monitoring Stack
+- [**Longhorn**](clusters/homelab/infrastructure/longhorn/README.md) - Distributed Storage
+- [**CloudNative-PG**](clusters/homelab/infrastructure/cloudnative-pg/README.md) - PostgreSQL
