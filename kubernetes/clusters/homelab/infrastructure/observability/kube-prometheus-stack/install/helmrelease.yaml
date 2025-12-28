@@ -42,7 +42,6 @@ spec:
         # Storage
         storageSpec:
           volumeClaimTemplate:
-            metadata: {}
             spec:
               storageClassName: longhorn
               accessModes: ["ReadWriteOnce"]
