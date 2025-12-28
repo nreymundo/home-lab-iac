@@ -4,4 +4,5 @@ kind: Kustomization
 resources:
   - postgres-cluster.yaml
   - ingress.yaml
+  - outpost-certificate.yaml
   - authentik-podmonitor.yaml
