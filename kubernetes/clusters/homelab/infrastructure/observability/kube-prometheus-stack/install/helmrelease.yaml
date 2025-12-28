@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: kube-prometheus-stack
-      version: "68.0.0"
+      version: "80.8.0"
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
@@ -89,7 +89,7 @@ spec:
         storageClassName: longhorn
         accessModes:
           - ReadWriteOnce
-        size: 5Gi
+        size: 2Gi
 
       # Auto-configure Loki Data Source
       additionalDataSources:
@@ -100,7 +100,7 @@ spec:
           isDefault: false
           jsonData:
             derivedFields:
-              - datasourceUid: Prometheus
+              - datasourceUid: prometheus
                 matcherRegex: "traceID=(\\w+)"
                 name: TraceID
                 url: "$${__value.raw}"
