@@ -9,11 +9,11 @@ The main purpose is to slowly consolidate all the custom scripts and configurati
 1. This repository is a massive work in progress and there's no guarantee I will ever finish it. I'll keep adding to it as I keep adding more stuff to my homelab. Or at least that's the idea.
 2. The code is either written by me or written by AI and audited by me.
 3. The READMEs and documentations are mostly written by AI as a way to keep track of everything and so I know WTF was going if I take a break and eventually come back to this.
-4. Finally, the code isn't the best in all places. In some cases you'll see long very tailored shell commands or things that are, honeslty, flaky as fuck. _The joys of homelabing_.
+4. Finally, the code isn't the best in all places. In some cases you'll see long very tailored shell commands or things that are, honestly, flaky as fuck. _The joys of homelabing_.
 
 ## 🎯 What This Actually Does
 
-Yes yes, I know, I'm reinventing the wheel all over the place. There are already available charts and other projects to do this but... where's the fun in that? I wanted to go from scratch as a way to brush up my skills (particularly in setting up Kubernetes from scratch), get a fully custom solution... and because why not?.
+Yes yes, I know, I'm reinventing the wheel all over the place. There are already available charts and other projects to do this but... where's the fun in that? I wanted to go from scratch as a way to brush up my skills (particularly in setting up Kubernetes from scratch), get a fully custom solution... and because why not?
 
 **What runs here:**
 - A K3s Kubernetes cluster on Proxmox VMs

@@ -21,7 +21,7 @@ graph LR
 ## Security Best Practices (That I'm actually following)
 
 1.  **Never Commit Secrets:** If you commit a password, it is burned. Rotate it immediately.
-2.  **Only samples:** We're committing sample files on how to create the needed secrets. We're not even committing Org IDs and Secret IDs.
+2.  **Commit Samples with Placeholders:** Sample files with placeholders like `<SECRET_ID>` are committed to demonstrate the required structure. The actual secret values and their IDs are never committed.
 
 ## Workflow: Adding a Secret
 

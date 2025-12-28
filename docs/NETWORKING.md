@@ -44,7 +44,7 @@ Isolated network for Kubernetes nodes.
 | Host | IP | Purpose |
 |------|-----|---------|
 | **Gateway** | `192.168.10.1` | VLAN Interface on Router |
-| **Pi-Hole** | `192.168.10.2` | Pimary DNS and adblocker - Using unbound and cloudflared |
+| **Pi-Hole** | `192.168.10.2` | Primary DNS and adblocker - Using unbound and cloudflared |
 | **k3s-node-xx** | `192.168.10.50`+ | K3s Virtual Machines |
 | **MetalLB Pool** | `192.168.10.200-240` | LoadBalancer Service IPs |
 
@@ -65,7 +65,7 @@ These ranges are trusted by the `traefik-lan-allowlist` middleware.
 ```mermaid
 sequenceDiagram
     participant Client
-    participant PiHole as Pi-hole (.6)
+    participant PiHole
     participant Cloudflare
     participant K8s as K3s Cluster
 
