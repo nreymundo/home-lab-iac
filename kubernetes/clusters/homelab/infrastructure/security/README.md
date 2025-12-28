@@ -16,8 +16,9 @@ graph TD
     User[User] -->|Request| Traefik
     Traefik -->|Forward Auth| Authentik[Authentik Outpost]
     Authentik -->|Check Session| AuthServer[Authentik Server]
-    AuthServer -->|Valid| Traefik
-    Traefik -->|Protected| App[Application]
+    AuthServer -- Valid Session --> Authentik
+    Authentik -->|Allow| Traefik
+    Traefik -->|Proxy Request| App[Application]
 
     Traefik -.->|Logs| CrowdSec[CrowdSec - Future]
     CrowdSec -.->|Block IPs| Traefik
@@ -64,7 +65,7 @@ spec:
 2. Create Provider (Proxy type)
 3. Add annotation to Ingress
 
-See [samples/stateless_web_app_with_authentik.yaml](../../../samples/stateless_web_app_with_authentik.yaml) for full example.
+See [samples/stateless_web_app_with_authentik.yaml](../../../../samples/stateless_web_app_with_authentik.yaml) for full example.
 
 ### Method 2: Native App Authentication
 
@@ -110,5 +111,5 @@ For apps with built-in auth (like Grafana, Longhorn), you can:
 
 - [Traefik Configuration](../traefik/README.md)
 - [Observability Stack](../observability/README.md)
-- [Network Architecture](../../../../docs/NETWORKING.md)
-- [Security Guidelines](../../../../docs/SECURITY.md)
+- [Network Architecture](../../../../../docs/NETWORKING.md)
+- [Security Guidelines](../../../../../docs/SECURITY.md)
