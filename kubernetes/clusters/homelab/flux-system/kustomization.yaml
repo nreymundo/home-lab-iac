@@ -22,6 +22,4 @@ resources:
   - authentik-config-kustomization.yaml
   - observability-common-kustomization.yaml
   - observability-loki-install-kustomization.yaml
-  - observability-prometheus-install-kustomization.yaml
   - observability-alloy-install-kustomization.yaml
-  - observability-grafana-install-kustomization.yaml
