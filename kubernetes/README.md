@@ -83,7 +83,7 @@ We use **Bitwarden Secrets Manager**.
 Each major component has its own documentation:
 
 - [**Traefik**](clusters/homelab/infrastructure/traefik/README.md) - Ingress & Routing
-- [**Authentik**](clusters/homelab/infrastructure/authentik/README.md) - SSO & Identity
+- [**Authentik**](clusters/homelab/infrastructure/security/authentik/README.md) - SSO & Identity
 - [**Observability**](clusters/homelab/infrastructure/observability/README.md) - Monitoring Stack
 - [**Longhorn**](clusters/homelab/infrastructure/longhorn/README.md) - Distributed Storage
 - [**CloudNative-PG**](clusters/homelab/infrastructure/cloudnative-pg/README.md) - PostgreSQL

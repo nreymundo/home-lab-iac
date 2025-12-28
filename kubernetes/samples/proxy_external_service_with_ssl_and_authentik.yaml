@@ -9,7 +9,7 @@
 # - Ingress (Traefik, websecure, TLS, LAN Allowlist + Authentik)
 #
 # Requirements:
-# - Authentik outpost must be configured (see ../../infrastructure/authentik/README.md)
+# - Authentik outpost must be configured (see ../../infrastructure/security/authentik/README.md)
 # - Authentik Application and Provider must be created for this service
 #
 # Replace:

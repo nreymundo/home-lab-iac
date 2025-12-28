@@ -18,8 +18,8 @@ resources:
   - external-dns-install-kustomization.yaml
   - longhorn-install-kustomization.yaml
   - longhorn-config-kustomization.yaml
-  - authentik-install-kustomization.yaml
-  - authentik-config-kustomization.yaml
+  - security-authentik-install-kustomization.yaml
+  - security-authentik-config-kustomization.yaml
   - observability-common-kustomization.yaml
   - observability-loki-install-kustomization.yaml
   - observability-kube-prometheus-stack-install-kustomization.yaml
