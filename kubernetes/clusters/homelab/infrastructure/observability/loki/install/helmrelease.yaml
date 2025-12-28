@@ -98,8 +98,6 @@ spec:
       persistence:
         storageClass: longhorn
         size: 20Gi
-        annotations:
-          longhorn.io/numberOfReplicas: "1"
       extraArgs:
         - "-config.expand-env=true"
 
