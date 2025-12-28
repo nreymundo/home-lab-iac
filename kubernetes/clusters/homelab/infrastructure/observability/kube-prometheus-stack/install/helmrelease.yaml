@@ -42,9 +42,7 @@ spec:
         # Storage
         storageSpec:
           volumeClaimTemplate:
-            metadata:
-              annotations:
-                longhorn.io/numberOfReplicas: "1"
+            metadata: {}
             spec:
               storageClassName: longhorn
               accessModes: ["ReadWriteOnce"]
@@ -93,8 +91,6 @@ spec:
         accessModes:
           - ReadWriteOnce
         size: 2Gi
-        annotations:
-          longhorn.io/numberOfReplicas: "1"
 
       # Auto-configure Loki Data Source
       additionalDataSources:
