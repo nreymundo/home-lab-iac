@@ -84,7 +84,7 @@ variable "node_vmid_start" {
 variable "vm_cores" {
   type        = number
   description = "CPU cores per node VM"
-  default     = 4
+  default     = 8
   validation {
     condition     = var.vm_cores >= 1 && var.vm_cores <= 32
     error_message = "CPU cores must be between 1 and 32."
@@ -94,7 +94,7 @@ variable "vm_cores" {
 variable "vm_memory_mb" {
   type        = number
   description = "RAM in MB per node VM"
-  default     = 4096
+  default     = 8192
   validation {
     condition     = var.vm_memory_mb >= 512
     error_message = "Memory must be at least 512 MB."
