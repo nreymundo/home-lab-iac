@@ -43,3 +43,6 @@ spec:
       type: LoadBalancer
       spec:
         externalTrafficPolicy: Local
+    logs:
+      access:
+        enabled: true
