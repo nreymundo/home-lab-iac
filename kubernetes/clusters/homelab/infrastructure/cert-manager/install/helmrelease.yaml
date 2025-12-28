@@ -27,3 +27,7 @@ spec:
       retries: 3
   values:
     fullnameOverride: cert-manager
+    prometheus:
+      enabled: true
+      podmonitor:
+        enabled: true

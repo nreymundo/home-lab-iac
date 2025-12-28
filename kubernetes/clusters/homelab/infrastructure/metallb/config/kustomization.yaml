@@ -5,6 +5,7 @@ resources:
   - namespace.yaml
   - ipaddresspool.yaml
   - l2advertisement.yaml
+  - metallb-podmonitor.yaml
 
 configMapGenerator:
   - name: metallb-params

@@ -19,6 +19,8 @@ spec:
   values:
     deploymentMode: SingleBinary
     fullnameOverride: loki
+    serviceMonitor:
+      enabled: true
 
     # SingleBinary: disable scalable targets
     read:
