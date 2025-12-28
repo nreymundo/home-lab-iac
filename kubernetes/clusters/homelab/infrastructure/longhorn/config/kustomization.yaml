@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ingress.yaml
   - setting-default-replica-count.yaml
+  - longhorn-servicemonitor.yaml
 
 patches:
   # Ensure local-path is NOT the default StorageClass

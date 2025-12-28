@@ -45,7 +45,7 @@ spec:
       containers:
         - name: writer
           image: busybox:1.36
-          command: ["/bin/sh","-lc"]
+          command: ["/bin/sh", "-lc"]
           args:
             - |
               set -eu
