@@ -68,6 +68,8 @@ spec:
       ingress:
         enabled: true
         ingressClassName: traefik
+        labels:
+          external-dns: internal
         annotations:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.tls: "true"
