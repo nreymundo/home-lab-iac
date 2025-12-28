@@ -1,89 +1,68 @@
-# Terraform – K3s Infrastructure Provisioning
+# Terraform Infrastructure
 
-Provisioning layer for the K3s Kubernetes cluster on Proxmox VE. This module handles the creation of virtual machines using the Packer-built templates and generates the necessary Ansible inventory.
+Terraform manages the lifecycle of the K3s virtual machines.
 
 ## 🏗️ Architecture
 
-- **Provider:** `telmate/proxmox` (Proxmox VE)
-- **Source:** Clones from `ubuntu-24.04-base` template
-- **Output:**
-  - Virtual Machines on Proxmox
-  - Dynamic Ansible Inventory (`ansible/inventories/k3s-nodes.yml`)
+- **Provider:** `telmate/proxmox`
+- **State:** Local (`terraform.tfstate`)
+- **Resource:** `proxmox_vm_qemu`
 
-## 🚀 Quick Start
+It does two things:
+1.  **Clones VMs:** Creates `k3s-node-01`, `k3s-node-02`... from the Packer template.
+2.  **Generates Inventory:** Writes `ansible/inventories/k3s-nodes.yml` with the new IPs.
 
-### Prerequisites
-1. **Packer Template:** Ensure `ubuntu-24.04-base` has been built and is available on the Proxmox storage.
-2. **Terraform:** v1.0+ installed.
-3. **Proxmox Credentials:** API token ID and Secret.
+## 🚀 Usage
 
-### 1. Environment Configuration
-Terraform requires credentials to communicate with Proxmox. Use environment variables to keep them secure:
-
+### 1. Set Credentials
+Use environment variables to avoid committing secrets.
 ```bash
 export PM_API_URL="https://192.168.1.10:8006/api2/json"
 export PM_API_TOKEN_ID="terraform@pam!terraform"
 export PM_API_TOKEN_SECRET="your-secret-token"
-
-# Optional: SSH Keys for VM access (if not using defaults)
-export TF_VAR_ssh_public_keys='["ssh-ed25519 AAAAC3..."]'
 ```
 
-### 2. Initialize and Apply
-
+### 2. Apply
 ```bash
-cd terraform/k3s_nodes
-
-# Initialize Terraform (download providers)
 terraform init
-
-# Review execution plan
 terraform plan
-
-# Apply changes to infrastructure
 terraform apply
 ```
 
-## ⚙️ Configuration Variables
+## ⚙️ Scaling the Cluster
 
-Key variables defined in `variables.tf`. You can override these via `TF_VAR_` environment variables or a `terraform.tfvars` file.
+To add more nodes, just change the variable!
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `node_count` | Number of K3s nodes to provision | `2` |
-| `pm_node` | Proxmox node to deploy VMs on | `pve1` |
-| `template_name` | Name of the Packer template | `ubuntu-24.04-base` |
-| `vm_memory` | RAM per VM (MB) | `4096` |
-| `vm_cores` | CPU cores per VM | `2` |
-| `ip_prefix_len` | Network CIDR prefix | `24` |
-| `node_ip_start` | Starting IP octet | `50` (e.g., 192.168.10.50) |
+1.  Edit `variables.tf` (or override via `-var`):
+    ```hcl
+    variable "node_count" {
+      default = 3  # Was 2
+    }
+    ```
+2.  Run `terraform apply`.
+3.  Terraform creates `k3s-node-03`.
+4.  Run Ansible to configure the new node.
 
-## 🔗 Integration with Ansible
+## 🧹 State Management
 
-This Terraform module includes a `local_file` resource that automatically generates an Ansible inventory file.
+Since we use **local state**, the `terraform.tfstate` file is the database of your infrastructure.
 
-**Generated File:** `ansible/inventories/k3s-nodes.yml`
+- **Do NOT delete it.** If you do, Terraform forgets the VMs exist and will try to create duplicates (failing).
+- **Backup it.** Ideally, use a remote backend (S3/Consul), but for homelab, just be careful.
 
-**Example Output:**
-```yaml
-all:
-  children:
-    k3s_nodes:
-      hosts:
-        k3s-node-01:
-          ansible_host: 192.168.10.50
-          ansible_user: ubuntu
-        k3s-node-02:
-          ansible_host: 192.168.10.51
-          ansible_user: ubuntu
+### "I deleted the state file, help!"
+You have to import the existing VMs back into the state.
+```bash
+terraform import proxmox_vm_qemu.k3s_nodes[0] <VMID_OF_NODE_01>
+terraform import proxmox_vm_qemu.k3s_nodes[1] <VMID_OF_NODE_02>
 ```
 
-This integration allows for a seamless workflow:
-1. `terraform apply` -> Creates VMs + Updates Inventory
-2. `ansible-playbook` -> Configures the new VMs immediately
+## ⚠️ Known Issues
 
-## 🛠️ State Management
+### "Error: VM already exists"
+- **Cause:** Terraform crashed or state is out of sync.
+- **Fix:** Manually delete the VM in Proxmox, or fix the state (remove the resource from state if it doesn't exist in Proxmox).
 
-Terraform state is currently stored **locally** (`terraform.tfstate`).
-- **Backup:** Ensure this file is backed up if working in a team or across multiple machines.
-- **Locking:** No remote locking is configured. Avoid concurrent runs.
+### "Timeout waiting for IP"
+- **Cause:** QEMU Guest Agent isn't running in the VM.
+- **Fix:** Ensure the Packer template has the agent installed and enabled (`systemctl enable --now qemu-guest-agent`).
