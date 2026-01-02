@@ -25,7 +25,16 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
 
   os_type = "cloud-init"
   ciuser  = "ubuntu"
-  sshkeys = join("\n", var.ssh_public_keys)
+  sshkeys = join(
+    "\n",
+    compact(
+      split(
+        "\n",
+        replace(trimspace(data.bitwarden-secrets_secret.ssh_public_keys.value), "\r\n", "\n")
+      )
+    )
+  )
+
 
   network {
     id     = 0
