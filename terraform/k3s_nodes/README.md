@@ -49,9 +49,13 @@ nodes = [
     ci_user       = "ubuntu"
   },
   {
-    template_name = "fedora-40-base"
-    ci_user       = "fedora"
-    target_node   = "pve2"
+    template_name          = "fedora-40-base"
+    ci_user                = "fedora"
+    target_node            = "pve2"
+    vm_cores               = 4
+    vm_memory_mb           = 4096
+    vm_disk_size_gb        = 40
+    secondary_disk_size_gb = 300
   }
 ]
 
@@ -69,6 +73,7 @@ Notes:
 - `ansible_user` defaults to `ci_user`.
 - `node_os` in the inventory is derived from `ci_user`.
 - `target_node` is optional; if omitted, placement is round-robin across `proxmox_nodes`.
+- Per-node overrides: `vm_cores`, `vm_memory_mb`, `vm_disk_size_gb`, `secondary_disk_size_gb` fall back to global defaults.
 - If a node omits `template_name` or `ci_user`, defaults are `template_name` and `default_ci_user`.
 
 See `variables.tf` for all available options.
