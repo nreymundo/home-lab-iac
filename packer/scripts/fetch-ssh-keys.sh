@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Fetch SSH public keys from Bitwarden Secrets Manager
 # Usage: fetch-ssh-keys.sh [cloudinit|kickstart]
-# Requires: BW_ACCESS_TOKEN and BWS_SSH_KEYS_ID environment variables
+# Requires: BW_ACCESS_TOKEN and BW_SSH_KEYS_ID environment variables
 
 FORMAT="${1:-cloudinit}"
 
@@ -14,10 +14,10 @@ if [[ -z "${BW_ACCESS_TOKEN:-}" ]]; then
     exit 1
 fi
 
-# Check for BWS_SSH_KEYS_ID
-if [[ -z "${BWS_SSH_KEYS_ID:-}" ]]; then
-    echo "ERROR: BWS_SSH_KEYS_ID environment variable not set" >&2
-    echo "Export it: export BWS_SSH_KEYS_ID='your-secret-id'" >&2
+# Check for BW_SSH_KEYS_ID
+if [[ -z "${BW_SSH_KEYS_ID:-}" ]]; then
+    echo "ERROR: BW_SSH_KEYS_ID environment variable not set" >&2
+    echo "Export it: export BW_SSH_KEYS_ID='your-secret-id'" >&2
     exit 1
 fi
 
@@ -29,7 +29,7 @@ if ! command -v bws &> /dev/null; then
 fi
 
 # Fetch all SSH keys from single secret
-KEYS_RAW=$(bws secret get "$BWS_SSH_KEYS_ID" --access-token "$BW_ACCESS_TOKEN" 2>/dev/null | jq -r '.value')
+KEYS_RAW=$(bws secret get "$BW_SSH_KEYS_ID" --access-token "$BW_ACCESS_TOKEN" 2>/dev/null | jq -r '.value')
 
 # Validate keys were fetched
 if [[ -z "$KEYS_RAW" ]]; then

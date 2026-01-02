@@ -67,10 +67,10 @@ bws --version
 #### 4. Export Secret ID
 
 ```bash
-export BWS_SSH_KEYS_ID="uuid-for-ssh-keys-secret"
+export BW_SSH_KEYS_ID="uuid-for-ssh-keys-secret"
 
 # Add to shell profile for persistence
-echo 'export BWS_SSH_KEYS_ID="..."' >> ~/.bashrc  # or ~/.zshrc
+echo 'export BW_SSH_KEYS_ID="..."' >> ~/.bashrc  # or ~/.zshrc
 ```
 
 #### 5. Set Access Token
