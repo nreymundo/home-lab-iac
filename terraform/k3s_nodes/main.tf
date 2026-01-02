@@ -1,6 +1,7 @@
 locals {
   node_ip_subnet      = "${join(".", slice(split(".", var.node_ip_start), 0, 3))}.0/${var.ip_prefix_len}"
   node_ip_start_octet = tonumber(split(".", var.node_ip_start)[3])
+  node_count          = length(var.nodes)
   ssh_public_keys_list = compact(
     split(
       "\n",
@@ -10,13 +11,13 @@ locals {
 }
 
 resource "proxmox_vm_qemu" "k3s_nodes" {
-  count = var.node_count
+  count = local.node_count
 
   name        = "k3s-node-${format("%02d", count.index + 1)}"
-  target_node = element(var.proxmox_nodes, count.index % length(var.proxmox_nodes))
+  target_node = coalesce(try(var.nodes[count.index].target_node, null), element(var.proxmox_nodes, count.index % length(var.proxmox_nodes)))
   vmid        = var.node_vmid_start + count.index
 
-  clone      = var.template_name
+  clone      = coalesce(try(var.nodes[count.index].template_name, null), var.template_name)
   full_clone = true
 
   scsihw = "virtio-scsi-single"
@@ -30,7 +31,7 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
   memory = var.vm_memory_mb
 
   os_type = "cloud-init"
-  ciuser  = "ubuntu"
+  ciuser  = coalesce(try(var.nodes[count.index].ci_user, null), var.default_ci_user)
   sshkeys = join("\n", local.ssh_public_keys_list)
 
 
@@ -100,9 +101,10 @@ resource "local_file" "ansible_inventory" {
 
   content = templatefile("${path.module}/templates/inventory.yaml.tpl", {
     nodes = [
-      for idx in range(var.node_count) : {
-        name = "k3s-node-${format("%02d", idx + 1)}"
-        ip   = cidrhost(local.node_ip_subnet, local.node_ip_start_octet + idx)
+      for idx in range(local.node_count) : {
+        name         = "k3s-node-${format("%02d", idx + 1)}"
+        ip           = cidrhost(local.node_ip_subnet, local.node_ip_start_octet + idx)
+        ansible_user = coalesce(try(var.nodes[idx].ansible_user, null), coalesce(try(var.nodes[idx].ci_user, null), var.default_ci_user))
       }
     ]
   })

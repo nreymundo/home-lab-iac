@@ -1,8 +1,14 @@
 # Template Configuration
 variable "template_name" {
   type        = string
-  description = "Packer template name to clone from"
+  description = "Default Packer template name to clone from when node does not specify template_name"
   default     = "ubuntu-24.04-base"
+}
+
+variable "default_ci_user" {
+  type        = string
+  description = "Default cloud-init user when node does not specify ci_user"
+  default     = "ubuntu"
 }
 
 variable "ssh_keys_secret_id" {
@@ -50,13 +56,27 @@ variable "network_bridge" {
 }
 
 # Node Configuration
+variable "nodes" {
+  type = list(object({
+    template_name = optional(string)
+    ci_user       = optional(string)
+    ansible_user  = optional(string)
+    target_node   = optional(string)
+  }))
+  description = "Per-node configuration; list length defines node count."
+  validation {
+    condition     = length(var.nodes) > 0
+    error_message = "At least one node must be defined in nodes."
+  }
+}
+
 variable "node_count" {
   type        = number
-  description = "Number of K3s node VMs to create"
-  default     = 2
+  description = "Deprecated: node count is derived from length(nodes). Set to 0 or match length(nodes)."
+  default     = 0
   validation {
-    condition     = var.node_count >= 1
-    error_message = "At least one node is required."
+    condition     = var.node_count == 0 || var.node_count == length(var.nodes)
+    error_message = "node_count must be 0 or match the number of entries in nodes."
   }
 }
 
