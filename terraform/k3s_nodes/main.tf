@@ -8,18 +8,20 @@ locals {
   node_ansible_users = [
     for node_index, node in var.nodes : coalesce(try(node.ansible_user, null), local.node_ci_users[node_index])
   ]
-  node_cores = [
-    for node_index, node in var.nodes : coalesce(try(node.vm_cores, null), var.vm_cores)
-  ]
-  node_memory_mb = [
-    for node_index, node in var.nodes : coalesce(try(node.vm_memory_mb, null), var.vm_memory_mb)
-  ]
-  node_disk_size_gb = [
-    for node_index, node in var.nodes : coalesce(try(node.vm_disk_size_gb, null), var.vm_disk_size_gb)
-  ]
-  node_secondary_disk_size_gb = [
-    for node_index, node in var.nodes : coalesce(try(node.secondary_disk_size_gb, null), var.secondary_disk_size_gb)
-  ]
+  node_resource_defaults = {
+    vm_cores               = var.vm_cores
+    vm_memory_mb           = var.vm_memory_mb
+    vm_disk_size_gb        = var.vm_disk_size_gb
+    secondary_disk_size_gb = var.secondary_disk_size_gb
+  }
+  _node_resource_overrides = {
+    for attr, default_value in local.node_resource_defaults :
+    attr => [for node in var.nodes : coalesce(try(node[attr], null), default_value)]
+  }
+  node_cores                  = local._node_resource_overrides.vm_cores
+  node_memory_mb              = local._node_resource_overrides.vm_memory_mb
+  node_disk_size_gb           = local._node_resource_overrides.vm_disk_size_gb
+  node_secondary_disk_size_gb = local._node_resource_overrides.secondary_disk_size_gb
   ssh_public_keys_list = compact(
     split(
       "\n",
