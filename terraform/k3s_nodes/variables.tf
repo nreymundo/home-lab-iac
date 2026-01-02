@@ -5,6 +5,15 @@ variable "template_name" {
   default     = "ubuntu-24.04-base"
 }
 
+variable "ssh_keys_secret_id" {
+  type        = string
+  description = "Bitwarden Secrets Manager secret ID for SSH public keys."
+  validation {
+    condition     = length(trimspace(var.ssh_keys_secret_id)) > 0
+    error_message = "ssh_keys_secret_id must be set."
+  }
+}
+
 # Network Configuration
 variable "ip_prefix_len" {
   type        = number

@@ -55,7 +55,7 @@ bws --version
    ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK7zi2/... laptop
    ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOKnc8+... dev-vm
    ```
-5. Note your **Organization ID** and **Secret ID** (UUID format)
+5. Note your **Secret ID** (UUID format)
 
 #### 3. Create Machine Account
 
@@ -64,22 +64,22 @@ bws --version
 3. Grant it access to the project containing your SSH keys
 4. Copy the **Access Token**
 
-#### 4. Configure Secret IDs
-
-Edit `packer/scripts/bws-config.sh` with your actual IDs:
+#### 4. Export Secret ID
 
 ```bash
-export BWS_ORG_ID="your-org-id-here"
-export BWS_SSH_KEYS_ID="uuid-for-ssh-keys-secret"
+export BW_SSH_KEYS_ID="uuid-for-ssh-keys-secret"
+
+# Add to shell profile for persistence
+echo 'export BW_SSH_KEYS_ID="..."' >> ~/.bashrc  # or ~/.zshrc
 ```
 
 #### 5. Set Access Token
 
 ```bash
-export BWS_ACCESS_TOKEN="your-bitwarden-access-token"
+export BW_ACCESS_TOKEN="your-bitwarden-access-token"
 
 # Add to shell profile for persistence
-echo 'export BWS_ACCESS_TOKEN="..."' >> ~/.bashrc  # or ~/.zshrc
+echo 'export BW_ACCESS_TOKEN="..."' >> ~/.bashrc  # or ~/.zshrc
 ```
 
 #### 6. Make Scripts Executable
