@@ -58,7 +58,26 @@ If you don't have an SSH key, generate one. This will be used to access the VMs.
 ```bash
 ssh-keygen -t ed25519 -C "your-email@example.com"
 ```
-*Note: You'll need to update `ansible/inventories/group_vars/all.yml` with your public key later.*
+
+### 1.5 Configure Bitwarden Secrets Manager
+The Terraform configuration retrieves SSH public keys from Bitwarden Secrets Manager:
+
+1. In Bitwarden Secrets Manager, create a new secret containing your public SSH keys
+2. Add each public key on a separate line
+3. Copy the secret ID
+4. Update the secret ID in `terraform/k3s_nodes/data.tf`:
+
+```hcl
+data "bitwarden-secrets_secret" "ssh_public_keys" {
+  id = "your-secret-id-here"
+}
+```
+
+Set your Bitwarden credentials as environment variables:
+```bash
+export BW_ORGANIZATION_ID="your-org-id"
+export BW_ACCESS_TOKEN="your-access-token"
+```
 
 ---
 
@@ -116,6 +135,10 @@ Export your credentials (or use a `terraform.tfvars` file, but env vars are safe
 export PM_API_URL="https://192.168.1.10:8006/api2/json"
 export PM_API_TOKEN_ID="packer@pam!packer"
 export PM_API_TOKEN_SECRET="your-secret-token"
+
+# Bitwarden Secrets Manager (for SSH keys)
+export BW_ORGANIZATION_ID="your-org-id"
+export BW_ACCESS_TOKEN="your-access-token"
 ```
 
 ### 4.2 Plan and Apply

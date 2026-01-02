@@ -38,13 +38,19 @@ This is a homelab on a private LAN. Security is "good enough" not "perfect." If 
 
 ### Layer 3: Secrets Management
 **Bitwarden Secrets Manager**
-I use the Bitwarden Operator to inject secrets.
+I use Bitwarden for both Terraform provisioning and Kubernetes workloads.
 
-**Workflow:**
-1.  **Bitwarden UI:** I create a secret (e.g., `CLOUDFLARE_API_TOKEN`).
-2.  **Git:** I commit a `BitwardenSecret` CRD that references the ID (UUID), not the value.
-3.  **Cluster:** The operator fetches the value and creates a native Kubernetes `Secret`.
-4.  **App:** Mounts the secret as an env var or file.
+**Provisioning (Terraform):**
+- **SSH Public Keys:** Retrieved from Bitwarden Secrets Manager during VM provisioning
+- **Workflow:** Terraform provider fetches keys at `apply` time and injects them into cloud-init
+
+**Runtime (Kubernetes):**
+- **Operator:** Bitwarden Operator injects secrets into pods
+- **Workflow:**
+    1. **Bitwarden UI:** I create a secret (e.g., `CLOUDFLARE_API_TOKEN`)
+    2. **Git:** I commit a `BitwardenSecret` CRD that references the ID (UUID), not the value
+    3. **Cluster:** The operator fetches the value and creates a native Kubernetes `Secret`
+    4. **App:** Mounts the secret as an env var or file
 
 **Rule:** No actual secrets (passwords, keys, tokens) in Git. Only UUIDs and Public Keys.
 
@@ -52,7 +58,8 @@ I use the Bitwarden Operator to inject secrets.
 **SSH Access**
 - **Keys Only:** Password authentication is disabled.
 - **Root Login:** Disabled (except on Proxmox console).
-- **Inventory:** Public keys are stored in Ansible vars (this is safe).
+- **Provisioning:** SSH public keys retrieved from Bitwarden Secrets Manager during VM creation (Terraform)
+- **Runtime:** Public keys are stored in Ansible vars for ongoing access (this is safe).
 
 **Patch Management**
 - **RPi/VMs:** `unattended-upgrades` is enabled for security patches.
