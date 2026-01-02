@@ -58,12 +58,16 @@ variable "network_bridge" {
 # Node Configuration
 variable "nodes" {
   type = list(object({
-    template_name = optional(string)
-    ci_user       = optional(string)
-    ansible_user  = optional(string)
-    target_node   = optional(string)
+    template_name          = optional(string)
+    ci_user                = optional(string)
+    ansible_user           = optional(string)
+    target_node            = optional(string)
+    vm_cores               = optional(number)
+    vm_memory_mb           = optional(number)
+    vm_disk_size_gb        = optional(number)
+    secondary_disk_size_gb = optional(number)
   }))
-  description = "Per-node configuration; list length defines node count."
+  description = "Per-node configuration; list length defines node count. Optional overrides: cpu, memory, and disk sizing."
   validation {
     condition     = length(var.nodes) > 0
     error_message = "At least one node must be defined in nodes."

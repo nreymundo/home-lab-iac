@@ -3,10 +3,22 @@ locals {
   node_ip_start_octet = tonumber(split(".", var.node_ip_start)[3])
   node_count          = length(var.nodes)
   node_ci_users = [
-    for idx in range(local.node_count) : coalesce(try(var.nodes[idx].ci_user, null), var.default_ci_user)
+    for node_index, node in var.nodes : coalesce(try(node.ci_user, null), var.default_ci_user)
   ]
   node_ansible_users = [
-    for idx in range(local.node_count) : coalesce(try(var.nodes[idx].ansible_user, null), local.node_ci_users[idx])
+    for node_index, node in var.nodes : coalesce(try(node.ansible_user, null), local.node_ci_users[node_index])
+  ]
+  node_cores = [
+    for node_index, node in var.nodes : coalesce(try(node.vm_cores, null), var.vm_cores)
+  ]
+  node_memory_mb = [
+    for node_index, node in var.nodes : coalesce(try(node.vm_memory_mb, null), var.vm_memory_mb)
+  ]
+  node_disk_size_gb = [
+    for node_index, node in var.nodes : coalesce(try(node.vm_disk_size_gb, null), var.vm_disk_size_gb)
+  ]
+  node_secondary_disk_size_gb = [
+    for node_index, node in var.nodes : coalesce(try(node.secondary_disk_size_gb, null), var.secondary_disk_size_gb)
   ]
   ssh_public_keys_list = compact(
     split(
@@ -30,11 +42,11 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
 
   cpu {
     type    = "host"
-    cores   = var.vm_cores
+    cores   = local.node_cores[count.index]
     sockets = 1
   }
 
-  memory = var.vm_memory_mb
+  memory = local.node_memory_mb[count.index]
 
   os_type = "cloud-init"
   ciuser  = local.node_ci_users[count.index]
@@ -57,7 +69,7 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
       scsi0 {
         disk {
           storage    = var.storage_pool
-          size       = var.vm_disk_size_gb
+          size       = local.node_disk_size_gb[count.index]
           cache      = "writeback"
           iothread   = true
           discard    = true
@@ -69,7 +81,7 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
         content {
           disk {
             storage    = var.secondary_disk_storage_pool
-            size       = "${var.secondary_disk_size_gb}G"
+            size       = "${local.node_secondary_disk_size_gb[count.index]}G"
             cache      = "writeback"
             iothread   = true
             discard    = true
@@ -107,11 +119,11 @@ resource "local_file" "ansible_inventory" {
 
   content = templatefile("${path.module}/templates/inventory.yaml.tpl", {
     nodes = [
-      for idx in range(local.node_count) : {
-        name         = "k3s-node-${format("%02d", idx + 1)}"
-        ip           = cidrhost(local.node_ip_subnet, local.node_ip_start_octet + idx)
-        ansible_user = local.node_ansible_users[idx]
-        node_os      = local.node_ci_users[idx]
+      for node_index in range(local.node_count) : {
+        name         = "k3s-node-${format("%02d", node_index + 1)}"
+        ip           = cidrhost(local.node_ip_subnet, local.node_ip_start_octet + node_index)
+        ansible_user = local.node_ansible_users[node_index]
+        node_os      = local.node_ci_users[node_index]
       }
     ]
   })
