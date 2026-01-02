@@ -24,15 +24,19 @@ The Bitwarden provider retrieves SSH public keys from your Bitwarden vault:
 Required environment variables:
 - `BW_ORGANIZATION_ID` - Your Bitwarden organization ID
 - `BW_ACCESS_TOKEN` - Bitwarden Secrets Manager access token
+- `BW_SSH_KEYS_ID` - Secret ID for SSH public keys
 
-The SSH public keys secret ID is configured in `data.tf`. Update this to match your secret.
+Pass the secret ID into Terraform:
+```bash
+export TF_VAR_ssh_keys_secret_id="$BW_SSH_KEYS_ID"
+```
 
 ## Secrets Configuration
 
 ### SSH Public Keys
 1. Store your SSH public keys in Bitwarden Secrets Manager as a secret
 2. Each key should be on a separate line in the secret value
-3. Update `data.tf` with your secret ID
+3. Export `BW_SSH_KEYS_ID` and `TF_VAR_ssh_keys_secret_id` before running Terraform
 
 ## Variables
 

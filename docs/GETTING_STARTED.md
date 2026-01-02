@@ -65,12 +65,11 @@ The Terraform configuration retrieves SSH public keys from Bitwarden Secrets Man
 1. In Bitwarden Secrets Manager, create a new secret containing your public SSH keys
 2. Add each public key on a separate line
 3. Copy the secret ID
-4. Update the secret ID in `terraform/k3s_nodes/data.tf`:
+4. Export it for Terraform:
 
-```hcl
-data "bitwarden-secrets_secret" "ssh_public_keys" {
-  id = "your-secret-id-here"
-}
+```bash
+export BW_SSH_KEYS_ID="your-secret-id-here"
+export TF_VAR_ssh_keys_secret_id="$BW_SSH_KEYS_ID"
 ```
 
 Set your Bitwarden credentials as environment variables:
