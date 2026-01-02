@@ -1,0 +1,53 @@
+#version=RHEL9
+text
+reboot
+
+# Localization
+lang en_US.UTF-8
+keyboard us
+timezone Europe/Berlin --utc
+
+# Network
+network --bootproto=dhcp --device=link --onboot=yes --hostname=fedora-server
+
+# Storage
+clearpart --all --initlabel
+autopart --type=lvm
+
+# Root account - locked
+rootpw --lock
+
+# User account
+user --name=fedora --groups=wheel --gecos="Fedora User"
+
+# Services
+services --enabled=sshd,qemu-guest-agent
+
+# SSH Keys (injected by generate-autoinstall.sh)
+{{SSH_KEYS}}
+
+# Packages
+%packages
+@core
+@standard
+openssh-server
+qemu-guest-agent
+cloud-init
+cloud-utils-growpart
+nfs-utils
+iscsi-initiator-utils
+curl
+ca-certificates
+chrony
+%end
+
+%post --log=/root/ks-post.log
+# Enforce key-only SSH
+sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sed -i 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+
+# Passwordless sudo for fedora user
+echo 'fedora ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/fedora
+chmod 440 /etc/sudoers.d/fedora
+%end
