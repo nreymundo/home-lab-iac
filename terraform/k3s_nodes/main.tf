@@ -2,6 +2,12 @@ locals {
   node_ip_subnet      = "${join(".", slice(split(".", var.node_ip_start), 0, 3))}.0/${var.ip_prefix_len}"
   node_ip_start_octet = tonumber(split(".", var.node_ip_start)[3])
   node_count          = length(var.nodes)
+  node_ci_users = [
+    for idx in range(local.node_count) : coalesce(try(var.nodes[idx].ci_user, null), var.default_ci_user)
+  ]
+  node_ansible_users = [
+    for idx in range(local.node_count) : coalesce(try(var.nodes[idx].ansible_user, null), local.node_ci_users[idx])
+  ]
   ssh_public_keys_list = compact(
     split(
       "\n",
@@ -31,7 +37,7 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
   memory = var.vm_memory_mb
 
   os_type = "cloud-init"
-  ciuser  = coalesce(try(var.nodes[count.index].ci_user, null), var.default_ci_user)
+  ciuser  = local.node_ci_users[count.index]
   sshkeys = join("\n", local.ssh_public_keys_list)
 
 
@@ -104,8 +110,8 @@ resource "local_file" "ansible_inventory" {
       for idx in range(local.node_count) : {
         name         = "k3s-node-${format("%02d", idx + 1)}"
         ip           = cidrhost(local.node_ip_subnet, local.node_ip_start_octet + idx)
-        ansible_user = coalesce(try(var.nodes[idx].ansible_user, null), coalesce(try(var.nodes[idx].ci_user, null), var.default_ci_user))
-        node_os      = coalesce(try(var.nodes[idx].ci_user, null), var.default_ci_user)
+        ansible_user = local.node_ansible_users[idx]
+        node_os      = local.node_ci_users[idx]
       }
     ]
   })
