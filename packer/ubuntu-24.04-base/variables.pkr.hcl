@@ -49,6 +49,6 @@ variable "http_directory" {
 
 variable "ssh_private_key_file" {
   type        = string
-  default     = "~/.ssh/id_ed25519"
+  default     = "${env("HOME")}/.ssh/id_ed25519"
   description = "Private SSH key used by Packer to connect to the guest."
 }

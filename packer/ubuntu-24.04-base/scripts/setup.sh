@@ -10,15 +10,8 @@ echo "==> 1. System Update & Essential Packages"
 apt-get update
 apt-get upgrade -y
 
-# VM tools, essential packages, NTP, and GPU support tools
+# GPU support tools (other packages already installed via cloud-init)
 apt-get install -y \
-    cloud-init \
-    nfs-common \
-    open-iscsi \
-    curl \
-    ca-certificates \
-    fail2ban \
-    systemd-timesyncd \
     libdrm-dev \
     libelf-dev
 

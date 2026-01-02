@@ -1,0 +1,57 @@
+#cloud-config
+# Autoinstall seed for k3s template; password auth is disabled. Replace placeholder keys with your own.
+
+autoinstall:
+  version: 1
+
+  identity:
+    hostname: ubuntu-base
+    username: ubuntu
+    password: "$6$VnVWNLfqWLvPfAHw$vGxJus8Mt4DcE8E5/TNSXJi0zg/o5c.h3GptSpav9gpCRKpPWF3eaW4pj1hfeS0j6nd/D3tnIW27lpH5dCv4X."  # locked placeholder; SSH is key-only
+
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  timezone: Europe/Berlin
+
+  network:
+    version: 2
+    ethernets:
+      ens18:
+        dhcp4: true
+
+  storage:
+    layout:
+      name: lvm
+
+  ssh:
+    install-server: true
+    allow-pw: false
+    authorized-keys:
+{{SSH_KEYS}}
+    ssh_pwauth: false
+
+  refresh-installer:
+    update: no
+
+  packages:
+    - openssh-server
+    - qemu-guest-agent
+    - cloud-init
+    - nfs-common
+    - open-iscsi
+    - curl
+    - ca-certificates
+    - systemd-timesyncd
+    - libdrm-dev
+    - libelf-dev
+
+  late-commands:
+    - echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/ubuntu  # allow passwordless sudo
+    - curtin in-target --target=/target -- chmod 440 /etc/sudoers.d/ubuntu  # sudoers file mode
+    - curtin in-target --target=/target -- systemctl enable ssh  # enable sshd
+    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent  # enable qga
+    - curtin in-target --target=/target -- sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config  # enforce key-only
+    - curtin in-target --target=/target -- sed -i 's/^PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config  # enforce key-only
+
+  shutdown: reboot
