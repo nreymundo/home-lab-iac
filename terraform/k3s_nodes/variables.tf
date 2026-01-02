@@ -1,14 +1,3 @@
-# Environment inputs:
-# - Terraform variables: TF_VAR_ssh_public_keys
-
-# SSH Public Keys - DEPRECATED: Now retrieved from Bitwarden Secrets Manager
-# This variable is kept for backward compatibility but is not used
-variable "ssh_public_keys" {
-  type        = list(string)
-  description = "[DEPRECATED] List of public SSH keys to inject into VMs. Keys are now retrieved from Bitwarden Secrets Manager."
-  default     = []
-}
-
 # Template Configuration
 variable "template_name" {
   type        = string
