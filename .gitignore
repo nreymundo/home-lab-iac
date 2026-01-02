@@ -40,6 +40,7 @@ terraform.tfvars
 *_override.tf
 *_override.tf.json
 crash.log
+.bw-provider-state
 # Ignored per user preference/workflow
 .terraform.lock.hcl
 terraform/**/.terraform.lock.hcl
