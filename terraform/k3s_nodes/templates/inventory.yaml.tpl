@@ -11,6 +11,7 @@ all:
 %{ for node in nodes ~}
         ${node.name}:
           ansible_host: ${node.ip}
-          ansible_user: "ubuntu"
+          ansible_user: "${node.ansible_user}"
           ansible_port: 22
+          node_os: "${node.node_os}"
 %{ endfor ~}
