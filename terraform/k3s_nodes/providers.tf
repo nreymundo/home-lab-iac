@@ -4,6 +4,10 @@ terraform {
       source  = "telmate/proxmox"
       version = "3.0.2-rc06"
     }
+    bitwarden-secrets = {
+      source  = "bitwarden/bitwarden-secrets"
+      version = "0.5.4-pre"
+    }
   }
   required_version = ">= 1.3"
 
@@ -22,4 +26,12 @@ provider "proxmox" {
   pm_tls_insecure = true
   pm_timeout      = 600
   pm_parallel     = 3
+}
+
+# Environment inputs:
+# - Provider auth/endpoint: BW_ORGANIZATION_ID, BW_ACCESS_TOKEN
+
+provider "bitwarden-secrets" {
+  api_url      = "https://api.bitwarden.com"
+  identity_url = "https://identity.bitwarden.com"
 }
