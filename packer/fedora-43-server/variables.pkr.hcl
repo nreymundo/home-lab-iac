@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# Packer variables for the Proxmox Ubuntu 24.04 Base Image
+# Packer variables for the Proxmox Fedora 43 Server Base Image
 # ------------------------------------------------------------------------------
 
 # --- Proxmox API Configuration ---
@@ -30,7 +30,7 @@ variable "proxmox_api_token_secret" {
 
 variable "iso_name" {
   type        = string
-  default     = "ubuntu-24.04.3-live-server-amd64.iso"
+  default     = "Fedora-Server-netinst-x86_64-43-1.6.iso"
   description = "The name of the ISO file to use (must be available on the Proxmox storage)."
 }
 
@@ -40,11 +40,10 @@ variable "iso_storage_pool" {
   description = "The Proxmox storage pool where the ISO is located."
 }
 
-
 variable "http_directory" {
   type        = string
   default     = "http"
-  description = "Directory served by Packer's HTTP server for autoinstall seed files."
+  description = "Directory served by Packer's HTTP server for Kickstart files."
 }
 
 variable "ssh_private_key_file" {

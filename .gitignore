@@ -31,6 +31,9 @@ packer_cache/
 packer/**/*.auto.pkrvars.hcl
 packer/**/*.pkrvars.hcl
 !packer/**/*.pkrvars.hcl.example
+# Packer: Generated autoinstall configs with secrets
+packer/**/http/user-data
+packer/**/http/ks.cfg
 # Terraform overrides and variable definitions
 *.auto.tfvars
 terraform.tfvars
