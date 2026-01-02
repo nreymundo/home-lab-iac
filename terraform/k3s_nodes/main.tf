@@ -105,6 +105,7 @@ resource "local_file" "ansible_inventory" {
         name         = "k3s-node-${format("%02d", idx + 1)}"
         ip           = cidrhost(local.node_ip_subnet, local.node_ip_start_octet + idx)
         ansible_user = coalesce(try(var.nodes[idx].ansible_user, null), coalesce(try(var.nodes[idx].ci_user, null), var.default_ci_user))
+        node_os      = coalesce(try(var.nodes[idx].ci_user, null), var.default_ci_user)
       }
     ]
   })

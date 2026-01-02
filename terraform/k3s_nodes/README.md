@@ -67,6 +67,7 @@ secondary_disk_size_gb = 200
 Notes:
 - `node_count` is derived from `length(nodes)`; if you set `node_count`, it must match.
 - `ansible_user` defaults to `ci_user`.
+- `node_os` in the inventory is derived from `ci_user`.
 - `target_node` is optional; if omitted, placement is round-robin across `proxmox_nodes`.
 - If a node omits `template_name` or `ci_user`, defaults are `template_name` and `default_ci_user`.
 
