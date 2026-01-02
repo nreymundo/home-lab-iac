@@ -90,6 +90,7 @@ graph TD
 - **Creates:** K3s node VMs
 - **Network:** VLAN 10 (`192.168.10.0/24`)
 - **Output:** Ansible inventory (`ansible/inventories/k3s-nodes.yml`)
+- **Secrets:** Retrieves SSH public keys from Bitwarden Secrets Manager
 
 ### Layer 3: Configuration (Ansible)
 **Ansible: Config Management**
@@ -155,8 +156,9 @@ graph TD
 - **Use case:** Protect internal apps that don't have their own auth.
 
 **Bitwarden Secrets Manager**
-- **Purpose:** Inject secrets into Kubernetes from external vault.
-- **Operator:** BitwardenSecret CRDs.
+- **Purpose:** Centralized secrets management for both Terraform provisioning and Kubernetes workloads.
+- **Terraform:** Retrieves SSH public keys for VM provisioning.
+- **Kubernetes:** Operator (BitwardenSecret CRDs) injects secrets into pods.
 - **Why:** No secrets in Git. Period.
 
 ### Layer 7: Observability

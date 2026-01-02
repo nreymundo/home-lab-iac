@@ -1,6 +1,12 @@
 locals {
   node_ip_subnet      = "${join(".", slice(split(".", var.node_ip_start), 0, 3))}.0/${var.ip_prefix_len}"
   node_ip_start_octet = tonumber(split(".", var.node_ip_start)[3])
+  ssh_public_keys_list = compact(
+    split(
+      "\n",
+      replace(trimspace(data.bitwarden-secrets_secret.ssh_public_keys.value), "\r\n", "\n")
+    )
+  )
 }
 
 resource "proxmox_vm_qemu" "k3s_nodes" {
@@ -25,7 +31,8 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
 
   os_type = "cloud-init"
   ciuser  = "ubuntu"
-  sshkeys = join("\n", var.ssh_public_keys)
+  sshkeys = join("\n", local.ssh_public_keys_list)
+
 
   network {
     id     = 0
