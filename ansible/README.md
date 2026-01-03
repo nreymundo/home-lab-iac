@@ -92,7 +92,7 @@ proxmox_kernel_params_remove:
   - "i915.enable_gvt=1"
 ```
 
-- **CoreFreq (optional):** Installs CoreFreq via DKMS, loads `corefreqk`, and enables `corefreqd` when `proxmox_corefreq_enabled: true`. Variables: `proxmox_corefreq_version`, `proxmox_corefreq_git_repo`, `proxmox_corefreq_git_ref`, `proxmox_corefreq_modprobe_options`. Requires `community.general` for `modprobe` (`ansible-galaxy collection install community.general`). Disable by setting `proxmox_corefreq_enabled: false` (optional cleanup: remove `/etc/modules-load.d/corefreqk.conf` and `/etc/modprobe.d/corefreqk.conf`).
+- **CoreFreq (optional):** Installs CoreFreq via DKMS, loads `corefreqk`, and enables `corefreqd` when `proxmox_corefreq_enabled: true`. Variables: `proxmox_corefreq_version`, `proxmox_corefreq_git_repo`, `proxmox_corefreq_git_ref`, `proxmox_corefreq_modprobe_options`. Requires `community.general` for `modprobe` (`ansible-galaxy collection install community.general`). Disable by setting `proxmox_corefreq_enabled: false` (optional cleanup: disable `corefreqd`, remove the DKMS module, delete `/usr/src/corefreqk-*`, and remove `/etc/modules-load.d/corefreqk.conf` + `/etc/modprobe.d/corefreqk.conf`).
 
 ### `k3s`
 Applied to K3s Nodes.

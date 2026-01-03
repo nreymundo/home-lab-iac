@@ -21,12 +21,17 @@
 
 # Fix CoreFreq DKMS integration on some hosts/kernels:
 # - dkms.conf PRE_BUILD calls "make prepare" which may not exist in this tree
+- name: CoreFreq | Check dkms.conf presence
+  ansible.builtin.stat:
+    path: "/usr/src/corefreqk-{{ proxmox_corefreq_version }}/dkms.conf"
+  register: corefreq_dkms_conf
+
 - name: CoreFreq | Patch dkms.conf to disable PRE_BUILD hook
   ansible.builtin.replace:
     path: "/usr/src/corefreqk-{{ proxmox_corefreq_version }}/dkms.conf"
     regexp: '^PRE_BUILD=.*$'
     replace: '# PRE_BUILD disabled by Ansible (target not present in this tree)'
-  failed_when: false
+  when: corefreq_dkms_conf.stat.exists
 
 - name: CoreFreq | DKMS add (idempotent)
   ansible.builtin.command: "dkms add -m corefreqk -v {{ proxmox_corefreq_version }}"
@@ -93,10 +98,7 @@
 
       [Install]
       WantedBy=multi-user.target
-
-- name: CoreFreq | systemd daemon-reload
-  ansible.builtin.systemd:
-    daemon_reload: true
+  notify: Reload systemd daemon
 
 - name: CoreFreq | Enable and start daemon
   ansible.builtin.systemd:
