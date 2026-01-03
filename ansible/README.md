@@ -71,6 +71,27 @@ Applied to Virtual Machines only.
 - **Disk Expansion:** Automatically resizes the root filesystem if the underlying virtual disk grows.
 - **QEMU Agent:** Ensures the agent is running for Proxmox integration.
 
+### `proxmox`
+Applied to Proxmox hosts.
+- **GRUB kernel params:** Safely merges baseline and host-specific kernel params into `/etc/default/grub` (`GRUB_CMDLINE_LINUX_DEFAULT`) and runs `update-grub` only on change. Protected boot-critical params are blocked (`root=`, `init=`, `systemd.unit=`, `resume=`, `cryptdevice=`, `rd.`, `BOOT_IMAGE=`).
+
+Example:
+```yaml
+# Baseline (inventories/group_vars/proxmox.yml)
+proxmox_kernel_params_base_add:
+  - "intel_iommu=on"
+  - "pcie_aspm=force"
+  - "nmi_watchdog=0"
+proxmox_kernel_params_base_remove: []
+
+# Host (inventories/host_vars/pve1.yml)
+proxmox_kernel_params_add:
+  - "intel_idle.max_cstate=10"
+  - "processor.max_cstate=10"
+proxmox_kernel_params_remove:
+  - "i915.enable_gvt=1"
+```
+
 ### `k3s`
 Applied to K3s Nodes.
 - **Kernel Tuning:** Enables IP forwarding, bridge-nf-call-iptables.
