@@ -12,6 +12,10 @@ proxmox_zfs_thin_pools:
 proxmox_zfs_thin_enforce: false
 proxmox_zfs_thin_audit: true
 
+# --- ZFS ARC ---
+proxmox_zfs_arc_min_bytes: 1073741824  # 1 GiB
+proxmox_zfs_arc_max_bytes: 4294967296  # 4 GiB
+
 # --- CoreFreq (DKMS) ---
 proxmox_corefreq_enabled: false
 
