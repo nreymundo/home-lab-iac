@@ -1,0 +1,23 @@
+# Managed by Ansible. Do not edit manually.
+[connection]
+id={{ item.name }}
+type=ethernet
+interface-name={{ item.interface }}
+autoconnect=true
+
+[ethernet]
+
+[ipv4]
+method=manual
+{% for addr in item.ipv4.addresses %}
+address{{ loop.index }}={{ addr }}
+{% endfor %}
+{% if item.ipv4.gateway is defined %}
+gateway={{ item.ipv4.gateway }}
+{% endif %}
+{% if item.ipv4.dns is defined %}
+dns={{ item.ipv4.dns | join(';') }};
+{% endif %}
+
+[ipv6]
+method=disabled

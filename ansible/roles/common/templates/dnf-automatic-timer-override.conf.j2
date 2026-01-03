@@ -1,0 +1,6 @@
+# Managed by Ansible. Do not edit manually.
+[Timer]
+OnCalendar=
+OnCalendar=*-*-* {{ common_unattended_upgrades_reboot_time | default('08:00') }}
+RandomizedDelaySec=0
+Persistent=true

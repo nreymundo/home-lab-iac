@@ -1,0 +1,107 @@
+---
+# Debian/Ubuntu-specific tasks for the common role.
+
+- name: Update apt cache and upgrade packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+    cache_valid_time: 3600
+  when: common_run_upgrade | bool
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+  when: common_packages | length > 0
+
+- name: Install host-specific packages
+  ansible.builtin.apt:
+    name: "{{ common_extra_packages }}"
+    state: present
+  when: common_extra_packages | default([]) | length > 0
+
+- name: Ensure systemd-timesyncd is installed
+  ansible.builtin.apt:
+    name: systemd-timesyncd
+    state: present
+  when: common_ntp_servers | length > 0
+
+- name: Ensure systemd-timesyncd service is enabled
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    enabled: true
+    state: started
+  when:
+    - common_ntp_servers | length > 0
+    - not ansible_check_mode
+
+- name: Ensure timesyncd config directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/timesyncd.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: common_ntp_servers | length > 0
+
+- name: Configure systemd-timesyncd NTP servers
+  ansible.builtin.template:
+    src: timesyncd.conf.j2
+    dest: /etc/systemd/timesyncd.conf.d/20-ansible.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_ntp_servers | length > 0
+  notify: Restart systemd-timesyncd
+
+- name: Configure netplan when provided
+  ansible.builtin.template:
+    src: netplan.yaml.j2
+    dest: /etc/netplan/01-main.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_netplan_config | length > 0
+  notify: Apply netplan
+
+- name: Install unattended upgrade dependencies
+  ansible.builtin.apt:
+    name:
+      - unattended-upgrades
+      - apt-listchanges
+    state: present
+  when: common_enable_unattended_upgrades | bool
+
+- name: Configure unattended-upgrades origins and blacklist
+  ansible.builtin.template:
+    src: 50unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_enable_unattended_upgrades | bool
+
+- name: Configure unattended-upgrades frequency
+  ansible.builtin.template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_enable_unattended_upgrades | bool
+
+- name: Enable unattended-upgrades service
+  ansible.builtin.systemd:
+    name: unattended-upgrades
+    state: started
+    enabled: true
+  when: common_enable_unattended_upgrades | bool
+
+- name: Disable unattended-upgrades service
+  ansible.builtin.systemd:
+    name: unattended-upgrades
+    state: stopped
+    enabled: false
+  when:
+    - not common_enable_unattended_upgrades | bool
+    - "'unattended-upgrades.service' in ansible_facts.services"

@@ -1,0 +1,11 @@
+# Managed by Ansible. Do not edit manually.
+{% for server in common_ntp_servers %}
+server {{ server }} iburst
+{% endfor %}
+
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+keyfile /etc/chrony.keys
+leapsectz right/UTC
+logdir /var/log/chrony

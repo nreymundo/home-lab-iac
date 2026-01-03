@@ -1,7 +1,7 @@
 ---
 - name: Restart sshd
   ansible.builtin.service:
-    name: ssh
+    name: "{{ _common_ssh_service | default('ssh') }}"
     state: restarted
 
 - name: Apply netplan
@@ -17,3 +17,16 @@
   when:
     - ansible_facts.services is defined
     - "'systemd-timesyncd.service' in ansible_facts.services or 'systemd-timesyncd' in ansible_facts.services"
+
+- name: Restart chronyd
+  ansible.builtin.service:
+    name: chronyd
+    state: restarted
+
+- name: Reload NetworkManager connections
+  ansible.builtin.command: nmcli connection reload
+  changed_when: false
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
