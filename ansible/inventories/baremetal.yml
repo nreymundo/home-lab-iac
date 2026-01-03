@@ -14,6 +14,9 @@ all:
     pve3:
       ansible_host: 192.168.1.6
       ansible_user: root
+    framework:
+      ansible_host: 192.168.1.6
+      ansible_user: nico
 
 # Here we group the hosts defined above based on type/functionality
   children:
@@ -28,3 +31,6 @@ all:
         pve1: {}
         pve2: {}
         pve3: {}
+    fedora:
+      hosts:
+        framework: {}
