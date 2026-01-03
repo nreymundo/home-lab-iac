@@ -7,6 +7,12 @@ proxmox_kernel_params_base_remove: []
 proxmox_kernel_params_add: []
 proxmox_kernel_params_remove: []
 
+# Host-specific modprobe blacklist entries (module names).
+proxmox_modprobe_blacklist: []
+
+# Host-specific modprobe options entries (without the 'options' keyword).
+proxmox_modprobe_options: []
+
 proxmox_zfs_thin_pools:
   - ssd-zfs
 proxmox_zfs_thin_enforce: false
