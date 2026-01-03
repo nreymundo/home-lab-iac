@@ -3,3 +3,9 @@
 # By default, proxmox role audits and fixes ['ssd-zfs'].
 proxmox_zfs_thin_pools:
   - ssd-zfs
+
+proxmox_kernel_params_add:
+  - "intel_idle.max_cstate=10"
+  - "processor.max_cstate=10"
+proxmox_kernel_params_remove:
+  - "i915.enable_gvt=1"

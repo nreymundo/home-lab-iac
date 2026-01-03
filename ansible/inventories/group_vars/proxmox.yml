@@ -4,7 +4,7 @@ common_user: "{{ ansible_user | default('root') }}"
 
 common_enable_unattended_upgrades: false
 common_unattended_upgrades_auto_reboot: false
-common_run_upgrade: false
+common_run_upgrade: true
 common_enable_hushlogin: false
 
 common_packages:
@@ -16,3 +16,11 @@ common_packages:
 common_sshd_hardening:
   PermitRootLogin: "prohibit-password"
   PasswordAuthentication: "no"
+
+# Kernel parameters applied to all Proxmox hosts.
+proxmox_kernel_params_base_add:
+  - "intel_iommu=on"
+  - "pcie_aspm=force"
+  - "nmi_watchdog=0"
+
+proxmox_kernel_params_base_remove: []

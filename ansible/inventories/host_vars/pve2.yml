@@ -3,3 +3,9 @@
 # By default, proxmox role audits and fixes ['ssd-zfs'].
 proxmox_zfs_thin_pools:
   - ssd-zfs
+
+proxmox_kernel_params_add:
+  - "intel_iommu=on,igfx_off"
+  - "hpet=disable"
+  - "acpi_enforce_resources=lax"
+proxmox_kernel_params_remove: []

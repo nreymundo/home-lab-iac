@@ -1,0 +1,143 @@
+---
+- name: Manage GRUB kernel parameters
+  vars:
+    proxmox_kernel_params_protected_regex: '^(root=|init=|systemd\.unit=|resume=|cryptdevice=|rd\.|BOOT_IMAGE=)'
+  block:
+    - name: Merge desired kernel parameter lists
+      ansible.builtin.set_fact:
+        proxmox_kernel_params_add_merged: >-
+          {{ (proxmox_kernel_params_base_add | default([]))
+             + (proxmox_kernel_params_add | default([])) }}
+        proxmox_kernel_params_remove_merged: >-
+          {{ (proxmox_kernel_params_base_remove | default([]))
+             + (proxmox_kernel_params_remove | default([])) }}
+
+    - name: Build combined kernel param list
+      ansible.builtin.set_fact:
+        proxmox_kernel_params_all: >-
+          {{ proxmox_kernel_params_add_merged
+             + proxmox_kernel_params_remove_merged }}
+
+    - name: Validate kernel params do not touch protected keys
+      ansible.builtin.assert:
+        that:
+          - item is not match(proxmox_kernel_params_protected_regex)
+        fail_msg: >-
+          Refusing to modify protected kernel parameter '{{ item }}'
+          (matches {{ proxmox_kernel_params_protected_regex }})
+      loop: "{{ proxmox_kernel_params_all }}"
+      when: proxmox_kernel_params_all | length > 0
+
+    - name: Read /etc/default/grub
+      ansible.builtin.slurp:
+        src: /etc/default/grub
+      register: proxmox_grub_defaults_raw
+
+    - name: Decode /etc/default/grub content
+      ansible.builtin.set_fact:
+        proxmox_grub_defaults_text: "{{ proxmox_grub_defaults_raw.content | b64decode }}"
+
+    - name: Extract GRUB_CMDLINE_LINUX_DEFAULT
+      ansible.builtin.set_fact:
+        proxmox_grub_cmdline_line: >-
+          {{ proxmox_grub_defaults_text
+             | regex_search('(?m)^[ \t]*GRUB_CMDLINE_LINUX_DEFAULT=.*$')
+             | default('') }}
+
+    - name: Fail if GRUB_CMDLINE_LINUX_DEFAULT is missing
+      ansible.builtin.fail:
+        msg: "GRUB_CMDLINE_LINUX_DEFAULT not found in /etc/default/grub; refusing to modify kernel params."
+      when: proxmox_grub_cmdline_line | length == 0
+
+    - name: Parse current GRUB cmdline value
+      ansible.builtin.set_fact:
+        proxmox_grub_cmdline_value: >-
+          {{ proxmox_grub_cmdline_line
+             | regex_replace('^\s*GRUB_CMDLINE_LINUX_DEFAULT=', '')
+             | trim
+             | regex_replace('^"(.*)"$', '\1')
+             | regex_replace("^'(.*)'$", '\1') }}
+
+    - name: Parse current GRUB cmdline tokens
+      ansible.builtin.set_fact:
+        proxmox_grub_cmdline_tokens: >-
+          {{ (proxmox_grub_cmdline_value | trim).split()
+             if (proxmox_grub_cmdline_value | trim | length) > 0 else [] }}
+
+    - name: Build kernel param remove keys
+      ansible.builtin.set_fact:
+        proxmox_kernel_params_remove_keys: >-
+          {{ proxmox_kernel_params_remove_merged
+             | map('regex_replace', '=.*$', '')
+             | list }}
+
+    - name: Normalize kernel param adds
+      ansible.builtin.set_fact:
+        proxmox_kernel_params_add_deduped: >-
+          {%- set ns = namespace(result=[]) -%}
+          {%- for token in proxmox_kernel_params_add_merged -%}
+            {%- set key = token | regex_replace('=.*$', '') -%}
+            {%- set filtered = [] -%}
+            {%- for existing in ns.result -%}
+              {%- set existing_key = existing | regex_replace('=.*$', '') -%}
+              {%- if existing_key != key -%}
+                {%- set _ = filtered.append(existing) -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- set ns.result = filtered -%}
+            {%- set _ = ns.result.append(token) -%}
+          {%- endfor -%}
+          {{ ns.result }}
+
+    - name: Build kernel param add keys
+      ansible.builtin.set_fact:
+        proxmox_kernel_params_add_keys: >-
+          {{ proxmox_kernel_params_add_deduped
+             | map('regex_replace', '=.*$', '')
+             | list }}
+
+    - name: Build updated GRUB cmdline tokens
+      ansible.builtin.set_fact:
+        proxmox_grub_cmdline_tokens_updated: >-
+          {%- set protected = proxmox_kernel_params_protected_regex -%}
+          {%- set remove_keys = proxmox_kernel_params_remove_keys -%}
+          {%- set add_tokens = proxmox_kernel_params_add_deduped -%}
+          {%- set add_keys = proxmox_kernel_params_add_keys -%}
+          {%- set result = [] -%}
+          {%- set seen_keys = [] -%}
+          {%- for token in proxmox_grub_cmdline_tokens -%}
+            {%- set key = token | regex_replace('=.*$', '') -%}
+            {%- if token is match(protected) -%}
+              {%- if key not in seen_keys -%}
+                {%- set _ = result.append(token) -%}
+                {%- set _ = seen_keys.append(key) -%}
+              {%- endif -%}
+            {%- elif token in add_tokens -%}
+              {%- if key not in seen_keys -%}
+                {%- set _ = result.append(token) -%}
+                {%- set _ = seen_keys.append(key) -%}
+              {%- endif -%}
+            {%- elif key in remove_keys -%}
+            {%- elif key in add_keys -%}
+            {%- else -%}
+              {%- if key not in seen_keys -%}
+                {%- set _ = result.append(token) -%}
+                {%- set _ = seen_keys.append(key) -%}
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- for token in add_tokens -%}
+            {%- set key = token | regex_replace('=.*$', '') -%}
+            {%- if key not in seen_keys -%}
+              {%- set _ = result.append(token) -%}
+              {%- set _ = seen_keys.append(key) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ result }}
+
+    - name: Update GRUB_CMDLINE_LINUX_DEFAULT
+      ansible.builtin.lineinfile:
+        path: /etc/default/grub
+        regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+        line: "GRUB_CMDLINE_LINUX_DEFAULT=\"{{ proxmox_grub_cmdline_tokens_updated | join(' ') }}\""
+      notify: Update grub

@@ -1,4 +1,12 @@
 ---
+# Baseline kernel parameters for all Proxmox hosts.
+proxmox_kernel_params_base_add: []
+proxmox_kernel_params_base_remove: []
+
+# Host-specific kernel parameter overrides (set in host_vars).
+proxmox_kernel_params_add: []
+proxmox_kernel_params_remove: []
+
 proxmox_zfs_thin_pools:
   - ssd-zfs
 proxmox_zfs_thin_enforce: false
