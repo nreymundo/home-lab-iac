@@ -17,6 +17,7 @@ common_packages:
   - vim
   - git
   - linux-cpupower
+  - powertop
 
 # Allow root login with keys for Proxmox, but disable passwords.
 common_sshd_hardening:
