@@ -24,3 +24,5 @@ proxmox_kernel_params_base_add:
   - "nmi_watchdog=0"
 
 proxmox_kernel_params_base_remove: []
+
+proxmox_corefreq_enabled: true

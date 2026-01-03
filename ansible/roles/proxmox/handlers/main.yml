@@ -3,3 +3,12 @@
   ansible.builtin.command: update-grub
   changed_when: true
   when: not ansible_check_mode
+
+- name: Update initramfs
+  ansible.builtin.command: update-initramfs -u -k all
+  changed_when: true
+  when: not ansible_check_mode
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true

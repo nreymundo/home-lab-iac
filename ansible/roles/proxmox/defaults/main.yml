@@ -11,3 +11,18 @@ proxmox_zfs_thin_pools:
   - ssd-zfs
 proxmox_zfs_thin_enforce: false
 proxmox_zfs_thin_audit: true
+
+# --- CoreFreq (DKMS) ---
+proxmox_corefreq_enabled: false
+
+proxmox_corefreq_version: "2.00"
+proxmox_corefreq_git_repo: "https://github.com/cyring/CoreFreq.git"
+proxmox_corefreq_git_ref: "master"
+
+proxmox_corefreq_modprobe_options: >-
+  options corefreqk
+  Register_ClockSource=1
+  Register_CPU_Freq=1
+  Register_Governor=1
+  Register_CPU_Idle=1
+  Override_SubCstate="1,1,1,1,1,1,0,0"
