@@ -2,11 +2,11 @@
 # Override ZFS pools managed by thin provisioning for this Proxmox host.
 # By default, proxmox role audits and fixes ['ssd-zfs'].
 proxmox_zfs_thin_pools:
-  - ssd-zfs
+  - rpool
 
 proxmox_kernel_params_add:
-  - "intel_idle.max_cstate=10"
-  - "processor.max_cstate=10"
-  - "intel_iommu=on"
-proxmox_kernel_params_remove:
-  - "i915.enable_gvt=1"
+  - "initcall_blacklist=acpi_cpufreq_init"
+  - "idle=halt"
+  - "amd_pstate=disable"
+  - "tsc=unstable"
+proxmox_kernel_params_remove: []

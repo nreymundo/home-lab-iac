@@ -11,6 +11,9 @@ all:
     pve2:
       ansible_host: 192.168.1.5
       ansible_user: root
+    pve3:
+      ansible_host: 192.168.1.6
+      ansible_user: root
 
 # Here we group the hosts defined above based on type/functionality
   children:
@@ -24,3 +27,4 @@ all:
       hosts:
         pve1: {}
         pve2: {}
+        pve3: {}
