@@ -1,0 +1,4 @@
+# Managed by Ansible: Proxmox module options
+{% for option in proxmox_modprobe_options | default([]) %}
+options {{ option }}
+{% endfor %}

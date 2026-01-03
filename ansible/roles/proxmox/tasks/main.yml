@@ -20,6 +20,23 @@
   when: proxmox_modprobe_blacklist | default([]) | length == 0
   notify: Update initramfs
 
+- name: Manage Proxmox module options
+  ansible.builtin.template:
+    src: modprobe_options.conf.j2
+    dest: /etc/modprobe.d/pve-options.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: proxmox_modprobe_options | default([]) | length > 0
+  notify: Update initramfs
+
+- name: Remove Proxmox module options file when empty
+  ansible.builtin.file:
+    path: /etc/modprobe.d/pve-options.conf
+    state: absent
+  when: proxmox_modprobe_options | default([]) | length == 0
+  notify: Update initramfs
+
 - name: Include Proxmox ZFS thin provisioning audit
   ansible.builtin.include_tasks: zfs_thin_audit.yml
   when: proxmox_zfs_thin_enforce | default(false) | bool or proxmox_zfs_thin_audit | default(true) | bool

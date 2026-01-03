@@ -15,3 +15,6 @@ proxmox_modprobe_blacklist:
   - radeon
   - amdgpu
   - snd_hda_intel
+
+proxmox_modprobe_options:
+  - "vfio-pci ids=1002:1586,1002:1640 disable_vga=1"
