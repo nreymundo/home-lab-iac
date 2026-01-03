@@ -1,0 +1,16 @@
+# colorized 'ls' and some useful aliases
+ export LS_OPTIONS='--color=auto'
+ eval "$(dircolors)"
+ alias ls='ls $LS_OPTIONS'
+ alias ll='ls $LS_OPTIONS -l'
+ alias l='ls $LS_OPTIONS -lA'
+
+ alias rm='rm -i'
+ alias cp='cp -i'
+ alias mv='mv -i'
+
+# don't put duplicate lines or lines starting with space in the history.
+export HISTCONTROL=ignoreboth:erasedups
+
+# Load starship prompt
+eval "$(starship init bash)"

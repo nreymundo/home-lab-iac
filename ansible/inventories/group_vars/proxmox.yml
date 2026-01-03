@@ -11,6 +11,9 @@ common_packages:
   - htop
   - iftop
   - iperf3
+  - fastfetch
+  - lm-sensors
+  - starship
 
 # Allow root login with keys for Proxmox, but disable passwords.
 common_sshd_hardening:
