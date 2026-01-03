@@ -3,6 +3,23 @@
 - name: Manage Proxmox kernel parameters
   ansible.builtin.include_tasks: bootloader_kernel_params.yml
 
+- name: Manage Proxmox module blacklist
+  ansible.builtin.template:
+    src: modprobe_blacklist.conf.j2
+    dest: /etc/modprobe.d/pve-blacklist.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: proxmox_modprobe_blacklist | default([]) | length > 0
+  notify: Update initramfs
+
+- name: Remove Proxmox module blacklist file when empty
+  ansible.builtin.file:
+    path: /etc/modprobe.d/pve-blacklist.conf
+    state: absent
+  when: proxmox_modprobe_blacklist | default([]) | length == 0
+  notify: Update initramfs
+
 - name: Include Proxmox ZFS thin provisioning audit
   ansible.builtin.include_tasks: zfs_thin_audit.yml
   when: proxmox_zfs_thin_enforce | default(false) | bool or proxmox_zfs_thin_audit | default(true) | bool

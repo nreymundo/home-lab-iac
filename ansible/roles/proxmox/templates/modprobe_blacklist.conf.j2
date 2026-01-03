@@ -1,0 +1,4 @@
+# Managed by Ansible: Proxmox module blacklist
+{% for module in proxmox_modprobe_blacklist | default([]) %}
+blacklist {{ module }}
+{% endfor %}
