@@ -14,6 +14,9 @@ common_packages:
   - fastfetch
   - lm-sensors
   - starship
+  - vim
+  - git
+  - linux-cpupower
 
 # Allow root login with keys for Proxmox, but disable passwords.
 common_sshd_hardening:
@@ -22,9 +25,9 @@ common_sshd_hardening:
 
 # Kernel parameters applied to all Proxmox hosts.
 proxmox_kernel_params_base_add:
-  - "intel_iommu=on"
   - "pcie_aspm=force"
   - "nmi_watchdog=0"
+  - "nowatchdog"
 
 proxmox_kernel_params_base_remove: []
 

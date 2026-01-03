@@ -4,9 +4,9 @@
 proxmox_zfs_thin_pools:
   - rpool
 
-proxmox_kernel_params_add:
-  - "initcall_blacklist=acpi_cpufreq_init"
-  - "idle=halt"
-  - "amd_pstate=disable"
-  - "tsc=unstable"
+proxmox_kernel_params_add: []
+# - "initcall_blacklist=acpi_cpufreq_init"
+# - "idle=halt"
+# - "amd_pstate=disable"
+# - "tsc=unstable"
 proxmox_kernel_params_remove: []
