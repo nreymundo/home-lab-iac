@@ -1,0 +1,105 @@
+---
+# CoreFreq DKMS install/config for Proxmox
+
+- name: CoreFreq | Install DKMS + build deps
+  ansible.builtin.apt:
+    name:
+      - dkms
+      - pve-headers
+      - build-essential
+      - git
+      - libpthread-stubs0-dev
+    state: present
+    update_cache: true
+
+- name: CoreFreq | Clone sources into DKMS path
+  ansible.builtin.git:
+    repo: "{{ proxmox_corefreq_git_repo }}"
+    dest: "/usr/src/corefreqk-{{ proxmox_corefreq_version }}"
+    version: "{{ proxmox_corefreq_git_ref }}"
+    force: true
+
+# Fix CoreFreq DKMS integration on some hosts/kernels:
+# - dkms.conf PRE_BUILD calls "make prepare" which may not exist in this tree
+- name: CoreFreq | Patch dkms.conf to disable PRE_BUILD hook
+  ansible.builtin.replace:
+    path: "/usr/src/corefreqk-{{ proxmox_corefreq_version }}/dkms.conf"
+    regexp: '^PRE_BUILD=.*$'
+    replace: '# PRE_BUILD disabled by Ansible (target not present in this tree)'
+  failed_when: false
+
+- name: CoreFreq | DKMS add (idempotent)
+  ansible.builtin.command: "dkms add -m corefreqk -v {{ proxmox_corefreq_version }}"
+  args:
+    creates: "/var/lib/dkms/corefreqk/{{ proxmox_corefreq_version }}"
+
+# CoreFreq Makefile expects this directory to exist on some setups
+- name: CoreFreq | Ensure DKMS build directory exists
+  ansible.builtin.file:
+    path: "/var/lib/dkms/corefreqk/{{ proxmox_corefreq_version }}/build/build"
+    state: directory
+    mode: "0755"
+
+- name: CoreFreq | DKMS status (current kernel)
+  ansible.builtin.command: "dkms status -m corefreqk -v {{ proxmox_corefreq_version }}"
+  register: corefreq_dkms_status
+  changed_when: false
+  failed_when: false
+
+- name: CoreFreq | DKMS build
+  ansible.builtin.command: "dkms build -m corefreqk -v {{ proxmox_corefreq_version }} -k {{ ansible_kernel }}"
+  changed_when: true
+  when: corefreq_dkms_status.stdout is not search(ansible_kernel ~ '.*installed')
+
+- name: CoreFreq | DKMS install
+  ansible.builtin.command: "dkms install -m corefreqk -v {{ proxmox_corefreq_version }} -k {{ ansible_kernel }}"
+  changed_when: true
+  when: corefreq_dkms_status.stdout is not search(ansible_kernel ~ '.*installed')
+
+- name: CoreFreq | Ensure module loads at boot
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/corefreqk.conf
+    content: "corefreqk\n"
+    mode: "0644"
+
+- name: CoreFreq | Configure module parameters
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/corefreqk.conf
+    content: "{{ proxmox_corefreq_modprobe_options }}\n"
+    mode: "0644"
+  notify: update initramfs
+
+- name: CoreFreq | Load module
+  community.general.modprobe:
+    name: corefreqk
+    state: present
+
+# Ensure systemd unit exists (pve1 may not have it even if binaries are installed)
+- name: CoreFreq | Install systemd unit
+  ansible.builtin.copy:
+    dest: /usr/lib/systemd/system/corefreqd.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=CoreFreq Daemon
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/corefreqd -q
+      ExecStop=/bin/kill -QUIT $MAINPID
+      RemainAfterExit=no
+      SuccessExitStatus=SIGQUIT SIGUSR1 SIGTERM
+      Slice=-.slice
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: CoreFreq | systemd daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: CoreFreq | Enable and start daemon
+  ansible.builtin.systemd:
+    name: corefreqd
+    enabled: true
+    state: started
