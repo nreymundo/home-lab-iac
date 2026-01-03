@@ -10,7 +10,7 @@ common_netplan_config:
     ethernets:
       eth0:
         addresses:
-          - 192.168.1.6/24
+          - 192.168.1.7/24
         gateway4: 192.168.1.1
         nameservers:
           addresses:
@@ -20,14 +20,14 @@ common_netplan_config:
         id: 10
         link: eth0
         addresses:
-          - 192.168.10.6/24
+          - 192.168.10.7/24
         gateway4: 192.168.10.1
         nameservers:
           addresses:
             - 192.168.10.1
 
 # Use the VLAN 10 IP for K3s traffic
-k3s_node_ip: 192.168.10.6
+k3s_node_ip: 192.168.10.7
 k3s_iface: vlan10
 
 k3s_allow_workloads: false
