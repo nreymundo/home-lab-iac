@@ -1,7 +1,7 @@
 ---
 
-- name: Manage Proxmox GRUB kernel parameters
-  ansible.builtin.include_tasks: grub_kernel_params.yml
+- name: Manage Proxmox kernel parameters
+  ansible.builtin.include_tasks: bootloader_kernel_params.yml
 
 - name: Include Proxmox ZFS thin provisioning audit
   ansible.builtin.include_tasks: zfs_thin_audit.yml
