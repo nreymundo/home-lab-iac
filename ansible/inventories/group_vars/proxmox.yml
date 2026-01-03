@@ -5,7 +5,6 @@ common_user: "{{ ansible_user | default('root') }}"
 common_enable_unattended_upgrades: false
 common_unattended_upgrades_auto_reboot: false
 common_run_upgrade: true
-common_enable_hushlogin: false
 
 common_packages:
   - htop
