@@ -66,7 +66,7 @@
 
     - name: Parse current kernel cmdline tokens
       ansible.builtin.set_fact:
-        proxmox_grub_cmdline_tokens: >-
+        proxmox_kernel_cmdline_tokens: >-
           {{ (proxmox_kernel_cmdline_text | trim).split()
              if (proxmox_kernel_cmdline_text | trim | length) > 0 else [] }}
       when: proxmox_bootloader_effective == 'systemd-boot'
@@ -109,7 +109,7 @@
 
     - name: Parse current GRUB cmdline tokens
       ansible.builtin.set_fact:
-        proxmox_grub_cmdline_tokens: >-
+        proxmox_kernel_cmdline_tokens: >-
           {{ (proxmox_grub_cmdline_value | trim).split()
              if (proxmox_grub_cmdline_value | trim | length) > 0 else [] }}
       when: proxmox_bootloader_effective == 'grub'
@@ -148,14 +148,14 @@
 
     - name: Build updated kernel cmdline tokens
       ansible.builtin.set_fact:
-        proxmox_grub_cmdline_tokens_updated: >-
+        proxmox_kernel_cmdline_tokens_updated: >-
           {%- set protected = proxmox_kernel_params_protected_regex -%}
           {%- set remove_keys = proxmox_kernel_params_remove_keys -%}
           {%- set add_tokens = proxmox_kernel_params_add_deduped -%}
           {%- set add_keys = proxmox_kernel_params_add_keys -%}
           {%- set result = [] -%}
           {%- set seen_keys = [] -%}
-          {%- for token in proxmox_grub_cmdline_tokens -%}
+          {%- for token in proxmox_kernel_cmdline_tokens -%}
             {%- set key = token | regex_replace('=.*$', '') -%}
             {%- if token is match(protected) -%}
               {%- if key not in seen_keys -%}
@@ -188,7 +188,7 @@
     - name: Update systemd-boot kernel cmdline
       ansible.builtin.copy:
         dest: /etc/kernel/cmdline
-        content: "{{ proxmox_grub_cmdline_tokens_updated | join(' ') }}\n"
+        content: "{{ proxmox_kernel_cmdline_tokens_updated | join(' ') }}\n"
         owner: root
         group: root
         mode: '0644'
@@ -199,6 +199,6 @@
       ansible.builtin.lineinfile:
         path: /etc/default/grub
         regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
-        line: "GRUB_CMDLINE_LINUX_DEFAULT=\"{{ proxmox_grub_cmdline_tokens_updated | join(' ') }}\""
+        line: "GRUB_CMDLINE_LINUX_DEFAULT=\"{{ proxmox_kernel_cmdline_tokens_updated | join(' ') }}\""
       notify: Update grub
       when: proxmox_bootloader_effective == 'grub'
