@@ -14,3 +14,45 @@
 - name: CoreFreq (DKMS)
   ansible.builtin.include_tasks: corefreq.yml
   when: proxmox_corefreq_enabled | bool
+
+- name: Set root .profile
+  ansible.builtin.copy:
+    dest: /root/.profile
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      if [ "$BASH" ]; then
+        if [ -f ~/.bashrc ]; then
+          . ~/.bashrc
+        fi
+      fi
+
+      mesg n 2> /dev/null || true
+
+      # Run fastfetch on login to show system info
+      fastfetch
+
+- name: Set root .bashrc
+  ansible.builtin.copy:
+    dest: /root/.bashrc
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # colorized 'ls' and some useful aliases
+       export LS_OPTIONS='--color=auto'
+       eval "$(dircolors)"
+       alias ls='ls $LS_OPTIONS'
+       alias ll='ls $LS_OPTIONS -l'
+       alias l='ls $LS_OPTIONS -lA'
+
+       alias rm='rm -i'
+       alias cp='cp -i'
+       alias mv='mv -i'
+
+      # don't put duplicate lines or lines starting with space in the history.
+      export HISTCONTROL=ignoreboth:erasedups
+
+      # Load starship prompt
+      eval "$(starship init bash)"
