@@ -1,0 +1,26 @@
+---
+# NetworkManager connections for the Framework laptop running Fedora.
+# NOTE: Update the interface name after installing Fedora (find with `ip link show`).
+common_nm_connections:
+  - name: main
+    type: ethernet
+    interface: "<FILL_IN>"  # e.g., enp1s0
+    ipv4:
+      addresses:
+        - 192.168.1.6/24
+      gateway: 192.168.1.1
+      dns:
+        - 192.168.1.1
+
+  - name: vlan10
+    type: vlan
+    vlan_id: 10
+    parent: "<FILL_IN>"  # same as interface above
+    ipv4:
+      addresses:
+        - 192.168.10.6/24
+      # No gateway or DNS for VLAN
+
+# Future K3s settings (uncomment when joining the cluster)
+# k3s_node_ip: 192.168.10.6
+# k3s_iface: vlan10

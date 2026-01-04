@@ -1,0 +1,128 @@
+---
+# Fedora/RedHat-specific tasks for the common role.
+
+- name: Update dnf cache and upgrade packages
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest  # noqa: package-latest
+    update_cache: true
+  when: common_run_upgrade | bool
+
+- name: Install common packages
+  ansible.builtin.dnf:
+    name: "{{ common_packages }}"
+    state: present
+  when: common_packages | length > 0
+
+- name: Install host-specific packages
+  ansible.builtin.dnf:
+    name: "{{ common_extra_packages }}"
+    state: present
+  when: common_extra_packages | default([]) | length > 0
+
+# NTP via Chrony
+- name: Ensure chrony is installed
+  ansible.builtin.dnf:
+    name: chrony
+    state: present
+  when: common_ntp_servers | length > 0
+
+- name: Configure chrony NTP servers
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_ntp_servers | length > 0
+  notify: Restart chronyd
+
+- name: Ensure chronyd service is enabled and started
+  ansible.builtin.systemd:
+    name: chronyd
+    enabled: true
+    state: started
+  when:
+    - common_ntp_servers | length > 0
+    - not ansible_check_mode
+
+# NetworkManager configuration
+- name: Configure NetworkManager ethernet connections
+  ansible.builtin.template:
+    src: nm-ethernet.nmconnection.j2
+    dest: "/etc/NetworkManager/system-connections/{{ item.name }}.nmconnection"
+    owner: root
+    group: root
+    mode: "0600"
+  loop: "{{ common_nm_connections | default([]) }}"
+  when:
+    - common_nm_connections | default([]) | length > 0
+    - item.type == 'ethernet'
+  notify: Reload NetworkManager connections
+
+- name: Configure NetworkManager VLAN connections
+  ansible.builtin.template:
+    src: nm-vlan.nmconnection.j2
+    dest: "/etc/NetworkManager/system-connections/{{ item.name }}.nmconnection"
+    owner: root
+    group: root
+    mode: "0600"
+  loop: "{{ common_nm_connections | default([]) }}"
+  when:
+    - common_nm_connections | default([]) | length > 0
+    - item.type == 'vlan'
+  notify: Reload NetworkManager connections
+
+# Automatic updates via dnf-automatic
+- name: Install dnf-automatic
+  ansible.builtin.dnf:
+    name: dnf-automatic
+    state: present
+  when: common_enable_unattended_upgrades | bool
+
+- name: Configure dnf-automatic
+  ansible.builtin.template:
+    src: dnf-automatic.conf.j2
+    dest: /etc/dnf/automatic.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_enable_unattended_upgrades | bool
+
+- name: Ensure dnf-automatic timer override directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/dnf-automatic.timer.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: common_enable_unattended_upgrades | bool
+
+- name: Configure dnf-automatic timer schedule
+  ansible.builtin.template:
+    src: dnf-automatic-timer-override.conf.j2
+    dest: /etc/systemd/system/dnf-automatic.timer.d/override.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_enable_unattended_upgrades | bool
+  notify: Reload systemd daemon
+
+- name: Enable dnf-automatic timer
+  ansible.builtin.systemd:
+    name: dnf-automatic.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when:
+    - common_enable_unattended_upgrades | bool
+    - not ansible_check_mode
+
+- name: Disable dnf-automatic timer
+  ansible.builtin.systemd:
+    name: dnf-automatic.timer
+    enabled: false
+    state: stopped
+  when:
+    - not common_enable_unattended_upgrades | bool
+    - "'dnf-automatic.timer' in ansible_facts.services"

@@ -1,0 +1,24 @@
+# Managed by Ansible. Do not edit manually.
+[commands]
+upgrade_type = default
+random_sleep = 0
+download_updates = yes
+apply_updates = yes
+{% if common_unattended_upgrades_auto_reboot | default(false) | bool %}
+reboot = when-needed
+reboot_command = "shutdown -r +5 'Rebooting after dnf-automatic updates'"
+{% else %}
+reboot = never
+{% endif %}
+
+[emitters]
+emit_via = stdio
+
+[command]
+
+[command_email]
+
+[email]
+
+[base]
+debuglevel = 1

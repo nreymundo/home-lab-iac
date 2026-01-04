@@ -1,0 +1,6 @@
+---
+- name: Provision Fedora hosts
+  hosts: fedora
+  become: true
+  roles:
+    - common

@@ -1,0 +1,23 @@
+---
+# Common role overrides for Fedora hosts.
+common_user: "{{ ansible_user | default('fedora') }}"
+
+common_enable_unattended_upgrades: true
+common_unattended_upgrades_auto_reboot: true
+common_unattended_upgrades_reboot_time: "08:00"
+
+common_run_upgrade: true
+
+common_packages:
+  - curl
+  - vim-enhanced
+  - git
+  - htop
+
+common_sshd_hardening:
+  PermitRootLogin: "no"
+  PasswordAuthentication: "no"
+  ChallengeResponseAuthentication: "no"
+
+# Fedora uses NetworkManager, not netplan.
+common_netplan_config: {}

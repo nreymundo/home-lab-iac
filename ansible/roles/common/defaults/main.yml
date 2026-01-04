@@ -18,10 +18,15 @@ common_sshd_hardening:
   PasswordAuthentication: "no"
   ChallengeResponseAuthentication: "no"
 
-# Optional netplan configuration. Set as a mapping matching netplan schema to manage /etc/netplan/01-main.yaml.
+# Optional netplan configuration (Debian/Ubuntu).
+# Set as a mapping matching netplan schema to manage /etc/netplan/01-main.yaml.
 common_netplan_config: {}
 
-# NTP servers for systemd-timesyncd.
+# Optional NetworkManager connections (Fedora/RedHat).
+# List of connection definitions with name, type, interface, ipv4 settings, etc.
+common_nm_connections: []
+
+# NTP servers for systemd-timesyncd (Debian) or chrony (Fedora).
 common_ntp_servers:
   - "0.de.pool.ntp.org"
   - "1.de.pool.ntp.org"
