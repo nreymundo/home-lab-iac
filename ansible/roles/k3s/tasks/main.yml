@@ -1,5 +1,5 @@
 ---
-- name: Install K3s dependencies
+- name: Install K3s dependencies (Debian/Ubuntu)
   ansible.builtin.apt:
     name:
       - curl
@@ -7,6 +7,17 @@
       - cryptsetup
     state: present
     update_cache: true
+  when: ansible_os_family == 'Debian'
+
+- name: Install K3s dependencies (Fedora/RedHat)
+  ansible.builtin.dnf:
+    name:
+      - curl
+      - iscsi-initiator-utils
+      - cryptsetup
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'RedHat'
 
 - name: Apply OS tuning
   ansible.builtin.include_tasks: os-tuning.yml
