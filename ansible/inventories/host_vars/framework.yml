@@ -5,6 +5,11 @@ common_extra_packages:
   - vulkan-tools
   - mesa-vulkan-drivers
   - mesa-demos
+  - corefreq
+
+# COPR repositories.
+common_copr_extra_repos:
+  - "sunnyyang/corefreq"
 
 # NetworkManager connections for the Framework laptop running Fedora.
 # NOTE: Update the interface name after installing Fedora (find with `ip link show`).

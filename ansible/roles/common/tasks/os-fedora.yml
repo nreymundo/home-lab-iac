@@ -1,6 +1,13 @@
 ---
 # Fedora/RedHat-specific tasks for the common role.
 
+- name: Enable COPR repositories
+  community.general.copr:
+    name: "{{ item }}"
+    state: enabled
+  loop: "{{ (common_copr_repos | default([])) + (common_copr_extra_repos | default([])) }}"
+  when: ((common_copr_repos | default([])) + (common_copr_extra_repos | default([]))) | length > 0
+
 - name: Update dnf cache and upgrade packages
   ansible.builtin.dnf:
     name: "*"
