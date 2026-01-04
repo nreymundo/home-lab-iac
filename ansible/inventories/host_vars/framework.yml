@@ -6,10 +6,12 @@ common_extra_packages:
   - mesa-vulkan-drivers
   - mesa-demos
   - corefreq
+  - ryzenadj
 
 # COPR repositories.
 common_copr_extra_repos:
   - "sunnyyang/corefreq"
+  - "shdwchn10/ryzenadj"
 
 # NetworkManager connections for the Framework laptop running Fedora.
 # NOTE: Update the interface name after installing Fedora (find with `ip link show`).
