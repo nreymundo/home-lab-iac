@@ -14,6 +14,19 @@ k3s_node_ip: "{{ ansible_host }}"
 k3s_iface: "{{ ansible_default_ipv4.interface | default('') }}"
 k3s_allow_workloads: true
 
+# K3s dependency packages per OS family.
+k3s_dependency_packages_by_os:
+  Debian:
+    - curl
+    - open-iscsi
+    - cryptsetup
+  RedHat:
+    - curl
+    - iscsi-initiator-utils
+    - cryptsetup
+
+k3s_dependency_packages: "{{ k3s_dependency_packages_by_os.get(ansible_os_family, []) }}"
+
 # OS Tuning
 k3s_os_tuning_enabled: true
 k3s_fs_inotify_max_user_watches: 1048576
