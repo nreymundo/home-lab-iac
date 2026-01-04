@@ -1,10 +1,17 @@
 ---
+
+# Framework Desktop specific packages.
+common_extra_packages:
+  - vulkan-tools
+  - mesa-vulkan-drivers
+  - mesa-demos
+
 # NetworkManager connections for the Framework laptop running Fedora.
 # NOTE: Update the interface name after installing Fedora (find with `ip link show`).
 common_nm_connections:
   - name: main
     type: ethernet
-    interface: "<FILL_IN>"  # e.g., enp1s0
+    interface: "enp191s0"
     ipv4:
       addresses:
         - 192.168.1.6/24
@@ -15,12 +22,20 @@ common_nm_connections:
   - name: vlan10
     type: vlan
     vlan_id: 10
-    parent: "<FILL_IN>"  # same as interface above
+    parent: "enp191s0"
     ipv4:
       addresses:
         - 192.168.10.6/24
       # No gateway or DNS for VLAN
 
-# Future K3s settings (uncomment when joining the cluster)
-# k3s_node_ip: 192.168.10.6
-# k3s_iface: vlan10
+# KVM/libvirt configuration.
+kvm_enable_libvirt: true
+kvm_enable_cockpit: true
+
+# Podman configuration.
+podman_enable_gpu: true
+podman_enable_socket: true
+
+# Use the VLAN 10 IP for K3s traffic
+k3s_node_ip: 192.168.10.6
+k3s_iface: enp191s0.10
