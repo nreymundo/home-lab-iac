@@ -12,6 +12,7 @@ common_packages:
   - curl
   - vim
   - git
+  - bash-completion
 
 common_sshd_hardening:
   PermitRootLogin: "no"
@@ -39,3 +40,9 @@ common_timezone: "Europe/Berlin"
 # COPR repositories to enable (Fedora only).
 common_copr_repos: []
 common_copr_extra_repos: []
+
+# Kernel parameter management (Fedora/RedHat via grubby).
+common_kernel_params_base_add: []
+common_kernel_params_base_remove: []
+common_kernel_params_add: []
+common_kernel_params_remove: []

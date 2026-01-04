@@ -133,3 +133,18 @@
   when:
     - not common_enable_unattended_upgrades | bool
     - "'dnf-automatic.timer' in ansible_facts.services"
+
+# Bootloader kernel parameters via grubby
+- name: Remove kernel parameters
+  ansible.builtin.command:
+    cmd: "grubby --update-kernel=ALL --remove-args={{ item }}"
+  changed_when: false
+  loop: "{{ common_kernel_params_remove }}"
+  when: common_kernel_params_remove | default([]) | length > 0
+
+- name: Add kernel parameters
+  ansible.builtin.command:
+    cmd: "grubby --update-kernel=ALL --args={{ item }}"
+  changed_when: false
+  loop: "{{ common_kernel_params_add }}"
+  when: common_kernel_params_add | default([]) | length > 0
