@@ -35,3 +35,6 @@ common_ntp_servers:
 
 # System timezone to enforce.
 common_timezone: "Europe/Berlin"
+
+# COPR repositories to enable (Fedora only).
+common_copr_repos: []

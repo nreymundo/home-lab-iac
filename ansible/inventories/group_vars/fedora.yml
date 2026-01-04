@@ -8,6 +8,10 @@ common_unattended_upgrades_reboot_time: "08:00"
 
 common_run_upgrade: true
 
+# COPR repositories.
+common_copr_repos:
+  - "atim/starship"
+
 common_packages:
   - curl
   - vim-enhanced
