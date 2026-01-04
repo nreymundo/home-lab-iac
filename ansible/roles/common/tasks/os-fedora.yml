@@ -5,8 +5,8 @@
   community.general.copr:
     name: "{{ item }}"
     state: enabled
-  loop: "{{ common_copr_repos }}"
-  when: common_copr_repos | length > 0
+  loop: "{{ (common_copr_repos | default([])) + (common_copr_extra_repos | default([])) }}"
+  when: ((common_copr_repos | default([])) + (common_copr_extra_repos | default([]))) | length > 0
 
 - name: Update dnf cache and upgrade packages
   ansible.builtin.dnf:

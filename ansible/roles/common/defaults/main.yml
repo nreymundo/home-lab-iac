@@ -38,3 +38,4 @@ common_timezone: "Europe/Berlin"
 
 # COPR repositories to enable (Fedora only).
 common_copr_repos: []
+common_copr_extra_repos: []

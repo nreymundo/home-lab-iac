@@ -8,7 +8,7 @@ common_extra_packages:
   - corefreq
 
 # COPR repositories.
-common_copr_repos:
+common_copr_extra_repos:
   - "sunnyyang/corefreq"
 
 # NetworkManager connections for the Framework laptop running Fedora.
