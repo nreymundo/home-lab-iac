@@ -54,6 +54,9 @@
   when: common_ntp_servers | length > 0
   notify: Restart systemd-timesyncd
 
+- name: Include fstrim timer management tasks
+  ansible.builtin.include_tasks: fstrim.yml
+
 - name: Configure netplan when provided
   ansible.builtin.template:
     src: netplan.yaml.j2

@@ -6,6 +6,11 @@ common_unattended_upgrades_auto_reboot: false
 common_unattended_upgrades_reboot_time: "06:00"
 common_run_upgrade: true
 common_enable_hushlogin: true
+
+# Scheduled fstrim for Linux guests (ignored if discard unsupported).
+common_enable_fstrim: true
+common_fstrim_timer_schedule: ""
+
 common_extra_packages: []
 
 common_packages:

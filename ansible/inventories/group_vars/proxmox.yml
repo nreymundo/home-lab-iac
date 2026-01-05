@@ -6,6 +6,9 @@ common_enable_unattended_upgrades: false
 common_unattended_upgrades_auto_reboot: false
 common_run_upgrade: true
 
+# Disable fstrim timer on Proxmox hosts (storage-specific).
+common_enable_fstrim: false
+
 common_packages:
   - htop
   - iftop

@@ -53,6 +53,9 @@
     - common_ntp_servers | length > 0
     - not ansible_check_mode
 
+- name: Include fstrim timer management tasks
+  ansible.builtin.include_tasks: fstrim.yml
+
 # NetworkManager configuration
 - name: Configure NetworkManager ethernet connections
   ansible.builtin.template:

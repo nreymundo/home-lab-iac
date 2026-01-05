@@ -96,6 +96,7 @@ Applied to ALL hosts. Automatically detects OS family (Debian vs RedHat) and app
 - Hardens SSH daemon
 - Adds SSH public keys
 - Installs base packages
+- Enables scheduled fstrim (configurable via common_enable_fstrim)
 
 **Debian/Ubuntu specific:**
 - Package management via apt
@@ -213,6 +214,7 @@ common_nm_connections:
 2.  **Generated Inventory:** `inventories/k3s-nodes.yml` is managed by Terraform. Do not edit it manually; your changes will be lost next time you run `terraform apply`.
 3.  **Proxmox:** We are careful with the Proxmox hosts. We do NOT enable unattended upgrades on them to prevent unexpected reboots of the hypervisor.
 4.  **Fedora Interface Names:** Fedora uses predictable interface names (e.g., `enp1s0`). Check with `ip link show` and update host_vars before running the playbook.
+5.  **Trim:** `fstrim.timer` is enabled by default on guests; disable with `common_enable_fstrim: false` (e.g., `inventories/group_vars/proxmox.yml`). Discard must be enabled to reclaim space.
 
 ## Troubleshooting
 
