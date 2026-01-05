@@ -12,11 +12,11 @@ Core infrastructure applications organized by category.
 
  | Category | Location | Components |
  |----------|----------|------------|
- | **Networking** | `networking/traefik/`, `networking/metallb/` |
- | **Storage** | `storage/longhorn/` |
- | **Security** | `security/authentik/` |
- | **DNS** | `dns/external-dns/`, `dns/cert-manager/` |
- | **Observability** | `observability/*` |
+ | **Networking** | `networking/` | `traefik`, `metallb` |
+ | **Storage** | `storage/` | `longhorn` |
+ | **Security** | `security/` | `authentik` |
+ | **DNS** | `dns/` | `external-dns`, `cert-manager` |
+ | **Observability** | `observability/` | `prometheus`, `grafana`, `loki`, `alloy` |
 
 ## STRUCTURE (Per Component)
 

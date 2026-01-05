@@ -46,7 +46,7 @@ home-lab-iac/
 | **Build VM template** | `packer/*/build.sh` | Secret-injected via Bitwarden |
 | **Troubleshoot Flux** | `kubernetes/clusters/homelab/flux-system/` | Check Kustomization dependencies |
 | **Add new host** | `terraform/k3s_nodes/vars.tf` | Update VM ID scheme |
-| **Add monitoring** | Component `config/` dirs | Add PodMonitor/ServicMonitor |
+| **Add monitoring** | Component `config/` dirs | Add PodMonitor/ServiceMonitor |
 
 ## CONVENTIONS (Deviations from standard)
 
