@@ -54,53 +54,8 @@
   when: common_ntp_servers | length > 0
   notify: Restart systemd-timesyncd
 
-- name: Ensure fstrim timer override directory exists
-  ansible.builtin.file:
-    path: /etc/systemd/system/fstrim.timer.d
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-  when:
-    - common_enable_fstrim | bool
-    - common_fstrim_timer_schedule | default('') | length > 0
-
-- name: Configure fstrim timer schedule
-  ansible.builtin.copy:
-    content: |
-      # Managed by Ansible. Do not edit manually.
-      [Timer]
-      OnCalendar=
-      OnCalendar=*-*-* {{ common_fstrim_timer_schedule }}
-      RandomizedDelaySec=0
-      Persistent=true
-    dest: /etc/systemd/system/fstrim.timer.d/override.conf
-    owner: root
-    group: root
-    mode: "0644"
-  when:
-    - common_enable_fstrim | bool
-    - common_fstrim_timer_schedule | default('') | length > 0
-  notify: Reload systemd daemon
-
-- name: Enable fstrim timer
-  ansible.builtin.systemd:
-    name: fstrim.timer
-    enabled: true
-    state: started
-    daemon_reload: true
-  when:
-    - common_enable_fstrim | bool
-    - not ansible_check_mode
-
-- name: Disable fstrim timer
-  ansible.builtin.systemd:
-    name: fstrim.timer
-    enabled: false
-    state: stopped
-  when:
-    - not common_enable_fstrim | bool
-    - "'fstrim.timer' in ansible_facts.services"
+- name: Include fstrim timer management tasks
+  ansible.builtin.include_tasks: fstrim.yml
 
 - name: Configure netplan when provided
   ansible.builtin.template:
