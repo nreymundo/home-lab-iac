@@ -108,6 +108,21 @@ Applied to ALL hosts. Automatically detects OS family (Debian vs RedHat) and app
 - NTP via chrony
 - Network config via NetworkManager keyfiles
 - Automatic updates via dnf-automatic
+- Kernel boot params via grubby: Safely merges baseline and host-specific kernel params using `grubby --update-kernel=ALL`. Protected boot-critical params are blocked (`root=`, `init=`, `systemd.unit=`, `resume=`, `cryptdevice=`, `rd.`, `BOOT_IMAGE=`).
+
+Example:
+```yaml
+# Baseline (inventories/group_vars/fedora.yml)
+common_kernel_params_base_add:
+  - "transparent_hugepage=never"
+common_kernel_params_base_remove: []
+
+# Host (inventories/host_vars/framework.yml)
+common_kernel_params_add:
+  - "max_loop=64"
+common_kernel_params_remove:
+  - "quiet"
+```
 
 ### `vms`
 Applied to Virtual Machines only.

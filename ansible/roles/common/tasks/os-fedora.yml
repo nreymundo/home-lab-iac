@@ -133,3 +133,162 @@
   when:
     - not common_enable_unattended_upgrades | bool
     - "'dnf-automatic.timer' in ansible_facts.services"
+
+# Bootloader kernel parameters via grubby
+- name: Merge desired kernel parameter lists
+  ansible.builtin.set_fact:
+    common_kernel_params_add_merged: >-
+      {{ (common_kernel_params_base_add | default([]))
+         + (common_kernel_params_add | default([])) }}
+    common_kernel_params_remove_merged: >-
+      {{ (common_kernel_params_base_remove | default([]))
+         + (common_kernel_params_remove | default([])) }}
+
+- name: Build combined kernel param list
+  ansible.builtin.set_fact:
+    common_kernel_params_all: >-
+      {{ common_kernel_params_add_merged
+         + common_kernel_params_remove_merged }}
+
+- name: Validate kernel params do not touch protected keys
+  vars:
+    common_kernel_params_protected_regex: '^(root=|init=|systemd\.unit=|resume=|cryptdevice=|rd\.|BOOT_IMAGE=)'
+  ansible.builtin.assert:
+    that:
+      - item is not match(common_kernel_params_protected_regex)
+    fail_msg: >-
+      Refusing to modify protected kernel parameter '{{ item }}'
+      (matches {{ common_kernel_params_protected_regex }})
+  loop: "{{ common_kernel_params_all }}"
+  when: common_kernel_params_all | length > 0
+
+- name: Read current kernel parameters via grubby
+  ansible.builtin.command:
+    cmd: grubby --info=ALL
+  register: common_kernel_params_info
+  changed_when: false
+  failed_when: false
+  when: common_kernel_params_all | length > 0
+
+- name: Parse current kernel parameters
+  ansible.builtin.set_fact:
+    common_kernel_params_current_lists: >-
+      {%- set result = [] -%}
+      {%- for line in common_kernel_params_info.stdout_lines | default([]) -%}
+        {%- if line is match('^args=') -%}
+          {%- set raw = line | regex_replace('^args=', '') -%}
+          {%- set raw = raw | regex_replace('^"(.*)"$', '\\1') -%}
+          {%- set raw = raw | regex_replace("^'(.*)'$", '\\1') -%}
+          {%- set tokens = (raw | trim).split() if (raw | trim | length) > 0 else [] -%}
+          {%- set _ = result.append(tokens) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ result }}
+  when: common_kernel_params_all | length > 0
+
+- name: Build current kernel parameter sets
+  ansible.builtin.set_fact:
+    common_kernel_params_current_union: >-
+      {%- set union = [] -%}
+      {%- for lst in common_kernel_params_current_lists -%}
+        {%- for token in lst -%}
+          {%- if token not in union -%}
+            {%- set _ = union.append(token) -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+      {{ union }}
+    common_kernel_params_current_intersection: >-
+      {%- set lists = common_kernel_params_current_lists -%}
+      {%- if lists | length == 0 -%}
+        []
+      {%- else -%}
+        {%- set intersection = lists[0] | list -%}
+        {%- for lst in lists[1:] -%}
+          {%- set filtered = [] -%}
+          {%- for token in intersection -%}
+            {%- if token in lst -%}
+              {%- set _ = filtered.append(token) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- set intersection = filtered -%}
+        {%- endfor -%}
+        {{ intersection }}
+      {%- endif -%}
+  when: common_kernel_params_all | length > 0
+
+- name: Normalize kernel param adds
+  ansible.builtin.set_fact:
+    common_kernel_params_add_deduped: >-
+      {%- set ns = namespace(result=[]) -%}
+      {%- for token in common_kernel_params_add_merged -%}
+        {%- set key = token | regex_replace('=.*$', '') -%}
+        {%- set filtered = [] -%}
+        {%- for existing in ns.result -%}
+          {%- set existing_key = existing | regex_replace('=.*$', '') -%}
+          {%- if existing_key != key -%}
+            {%- set _ = filtered.append(existing) -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- set ns.result = filtered -%}
+        {%- set _ = ns.result.append(token) -%}
+      {%- endfor -%}
+      {{ ns.result }}
+  when: common_kernel_params_all | length > 0
+
+- name: Build kernel parameter keys
+  ansible.builtin.set_fact:
+    common_kernel_params_remove_keys: >-
+      {{ common_kernel_params_remove_merged
+         | map('regex_replace', '=.*$', '')
+         | list }}
+    common_kernel_params_add_keys: >-
+      {{ common_kernel_params_add_deduped
+         | map('regex_replace', '=.*$', '')
+         | list }}
+    common_kernel_params_current_keys: >-
+      {{ common_kernel_params_current_union
+         | map('regex_replace', '=.*$', '')
+         | list }}
+  when: common_kernel_params_all | length > 0
+
+- name: Build kernel parameter change sets
+  ansible.builtin.set_fact:
+    common_kernel_params_add_needed: >-
+      {{ common_kernel_params_add_deduped
+         | difference(common_kernel_params_current_intersection) }}
+    common_kernel_params_remove_needed: >-
+      {%- set to_remove = [] -%}
+      {%- set current_keys = common_kernel_params_current_keys -%}
+      {%- set add_needed_keys = (common_kernel_params_add_deduped
+          | difference(common_kernel_params_current_intersection)
+          | map('regex_replace', '=.*$', '')
+          | list) -%}
+      {%- set remove_keys = common_kernel_params_remove_keys + add_needed_keys -%}
+      {%- for key in remove_keys -%}
+        {%- if key in current_keys -%}
+          {%- if key not in to_remove -%}
+            {%- set _ = to_remove.append(key) -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ to_remove }}
+  when: common_kernel_params_all | length > 0
+
+- name: Remove kernel parameters
+  ansible.builtin.command:
+    cmd: "grubby --update-kernel=ALL --remove-args={{ item }}"
+  changed_when: true
+  loop: "{{ common_kernel_params_remove_needed }}"
+  when:
+    - common_kernel_params_all | length > 0
+    - common_kernel_params_remove_needed | default([]) | length > 0
+
+- name: Add kernel parameters
+  ansible.builtin.command:
+    cmd: "grubby --update-kernel=ALL --args={{ item }}"
+  changed_when: true
+  loop: "{{ common_kernel_params_add_needed }}"
+  when:
+    - common_kernel_params_all | length > 0
+    - common_kernel_params_add_needed | default([]) | length > 0

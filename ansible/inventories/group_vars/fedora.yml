@@ -17,6 +17,7 @@ common_packages:
   - vim-enhanced
   - git
   - htop
+  - starship
 
 common_sshd_hardening:
   PermitRootLogin: "no"

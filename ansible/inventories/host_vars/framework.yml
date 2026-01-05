@@ -3,15 +3,19 @@
 # Framework Desktop specific packages.
 common_extra_packages:
   - vulkan-tools
+  - vulkan-headers
   - mesa-vulkan-drivers
   - mesa-demos
   - corefreq
   - ryzenadj
+  - topgrade
+  - tuned
 
 # COPR repositories.
 common_copr_extra_repos:
   - "sunnyyang/corefreq"
   - "shdwchn10/ryzenadj"
+  - "lilay/topgrade"
 
 # NetworkManager connections for the Framework laptop running Fedora.
 # NOTE: Update the interface name after installing Fedora (find with `ip link show`).
@@ -34,6 +38,14 @@ common_nm_connections:
       addresses:
         - 192.168.10.6/24
       # No gateway or DNS for VLAN
+
+# Kernel parameters.
+common_kernel_params_add:
+# - "nmi_watchdog=0"
+# - "nowatchdog" # Probably redundant
+  - "ttm.pages_limit=25165824" # Sets unified memory to ~96GB
+  - "ttm.page_pool_size=25165824" # Sets unified memory to ~96GB
+  - "amd_iommu=off" # When not using PCI passthrough.
 
 # KVM/libvirt configuration.
 kvm_enable_libvirt: true
