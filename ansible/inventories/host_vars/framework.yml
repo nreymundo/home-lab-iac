@@ -41,7 +41,8 @@ common_nm_connections:
 
 # Kernel parameters.
 common_kernel_params_add:
-  - "nmi_watchdog=0"
+# - "nmi_watchdog=0"
+# - "nowatchdog" # Probably redundant
   - "ttm.pages_limit=25165824" # Sets unified memory to ~96GB
   - "ttm.page_pool_size=25165824" # Sets unified memory to ~96GB
   - "amd_iommu=off" # When not using PCI passthrough.
