@@ -11,7 +11,7 @@ spec:
   dependsOn:
     - name: traefik-install
     - name: kubernetes-replicator
-    - name: cert-manager-config
+    - name: system
   sourceRef:
     kind: GitRepository
     name: flux-system
