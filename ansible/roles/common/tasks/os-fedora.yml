@@ -137,6 +137,15 @@
     - not common_enable_unattended_upgrades | bool
     - "'dnf-automatic.timer' in ansible_facts.services"
 
+# Firewalld management
+- name: Stop and mask firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: stopped
+    masked: true
+    enabled: false
+  when: common_mask_firewalld | bool
+
 # Bootloader kernel parameters via grubby
 - name: Merge desired kernel parameter lists
   ansible.builtin.set_fact:
