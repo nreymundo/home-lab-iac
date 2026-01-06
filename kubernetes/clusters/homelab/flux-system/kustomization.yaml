@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - gotk-components.yaml
   - gotk-sync.yaml
+  - system.yaml
   - sources-kustomization.yaml
   - metallb-install-kustomization.yaml
   - metallb-config-kustomization.yaml
@@ -12,8 +13,8 @@ resources:
   - external-proxy-kustomization.yaml
   - bitwarden-sm-operator-install-kustomization.yaml
   - kubernetes-replicator-install-kustomization.yaml
-  - cert-manager-install-kustomization.yaml
-  - cert-manager-config-kustomization.yaml
+  # - cert-manager-install-kustomization.yaml  <-- REMOVED (Replaced by new-system.yaml)
+  # - cert-manager-config-kustomization.yaml   <-- REMOVED (Replaced by new-system.yaml)
   - cloudnative-pg-install-kustomization.yaml
   - external-dns-install-kustomization.yaml
   - longhorn-install-kustomization.yaml
