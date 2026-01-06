@@ -20,7 +20,7 @@
       [Timer]
       OnCalendar=
       OnCalendar=*-*-* {{ common_fstrim_timer_schedule }}
-      RandomizedDelaySec=0
+      RandomizedDelaySec=3600
       Persistent=true
     dest: /etc/systemd/system/fstrim.timer.d/override.conf
     owner: root
