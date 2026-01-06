@@ -9,7 +9,7 @@ common_enable_hushlogin: true
 
 # Scheduled fstrim for Linux guests (ignored if discard unsupported).
 common_enable_fstrim: true
-common_fstrim_timer_schedule: ""
+common_fstrim_timer_schedule: "04:00:00"
 
 common_extra_packages: []
 
