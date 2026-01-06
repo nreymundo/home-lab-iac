@@ -144,9 +144,7 @@
     state: stopped
     masked: true
     enabled: false
-  when:
-    - common_mask_firewalld | bool
-    - not ansible_check_mode
+  when: common_mask_firewalld | bool
 
 # Bootloader kernel parameters via grubby
 - name: Merge desired kernel parameter lists
