@@ -14,4 +14,8 @@ all:
           ansible_user: "${node.ansible_user}"
           ansible_port: 22
           node_os: "${node.node_os}"
+          k3s_node_labels:
+%{ for k, v in node.labels ~}
+            ${k}: "${v}"
+%{ endfor ~}
 %{ endfor ~}

@@ -22,6 +22,9 @@ locals {
   node_memory_mb              = local._node_resource_overrides.vm_memory_mb
   node_disk_size_gb           = local._node_resource_overrides.vm_disk_size_gb
   node_secondary_disk_size_gb = local._node_resource_overrides.secondary_disk_size_gb
+  node_target_nodes = [
+    for node_index, node in var.nodes : coalesce(try(node.target_node, null), element(var.proxmox_nodes, node_index % length(var.proxmox_nodes)))
+  ]
   ssh_public_keys_list = compact(
     split(
       "\n",
@@ -34,7 +37,7 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
   count = local.node_count
 
   name        = "k3s-node-${format("%02d", count.index + 1)}"
-  target_node = coalesce(try(var.nodes[count.index].target_node, null), element(var.proxmox_nodes, count.index % length(var.proxmox_nodes)))
+  target_node = local.node_target_nodes[count.index]
   vmid        = var.node_vmid_start + count.index
 
   clone      = coalesce(try(var.nodes[count.index].template_name, null), var.template_name)
@@ -127,6 +130,17 @@ resource "local_file" "ansible_inventory" {
         ip           = cidrhost(local.node_ip_subnet, local.node_ip_start_octet + node_index)
         ansible_user = local.node_ansible_users[node_index]
         node_os      = local.node_ci_users[node_index]
+        labels = merge(
+          {
+            "homelab.lan/role"            = "general"
+            "homelab.lan/cpu-vendor"      = "intel"
+            "homelab.lan/runtime"         = "vm"
+            "homelab.lan/hypervisor"      = "proxmox"
+            "homelab.lan/gpu"             = "none"
+            "topology.kubernetes.io/zone" = local.node_target_nodes[node_index]
+          },
+          try(var.nodes[node_index].labels, {})
+        )
       }
     ]
   })

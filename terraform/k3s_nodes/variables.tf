@@ -66,6 +66,7 @@ variable "nodes" {
     vm_memory_mb           = optional(number)
     vm_disk_size_gb        = optional(number)
     secondary_disk_size_gb = optional(number)
+    labels                 = optional(map(string), {})
   }))
   description = "Per-node configuration; list length defines node count. Optional overrides: cpu, memory, and disk sizing."
   validation {

@@ -131,6 +131,9 @@
           --disable traefik
           --disable metrics-server
           --disable servicelb
+          {% for key, value in (k3s_node_labels | default({})).items() %}
+          --node-label {{ key }}={{ value }}
+          {% endfor %}
       notify: Restart k3s
 
     - name: Enable and start K3s service (Seed)
@@ -231,6 +234,9 @@
           --disable traefik
           --disable metrics-server
           --disable servicelb
+          {% for key, value in (k3s_node_labels | default({})).items() %}
+          --node-label {{ key }}={{ value }}
+          {% endfor %}
 
     - name: Enable and start K3s service (Secondary)
 
