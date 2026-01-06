@@ -13,8 +13,22 @@ all:
           ansible_user: "ubuntu"
           ansible_port: 22
           node_os: "ubuntu"
+          k3s_node_labels:
+            homelab.lan/cpu-vendor: "intel"
+            homelab.lan/gpu: "none"
+            homelab.lan/hypervisor: "proxmox"
+            homelab.lan/role: "master"
+            homelab.lan/runtime: "vm"
+            topology.kubernetes.io/zone: "pve1"
         k3s-node-02:
           ansible_host: 192.168.10.51
           ansible_user: "ubuntu"
           ansible_port: 22
           node_os: "ubuntu"
+          k3s_node_labels:
+            homelab.lan/cpu-vendor: "intel"
+            homelab.lan/gpu: "none"
+            homelab.lan/hypervisor: "proxmox"
+            homelab.lan/role: "master"
+            homelab.lan/runtime: "vm"
+            topology.kubernetes.io/zone: "pve2"

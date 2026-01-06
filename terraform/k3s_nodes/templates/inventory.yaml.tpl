@@ -14,4 +14,10 @@ all:
           ansible_user: "${node.ansible_user}"
           ansible_port: 22
           node_os: "${node.node_os}"
+%{ if length(node.labels) > 0 ~}
+          k3s_node_labels:
+%{ for k, v in node.labels ~}
+            ${k}: "${v}"
+%{ endfor ~}
+%{ endif ~}
 %{ endfor ~}
