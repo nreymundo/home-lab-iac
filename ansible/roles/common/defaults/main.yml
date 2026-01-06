@@ -46,6 +46,9 @@ common_timezone: "Europe/Berlin"
 common_copr_repos: []
 common_copr_extra_repos: []
 
+# Firewalld management (Fedora/RedHat).
+common_mask_firewalld: false
+
 # Kernel parameter management (Fedora/RedHat via grubby).
 common_kernel_params_base_add: []
 common_kernel_params_base_remove: []

@@ -59,6 +59,9 @@ podman_enable_socket: true
 k3s_node_ip: 192.168.10.6
 k3s_iface: enp191s0.10
 
+# Disable firewalld on the framework node
+common_mask_firewalld: true
+
 # K3s node labels
 k3s_node_labels:
   homelab.lan/role: "accelerator"
