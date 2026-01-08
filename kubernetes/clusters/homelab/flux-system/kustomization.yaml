@@ -14,7 +14,7 @@ resources:
   - bitwarden-sm-operator-install-kustomization.yaml
   - kubernetes-replicator-install-kustomization.yaml
   - cloudnative-pg-install-kustomization.yaml
-  - external-dns-install-kustomization.yaml
+  # - external-dns-install-kustomization.yaml <-- REMOVED (Migrated to system layer)
   - longhorn-install-kustomization.yaml
   - longhorn-config-kustomization.yaml
   - security-authentik-install-kustomization.yaml
