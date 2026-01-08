@@ -4,5 +4,6 @@ kind: Kustomization
 namespace: external-dns
 resources:
   - ./namespace.yaml
+  - ./ks.yaml
 transformers:
   - ../../../common/transformers
