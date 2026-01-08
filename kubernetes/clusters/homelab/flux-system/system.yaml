@@ -12,5 +12,8 @@ spec:
   prune: true
   wait: true
   postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: cert-manager-secrets
     substitute:
-      quote: '"' # double quote var for boolean/numeral values
+      quote: '"'
