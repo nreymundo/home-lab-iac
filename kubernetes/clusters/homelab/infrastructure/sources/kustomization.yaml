@@ -8,7 +8,6 @@ resources:
   - external-dns-helmrepo.yaml
   - grafana-helmrepo.yaml
   - longhorn-helmrepo.yaml
-  - metallb-helmrepo.yaml
   - mittwald-helmrepo.yaml
   - prometheus-community-helmrepo.yaml
   - traefik-helmrepo.yaml

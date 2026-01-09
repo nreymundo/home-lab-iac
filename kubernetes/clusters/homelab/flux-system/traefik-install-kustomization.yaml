@@ -9,7 +9,7 @@ spec:
   prune: true
   dependsOn:
     - name: sources
-    - name: metallb-config
+    - name: system
   sourceRef:
     kind: GitRepository
     name: flux-system
