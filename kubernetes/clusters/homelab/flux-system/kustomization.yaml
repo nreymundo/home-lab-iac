@@ -6,8 +6,6 @@ resources:
   - gotk-sync.yaml
   - system.yaml
   - sources-kustomization.yaml
-  - metallb-install-kustomization.yaml
-  - metallb-config-kustomization.yaml
   - traefik-install-kustomization.yaml
   - traefik-config-kustomization.yaml
   - external-proxy-kustomization.yaml
