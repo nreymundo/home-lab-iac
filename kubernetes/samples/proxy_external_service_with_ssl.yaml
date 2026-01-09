@@ -69,7 +69,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls: "true"
 
     # LAN-only access
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: services-lan-allowlist@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:

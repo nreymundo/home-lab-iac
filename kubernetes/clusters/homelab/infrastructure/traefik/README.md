@@ -1,3 +1,5 @@
+> **DEPRECATED:** Traefik has migrated to `kubernetes/platform/base/ingress/traefik/`. This directory is no longer authoritative.
+
 # Traefik Ingress Controller
 
 Traefik is the router for the cluster. It handles:

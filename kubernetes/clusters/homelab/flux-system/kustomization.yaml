@@ -6,8 +6,8 @@ resources:
   - gotk-sync.yaml
   - system.yaml
   - sources-kustomization.yaml
-  - traefik-install-kustomization.yaml
-  - traefik-config-kustomization.yaml
+  - platform.yaml
+  - core.yaml
   - external-proxy-kustomization.yaml
   - bitwarden-sm-operator-install-kustomization.yaml
   - kubernetes-replicator-install-kustomization.yaml

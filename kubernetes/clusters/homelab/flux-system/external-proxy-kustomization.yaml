@@ -9,7 +9,8 @@ spec:
   path: ./kubernetes/clusters/homelab/apps/external-proxy
   prune: true
   dependsOn:
-    - name: traefik-config
+    - name: core
+      namespace: flux-system
   sourceRef:
     kind: GitRepository
     name: flux-system
