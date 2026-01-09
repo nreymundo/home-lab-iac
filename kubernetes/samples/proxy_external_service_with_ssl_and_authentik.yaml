@@ -74,8 +74,8 @@ metadata:
 
     # Security: LAN-only access + Authentik authentication
     traefik.ingress.kubernetes.io/router.middlewares: >-
-      traefik-lan-allowlist@kubernetescrd,
-      traefik-authentik@kubernetescrd
+      services-lan-allowlist@kubernetescrd,
+      services-authentik-forwardauth@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
