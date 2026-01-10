@@ -1,0 +1,16 @@
+---
+apiVersion: k8s.bitwarden.com/v1
+kind: BitwardenSecret
+metadata:
+  name: cloudflare-secrets
+  namespace: cert-manager
+spec:
+  organizationId: "377d85e1-fff0-41de-a1e4-b3bc01566f70"
+  secretName: cloudflare-secrets
+  authToken:
+    secretName: bw-access-token
+    secretKey: token
+  onlyMappedSecrets: true
+  map:
+    - bwSecretId: "ac0bb7f7-7d68-4404-9e5e-b3bd00f0c95b"
+      secretKeyName: CLOUDFLARE_API_TOKEN
