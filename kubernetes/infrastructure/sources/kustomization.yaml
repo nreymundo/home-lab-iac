@@ -5,3 +5,4 @@ resources:
   - traefik.yaml
   - kube-replicator.yaml
   - bitwarden.yaml
+  - cert-manager.yaml
