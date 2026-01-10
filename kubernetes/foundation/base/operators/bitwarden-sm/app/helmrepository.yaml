@@ -1,9 +1,7 @@
----
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
-  name: bitwarden
-  namespace: flux-system
+  name: bitwarden-sm
 spec:
   interval: 30m
   url: https://charts.bitwarden.com/
