@@ -1,17 +1,18 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: apps
+  name: traefik-config
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./kubernetes/apps/production
+  path: ./kubernetes/infrastructure/networking/traefik/config
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: traefik-config
+    - name: traefik-install
+  wait: true
   postBuild:
     substituteFrom:
       - kind: ConfigMap

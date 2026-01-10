@@ -1,17 +1,23 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: apps
+  name: traefik-install
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./kubernetes/apps/production
+  path: ./kubernetes/infrastructure/networking/traefik/install
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: traefik-config
+    - name: metallb-config
+  wait: true
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: traefik
+      namespace: flux-system
   postBuild:
     substituteFrom:
       - kind: ConfigMap

@@ -1,0 +1,38 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: traefik
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: traefik
+  install:
+    createNamespace: true
+  upgrade:
+    cleanupOnFail: true
+  chart:
+    spec:
+      chart: traefik
+      version: "34.*"
+      sourceRef:
+        kind: HelmRepository
+        name: traefik
+        namespace: flux-system
+      interval: 1h
+  values:
+    service:
+      enabled: true
+      type: LoadBalancer
+      loadBalancerIP: ${TRAEFIK_LB_IP}
+    ports:
+      web:
+        redirectTo:
+          port: websecure
+      websecure:
+        tls:
+          enabled: true
+    providers:
+      kubernetesIngress:
+        enabled: true
+      kubernetesCRD:
+        enabled: true
