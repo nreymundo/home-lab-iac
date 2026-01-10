@@ -55,19 +55,19 @@ kvm_enable_cockpit: true
 podman_enable_gpu: true
 podman_enable_socket: true
 
-# Use the VLAN 10 IP for K3s traffic
-k3s_node_ip: 192.168.10.6
-k3s_iface: enp191s0.10
-
 # Disable firewalld on the framework node
 common_mask_firewalld: true
 
-# K3s node labels
-k3s_node_labels:
-  homelab.lan/role: "accelerator"
-  homelab.lan/cpu-vendor: "amd"
-  homelab.lan/runtime: "baremetal"
-  homelab.lan/gpu: "amd-igpu"
-  homelab.lan/ai-capable: "true"
-  homelab.lan/storage-local: "true"
-  topology.kubernetes.io/zone: "framework"
+# Not using it as part of a k3s cluster for now so these aren't used.
+# Use the VLAN 10 IP for K3s traffic
+# k3s_node_ip: 192.168.10.6
+# k3s_iface: enp191s0.10
+
+# k3s_node_labels:
+#   homelab.lan/role: "accelerator"
+#   homelab.lan/cpu-vendor: "amd"
+#   homelab.lan/runtime: "baremetal"
+#   homelab.lan/gpu: "amd-igpu"
+#   homelab.lan/ai-capable: "true"
+#   homelab.lan/storage-local: "true"
+#   topology.kubernetes.io/zone: "framework"

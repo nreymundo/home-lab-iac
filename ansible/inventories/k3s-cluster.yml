@@ -8,4 +8,5 @@ all:
         k3s_server:
           children:
             k3s_nodes: {}
-            baremetal_k3s: {}
+          hosts:
+            main-rpi4: {}

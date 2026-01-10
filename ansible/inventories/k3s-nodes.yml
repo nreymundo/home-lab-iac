@@ -17,7 +17,7 @@ all:
             homelab.lan/cpu-vendor: "intel"
             homelab.lan/gpu: "none"
             homelab.lan/hypervisor: "proxmox"
-            homelab.lan/role: "master"
+            homelab.lan/role: "general"
             homelab.lan/runtime: "vm"
             topology.kubernetes.io/zone: "pve1"
         k3s-node-02:
@@ -29,6 +29,6 @@ all:
             homelab.lan/cpu-vendor: "intel"
             homelab.lan/gpu: "none"
             homelab.lan/hypervisor: "proxmox"
-            homelab.lan/role: "master"
+            homelab.lan/role: "general"
             homelab.lan/runtime: "vm"
             topology.kubernetes.io/zone: "pve2"

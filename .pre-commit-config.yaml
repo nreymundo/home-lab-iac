@@ -16,19 +16,16 @@ repos:
       - id: yamllint
         files: \.ya?ml$
         exclude: ^kubernetes/clusters/homelab/flux-system/
-  - repo: https://github.com/ansible/ansible-lint
-    rev: v24.10.0
+  - repo: local
     hooks:
       - id: ansible-lint
+        name: ansible-lint
         entry: env ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint
+        language: system
         files: ^ansible/.*\.(ya?ml|j2|cfg|ini)$
         args: ["--project-dir", "ansible"]
         pass_filenames: true
         always_run: false
-        additional_dependencies:
-          - ansible==9.4.0
-  - repo: local
-    hooks:
       - id: packer-fmt
         name: Packer fmt
         entry: packer fmt -recursive packer/

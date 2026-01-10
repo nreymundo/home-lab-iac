@@ -31,3 +31,12 @@ k3s_node_ip: 192.168.10.7
 k3s_iface: vlan10
 
 k3s_allow_workloads: false
+
+# K3s node labels
+k3s_node_labels:
+  homelab.lan/role: "quorum"
+  homelab.lan/cpu-vendor: "arm"
+  homelab.lan/runtime: "baremetal"
+  homelab.lan/gpu: "none"
+  homelab.lan/storage-local: "true"
+  topology.kubernetes.io/zone: "rpi4"
