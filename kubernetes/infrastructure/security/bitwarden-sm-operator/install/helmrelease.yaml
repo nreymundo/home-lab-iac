@@ -12,7 +12,7 @@ spec:
   chart:
     spec:
       chart: sm-operator
-      version: "0.*"
+      version: "1.*"
       sourceRef:
         kind: HelmRepository
         name: bitwarden
