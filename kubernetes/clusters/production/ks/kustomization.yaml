@@ -7,4 +7,6 @@ resources:
   - 20-traefik-install.yaml
   - 21-traefik-config.yaml
   - 30-kube-replicator-install.yaml
+  - 40-bitwarden-install.yaml
+  - 41-bitwarden-config.yaml
   - 90-apps.yaml
