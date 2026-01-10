@@ -13,7 +13,7 @@ spec:
   chart:
     spec:
       chart: traefik
-      version: "34.*"
+      version: "38.*"
       sourceRef:
         kind: HelmRepository
         name: traefik

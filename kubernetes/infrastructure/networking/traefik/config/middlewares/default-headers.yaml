@@ -5,10 +5,9 @@ metadata:
   namespace: traefik
 spec:
   headers:
-    browserXssFilter: true
     contentTypeNosniff: true
-    frameDeny: true
     referrerPolicy: "strict-origin-when-cross-origin"
     stsSeconds: 31536000
     stsIncludeSubdomains: true
     stsPreload: true
+    contentSecurityPolicy: "frame-ancestors 'self'"
