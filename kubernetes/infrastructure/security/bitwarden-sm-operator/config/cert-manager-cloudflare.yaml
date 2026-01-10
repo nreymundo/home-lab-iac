@@ -5,7 +5,7 @@ metadata:
   name: cloudflare-secrets
   namespace: cert-manager
 spec:
-  organizationId: "377d85e1-fff0-41de-a1e4-b3bc01566f70"
+  organizationId: "${BW_ORG_ID}"
   secretName: cloudflare-secrets
   authToken:
     secretName: bw-auth-token
