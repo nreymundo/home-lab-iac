@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - 00-infrastructure.yaml
+  - 10-metallb-install.yaml
+  - 11-metallb-config.yaml
+  - 90-apps.yaml
