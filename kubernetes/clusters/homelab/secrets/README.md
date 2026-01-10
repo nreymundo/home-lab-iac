@@ -55,6 +55,10 @@ Flux applies the CRD. The operator fetches the value.
 kubectl get secret grafana-admin -n observability -o jsonpath='{.data.admin-password}' | base64 -d
 ```
 
+## Cluster Vars and cert-manager
+- `cluster-vars` in `flux-system` provides `ACME_EMAIL` and `DOMAIN_NAME` for Flux substitutions.
+- `cloudflare-secrets` in `cert-manager` provides `CLOUDFLARE_API_TOKEN`, `ACME_EMAIL`, and `DOMAIN_NAME` for cert-manager.
+
 ## Bootstrap Secrets
 Some secrets are needed *before* the operator can run (e.g., the Bitwarden Access Token itself).
 These are created manually. See `bitwarden-authentik-secret.sample.yaml` for templates.

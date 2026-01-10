@@ -17,6 +17,6 @@ spec:
   postBuild:
     substituteFrom:
       - kind: Secret
-        name: cert-manager-secrets
+        name: cluster-vars
     substitute:
       quote: '"'

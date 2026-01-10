@@ -51,7 +51,7 @@ spec:
   postBuild:
     substituteFrom:
       - kind: Secret
-        name: cert-manager-secrets
+        name: cloudflare-secrets
   prune: true
   sourceRef:
     kind: GitRepository
