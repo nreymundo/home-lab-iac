@@ -9,4 +9,6 @@ resources:
   - 30-kube-replicator-install.yaml
   - 40-bitwarden-install.yaml
   - 41-bitwarden-config.yaml
+  - 50-cert-manager-install.yaml
+  - 51-cert-manager-config.yaml
   - 90-apps.yaml
