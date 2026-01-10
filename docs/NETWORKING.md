@@ -49,7 +49,7 @@ Isolated network for Kubernetes nodes.
 | **MetalLB Pool** | `192.168.10.200-240` | LoadBalancer Service IPs |
 
 ### LAN Allowlist Ranges
-These ranges are trusted by the `traefik-lan-allowlist` middleware.
+These ranges are trusted by the `services-lan-allowlist` middleware.
 - `192.168.0.0/16` - Main LAN supernet
 - `10.1.20.0/27` - VPN/Wireguard range (if applicable)
 
@@ -112,9 +112,9 @@ Traefik acts as the entry point for all HTTP/HTTPS traffic entering the cluster.
 **Example Usage:**
 ```yaml
 annotations:
-  traefik.ingress.kubernetes.io/router.middlewares: |
-    traefik-lan-allowlist@kubernetescrd,
-    traefik-authentik@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      services-lan-allowlist@kubernetescrd,
+      services-authentik-forwardauth@kubernetescrd
 ```
 
 ## SSL/TLS Certificate Management

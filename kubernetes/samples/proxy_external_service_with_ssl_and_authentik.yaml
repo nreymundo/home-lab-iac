@@ -38,7 +38,7 @@ metadata:
 
     # Reference the shared ServersTransport (skip upstream TLS verification)
     # This resource is managed in infrastructure/traefik/config
-    traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serverstransport: services-lan-https-insecure@kubernetescrd
 spec:
   ports:
     - name: https
