@@ -9,7 +9,6 @@ resources:
   - platform.yaml
   - core.yaml
   - external-proxy-kustomization.yaml
-  - bitwarden-sm-operator-install-kustomization.yaml
   - kubernetes-replicator-install-kustomization.yaml
   - cloudnative-pg-install-kustomization.yaml
   - longhorn-install-kustomization.yaml
