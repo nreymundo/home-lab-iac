@@ -77,3 +77,4 @@ kubernetes/clusters/homelab/secrets/bitwarden-cloudflare-secrets.yaml
 *.swp
 *.swo
 k3s.yaml
+local
