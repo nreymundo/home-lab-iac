@@ -51,7 +51,7 @@ spec:
   postBuild:
     substituteFrom:
       - kind: Secret
-        name: cert-manager-secrets
+        name: cluster-vars
   prune: true
   sourceRef:
     kind: GitRepository
