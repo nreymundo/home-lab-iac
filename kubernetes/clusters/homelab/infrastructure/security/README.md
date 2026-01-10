@@ -28,7 +28,7 @@ graph TD
 
 ### Authentik (Identity Provider)
 - **Type:** SSO/IdP with forward auth integration
-- **Integration:** Traefik middleware (`traefik-authentik@kubernetescrd`)
+- **Integration:** Traefik middleware (`services-authentik-forwardauth@kubernetescrd`)
 - **Database:** PostgreSQL (CloudNative-PG)
 - **Use Case:** Protect internal apps without native authentication
 
@@ -54,8 +54,8 @@ kind: Ingress
 metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: >-
-      traefik-lan-allowlist@kubernetescrd,
-      traefik-authentik@kubernetescrd
+      services-lan-allowlist@kubernetescrd,
+      services-authentik-forwardauth@kubernetescrd
 spec:
   # ... rest of ingress config
 ```

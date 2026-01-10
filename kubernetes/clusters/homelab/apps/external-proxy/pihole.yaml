@@ -6,7 +6,7 @@ metadata:
   namespace: external-proxy
   annotations:
     traefik.ingress.kubernetes.io/service.serversscheme: https
-    traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serverstransport: services-lan-https-insecure@kubernetescrd
 spec:
   ports:
     - name: https

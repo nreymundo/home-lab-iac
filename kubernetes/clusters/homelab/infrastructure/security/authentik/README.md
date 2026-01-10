@@ -69,7 +69,7 @@ spec:
 **Usage:**
 Add annotation to Ingress:
 ```yaml
-traefik.ingress.kubernetes.io/router.middlewares: traefik-authentik@kubernetescrd
+traefik.ingress.kubernetes.io/router.middlewares: services-authentik-forwardauth@kubernetescrd
 ```
 
 ## Database
