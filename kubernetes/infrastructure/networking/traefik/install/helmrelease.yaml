@@ -35,6 +35,11 @@ spec:
       websecure:
         tls:
           enabled: true
+      metrics:
+        port: 9100
+        expose:
+          default: true
+        protocol: TCP
       traefik:
         port: 9000
         expose:
@@ -44,6 +49,14 @@ spec:
     logs:
       access:
         enabled: true
+    metrics:
+      prometheus:
+        enabled: true
+        entryPoint: metrics
+        serviceMonitor:
+          enabled: true
+          additionalLabels:
+            release: observability-kube-prometheus-stack
     additionalArguments:
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
