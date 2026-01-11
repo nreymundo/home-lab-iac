@@ -12,4 +12,6 @@ resources:
   - 41-bitwarden-config.yaml
   - 50-cert-manager-install.yaml
   - 51-cert-manager-config.yaml
+  - 60-longhorn-install.yaml
+  - 61-longhorn-config.yaml
   - 90-apps.yaml

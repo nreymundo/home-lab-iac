@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - storageclass-longhorn-r1.yaml
+  - storageclass-longhorn-r2.yaml
+  - storageclass-local-path.yaml
+  - ingress-longhorn-ui.yaml
