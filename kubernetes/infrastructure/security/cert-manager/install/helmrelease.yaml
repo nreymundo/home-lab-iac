@@ -19,3 +19,5 @@ spec:
       interval: 1h
   values:
     installCRDs: true
+    prometheus:
+      enabled: true
