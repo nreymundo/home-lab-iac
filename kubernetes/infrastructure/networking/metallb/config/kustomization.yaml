@@ -3,3 +3,6 @@ kind: Kustomization
 resources:
   - ipaddresspool.yaml
   - l2advertisement.yaml
+  - metrics-service-controller.yaml
+  - podmonitor-speaker.yaml
+  - servicemonitor-controller.yaml

@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: metallb-controller
+  namespace: metallb-system
+  labels:
+    release: observability-kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: metallb
+      app.kubernetes.io/component: controller
+  endpoints:
+    - port: monitoring
+      path: /metrics
