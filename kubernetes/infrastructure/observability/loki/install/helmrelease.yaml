@@ -36,7 +36,7 @@ spec:
       replicas: 1
       persistence:
         enabled: true
-        storageClass: storageclass-longhorn-r2
+        storageClass: longhorn-r2
         size: 20Gi
 
     # Ensure we ONLY run SingleBinary mode (avoid unintended extra components)

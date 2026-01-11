@@ -23,7 +23,7 @@ spec:
       persistence:
         enabled: true
         type: pvc
-        storageClassName: storageclass-longhorn-r2
+        storageClassName: longhorn-r2
         size: 5Gi
 
       admin:
@@ -60,7 +60,7 @@ spec:
         storageSpec:
           volumeClaimTemplate:
             spec:
-              storageClassName: storageclass-longhorn-r2
+              storageClassName: longhorn-r2
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
@@ -71,7 +71,7 @@ spec:
         storage:
           volumeClaimTemplate:
             spec:
-              storageClassName: storageclass-longhorn-r2
+              storageClassName: longhorn-r2
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
