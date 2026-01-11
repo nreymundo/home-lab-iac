@@ -13,3 +13,7 @@ spec:
   dependsOn:
     - name: longhorn-install
   wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-identity
