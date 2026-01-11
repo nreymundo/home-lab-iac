@@ -8,3 +8,5 @@ resources:
   - cert-manager.yaml
   - external-dns.yaml
   - longhorn.yaml
+  - prometheus-community.yaml
+  - grafana.yaml

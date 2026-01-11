@@ -1,0 +1,95 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: observability
+
+  install:
+    createNamespace: false
+
+  chart:
+    spec:
+      chart: alloy
+      version: "1.*"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 12h
+
+  values:
+    controller:
+      type: daemonset
+      volumes:
+        extra:
+          - name: varlogpods
+            hostPath:
+              path: /var/log/pods
+          - name: varlogcontainers
+            hostPath:
+              path: /var/log/containers
+      volumeMounts:
+        extra:
+          - name: varlogpods
+            mountPath: /var/log/pods
+            readOnly: true
+          - name: varlogcontainers
+            mountPath: /var/log/containers
+            readOnly: true
+
+    serviceAccount:
+      create: true
+
+    alloy:
+      configMap:
+        create: true
+        content: |
+          logging {
+            level = "info"
+          }
+
+          discovery.kubernetes "pods" {
+            role = "pod"
+          }
+
+          loki.source.kubernetes "pods" {
+            targets    = discovery.kubernetes.pods.targets
+            forward_to = [loki.process.filter_levels.receiver]
+          }
+
+          loki.process "filter_levels" {
+            // Try JSON first (common structured logs)
+            stage.json {
+              expressions = { level = "level" }
+            }
+
+            stage.drop {
+              expression = "lower(level) == \"debug\" or lower(level) == \"trace\""
+              drop_counter_reason = "drop_level_debug_trace"
+            }
+
+            // Fallback for unstructured logs (only when no structured level is present)
+            stage.drop {
+              expression = "level == nil && regexp(\"(?i)\\\\b(debug|trace)\\\\b\", .message)"
+              drop_counter_reason = "drop_regex_debug_trace"
+            }
+
+            forward_to = [loki.write.default.receiver]
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "http://observability-loki-gateway.observability.svc.cluster.local:80/loki/api/v1/push"
+            }
+          }
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi

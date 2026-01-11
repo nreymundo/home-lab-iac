@@ -14,4 +14,7 @@ resources:
   - 51-cert-manager-config.yaml
   - 60-longhorn-install.yaml
   - 61-longhorn-config.yaml
+  - 70-observability-kube-prometheus-stack-install.yaml
+  - 72-observability-loki-install.yaml
+  - 74-observability-alloy-install.yaml
   - 90-apps.yaml
