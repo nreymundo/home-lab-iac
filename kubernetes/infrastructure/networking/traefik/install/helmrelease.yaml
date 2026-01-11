@@ -24,6 +24,8 @@ spec:
       enabled: true
       type: LoadBalancer
       loadBalancerIP: ${TRAEFIK_LB_IP}
+      spec:
+        externalTrafficPolicy: Local
     ports:
       web: {}
       websecure:
