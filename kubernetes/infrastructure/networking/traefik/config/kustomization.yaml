@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - middlewares/default-headers.yaml
   - middlewares/default-chain.yaml
+  - dashboard/ingress-dashboard.yaml

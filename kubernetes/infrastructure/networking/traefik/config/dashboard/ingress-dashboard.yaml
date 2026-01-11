@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-dashboard
+  namespace: traefik
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    # ExternalDNS: publish the name
+    external-dns.alpha.kubernetes.io/hostname: traefik.lan.${CLUSTER_DOMAIN}
+    # Optional: force A record to your stable LB IP
+    external-dns.alpha.kubernetes.io/target: ${TRAEFIK_LB_IP}
+    # Traefik routing
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
+spec:
+  tls:
+    - hosts:
+        - traefik.lan.${CLUSTER_DOMAIN}
+      secretName: wildcard-cluster-domain-tls
+  rules:
+    - host: traefik.lan.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: traefik
+                port:
+                  number: 9000
