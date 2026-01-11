@@ -1,0 +1,42 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: external-dns
+  install:
+    createNamespace: true
+  upgrade:
+    cleanupOnFail: true
+  chart:
+    spec:
+      chart: external-dns
+      version: "1.20.*"
+      sourceRef:
+        kind: HelmRepository
+        name: external-dns
+        namespace: flux-system
+      interval: 1h
+  values:
+    provider: pihole
+
+    sources:
+      - ingress
+
+    policy: sync
+    registry: noop
+
+    domainFilters:
+      - ${CLUSTER_DOMAIN}
+      - lan.${CLUSTER_DOMAIN}
+
+    env:
+      - name: EXTERNAL_DNS_PIHOLE_SERVER
+        value: ${PIHOLE_URL}
+      - name: EXTERNAL_DNS_PIHOLE_PASSWORD
+        value: "PLACEHOLDER"
+
+    interval: 1m
+    logLevel: info
