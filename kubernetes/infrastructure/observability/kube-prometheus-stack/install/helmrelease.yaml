@@ -49,10 +49,6 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
         hosts:
           - grafana.lan.${CLUSTER_DOMAIN}
-        tls:
-          - secretName: wildcard-cluster-domain-tls
-            hosts:
-              - grafana.lan.${CLUSTER_DOMAIN}
 
     prometheus:
       prometheusSpec:

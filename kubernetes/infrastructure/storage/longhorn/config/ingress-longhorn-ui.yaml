@@ -22,7 +22,3 @@ spec:
                 name: longhorn-frontend
                 port:
                   number: 80
-  tls:
-    - hosts:
-        - longhorn.lan.${CLUSTER_DOMAIN}
-      secretName: wildcard-cluster-domain-tls
