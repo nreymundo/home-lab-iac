@@ -1,0 +1,78 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: observability
+  install:
+    createNamespace: false
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      version: "80.*"
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+      interval: 12h
+  values:
+    grafana:
+      enabled: true
+      persistence:
+        enabled: true
+        type: pvc
+        storageClassName: storageclass-longhorn-r2
+        size: 5Gi
+
+      admin:
+        existingSecret: grafana-admin-credentials
+        userKey: admin-user
+        passwordKey: admin-password
+
+      additionalDataSources:
+        - name: Loki
+          type: loki
+          access: proxy
+          url: http://loki:3100
+          isDefault: false
+          jsonData:
+            timeInterval: "10s"
+
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        annotations:
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
+        hosts:
+          - grafana.lan.${CLUSTER_DOMAIN}
+        tls:
+          - secretName: wildcard-cluster-domain-tls
+            hosts:
+              - grafana.lan.${CLUSTER_DOMAIN}
+
+    prometheus:
+      prometheusSpec:
+        retention: 7d
+        retentionSize: 25Gi
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: storageclass-longhorn-r2
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 30Gi
+
+    alertmanager:
+      alertmanagerSpec:
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: storageclass-longhorn-r2
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 5Gi

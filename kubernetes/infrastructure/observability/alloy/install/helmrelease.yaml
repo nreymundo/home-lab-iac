@@ -1,0 +1,74 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: observability
+  install:
+    createNamespace: false
+  chart:
+    spec:
+      chart: alloy
+      version: "1.*"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 12h
+  values:
+    controller:
+      type: daemonset
+
+    # Mount host logs (works on most distros / k3s default containerd paths)
+    mounts:
+      dockercontainers: true
+      varlog: true
+
+    alloy:
+      configMap:
+        create: true
+        content: |
+          logging {
+            level = "info"
+          }
+
+          discovery.kubernetes "pods" {
+            role = "pod"
+          }
+
+          discovery.relabel "pod_logs" {
+            targets = discovery.kubernetes.pods.targets
+
+            # Keep only pods with a container log path
+            rule {
+              source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+              target_label  = "__path__"
+              replacement   = "/var/log/pods/*$1/*$2/*.log"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_namespace"]
+              target_label  = "namespace"
+            }
+            rule {
+              source_labels = ["__meta_kubernetes_pod_name"]
+              target_label  = "pod"
+            }
+            rule {
+              source_labels = ["__meta_kubernetes_pod_container_name"]
+              target_label  = "container"
+            }
+          }
+
+          loki.source.file "kubernetes" {
+            targets    = discovery.relabel.pod_logs.output
+            forward_to = [loki.write.local.receiver]
+          }
+
+          loki.write "local" {
+            endpoint {
+              url = "http://loki:3100/loki/api/v1/push"
+            }
+          }
