@@ -8,7 +8,9 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
     # Ensure Traefik uses the secure entrypoint (common convention)
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    external-dns.alpha.kubernetes.io/hostname: longhorn.lan.${CLUSTER_DOMAIN}
 spec:
+  ingressClassName: traefik
   rules:
     - host: longhorn.lan.${CLUSTER_DOMAIN}
       http:
