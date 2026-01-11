@@ -3,4 +3,5 @@ kind: Kustomization
 resources:
   - middlewares/default-headers.yaml
   - middlewares/default-chain.yaml
+  - middlewares/ip-whitelist-lan.yaml
   - dashboard/ingressroute-dashboard.yaml

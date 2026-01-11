@@ -6,4 +6,5 @@ metadata:
 spec:
   chain:
     middlewares:
+      - name: ip-whitelist-lan
       - name: default-headers
