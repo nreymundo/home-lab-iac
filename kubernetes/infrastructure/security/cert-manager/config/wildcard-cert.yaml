@@ -5,6 +5,9 @@ metadata:
   namespace: cert-manager
 spec:
   secretName: wildcard-cluster-domain-tls
+  secretTemplate:
+    annotations:
+      replicator.v1.mittwald.de/replicate-to: "traefik"
   issuerRef:
     name: letsencrypt-dns
     kind: ClusterIssuer
