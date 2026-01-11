@@ -35,6 +35,9 @@ spec:
           default: true
         exposedPort: 9000
         protocol: TCP
+    logs:
+      access:
+        enabled: true
     additionalArguments:
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
