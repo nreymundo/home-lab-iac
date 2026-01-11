@@ -10,3 +10,4 @@ resources:
   - longhorn.yaml
   - prometheus-community.yaml
   - grafana.yaml
+  - cloudnative-pg.yaml
