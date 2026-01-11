@@ -26,6 +26,10 @@ spec:
       loadBalancerIP: ${TRAEFIK_LB_IP}
       spec:
         externalTrafficPolicy: Local
+    ingressClass:
+      enabled: true
+      isDefaultClass: false
+      name: traefik # Overriding this so the ingressClass becomes "traefik" instead of "traefik-traefik"
     ports:
       web: {}
       websecure:
