@@ -1,0 +1,16 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: authentik-pg
+  namespace: authentik
+spec:
+  instances: 1
+  storage:
+    size: 2Gi
+    storageClass: longhorn-r1   # adjust to your class
+  bootstrap:
+    initdb:
+      database: authentik
+      owner: authentik
+      secret:
+        name: authentik-db-secrets

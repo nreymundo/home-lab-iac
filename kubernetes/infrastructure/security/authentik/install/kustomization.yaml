@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: authentik
+resources:
+  - authentik-secrets.yaml
+  - authentik-db-secrets.yaml
+  - authentik-db.yaml
+  - helmrelease.yaml
+  - ingress.yaml
+  - blueprint-bootstrap-cm.yaml
+  - middleware.yaml

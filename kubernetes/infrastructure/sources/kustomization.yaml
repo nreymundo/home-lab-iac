@@ -11,3 +11,4 @@ resources:
   - prometheus-community.yaml
   - grafana.yaml
   - cloudnative-pg.yaml
+  - authentik.yaml

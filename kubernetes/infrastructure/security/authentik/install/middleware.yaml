@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: authentik-auth
+  namespace: authentik
+spec:
+  forwardAuth:
+    # Port 9000 is the outpost/auth port on the server pod
+    address: http://authentik-server.authentik.svc.cluster.local:9000/outpost.goauthentik.io/auth/traefik
+    trustForwardHeader: true
+    authResponseHeaders:
+      - X-authentik-username
+      - X-authentik-groups
+      - X-authentik-email
+      - X-authentik-name
+      - X-authentik-uid
