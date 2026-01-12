@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprints-bootstrap
+  namespace: authentik
+data:
+  10-bootstrap-user.yaml: |
+    version: 1
+    metadata:
+      name: homelab-bootstrap-user
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      - model: authentik_core.user
+        state: present
+        identifiers:
+          username: !Env [AK_BLUEPRINT_USER]
+        attrs:
+          name: !Env [AK_BLUEPRINT_USER]
+          email: "${ACME_EMAIL}"
+          is_active: true
+          password: !Env [AK_BLUEPRINT_USER_PASSWORD]

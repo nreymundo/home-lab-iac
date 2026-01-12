@@ -10,6 +10,8 @@ resources:
   - 30-kube-replicator-install.yaml
   - 40-bitwarden-install.yaml
   - 41-bitwarden-config.yaml
+  - 42-authentik-install.yaml
+  - 43-authentik-config.yaml
   - 50-cert-manager-install.yaml
   - 51-cert-manager-config.yaml
   - 60-longhorn-install.yaml
