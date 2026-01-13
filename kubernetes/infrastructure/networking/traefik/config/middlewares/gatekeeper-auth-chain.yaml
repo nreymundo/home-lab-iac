@@ -1,10 +1,11 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: default-chain
+  name: gatekeeper-auth-chain
   namespace: traefik
 spec:
   chain:
     middlewares:
       - name: lan-allowlist
       - name: default-headers
+      - name: authentik-authentik-auth@kubernetescrd

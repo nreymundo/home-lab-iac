@@ -6,8 +6,12 @@ metadata:
 spec:
   headers:
     contentTypeNosniff: true
+    browserXssFilter: true
     referrerPolicy: "strict-origin-when-cross-origin"
     stsSeconds: 31536000
     stsIncludeSubdomains: true
     stsPreload: true
     contentSecurityPolicy: "frame-ancestors 'self'"
+    customResponseHeaders:
+      X-Permitted-Cross-Domain-Policies: "none"
+      Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), vr=()"

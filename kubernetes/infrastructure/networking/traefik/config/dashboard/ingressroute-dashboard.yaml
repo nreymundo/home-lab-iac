@@ -10,7 +10,7 @@ spec:
     - match: Host(`traefik.lan.${CLUSTER_DOMAIN}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
       kind: Rule
       middlewares:
-        - name: default-chain
+        - name: gatekeeper-auth-chain
           namespace: traefik
       services:
         - name: api@internal
