@@ -35,7 +35,7 @@ spec:
 
         # REQUIRED: Allows Authentik to trust Traefik headers to prevent HTTP downgrades
         - name: AUTHENTIK_LISTEN__TRUSTED_PROXY_IPS
-          value: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+          value: "10.0.0.0/8"
 
         # Blueprint variables
         - name: AK_BLUEPRINT_USER

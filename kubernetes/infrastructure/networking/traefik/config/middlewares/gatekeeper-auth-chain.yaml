@@ -8,4 +8,5 @@ spec:
     middlewares:
       - name: lan-allowlist
       - name: default-headers
-      - name: authentik-authentik-auth@kubernetescrd
+      - name: authentik-auth
+        namespace: authentik

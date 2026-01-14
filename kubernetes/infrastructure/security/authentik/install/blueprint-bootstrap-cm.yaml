@@ -19,17 +19,9 @@ data:
           name: !Env AK_BLUEPRINT_USER
           email: "${ACME_EMAIL}"
           is_active: true
-          is_superuser: true
           password: !Env AK_BLUEPRINT_USER_PASSWORD
-
-      - model: authentik_brands.brand
-        identifiers:
-          domain: "sso.${CLUSTER_DOMAIN}"
-        attrs:
-          name: "Default brand"
-          default: true
-          branding_title: "authentik"
-          flow_authentication: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+          ak_groups:
+            - !Find [authentik_core.group, [name, "authentik Admins"]]
 
       - model: authentik_providers_proxy.proxyprovider
         id: proxy-provider
