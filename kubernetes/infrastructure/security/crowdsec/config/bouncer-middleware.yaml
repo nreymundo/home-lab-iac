@@ -1,0 +1,23 @@
+# Traefik Middleware for Crowdsec Bouncer Plugin
+# This middleware uses the crowdsec-bouncer-traefik-plugin enabled in Traefik
+# to check incoming requests against Crowdsec decisions
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: crowdsec-bouncer
+  namespace: crowdsec
+spec:
+  plugin:
+    crowdsec-bouncer-traefik-plugin:
+      # Stream mode: bouncer caches decisions and updates every 60s
+      crowdsecMode: stream
+      # Internal LAPI service address
+      crowdsecLapiHost: crowdsec-lapi-service.crowdsec.svc.cluster.local:8080
+      # Path to the bouncer API key mounted in Traefik
+      crowdsecLapiKeyPath: /etc/traefik/crowdsec-bouncer-api-key
+      # Update interval for decision cache (in seconds)
+      updateIntervalSeconds: 60
+      # Default decision timeout
+      defaultDecisionSeconds: 60
+      # Log level for the plugin
+      logLevel: INFO

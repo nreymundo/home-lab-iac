@@ -12,6 +12,8 @@ resources:
   - 41-bitwarden-config.yaml
   - 42-authentik-install.yaml
   - 43-authentik-config.yaml
+  - 44-crowdsec-install.yaml
+  - 45-crowdsec-config.yaml
   - 50-cert-manager-install.yaml
   - 51-cert-manager-config.yaml
   - 60-longhorn-install.yaml

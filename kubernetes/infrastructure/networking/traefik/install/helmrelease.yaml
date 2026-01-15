@@ -65,3 +65,24 @@ spec:
         enabled: true
       kubernetesCRD:
         enabled: true
+        # Allow Traefik to read resources from crowdsec namespace for the bouncer middleware
+        allowCrossNamespace: true
+
+    # --- Crowdsec Bouncer Plugin ---
+    experimental:
+      plugins:
+        crowdsec-bouncer-traefik-plugin:
+          moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+          version: v1.3.5
+
+    # Mount the Crowdsec bouncer API key into Traefik
+    additionalVolumeMounts:
+      - name: crowdsec-bouncer-api-key
+        mountPath: /etc/traefik/crowdsec-bouncer-api-key
+        subPath: CROWDSEC_BOUNCER_API_KEY
+
+    deployment:
+      additionalVolumes:
+        - name: crowdsec-bouncer-api-key
+          secret:
+            secretName: crowdsec-bouncer-api-key
