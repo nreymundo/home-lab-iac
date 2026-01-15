@@ -16,15 +16,10 @@ spec:
   values:
     container_runtime: containerd
 
-    # --- LAPI Configuration (Local API - central decision engine) ---
+    # --- LAPI Configuration ---
     lapi:
       replicas: 1
-
       env:
-        # Install core collections for Traefik and basic scenarios
-        - name: COLLECTIONS
-          value: "crowdsecurity/traefik crowdsecurity/base-http-scenarios"
-        # Pre-define the Traefik bouncer key from secret
         - name: BOUNCER_KEY_TRAEFIK
           valueFrom:
             secretKeyRef:
@@ -48,13 +43,20 @@ spec:
           size: 100Mi
           storageClassName: longhorn-r2
 
-    # --- Agent Configuration (Log parser and scenario engine) ---
+    # --- Agent Configuration ---
     agent:
-      # Acquire logs from Traefik pods
+      env:
+        - name: COLLECTIONS
+          value: "crowdsecurity/traefik crowdsecurity/base-http-scenarios firix/authentik"
+
+      # What logs to read and which parser to use for which one.
       acquisition:
         - namespace: traefik
           podName: traefik-*
           program: traefik
+        - namespace: authentik
+          podName: authentik-*
+          program: authentik
 
       metrics:
         enabled: true
@@ -63,7 +65,6 @@ spec:
           additionalLabels:
             release: observability-kube-prometheus-stack
 
-      # Resource limits
       resources:
         requests:
           cpu: 100m
