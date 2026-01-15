@@ -20,11 +20,3 @@ spec:
                 name: authentik-server
                 port:
                   number: 80
-          # REQUIRED for the outpost to handle logins/redirects
-          - path: /outpost.goauthentik.io/
-            pathType: Prefix
-            backend:
-              service:
-                name: authentik-server
-                port:
-                  number: 9000

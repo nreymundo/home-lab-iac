@@ -11,6 +11,7 @@ data:
       labels:
         blueprints.goauthentik.io/instantiate: "true"
     entries:
+      # 1. Create the Admin User
       - model: authentik_core.user
         state: present
         identifiers:
@@ -19,10 +20,18 @@ data:
           name: !Env AK_BLUEPRINT_USER
           email: "${ACME_EMAIL}"
           is_active: true
+          is_superuser: true  # This ensures the Admin Console is visible
           password: !Env AK_BLUEPRINT_USER_PASSWORD
-          ak_groups:
-            - !Find [authentik_core.group, [name, "authentik Admins"]]
 
+      # 2. Ensure user is in the "authentik Admins" group
+      - model: authentik_core.group
+        identifiers:
+          name: "authentik Admins"
+        attrs:
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+
+      # 3. Define the Proxy Provider
       - model: authentik_providers_proxy.proxyprovider
         id: proxy-provider
         identifiers:
@@ -38,6 +47,7 @@ data:
           internal_host_ssl_validation: true
           skip_path_regex: ""
 
+      # 4. Define the Application
       - model: authentik_core.application
         identifiers:
           slug: "gatekeeper"
@@ -45,6 +55,7 @@ data:
           name: "Gatekeeper"
           provider: !KeyOf proxy-provider
 
+      # 5. Define the Outpost
       - model: authentik_outposts.outpost
         identifiers:
           name: "gatekeeper-proxy"

@@ -63,7 +63,39 @@ spec:
       configMaps:
         - authentik-blueprints-bootstrap
 
+    # --- Metrics & Monitoring Configuration ---
+
+    # 1. Server Metrics (HTTP traffic, API usage)
+    server:
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+          interval: 30s
+          scrapeTimeout: 3s
+          labels:
+            release: observability-kube-prometheus-stack
+
+    # 2. Worker Metrics (Task queue, background processing)
+    worker:
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+          interval: 30s
+          scrapeTimeout: 3s
+          labels:
+            release: observability-kube-prometheus-stack
+
+    # 3. Prometheus Rules (Alerts)
+    prometheus:
+      rules:
+        enabled: true
+        labels:
+          release: observability-kube-prometheus-stack
+
+    # --- Infrastructure Overrides ---
     postgresql:
-      enabled: false
+      enabled: false # False because I'm creating my own DB
     redis:
-      enabled: false
+      enabled: false # This is deprecated and doesn't exist anymore
