@@ -48,7 +48,7 @@ spec:
       acquisition:
         - source: kubernetes
           namespace: traefik
-          podName: traefik-*
+          labelSelector: "app.kubernetes.io/name=traefik"
           program: traefik
 
       metrics:
