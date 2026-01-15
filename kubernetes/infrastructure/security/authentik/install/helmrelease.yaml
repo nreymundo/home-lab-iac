@@ -67,3 +67,9 @@ spec:
       enabled: false
     redis:
       enabled: false
+
+    prometheus:
+      serviceMonitor:
+        create: true
+      rules:
+        create: true
