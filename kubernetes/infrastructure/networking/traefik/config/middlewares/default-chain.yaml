@@ -6,7 +6,7 @@ metadata:
 spec:
   chain:
     middlewares:
-      - name: crowdsec-bouncer
-        namespace: crowdsec
       - name: lan-allowlist
       - name: default-headers
+      - name: crowdsec-bouncer
+        namespace: crowdsec
