@@ -16,14 +16,6 @@ spec:
   values:
     fullnameOverride: authentik
 
-    server:
-      service:
-        extraServicePorts:
-          - name: outpost-http
-            port: 9000
-            targetPort: 9000
-            protocol: TCP
-
     global:
       envFrom:
         - secretRef:
@@ -31,7 +23,7 @@ spec:
       env:
         # REQUIRED: Defines the public base URL for correct browser redirects
         - name: AUTHENTIK_HOST
-          value: https://sso.lainternetdelpantano.xyz
+          value: "https://sso.${CLUSTER_DOMAIN}"
 
         # REQUIRED: Allows Authentik to trust Traefik headers to prevent HTTP downgrades
         - name: AUTHENTIK_LISTEN__TRUSTED_PROXY_IPS
