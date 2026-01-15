@@ -7,3 +7,4 @@ resources:
   - middlewares/https-insecure.yaml
   - middlewares/ip-whitelist-lan.yaml
   - dashboard/ingressroute-dashboard.yaml
+  - tls-store.yaml
