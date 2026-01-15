@@ -1,0 +1,72 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: crowdsec
+  namespace: crowdsec
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: crowdsec
+      version: "0.21.*"
+      sourceRef:
+        kind: HelmRepository
+        name: crowdsec
+        namespace: flux-system
+  values:
+    container_runtime: containerd
+
+    # --- LAPI Configuration (Local API - central decision engine) ---
+    lapi:
+      replicas: 1
+
+      env:
+        # Install core collections for Traefik and basic scenarios
+        - name: COLLECTIONS
+          value: "crowdsecurity/traefik crowdsecurity/base-http-scenarios"
+        # Pre-define the Traefik bouncer key from secret
+        - name: BOUNCER_KEY_TRAEFIK
+          valueFrom:
+            secretKeyRef:
+              name: traefik-bouncer-key
+              key: CROWDSEC_TRAEFIK_BOUNCER_API_KEY
+
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+          additionalLabels:
+            release: observability-kube-prometheus-stack
+
+      persistentVolume:
+        data:
+          enabled: true
+          size: 1Gi
+          storageClassName: longhorn-r2
+        config:
+          enabled: true
+          size: 100Mi
+          storageClassName: longhorn-r2
+
+    # --- Agent Configuration (Log parser and scenario engine) ---
+    agent:
+      # Acquire logs from Traefik pods
+      acquisition:
+        - namespace: traefik
+          podName: traefik-*
+          program: traefik
+
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+          additionalLabels:
+            release: observability-kube-prometheus-stack
+
+      # Resource limits
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 256Mi

@@ -15,5 +15,3 @@ spec:
       services:
         - name: api@internal
           kind: TraefikService
-  tls:
-    secretName: wildcard-cluster-domain-tls
