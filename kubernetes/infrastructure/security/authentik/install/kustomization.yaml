@@ -5,5 +5,6 @@ resources:
   - authentik-secrets.yaml
   - authentik-db-secrets.yaml
   - authentik-db.yaml
+  - authentik-db-backup.yaml
   - helmrelease.yaml
   - blueprint-bootstrap-cm.yaml

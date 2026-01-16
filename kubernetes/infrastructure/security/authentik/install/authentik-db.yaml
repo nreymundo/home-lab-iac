@@ -7,10 +7,27 @@ spec:
   instances: 1
   storage:
     size: 2Gi
-    storageClass: longhorn-r1   # adjust to your class
+    storageClass: longhorn-r1
   bootstrap:
     initdb:
       database: authentik
       owner: authentik
       secret:
         name: authentik-db-secrets
+  backup:
+    barmanObjectStore:
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-backup-s3
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-backup-s3
+          key: ACCESS_SECRET_KEY
+        region:
+          name: cnpg-backup-s3
+          key: AWS_DEFAULT_REGION
+      destinationPath: "s3://cloudnative-pg/authentik"
+      endpointURL: "https://s3.{CLUSTER_DOMAIN}"
+      s3ForcePathStyle: true
+      serverName: "authentik-pg-v1"
+    retentionPolicy: "14d"
