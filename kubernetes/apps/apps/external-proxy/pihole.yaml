@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pihole
+  namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
+spec:
+  ports:
+    - name: https
+      port: 443
+      targetPort: 443
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: pihole
+  namespace: external-proxy
+subsets:
+  - addresses:
+      - ip: 192.168.10.2
+    ports:
+      - name: https
+        port: 443
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pihole
+  namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    external-dns.alpha.kubernetes.io/hostname: pihole.lan.${CLUSTER_DOMAIN}
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: pihole.lan.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pihole
+                port:
+                  name: https
