@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crowdsec-acquisition
+  namespace: crowdsec
+data:
+  values.yaml: |
+    agent:
+      acquisition:
+        - namespace: traefik
+          podName: traefik-*
+          program: traefik
+        - namespace: authentik
+          podName: authentik-*
+          program: authentik

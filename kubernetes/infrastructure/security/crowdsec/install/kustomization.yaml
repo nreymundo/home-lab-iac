@@ -4,3 +4,4 @@ namespace: crowdsec
 resources:
   - helmrelease.yaml
   - traefik-bouncer-secret.yaml
+  - acquisition-configmap.yaml
