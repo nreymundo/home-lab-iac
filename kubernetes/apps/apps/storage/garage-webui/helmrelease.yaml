@@ -22,8 +22,8 @@ spec:
               repository: khairul169/garage-webui
               tag: latest
             env:
-              API_BASE_URL: "http://unraid.local:3903"
-              S3_ENDPOINT_URL: "http://unraid.local:3900"
+              API_BASE_URL: "http://${UNRAID_IP}:3903"
+              S3_ENDPOINT_URL: "http://${UNRAID_IP}:3900"
               API_ADMIN_KEY:
                 valueFrom:
                   secretKeyRef:
