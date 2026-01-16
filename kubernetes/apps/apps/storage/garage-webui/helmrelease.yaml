@@ -23,7 +23,7 @@ spec:
               tag: latest
             env:
               API_BASE_URL: "http://${UNRAID_IP}:3903"
-              S3_ENDPOINT_URL: "http://${UNRAID_IP}:3900"
+              S3_ENDPOINT_URL: "https://s3.${CLUSTER_DOMAIN}"
               API_ADMIN_KEY:
                 valueFrom:
                   secretKeyRef:
