@@ -1,0 +1,47 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: garage-s3
+  namespace: external-proxy
+spec:
+  ports:
+    - name: s3
+      port: 9000
+      targetPort: 9000
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: garage-s3
+  namespace: external-proxy
+subsets:
+  - addresses:
+      - ip: ${UNRAID_IP}
+    ports:
+      - name: s3
+        port: 9000
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: garage-s3
+  namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Here for docs. Created a wildcard cert directly in Pi-Hole
+    #external-dns.alpha.kubernetes.io/hostname: s3.${CLUSTER_DOMAIN}
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: s3.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: garage-s3
+                port:
+                  name: s3
