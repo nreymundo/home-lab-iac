@@ -1,4 +1,4 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: garage-webui
@@ -41,6 +41,7 @@ spec:
         className: traefik
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+          external-dns.alpha.kubernetes.io/hostname: garage.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: garage.lan.${CLUSTER_DOMAIN}
             paths:
