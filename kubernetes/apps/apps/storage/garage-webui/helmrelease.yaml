@@ -39,6 +39,8 @@ spec:
       app:
         enabled: true
         className: traefik
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
         hosts:
           - host: garage.lan.${CLUSTER_DOMAIN}
             paths:
