@@ -5,3 +5,5 @@ resources:
   - storageclass-longhorn-r2.yaml
   - storageclass-local-path.yaml
   - ingress-longhorn-ui.yaml
+  - longhorn-backup-secret.yaml
+  - recurring-backup-jobs.yaml
