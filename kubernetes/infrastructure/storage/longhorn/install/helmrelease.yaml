@@ -23,3 +23,7 @@ spec:
     # Keep values minimal; policy will be in StorageClass.
     persistence:
       defaultClass: false # we will create our own StorageClass + mark it default
+    # S3 Backup Target (Garage)
+    defaultBackupStore:
+      backupTarget: "s3://longhorn@garage/"
+      backupTargetCredentialSecret: longhorn-backup-secret
