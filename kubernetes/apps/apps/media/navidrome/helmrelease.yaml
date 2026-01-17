@@ -37,6 +37,13 @@ spec:
               ND_TRANSCODINGCACHESIZE: 100MB
               ND_SESSIONTIMEOUT: 24h
               ND_MUSICFOLDER: /mnt/media/libraries/music
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
     service:
       app:
         controller: navidrome

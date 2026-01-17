@@ -67,6 +67,13 @@ spec:
 
     # 1. Server Metrics (HTTP traffic, API usage)
     server:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 384Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi
       metrics:
         enabled: true
         serviceMonitor:
@@ -78,6 +85,13 @@ spec:
 
     # 2. Worker Metrics (Task queue, background processing)
     worker:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 384Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi
       metrics:
         enabled: true
         serviceMonitor:

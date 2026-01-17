@@ -20,6 +20,13 @@ spec:
   values:
     grafana:
       enabled: true
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
       persistence:
         enabled: true
         type: pvc
@@ -52,6 +59,13 @@ spec:
 
     prometheus:
       prometheusSpec:
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
         retention: 7d
         retentionSize: 25GiB
         serviceMonitorNamespaceSelector: {}
@@ -67,6 +81,13 @@ spec:
 
     alertmanager:
       alertmanagerSpec:
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
         storage:
           volumeClaimTemplate:
             spec:

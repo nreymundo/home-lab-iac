@@ -27,6 +27,13 @@ spec:
             ports:
               - name: http
                 containerPort: 3909
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                cpu: 50m
+                memory: 128Mi
             env:
               API_BASE_URL: "http://${UNRAID_IP}:3903"
               S3_ENDPOINT_URL: "https://s3.${CLUSTER_DOMAIN}"
