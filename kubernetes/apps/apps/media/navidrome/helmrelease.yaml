@@ -33,6 +33,10 @@ spec:
                 containerPort: 4533
             env:
               ND_LOGLEVEL: info
+              ND_PORT: "4533"
+              ND_TRANSCODINGCACHESIZE: 100MB
+              ND_SESSIONTIMEOUT: 24h
+              ND_MUSICFOLDER: /mnt/media/libraries/music
             resources:
               requests:
                 cpu: 100m
@@ -40,10 +44,6 @@ spec:
               limits:
                 cpu: 1000m
                 memory: 1Gi
-              ND_PORT: "4533"
-              ND_TRANSCODINGCACHESIZE: 100MB
-              ND_SESSIONTIMEOUT: 24h
-              ND_MUSICFOLDER: /mnt/media/libraries/music
     service:
       app:
         controller: navidrome
