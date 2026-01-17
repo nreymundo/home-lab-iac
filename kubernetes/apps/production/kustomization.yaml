@@ -4,3 +4,4 @@ resources:
   - ../apps/storage/garage-webui
   - ../apps/media/navidrome
   - ../apps/external-proxy
+  - ../apps/automation/n8n
