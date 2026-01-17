@@ -82,10 +82,7 @@ spec:
               repository: docker.n8n.io/n8nio/n8n
               tag: 1.123.16
             command: ["/bin/sh", "-c", "n8n worker"]
-            envFrom:
-              - secretRef:
-                  name: n8n-secrets # For Encryption Key
-            env: # Needs same envs as main for DB/Redis connection
+            env:
               DB_TYPE: postgresdb
               DB_POSTGRESDB_HOST: n8n-pg-rw
               DB_POSTGRESDB_PORT: 5432
@@ -146,14 +143,15 @@ spec:
         enabled: true
         type: persistentVolumeClaim
         storageClass: longhorn-r2
-        accessMode: ReadWriteOnce
+        accessMode: ReadWriteMany
         size: 1Gi
         advancedMounts:
           main:
             main:
               - path: /home/node/.n8n
-        globalMounts:
-          - path: /home/node/.n8n
+          worker:
+            worker:
+              - path: /home/node/.n8n
         labels:
           recurring-job.longhorn.io/backup-daily: enabled
           recurring-job.longhorn.io/backup-weekly: enabled

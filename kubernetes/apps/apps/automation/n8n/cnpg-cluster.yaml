@@ -12,7 +12,7 @@ spec:
       recurring-job.longhorn.io/backup-weekly: enabled
   instances: 1
   monitoring:
-    enablePodMonitor: false
+    enablePodMonitor: true
   storage:
     size: 1Gi
     storageClass: longhorn-r2
