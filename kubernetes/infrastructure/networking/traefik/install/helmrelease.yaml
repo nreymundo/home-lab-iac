@@ -20,6 +20,14 @@ spec:
         namespace: flux-system
       interval: 1h
   values:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+
     service:
       enabled: true
       type: LoadBalancer

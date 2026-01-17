@@ -33,6 +33,13 @@ spec:
                 containerPort: 4533
             env:
               ND_LOGLEVEL: info
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
               ND_PORT: "4533"
               ND_TRANSCODINGCACHESIZE: 100MB
               ND_SESSIONTIMEOUT: 24h
