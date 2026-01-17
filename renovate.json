@@ -7,10 +7,17 @@
   ],
   "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes"],
   "flux": {
-    "fileMatch": ["\\.yaml$"]
+    "fileMatch": [
+      "^kubernetes/infrastructure/.*/helmrelease\\.yaml$",
+      "^kubernetes/apps/.*/helmrelease\\.yaml$"
+    ]
   },
   "kubernetes": {
-    "fileMatch": ["\\.yaml$"]
+    "fileMatch": [
+      "^kubernetes/infrastructure/.*/helmrelease\\.yaml$",
+      "^kubernetes/apps/.*/helmrelease\\.yaml$",
+      "^kubernetes/renovate/.*\\.yaml$"
+    ]
   },
   "automerge": true,
   "automergeType": "pr",
@@ -29,8 +36,8 @@
     },
     {
       "description": "Ignore flux-system components (managed by Flux)",
-      "matchManagers": ["flux"],
-      "matchDepNames": ["flux-system"]
+      "matchPaths": ["kubernetes/clusters/production/flux-system/**"],
+      "enabled": false
     }
   ],
   "labels": ["dependencies", "renovate"],

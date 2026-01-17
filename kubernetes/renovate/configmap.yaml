@@ -7,6 +7,5 @@ data:
   config.json: |
     {
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-      "repositories": ["nreymundo/home-lab-iac"],
-      "logLevel": "debug"
+      "repositories": ["nreymundo/home-lab-iac"]
     }
