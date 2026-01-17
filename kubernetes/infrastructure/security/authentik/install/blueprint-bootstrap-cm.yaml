@@ -73,3 +73,57 @@ data:
             kubernetes_service_type: ClusterIP
             kubernetes_disabled_components:
               - traefik middleware
+
+  20-grafana.yaml: |
+    version: 1
+    metadata:
+      name: grafana-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Create Grafana Admins and assign the bootstrap user
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Grafana Admins"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+
+      # Create Grafana Editors (currently empty)
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Grafana Editors"
+        attrs:
+          is_superuser: false
+          parent: null
+
+      - model: authentik_providers_oauth2.oauth2provider
+        id: grafana-provider
+        identifiers:
+          name: "Grafana"
+        attrs:
+          client_id: !Env GRAFANA_CLIENT_ID
+          client_secret: !Env GRAFANA_CLIENT_SECRET
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          client_type: confidential
+          client_authentication_method: client_secret_post
+          redirect_uris:
+            - url: "https://grafana.lan.${CLUSTER_DOMAIN}/login/generic_oauth"
+              matching_mode: strict
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+
+      - model: authentik_core.application
+        identifiers:
+          slug: "grafana"
+        attrs:
+          name: "Grafana"
+          provider: !KeyOf grafana-provider
+          group: "Observability"

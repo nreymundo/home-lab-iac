@@ -10,3 +10,4 @@ resources:
   - authentik-db-backup.yaml
   - helmrelease.yaml
   - blueprint-bootstrap-cm.yaml
+  - grafana-sso-secret.yaml
