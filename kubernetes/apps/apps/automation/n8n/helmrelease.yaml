@@ -1,0 +1,181 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: n8n
+  namespace: n8n
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 4.6.2
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+
+    controllers:
+      # Main N8N Service
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          labels:
+            app.kubernetes.io/controller: n8n
+        containers:
+          main:
+            image:
+              repository: docker.n8n.io/n8nio/n8n
+              tag: 1.123.16
+            env:
+              DB_TYPE: postgresdb
+              DB_POSTGRESDB_HOST: n8n-pg-rw
+              DB_POSTGRESDB_PORT: 5432
+              DB_POSTGRESDB_DATABASE: n8n
+              DB_POSTGRESDB_USER: "n8n"
+              DB_POSTGRESDB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: n8n-db-secrets
+                    key: password
+              EXECUTIONS_MODE: queue
+              QUEUE_BULL_REDIS_HOST: n8n-redis.n8n.svc.cluster.local
+              QUEUE_HEALTH_CHECK_ACTIVE: "true"
+              N8N_ENCRYPTION_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: n8n-secrets
+                    key: N8N_ENCRYPTION_KEY
+              N8N_PORT: 5678
+            resources:
+              requests:
+                cpu: 100m
+                memory: 250Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+            probes:
+              liveness:
+                enabled: true
+              readiness:
+                enabled: true
+              startup:
+                enabled: true
+                spec:
+                  failureThreshold: 30
+                  periodSeconds: 5
+
+      # N8N Worker
+      worker:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          labels:
+            app.kubernetes.io/controller: n8n-worker
+        containers:
+          worker:
+            image:
+              repository: docker.n8n.io/n8nio/n8n
+              tag: 1.123.16
+            command: ["/bin/sh", "-c", "n8n worker"]
+            envFrom:
+              - secretRef:
+                  name: n8n-secrets # For Encryption Key
+            env: # Needs same envs as main for DB/Redis connection
+              DB_TYPE: postgresdb
+              DB_POSTGRESDB_HOST: n8n-pg-rw
+              DB_POSTGRESDB_PORT: 5432
+              DB_POSTGRESDB_DATABASE: n8n
+              DB_POSTGRESDB_USER: "n8n"
+              DB_POSTGRESDB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: n8n-db-secrets
+                    key: password
+              EXECUTIONS_MODE: queue
+              QUEUE_BULL_REDIS_HOST: n8n-redis.n8n.svc.cluster.local
+              N8N_ENCRYPTION_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: n8n-secrets
+                    key: N8N_ENCRYPTION_KEY
+            resources:
+              requests:
+                cpu: 100m
+                memory: 250Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+
+      # Redis
+      redis:
+        pod:
+          labels:
+            app.kubernetes.io/controller: n8n-redis
+        containers:
+          redis:
+            image:
+              repository: redis
+              tag: 6-alpine
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 5678
+      redis:
+        controller: redis
+        ports:
+          http:
+            port: 6379
+
+    persistence:
+      n8n-storage:
+        enabled: true
+        type: persistentVolumeClaim
+        storageClass: longhorn-r2
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        advancedMounts:
+          main:
+            main:
+              - path: /home/node/.n8n
+        globalMounts:
+          - path: /home/node/.n8n
+        labels:
+          recurring-job.longhorn.io/backup-daily: enabled
+          recurring-job.longhorn.io/backup-weekly: enabled
+
+      cache:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          redis:
+            redis:
+              - path: /data
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: n8n.${CLUSTER_DOMAIN}
+        hosts:
+          - host: n8n.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
