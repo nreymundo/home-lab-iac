@@ -43,6 +43,11 @@ spec:
     serviceAccount:
       create: true
 
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: observability-kube-prometheus-stack
+
     alloy:
       configMap:
         create: true

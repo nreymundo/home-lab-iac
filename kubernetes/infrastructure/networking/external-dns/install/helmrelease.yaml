@@ -23,6 +23,14 @@ spec:
     provider:
       name: pihole
 
+    metrics:
+      enabled: true
+
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: observability-kube-prometheus-stack
+
     sources:
       - ingress
       - traefik-proxy

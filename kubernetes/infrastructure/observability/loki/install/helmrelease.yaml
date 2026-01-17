@@ -29,6 +29,16 @@ spec:
   values:
     deploymentMode: SingleBinary
 
+    monitoring:
+      serviceMonitor:
+        enabled: true
+        labels:
+          release: observability-kube-prometheus-stack
+      selfMonitoring:
+        enabled: false
+        grafanaAgent:
+          installOperator: false
+
     # --- Disable caches that do not make sense for a homelab ---
     chunksCache:
       enabled: false

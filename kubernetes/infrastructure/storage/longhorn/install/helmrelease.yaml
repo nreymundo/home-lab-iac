@@ -20,6 +20,12 @@ spec:
         namespace: flux-system
       interval: 1h
   values:
+    metrics:
+      serviceMonitor:
+        enabled: true
+        additionalLabels:
+          release: observability-kube-prometheus-stack
+
     # Keep values minimal; policy will be in StorageClass.
     persistence:
       defaultClass: false # we will create our own StorageClass + mark it default
