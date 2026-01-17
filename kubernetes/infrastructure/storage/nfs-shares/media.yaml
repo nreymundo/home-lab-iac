@@ -1,0 +1,31 @@
+---
+# PersistentVolume for media share
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-media
+spec:
+  capacity:
+    storage: 1Ti  # Informational only for NFS
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  nfs:
+    server: ${UNRAID_IP}
+    path: /mnt/user/media
+---
+# PersistentVolumeClaim for media share
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-media
+  namespace: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 1Ti # Has to match what's above
+  volumeName: nfs-media
