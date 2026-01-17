@@ -27,7 +27,6 @@ spec:
       limits:
         cpu: 500m
         memory: 512Mi
-
     service:
       enabled: true
       type: LoadBalancer
