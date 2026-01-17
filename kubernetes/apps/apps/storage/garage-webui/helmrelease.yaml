@@ -16,11 +16,17 @@ spec:
   values:
     controllers:
       garage-webui:
+        pod:
+          labels:
+            app.kubernetes.io/controller: garage-webui
         containers:
           app:
             image:
               repository: khairul169/garage-webui
               tag: 1.1.0
+            ports:
+              - name: http
+                containerPort: 3909
             env:
               API_BASE_URL: "http://${UNRAID_IP}:3903"
               S3_ENDPOINT_URL: "https://s3.${CLUSTER_DOMAIN}"
@@ -35,6 +41,7 @@ spec:
         ports:
           http:
             port: 3909
+            targetPort: 3909
     ingress:
       app:
         enabled: true
