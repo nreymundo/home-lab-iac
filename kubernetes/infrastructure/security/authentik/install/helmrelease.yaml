@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: authentik
-      version: "2025.12.*"
+      version: "2025.12.1"
       sourceRef:
         kind: HelmRepository
         name: authentik
@@ -21,13 +21,26 @@ spec:
         - secretRef:
             name: authentik-env
       env:
-        # REQUIRED: Defines the public base URL for correct browser redirects
         - name: AUTHENTIK_HOST
           value: "https://sso.${CLUSTER_DOMAIN}"
-
-        # REQUIRED: Allows Authentik to trust Traefik headers to prevent HTTP downgrades
+        - name: CLUSTER_DOMAIN
+          value: "${CLUSTER_DOMAIN}"
+        - name: ACME_EMAIL
+          value: "${ACME_EMAIL}"
         - name: AUTHENTIK_LISTEN__TRUSTED_PROXY_IPS
           value: "10.0.0.0/8"
+
+        # SSO Credentials for Blueprint
+        - name: GRAFANA_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: grafana-sso-secret
+              key: CLIENT_ID
+        - name: GRAFANA_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: grafana-sso-secret
+              key: CLIENT_SECRET
 
         # Blueprint variables
         - name: AK_BLUEPRINT_USER
@@ -41,7 +54,7 @@ spec:
               name: authentik-env
               key: AK_BLUEPRINT_USER_PASSWORD
 
-        # CloudNativePG database connection
+        # Database connection
         - name: AUTHENTIK_POSTGRESQL__HOST
           value: authentik-pg-rw
         - name: AUTHENTIK_POSTGRESQL__PORT
@@ -63,9 +76,6 @@ spec:
       configMaps:
         - authentik-blueprints-bootstrap
 
-    # --- Metrics & Monitoring Configuration ---
-
-    # 1. Server Metrics (HTTP traffic, API usage)
     server:
       resources:
         requests:
@@ -83,7 +93,6 @@ spec:
           labels:
             release: observability-kube-prometheus-stack
 
-    # 2. Worker Metrics (Task queue, background processing)
     worker:
       resources:
         requests:
@@ -101,15 +110,13 @@ spec:
           labels:
             release: observability-kube-prometheus-stack
 
-    # 3. Prometheus Rules (Alerts)
     prometheus:
       rules:
         enabled: true
         labels:
           release: observability-kube-prometheus-stack
 
-    # --- Infrastructure Overrides ---
     postgresql:
-      enabled: false # False because I'm creating my own DB
+      enabled: false
     redis:
-      enabled: false # This is deprecated and doesn't exist anymore
+      enabled: false
