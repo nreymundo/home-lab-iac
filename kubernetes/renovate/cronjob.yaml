@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate
+  namespace: renovate
+spec:
+  schedule: "0 0 * * 0"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 4
+      activeDeadlineSeconds: 3600
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: renovate
+              image: renovate/renovate:39.4.0
+              env:
+                - name: LOG_LEVEL
+                  value: debug
+                - name: TZ
+                  value: UTC
+                - name: RENOVATE_CONFIG_FILE
+                  value: /opt/renovate/config.json
+              envFrom:
+                - secretRef:
+                    name: renovate-token
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /opt/renovate
+                  readOnly: true
+                - name: cache-volume
+                  mountPath: /tmp/renovate
+          volumes:
+            - name: config-volume
+              configMap:
+                name: renovate-config
+            - name: cache-volume
+              emptyDir:
+                sizeLimit: 1Gi
