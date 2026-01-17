@@ -5,3 +5,4 @@ resources:
   - ../apps/media/navidrome
   - ../apps/external-proxy
   - ../apps/automation/n8n
+  - ../apps/media/audiobookshelf
