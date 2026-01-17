@@ -3,8 +3,12 @@ kind: Cluster
 metadata:
   name: authentik-pg
   namespace: authentik
+  labels:
+    release: observability-kube-prometheus-stack
 spec:
   instances: 1
+  monitoring:
+    enablePodMonitor: false
   storage:
     size: 2Gi
     storageClass: longhorn-r1
