@@ -1,0 +1,76 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: navidrome
+  namespace: media
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 4.6.2
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  values:
+    controllers:
+      navidrome:
+        pod:
+          labels:
+            app.kubernetes.io/controller: navidrome
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+        containers:
+          app:
+            image:
+              repository: deluan/navidrome
+              tag: 0.59.0
+            ports:
+              - name: http
+                containerPort: 4533
+            env:
+              ND_LOGLEVEL: info
+              ND_PORT: "4533"
+              ND_TRANSCODINGCACHESIZE: 100MB
+              ND_SESSIONTIMEOUT: 24h
+              ND_MUSICFOLDER: /mnt/media/libraries/music
+    service:
+      app:
+        controller: navidrome
+        ports:
+          http:
+            port: 4533
+            targetPort: 4533
+    ingress:
+      app:
+        enabled: true
+        className: traefik
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+          external-dns.alpha.kubernetes.io/hostname: music.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: music.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: app
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r2
+        globalMounts:
+          - path: /data
+      media:
+        enabled: true
+        type: persistentVolumeClaim
+        existingClaim: nfs-media
+        globalMounts:
+          - path: /mnt/media
+            readOnly: true
