@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.2.1
+      version: 4.6.2
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -20,7 +20,7 @@ spec:
           app:
             image:
               repository: khairul169/garage-webui
-              tag: latest
+              tag: 1.1.0
             env:
               API_BASE_URL: "http://${UNRAID_IP}:3903"
               S3_ENDPOINT_URL: "https://s3.${CLUSTER_DOMAIN}"
