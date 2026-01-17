@@ -5,44 +5,56 @@
     ":disableDependencyDashboard",
     ":disableRateLimiting"
   ],
-  "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes"],
-  "flux": {
-    "fileMatch": [
-      "^kubernetes/infrastructure/.*/helmrelease\\.yaml$",
-      "^kubernetes/apps/.*/helmrelease\\.yaml$"
-    ]
-  },
-  "kubernetes": {
-    "fileMatch": [
-      "^kubernetes/infrastructure/.*/helmrelease\\.yaml$",
-      "^kubernetes/apps/.*/helmrelease\\.yaml$",
-      "^kubernetes/renovate/.*\\.yaml$"
-    ]
-  },
-  "automerge": true,
-  "automergeType": "pr",
-  "automergeSchedule": ["on Sunday after 9pm"],
-  "platformAutomerge": false,
-  "packageRules": [
-    {
-      "description": "Auto-merge non-major updates",
-      "matchUpdateTypes": ["minor", "patch", "digest"],
-      "automerge": true
-    },
-    {
-      "description": "Require review for major updates",
-      "matchUpdateTypes": ["major"],
-      "automerge": false
-    },
-    {
-      "description": "Ignore flux-system components (managed by Flux)",
-      "matchPaths": ["kubernetes/clusters/production/flux-system/**"],
-      "enabled": false
-    }
-  ],
+  "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "regex", "terraform"],
+  "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
   "commitMessagePrefix": "chore(deps)",
-  "commitMessageAction": "Update",
-  "assignees": [],
-  "timezone": "UTC"
+  "ignorePaths": ["kubernetes/clusters/production/flux-system/**"],
+
+  "separateMajorMinor": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "automergeType": "pr",
+    "automergeSchedule": ["on Sunday after 9pm"]
+  },
+
+  "packageRules": [
+    {
+      "description": "Global stability and automerge schedule",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "minimumReleaseAge": "5 days",
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeSchedule": ["on Sunday after 9pm"]
+    },
+    {
+      "description": "Group Observability Stack",
+      "matchPackageNames": ["/loki/", "/alloy/", "/kube-prometheus-stack/"],
+      "groupName": "observability"
+    },
+    {
+      "description": "Group Networking tools",
+      "matchPackageNames": ["/traefik/", "/metallb/", "/external-dns/"],
+      "groupName": "networking"
+    },
+    {
+      "description": "Manual review for Major updates or 0.x.x (unstable) apps",
+      "matchUpdateTypes": ["major"],
+      "matchCurrentVersion": "/^0/",
+      "automerge": false
+    }
+  ],
+
+  "customManagers": [
+    {
+      "description": "Enable # renovate: datasource=... comments",
+      "customType": "regex",
+      "fileMatch": ["\\.ya?ml$", "\\.sh$", "\\.md$", "Dockerfile"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[^:]+?) depName=(?<depName>.+?)( versioning=(?<versioning>.+?))?( extractVersion=(?<extractVersion>.+?))?( registryUrl=(?<registryUrl>.+?))?\\s.+?[:=]\\s*[\"']?(?<currentValue>.+?)[\"']?\\s"
+      ]
+    }
+  ]
 }
