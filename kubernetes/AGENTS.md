@@ -32,8 +32,48 @@ kubernetes/
 │   │   └── external-proxy/
 │   └── production/
 │       └── apps.yaml             # Kustomization for apps
+├── components/                   # Reusable Kustomize components
+│   ├── bjw-s-defaults/           # Common HelmRelease fields
+│   └── nfs-mount/
+│       └── media/
+│           ├── ro/               # Read-only NFS media mount
+│           └── rw/               # Read-write NFS media mount
 └── renovate/                     # Renovate configuration
 ```
+
+## Kustomize Components
+
+Reusable components in `kubernetes/components/` reduce duplication across HelmReleases.
+
+### Available Components
+
+| Component | Path | Purpose |
+|-----------|------|---------|
+| bjw-s-defaults | `components/bjw-s-defaults` | Adds `interval`, `version`, `sourceRef` for bjw-s app-template |
+| NFS Media (RW) | `components/nfs-mount/media/rw` | NFS media mount at `/mnt/media` (read-write) + securityContext |
+| NFS Media (RO) | `components/nfs-mount/media/ro` | NFS media mount at `/mnt/media` (read-only) + securityContext |
+
+### Usage
+
+Reference components in app's `kustomization.yaml`:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+  - ../../../../components/bjw-s-defaults
+  - ../../../../components/nfs-mount/media/rw
+resources:
+  - helmrelease.yaml
+```
+
+### When to Use
+
+- **bjw-s-defaults**: Always use for apps using bjw-s `app-template` chart. Omit `interval`, `version`, and `sourceRef` from HelmRelease.
+- **nfs-mount/media/rw**: Apps that need read-write access to NFS media share
+- **nfs-mount/media/ro**: Apps that only need read access to NFS media share
+
+Both NFS components include `defaultPodOptions.securityContext` (runAsUser: 99, runAsGroup: 100, fsGroup: 100) for proper NFS permissions.
 
 ## Flux GitOps Model
 
@@ -147,10 +187,13 @@ labels:
      # ... see pattern above
    ```
 
-4. **Create kustomization.yaml**:
+4. **Create kustomization.yaml** (with components):
    ```yaml
    apiVersion: kustomize.config.k8s.io/v1beta1
    kind: Kustomization
+   components:
+     - ../../../../components/bjw-s-defaults
+     # Add nfs-mount/media/rw or /ro if app needs NFS media access
    resources:
      - helmrelease.yaml
    ```
