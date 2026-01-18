@@ -18,9 +18,9 @@ spec:
       audiobookshelf:
         pod:
           securityContext:
-            runAsUser: 1000
-            runAsGroup: 1000
-            fsGroup: 1000
+            runAsUser: 99
+            runAsGroup: 100
+            fsGroup: 100
         containers:
           app:
             image:
@@ -37,7 +37,7 @@ spec:
             resources:
               requests:
                 cpu: 100m
-                memory: 100Mi
+                memory: 1Gi
               limits:
                 cpu: 1000m
                 memory: 1Gi

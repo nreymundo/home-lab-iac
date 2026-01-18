@@ -20,9 +20,9 @@ spec:
           labels:
             app.kubernetes.io/controller: navidrome
           securityContext:
-            runAsUser: 1000
-            runAsGroup: 1000
-            fsGroup: 1000
+            runAsUser: 99
+            runAsGroup: 100
+            fsGroup: 100
         containers:
           app:
             image:
