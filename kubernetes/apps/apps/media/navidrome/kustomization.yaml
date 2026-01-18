@@ -3,5 +3,9 @@ kind: Kustomization
 components:
   - ../../../../components/bjw-s-defaults
   - ../../../../components/nfs-mount/media/ro
+  - ../../../../components/common-env
+  - ../../../../components/ingress/traefik-base
+  - ../../../../components/ingress/auth-guard
+  - ../../../../components/storage/backup-policy
 resources:
   - helmrelease.yaml

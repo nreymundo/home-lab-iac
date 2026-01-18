@@ -9,12 +9,12 @@ spec:
       chart: app-template
   values:
     controllers:
-      navidrome:
+      main:
         pod:
           labels:
             app.kubernetes.io/controller: navidrome
         containers:
-          app:
+          main:
             image:
               repository: deluan/navidrome
               tag: 0.59.0
@@ -35,25 +35,22 @@ spec:
                 cpu: 500m
                 memory: 1Gi
     service:
-      app:
-        controller: navidrome
+      main:
+        controller: main
         ports:
           http:
             port: 4533
             targetPort: 4533
     ingress:
-      app:
-        enabled: true
-        className: traefik
+      main:
         annotations:
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: music.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: music.lan.${CLUSTER_DOMAIN}
             paths:
               - path: /
                 service:
-                  identifier: app
+                  identifier: main
                   port: http
     persistence:
       data:
@@ -64,6 +61,3 @@ spec:
         storageClass: longhorn-r2
         globalMounts:
           - path: /data
-        labels:
-          recurring-job.longhorn.io/backup-daily: enabled
-          recurring-job.longhorn.io/backup-weekly: enabled
