@@ -74,9 +74,8 @@ spec:
           - path: /metadata
             subPath: metadata
         labels:
-          recurring-job.longhorn.io/source: enabled
-          recurring-job-group.longhorn.io/backup-daily: enabled
-          recurring-job-group.longhorn.io/backup-weekly: enabled
+          recurring-job.longhorn.io/backup-daily: enabled
+          recurring-job.longhorn.io/backup-weekly: enabled
       media:
         enabled: true
         type: persistentVolumeClaim
