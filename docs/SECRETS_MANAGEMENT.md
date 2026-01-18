@@ -77,8 +77,8 @@ Terraform retrieves SSH keys to inject into VMs via cloud-init.
 terraform {
   required_providers {
     bitwarden-secrets = {
-      source  = "maxlaverse/bitwarden-secrets"
-      version = "~> 0.1"
+      source  = "bitwarden/bitwarden-secrets"
+      version = "0.5.4-pre"
     }
   }
 }

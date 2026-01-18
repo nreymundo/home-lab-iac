@@ -23,7 +23,7 @@ terraform/
 | Provider | Purpose |
 |----------|---------|
 | `telmate/proxmox` | Create VMs on Proxmox VE cluster |
-| `maxlaverse/bitwarden-secrets` | Retrieve SSH keys from Bitwarden Secrets Manager |
+| `bitwarden/bitwarden-secrets` | Retrieve SSH keys from Bitwarden Secrets Manager |
 
 ## Key Files
 
