@@ -8,6 +8,7 @@ spec:
     spec:
       chart: app-template
   values:
+    fullnameOverride: gitea
     controllers:
       main:
         pod:
@@ -22,8 +23,8 @@ spec:
               repository: docker.gitea.com/gitea
               tag: 1.25.3
             env:
-              USER_UID: "99"
-              USER_GID: "100"
+              USER_UID: 99
+              USER_GID: 100
             ports:
               - name: http
                 containerPort: 3000
