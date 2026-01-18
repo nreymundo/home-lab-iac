@@ -50,7 +50,7 @@ spec:
     agent:
       env:
         - name: COLLECTIONS
-          value: "crowdsecurity/traefik crowdsecurity/base-http-scenarios firix/authentik"
+          value: "crowdsecurity/traefik crowdsecurity/base-http-scenarios firix/authentik LePresidente/gitea"
 
       metrics:
         enabled: true
