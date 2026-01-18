@@ -42,6 +42,11 @@ spec:
       websecure:
         tls:
           enabled: true
+      ssh:
+        port: 22
+        expose:
+          default: true
+        protocol: TCP
       metrics:
         port: 9100
         expose:
