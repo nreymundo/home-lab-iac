@@ -5,13 +5,13 @@ patches:
   - target:
       kind: HelmRelease
     patch: |-
-      - op: replace
+      - op: add
         path: /spec/interval
         value: 15m
-      - op: replace
+      - op: add
         path: /spec/chart/spec/version
         value: "4.6.2"
-      - op: replace
+      - op: add
         path: /spec/chart/spec/sourceRef
         value:
           kind: HelmRepository
