@@ -52,7 +52,7 @@ spec:
         enabled: true
         className: traefik
         annotations:
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: audiobooks.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: audiobooks.lan.${CLUSTER_DOMAIN}
