@@ -191,8 +191,6 @@ spec:
 
     ingress:
       main:
-        enabled: true
-        className: traefik
         annotations:
           external-dns.alpha.kubernetes.io/hostname: n8n.${CLUSTER_DOMAIN}
         hosts:

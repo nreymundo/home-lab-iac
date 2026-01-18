@@ -9,14 +9,13 @@ spec:
       chart: app-template
   values:
     controllers:
-      audiobookshelf:
+      main:
         containers:
-          app:
+          main:
             image:
               repository: ghcr.io/advplyr/audiobookshelf
               tag: 2.32.1
             env:
-              TZ: Europe/Berlin
               CONFIG_PATH: /config
               METADATA_PATH: /metadata
               BACKUP_PATH: /metadata/backups
@@ -31,15 +30,13 @@ spec:
                 cpu: 500m
                 memory: 1Gi
     service:
-      app:
-        controller: audiobookshelf
+      main:
+        controller: main
         ports:
           http:
             port: 80
     ingress:
-      app:
-        enabled: true
-        className: traefik
+      main:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: audiobooks.lan.${CLUSTER_DOMAIN}
@@ -48,7 +45,7 @@ spec:
             paths:
               - path: /
                 service:
-                  identifier: app
+                  identifier: main
                   port: http
     persistence:
       data:
@@ -62,6 +59,3 @@ spec:
             subPath: config
           - path: /metadata
             subPath: metadata
-        labels:
-          recurring-job.longhorn.io/backup-daily: enabled
-          recurring-job.longhorn.io/backup-weekly: enabled
