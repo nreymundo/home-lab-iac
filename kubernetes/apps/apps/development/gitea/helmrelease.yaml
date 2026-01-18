@@ -11,12 +11,6 @@ spec:
     fullnameOverride: gitea
     controllers:
       main:
-        pod:
-          securityContext:
-            runAsUser: 99
-            runAsGroup: 100
-            fsGroup: 100
-            fsGroupChangePolicy: "OnRootMismatch"
         containers:
           main:
             image:
