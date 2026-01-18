@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - target:
+      kind: HelmRelease
+    patch: |-
+      - op: replace
+        path: /spec/interval
+        value: 15m
+      - op: replace
+        path: /spec/chart/spec/version
+        value: "4.6.2"
+      - op: replace
+        path: /spec/chart/spec/sourceRef
+        value:
+          kind: HelmRepository
+          name: bjw-s
+          namespace: flux-system
