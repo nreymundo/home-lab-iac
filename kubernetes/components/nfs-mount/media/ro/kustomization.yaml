@@ -11,16 +11,12 @@ patches:
         name: _
       spec:
         values:
-          defaultPodOptions:
-            securityContext:
-              runAsUser: 99
-              runAsGroup: 100
-              fsGroup: 100
           persistence:
             media:
               enabled: true
-              type: persistentVolumeClaim
-              existingClaim: nfs-media
+              type: nfs
+              server: ${UNRAID_IP}
+              path: /mnt/user/media
               globalMounts:
                 - path: /mnt/media
                   readOnly: true

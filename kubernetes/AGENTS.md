@@ -157,7 +157,7 @@ spec:
 ### Storage Classes
 - `longhorn-r2` - Longhorn with 2 replicas (default for apps)
 - `longhorn-r1` - Longhorn with 1 replica (for less critical data)
-- NFS via PersistentVolumeClaim `nfs-media`, `nfs-downloads`
+- NFS via built-in app-template type: `nfs` (see `components/nfs-mount/`)
 
 ### Longhorn Backup Labels
 Add to PVC labels for automatic backups:
