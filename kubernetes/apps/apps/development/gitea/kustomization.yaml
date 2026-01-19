@@ -5,6 +5,7 @@ components:
   - ../../../../components/common-env
   - ../../../../components/ingress/traefik-base
   - ../../../../components/storage/backup-policy
+  - ../../../../components/nfs-mount/backup
 resources:
   - helmrelease.yaml
   - ingressroutetcp.yaml
