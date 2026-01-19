@@ -19,6 +19,7 @@ spec:
             env:
               USER_UID: 99
               USER_GID: 100
+              DISABLE_REGISTRATION: false
             ports:
               - name: http
                 containerPort: 3000
