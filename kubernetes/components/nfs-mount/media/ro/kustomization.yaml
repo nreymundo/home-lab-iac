@@ -21,7 +21,6 @@ patches:
               enabled: true
               type: persistentVolumeClaim
               existingClaim: nfs-media
-              readOnly: true
               globalMounts:
                 - path: /mnt/media
                   readOnly: true

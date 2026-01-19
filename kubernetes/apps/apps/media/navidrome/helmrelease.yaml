@@ -10,9 +10,6 @@ spec:
   values:
     controllers:
       main:
-        pod:
-          labels:
-            app.kubernetes.io/controller: navidrome
         containers:
           main:
             image:
