@@ -13,6 +13,6 @@ data:
         - namespace: authentik
           podName: authentik-*
           program: authentik
-        - namespace: gitea
+        - namespace: development
           podName: gitea-*
           program: gitea
