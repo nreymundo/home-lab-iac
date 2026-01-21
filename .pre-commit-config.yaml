@@ -16,7 +16,7 @@ repos:
     hooks:
       - id: yamllint
         files: \.ya?ml$
-        exclude: (^kubernetes/clusters/homelab/flux-system/|.*\.sops\.ya?ml$)
+        exclude: (^kubernetes/clusters/homelab/flux-system/|\.sops\.ya?ml$)
 
   - repo: local
     hooks:
@@ -60,7 +60,7 @@ repos:
       # Auto-encrypt *.sops.yaml files if they are not already encrypted
       - id: sops-auto-encrypt
         name: Auto-encrypt *.sops.yaml with sops (skip if already encrypted)
-        entry: bash -lc 'set -euo pipefail; changed=0; for f in "$@"; do if rg -q "^(---[[:space:]]*)?sops:[[:space:]]*$" "$f"; then continue; fi; sops --encrypt --in-place "$f"; changed=1; done; if [ "$changed" -eq 1 ]; then git add "$@"; fi'
+        entry: scripts/sops-auto-encrypt.sh
         language: system
         files: \.sops\.ya?ml$
         pass_filenames: true

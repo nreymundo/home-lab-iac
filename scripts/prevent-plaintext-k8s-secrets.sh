@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Only inspect staged YAML files
-files=$(git diff --cached --name-only --diff-filter=ACM | rg -i '\.ya?ml$' || true)
-[ -z "${files}" ] && exit 0
+mapfile -t files < <(git diff --cached --name-only --diff-filter=ACM | rg -i '\.ya?ml$' || true)
+[ ${#files[@]} -eq 0 ] && exit 0
 
 fail=0
 
-for f in $files; do
+for f in "${files[@]}"; do
   # Allow encrypted secret files by convention
   if [[ "$f" =~ \.sops\.ya?ml$ ]]; then
     continue
