@@ -12,6 +12,10 @@ spec:
     name: flux-system
   dependsOn:
     - name: traefik-config
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
   postBuild:
     substituteFrom:
       - kind: ConfigMap
