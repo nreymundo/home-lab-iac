@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -10,12 +10,14 @@ repos:
       - id: check-yaml
         args: ["--allow-multiple-documents"]
         exclude: ^kubernetes/clusters/homelab/flux-system/
+
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
         files: \.ya?ml$
-        exclude: ^kubernetes/clusters/homelab/flux-system/
+        exclude: (^kubernetes/clusters/homelab/flux-system/|.*\.sops\.ya?ml$)
+
   - repo: local
     hooks:
       - id: ansible-lint
@@ -26,15 +28,39 @@ repos:
         args: ["--project-dir", "ansible"]
         pass_filenames: true
         always_run: false
+
       - id: packer-fmt
         name: Packer fmt
         entry: packer fmt -recursive packer/
         language: system
         files: ^packer/.*\.pkr\.hcl$
         pass_filenames: false
+
       - id: terraform-fmt
         name: Terraform fmt
         entry: terraform -chdir=terraform fmt
         language: system
         files: ^terraform/.*\.tf$
         pass_filenames: false
+
+      # Block committing private key material (age + common key files)
+      - id: forbid-sensitive-files
+        name: Forbid committing key material (age/private keys)
+        entry: scripts/forbid-sensitive-files.sh
+        language: system
+        pass_filenames: false
+
+      # Block committing plaintext Kubernetes Secret manifests
+      - id: prevent-plaintext-k8s-secrets
+        name: Block plaintext Kubernetes Secret manifests
+        entry: scripts/prevent-plaintext-k8s-secrets.sh
+        language: system
+        pass_filenames: false
+
+      # Auto-encrypt *.sops.yaml files if they are not already encrypted
+      - id: sops-auto-encrypt
+        name: Auto-encrypt *.sops.yaml with sops (skip if already encrypted)
+        entry: bash -lc 'set -euo pipefail; changed=0; for f in "$@"; do if rg -q "^(---[[:space:]]*)?sops:[[:space:]]*$" "$f"; then continue; fi; sops --encrypt --in-place "$f"; changed=1; done; if [ "$changed" -eq 1 ]; then git add "$@"; fi'
+        language: system
+        files: \.sops\.ya?ml$
+        pass_filenames: true

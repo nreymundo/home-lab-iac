@@ -65,6 +65,13 @@ kubernetes/clusters/homelab/secrets/bitwarden-authentik-secret.yaml
 kubernetes/clusters/homelab/secrets/bitwarden-grafana-admin.yaml
 kubernetes/clusters/homelab/secrets/bitwarden-cluster-vars.yaml
 kubernetes/clusters/homelab/secrets/bitwarden-cloudflare-secrets.yaml
+# SOPS secrets and related
+age.agekey
+*.agekey
+**/*.agekey
+**/age.agekey
+.sops-cache/
+.sops.yaml.bak
 
 # Tests and tooling
 .coverage
