@@ -92,7 +92,7 @@ Files in `ks/` are numbered for dependency ordering:
 | 10-19 | Networking | MetalLB, Traefik |
 | 20-29 | Networking config | External-DNS |
 | 30-39 | Replication | Kube-replicator |
-| 40-49 | Security | Bitwarden, Authentik, Crowdsec |
+| 40-49 | Security | Authentik, Crowdsec |
 | 50-59 | Certificates | Cert-manager |
 | 60-69 | Storage | Longhorn, CNPG, NFS |
 | 70-79 | Observability | Prometheus, Loki, Alloy |
@@ -281,4 +281,4 @@ Config file: `/renovate.json`
 
 3. **Dependency ordering**: Use `dependsOn` in Kustomizations for explicit dependencies
 
-4. **Secrets**: Use Bitwarden Secrets Operator or kube-replicator for secret management
+4. **Secrets**: Use SOPS for secrets management, kube-replicator for cross-namespace replication

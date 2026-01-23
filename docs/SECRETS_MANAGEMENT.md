@@ -1,16 +1,16 @@
 # Secrets Management
 
-This document explains how secrets are managed across all components using Bitwarden Secrets Manager.
+This document explains how secrets are managed across all components.
 
 ## Overview
 
-All sensitive data is stored in **Bitwarden Secrets Manager** and retrieved at runtime by each component:
+Sensitive data is stored in either Bitwarden Secrets Manager (infrastructure) or encrypted in Git with SOPS (Kubernetes):
 
 | Component | Secrets Used | Retrieval Method |
 |-----------|-------------|------------------|
 | Packer | SSH public keys | `bws` CLI in `generate-autoinstall.sh` |
 | Terraform | SSH public keys | `bitwarden-secrets` provider |
-| Kubernetes | App secrets | Bitwarden Secrets Operator |
+| Kubernetes | App secrets | SOPS (AGE-encrypted) |
 
 ---
 
@@ -103,33 +103,53 @@ resource "proxmox_vm_qemu" "node" {
 
 ---
 
-## Kubernetes: Bitwarden Secrets Operator
+## Kubernetes: SOPS
 
-The cluster uses the **Bitwarden Secrets Operator** to sync secrets from Bitwarden to Kubernetes.
+The cluster uses **SOPS** (Secrets OPerationS) to manage encrypted secrets in Git.
 
-### Installation
+### How It Works
 
-The operator is deployed via Flux in `infrastructure/security/bitwarden-secrets-operator/`.
+1. Secrets are stored as `.sops.yaml` files in repository
+2. SOPS encrypts the `data` and `stringData` fields using AGE encryption
+3. Flux applies the encrypted secrets to the cluster
+4. The Flux SOPS controller decrypts secrets at runtime using the cluster AGE key
 
-### Creating a BitwardenSecret
+### Encryption Configuration
+
+SOPS is configured via `.sops.yaml` at the repository root:
 
 ```yaml
-apiVersion: k8s.bitwarden.com/v1
-kind: BitwardenSecret
+creation_rules:
+  - path_regex: .*\.sops\.ya?ml$
+    encrypted_regex: '^(data|stringData)$'
+    age: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+```
+
+### Creating an Encrypted Secret
+
+1. **Create a secret manifest** with the `.sops.yaml` extension:
+
+```yaml
+apiVersion: v1
+kind: Secret
 metadata:
   name: my-app-secrets
   namespace: my-app
-spec:
-  organizationId: "<org-id>"
-  secretName: my-app-secrets  # Name of the K8s Secret to create
-  map:
-    - secretKeyName: database-password
-      bwSecretId: "<bitwarden-secret-uuid>"
-    - secretKeyName: api-key
-      bwSecretId: "<bitwarden-secret-uuid>"
+type: Opaque
+stringData:
+  DATABASE_URL: "postgresql://user:password@db:5432/mydb"
+  API_KEY: "super-secret-api-key"
 ```
 
-### Using Secrets in Applications
+2. **Encrypt with SOPS**:
+
+```bash
+sops --encrypt secret.yaml > secret.sops.yaml
+```
+
+3. **Commit the encrypted file** to Git (the plaintext remains in the untracked `secret.yaml`)
+
+4. **Add to your application**:
 
 ```yaml
 apiVersion: apps/v1
@@ -142,6 +162,24 @@ spec:
           envFrom:
             - secretRef:
                 name: my-app-secrets
+```
+
+### Adding SOPS Decryption to Flux
+
+Ensure Flux SOPS integration is enabled in your cluster to automatically decrypt secrets at runtime.
+
+### Cross-Namespace Replication
+
+For secrets needed in multiple namespaces, use **kube-replicator** with annotations:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: shared-credentials
+  namespace: flux-system
+  annotations:
+    replicator.v1.mittwald.de/replicate-to: "namespace-1,namespace-2"
 ```
 
 ---
@@ -178,22 +216,19 @@ metadata:
 
 ## Adding New Secrets
 
-### 1. Add to Bitwarden
+### For Kubernetes Apps
 
-1. Go to Secrets Manager → relevant project
+1. Create a `*.sops.yaml` secret file in the appropriate directory
+2. Encrypt it with `sops --encrypt`
+3. The secret will be applied to the cluster by Flux and decrypted automatically
+
+### For Terraform
+
+1. Add to Bitwarden: Go to Secrets Manager → relevant project
 2. Create new secret with key-value pair
 3. Copy the secret UUID
+4. Reference in your Terraform configuration:
 
-### 2. Reference in Component
-
-**For Kubernetes apps:**
-```yaml
-# In BitwardenSecret spec.map
-- secretKeyName: new-secret-key
-  bwSecretId: "<uuid-from-bitwarden>"
-```
-
-**For Terraform:**
 ```hcl
 data "bitwarden-secrets_secret" "new_secret" {
   id = "<uuid-from-bitwarden>"
@@ -208,4 +243,5 @@ data "bitwarden-secrets_secret" "new_secret" {
 2. **Use separate machine accounts** for different environments (dev/prod)
 3. **Limit project access** - each machine account should only access needed projects
 4. **Never commit secrets** - use environment variables or secret managers
-5. **Audit access** regularly via Bitwarden's access logs
+5. **Audit access** regularly via Bitwarden's access logs (infrastructure)
+6. **Keep AGE keys secure** - rotate encryption keys periodically (Kubernetes)
