@@ -9,7 +9,6 @@ resources:
   - 25-external-dns-install.yaml
   - 30-kube-replicator-install.yaml
   - 40-bitwarden-install.yaml
-  - 41-bitwarden-config.yaml
   - 42-authentik-install.yaml
   - 43-authentik-config.yaml
   - 44-crowdsec-install.yaml

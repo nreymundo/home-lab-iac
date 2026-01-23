@@ -3,5 +3,5 @@ kind: Kustomization
 namespace: crowdsec
 resources:
   - helmrelease.yaml
-  - traefik-bouncer-secret.yaml
+  - traefik-bouncer-secret.sops.yaml
   - acquisition-configmap.yaml

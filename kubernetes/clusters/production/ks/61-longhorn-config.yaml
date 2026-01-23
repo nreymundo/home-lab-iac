@@ -13,6 +13,10 @@ spec:
   dependsOn:
     - name: longhorn-install
   wait: true
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
   postBuild:
     substituteFrom:
       - kind: ConfigMap
