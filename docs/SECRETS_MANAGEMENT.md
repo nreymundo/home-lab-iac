@@ -240,8 +240,7 @@ data "bitwarden-secrets_secret" "new_secret" {
 ## Security Best Practices
 
 1. **Rotate access tokens** periodically
-2. **Use separate machine accounts** for different environments (dev/prod)
-3. **Limit project access** - each machine account should only access needed projects
-4. **Never commit secrets** - use environment variables or secret managers
-5. **Audit access** regularly via Bitwarden's access logs (infrastructure)
-6. **Keep AGE keys secure** - rotate encryption keys periodically (Kubernetes)
+1. **Use separate machine accounts** for different environments (dev/prod)
+1. **Limit project access** - each machine account should only access needed projects
+1. **Never commit secrets** - use environment variables or secret managers
+1. **Keep AGE keys secure** - rotate encryption keys periodically (Kubernetes)
