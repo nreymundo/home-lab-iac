@@ -127,7 +127,7 @@ creation_rules:
 
 ### Creating an Encrypted Secret
 
-1. **Create a secret manifest** with the `.sops.yaml` extension:
+1. **Create a secret manifest** with a `.sops.yaml` extension (e.g., `secret.sops.yaml`) and add plaintext secret data:
 
 ```yaml
 apiVersion: v1
@@ -141,13 +141,15 @@ stringData:
   API_KEY: "super-secret-api-key"
 ```
 
-2. **Encrypt with SOPS**:
+2. **Encrypt file in-place**:
 
 ```bash
-sops --encrypt secret.yaml > secret.sops.yaml
+sops --encrypt --in-place secret.sops.yaml
 ```
 
-3. **Commit the encrypted file** to Git (the plaintext remains in the untracked `secret.yaml`)
+*Note: The repository's pre-commit hooks may handle this encryption automatically.*
+
+3. **Commit the encrypted file** to Git.
 
 4. **Add to your application**:
 
@@ -167,20 +169,6 @@ spec:
 ### Adding SOPS Decryption to Flux
 
 Ensure Flux SOPS integration is enabled in your cluster to automatically decrypt secrets at runtime.
-
-### Cross-Namespace Replication
-
-For secrets needed in multiple namespaces, use **kube-replicator** with annotations:
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: shared-credentials
-  namespace: flux-system
-  annotations:
-    replicator.v1.mittwald.de/replicate-to: "namespace-1,namespace-2"
-```
 
 ---
 
