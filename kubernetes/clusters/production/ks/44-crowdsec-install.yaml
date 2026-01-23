@@ -11,6 +11,10 @@ spec:
     kind: GitRepository
     name: flux-system
   wait: true
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
   timeout: 10m
   postBuild:
     substituteFrom:
