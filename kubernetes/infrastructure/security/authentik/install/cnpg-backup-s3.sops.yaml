@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: cnpg-backup-s3
+    namespace: authentik
+type: Opaque
+stringData:
+    ACCESS_KEY_ID: ENC[AES256_GCM,data:06b8YomIByy36xm57/FQNwpaG9s+JQnK350=,iv:FSznzdC8KItFVWlWMNifn49ucK594y0f7ZGoYBlXrVU=,tag:469qtNa4tru+BynIgjwJxQ==,type:str]
+    ACCESS_SECRET_KEY: ENC[AES256_GCM,data:hIPGENvjuKEv1Z22DwJFO2GywPs4vUvLzV9m2Ie/py+uDYDjgPVqojWYQ1PU4S/YNaZc9EccWnIFLIg8yThStw==,iv:VYInYa7UUdztpJrX+6rsei3pe77W9OD9ZjCM+FE6oRQ=,tag:Ce2n3GQrPPCSyttXzyhWJg==,type:str]
+    AWS_DEFAULT_REGION: ENC[AES256_GCM,data:QJ7r376m,iv:utOKwfpSSD2MantA6Io/8VtCsCeJk5KHYr3d9VpfW90=,tag:/8hgLEVBzmNYhNR61ZX86g==,type:str]
+sops:
+    age:
+        - recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSArc1lSZll6L0NUQTNCUEY4
+            RDZiV0EzTC9EVW53b0pGYnZyZ1VVNnBFYUJRCjlmaHhMaTlyaWVRVFlsZmlVWldT
+            dkxjWk03Mk10TE9RckdSa05uVG1WdVEKLS0tIEYzNUR5Y1VtMXFudEFZdS9tOHp4
+            cjdBU3VOcmV5bld6d29TQ2twTmFUWlEKZlkYiUZhdqfYwEo+r6nTb8qd5UomjN6F
+            QhgerG2GGiynz2mGogkDoHs4mAlkQORazqGxC2KPq5DpBF0HAyiuIQ==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-01-23T20:16:14Z"
+    mac: ENC[AES256_GCM,data:bQ3U87PnfkxnKzuc70eDmSEmd//FGorNM7x65Qgnd//gJrKusNwZ4VYjORV4lCupEAR1Y/ur9raPEudHNIV2MnSGI76ews9M1wXoTqVjeNpAFhefckm0KihSHO+6sj1UpcDol+EBw4bDGlxZJXC/Bnok/tij+swMWfNADImrZqY=,iv:OqRafFeLPz+t8H2Wa+2mo1k4uy9oX298CLYVGDvDnN0=,tag:8STkVs6/AY6kXhG38s5jfQ==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.11.0
