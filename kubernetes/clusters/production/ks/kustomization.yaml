@@ -8,7 +8,6 @@ resources:
   - 21-traefik-config.yaml
   - 25-external-dns-install.yaml
   - 30-kube-replicator-install.yaml
-  - 40-bitwarden-install.yaml
   - 42-authentik-install.yaml
   - 43-authentik-config.yaml
   - 44-crowdsec-install.yaml

@@ -18,7 +18,7 @@ See [docs/SECRETS_MANAGEMENT.md](docs/SECRETS_MANAGEMENT.md) for detailed setup.
 |-----------|--------|
 | Packer | `bws` CLI via `generate-autoinstall.sh` |
 | Terraform | `bitwarden-secrets` provider |
-| Kubernetes | Bitwarden Secrets Operator |
+| Kubernetes | SOPS (encrypted secrets in Git) |
 
 ---
 

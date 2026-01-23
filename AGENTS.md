@@ -85,7 +85,7 @@ All components use **Bitwarden Secrets Manager** for sensitive data:
 |-----------|-------|
 | Packer | SSH public keys injection during build |
 | Terraform | SSH public keys for cloud-init |
-| Kubernetes | Bitwarden Secrets Operator for app secrets |
+| Kubernetes | SOPS for app secrets |
 
 Environment variable: `BWS_ACCESS_TOKEN`
 
