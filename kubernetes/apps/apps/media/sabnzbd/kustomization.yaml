@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+  - ../../../../components/bjw-s-defaults
+  - ../../../../components/common-env
+  - ../../../../components/ingress/traefik-base
+  - ../../../../components/storage/backup-policy
+  - ../../../../components/nfs-mount/media/rw
+resources:
+  - helmrelease.yaml
+  - ingressroutetcp-privoxy.yaml
+  - ingressroutetcp-socks.yaml
+  - sabnzbd-wireguard.sops.yaml
+patches:
+  - target:
+      kind: HelmRelease
+      group: helm.toolkit.fluxcd.io
+      version: v2
+    patch: |-
+      apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      metadata:
+        name: sabnzbd
+      spec:
+        values:
+          persistence:
+            media:
+              globalMounts:
+                - path: /data

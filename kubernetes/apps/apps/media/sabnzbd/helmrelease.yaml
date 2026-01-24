@@ -1,0 +1,108 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sabnzbd
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    fullnameOverride: sabnzbd
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=binhex/arch-sabnzbdvpn registryUrl=https://docker.io
+              repository: binhex/arch-sabnzbdvpn
+              tag: 4.5.5-1-01
+            env:
+              VPN_ENABLED: "yes"
+              VPN_PROV: custom
+              VPN_CLIENT: wireguard
+              LAN_NETWORK: 192.168.0.0/16
+              ENABLE_PRIVOXY: "yes"
+              ENABLE_SOCKS: "yes"
+              PUID: "99"
+              PGID: "100"
+              UMASK: "0000"
+            ports:
+              - name: http
+                containerPort: 8080
+              - name: api
+                containerPort: 8090
+              - name: privoxy
+                containerPort: 8118
+              - name: socks
+                containerPort: 9118
+              - name: sabnzbd-tcp
+                containerPort: 58946
+              - name: sabnzbd-udp
+                containerPort: 58946
+                protocol: UDP
+            securityContext:
+              privileged: true
+              capabilities:
+                add:
+                  - NET_ADMIN
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8080
+          api:
+            port: 8090
+          privoxy:
+            port: 8118
+          socks:
+            port: 9118
+          sabnzbd-tcp:
+            port: 58946
+          sabnzbd-udp:
+            port: 58946
+            protocol: UDP
+    ingress:
+      main:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+          external-dns.alpha.kubernetes.io/hostname: sabnzbd.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: sabnzbd.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r1
+        globalMounts:
+          - path: /config
+      wireguard:
+        enabled: true
+        type: secret
+        name: sabnzbd-wireguard
+        globalMounts:
+          - path: /config/wireguard/wg0.conf
+            subPath: wg0.conf
+            readOnly: true
+      tun:
+        enabled: true
+        type: hostPath
+        hostPath: /dev/net/tun
+        hostPathType: CharDevice
+        globalMounts:
+          - path: /dev/net/tun
