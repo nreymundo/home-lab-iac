@@ -57,19 +57,14 @@
       ]
     },
     {
-      "description": "Track HelmRelease chart versions",
+      "description": "Track Helm chart versions",
       "customType": "regex",
-      "fileMatch": ["kubernetes/.*/helmrelease\\.ya?ml$"],
+      "fileMatch": [
+        "kubernetes/.*/helmrelease\\.ya?ml$",
+        "kubernetes/components/bjw-s-defaults/kustomization\\.ya?ml$"
+      ],
       "matchStrings": [
-        "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s+registryUrl=(?<registryUrl>\\S+)\\s*\\r?\\n\\s*version:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
-      ]
-    },
-    {
-      "description": "Track app-template version in kustomize patch",
-      "customType": "regex",
-      "fileMatch": ["kubernetes/components/bjw-s-defaults/kustomization\\.ya?ml$"],
-      "matchStrings": [
-        "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s+registryUrl=(?<registryUrl>\\S+)\\s*\\r?\\n\\s*value:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+        "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s+registryUrl=(?<registryUrl>\\S+)\\s*\\r?\\n\\s*(?:version|value):\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
       ]
     }
   ]
