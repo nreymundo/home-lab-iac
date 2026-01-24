@@ -16,7 +16,7 @@ spec:
             image:
               # renovate: datasource=docker depName=gitea/gitea registryUrl=https://docker.gitea.com
               repository: docker.gitea.com/gitea
-              tag: 1.25.3
+              tag: 1.25.4
             env:
               USER_UID: 99
               USER_GID: 100
