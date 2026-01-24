@@ -14,7 +14,7 @@ spec:
     spec:
       chart: traefik
       # renovate: datasource=helm depName=traefik registryUrl=https://traefik.github.io/charts
-      version: "38.*"
+      version: "39.0.0"
       sourceRef:
         kind: HelmRepository
         name: traefik
@@ -39,7 +39,12 @@ spec:
       isDefaultClass: false
       name: traefik # Overriding this so the ingressClass becomes "traefik" instead of "traefik-traefik"
     ports:
-      web: {}
+      web:
+        http:
+          redirections:
+            entryPoint:
+              to: websecure
+              scheme: https
       websecure:
         tls:
           enabled: true
@@ -70,9 +75,8 @@ spec:
           enabled: true
           additionalLabels:
             release: observability-kube-prometheus-stack
-    additionalArguments:
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    requestPath:
+      allowEncodedSlashes: false
     providers:
       kubernetesIngress:
         enabled: true
