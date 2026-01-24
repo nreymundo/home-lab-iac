@@ -57,7 +57,7 @@ spec:
               EXECUTIONS_MODE: queue
               QUEUE_BULL_REDIS_HOST: n8n-redis
               QUEUE_HEALTH_CHECK_ACTIVE: "true"
-              N8N_RUNNERS_ENABLED: "true"
+              OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS: "true"
               N8N_BLOCK_ENV_ACCESS_IN_NODE: "true"
               N8N_ENCRYPTION_KEY:
                 valueFrom:
