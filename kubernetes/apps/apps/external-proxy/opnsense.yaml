@@ -1,0 +1,47 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opnsense
+  namespace: external-proxy
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: opnsense
+  namespace: external-proxy
+subsets:
+  - addresses:
+      - ip: 192.168.10.1
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: opnsense
+  namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    external-dns.alpha.kubernetes.io/hostname: opnsense.lan.${CLUSTER_DOMAIN}
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: opnsense.lan.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: opnsense
+                port:
+                  name: http

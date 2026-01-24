@@ -2,5 +2,10 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - garage-s3.yaml
+  - home-assistant.yaml
   - kvm.yaml
+  - opnsense.yaml
   - pihole.yaml
+  - proxmox.yaml
+  - proxmox-backup.yaml
+  - unraid.yaml
