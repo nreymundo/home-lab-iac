@@ -5,7 +5,7 @@
     ":disableDependencyDashboard",
     ":disableRateLimiting"
   ],
-  "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "regex"],
+  "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "custom.regex"],
   "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
   "commitMessagePrefix": "chore(deps)",
@@ -49,11 +49,11 @@
 
   "customManagers": [
     {
-      "description": "Enable # renovate: datasource=... comments",
+      "description": "Enable # renovate: datasource=... comments (multiline repo/tag)",
       "customType": "regex",
-      "fileMatch": ["\\.ya?ml$", "\\.sh$", "\\.md$", "Dockerfile"],
+      "fileMatch": ["\\.ya?ml$", "\\.sh$", "Dockerfile"],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>[^:]+?) depName=(?<depName>.+?)( versioning=(?<versioning>.+?))?( extractVersion=(?<extractVersion>.+?))?( registryUrl=(?<registryUrl>.+?))?\\s.+?[:=]\\s*[\"']?(?<currentValue>.+?)[\"']?\\s"
+        "(?m)^\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\n\\s*repository:\\s*\\S+(?:\\s*\\n(?!\\s*#\\s*renovate:).*)*?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
       ]
     }
   ]
