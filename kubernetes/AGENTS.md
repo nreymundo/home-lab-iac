@@ -114,6 +114,7 @@ spec:
   chart:
     spec:
       chart: app-template
+      # renovate: datasource=helm depName=app-template registryUrl=https://bjw-s-labs.github.io/helm-charts/
       version: 4.6.2
       sourceRef:
         kind: HelmRepository
@@ -149,20 +150,33 @@ spec:
 
 ### Renovate Support
 
-For apps using **custom Docker registries** (not docker.io, ghcr.io, quay.io), add a Renovate datasource comment above the image definition:
+Renovate relies on explicit `# renovate:` comments to track Helm chart versions and image tags.
+
+**Image tags**: add a comment immediately above the `repository`/`tag` block for every image (not just custom registries):
 
 ```yaml
 # renovate: datasource=docker depName=<image-name> registryUrl=<registry-url>
-image:
-  repository: <registry>/<image-name>
-  tag: <version>
+repository: <registry>/<image-name>
+tag: <version>
 ```
 
-**Common custom registries:**
+**HelmRelease chart versions**: add a comment immediately above the `version` field:
+
+```yaml
+chart:
+  spec:
+    chart: <chart-name>
+    # renovate: datasource=helm depName=<chart-name> registryUrl=<chart-repo-url>
+    version: <version>
+```
+
+**App-template**: the shared chart version is tracked in
+`kubernetes/components/bjw-s-defaults/kustomization.yaml` with the same `# renovate:` pattern.
+
+**Common registries:**
 - `docker.gitea.com` → `registryUrl=https://docker.gitea.com`
 - `docker.n8n.io` → `registryUrl=https://docker.n8n.io`
-
-This enables Renovate to track and update these images. Without the comment, Renovate's `helm-values` manager cannot detect custom registry images.
+- `ghcr.io` → `registryUrl=https://ghcr.io`
 
 ### Ingress Conventions
 - **Ingress class**: `traefik`
@@ -204,18 +218,13 @@ labels:
       # ... see pattern above
     ```
 
- 4. **Add Renovate datasource comment** (if using custom registry):
-
-    If the app uses a custom Docker registry (not docker.io, ghcr.io, quay.io), add a `# renovate:` comment above the image definition:
+ 4. **Add Renovate datasource comment** above every image tag (see [Renovate Support](#renovate-support)):
 
     ```yaml
     # renovate: datasource=docker depName=<image-name> registryUrl=<registry-url>
-    image:
-      repository: <registry>/<image-name>
-      tag: <version>
+    repository: <registry>/<image-name>
+    tag: <version>
     ```
-
-    See [Renovate Support](#renovate-support) section for examples.
 
  5. **Create kustomization.yaml** (with components):
    ```yaml
@@ -253,6 +262,16 @@ labels:
 2. **Create component directory** in appropriate category (`networking/`, `security/`, etc.)
 
 3. **Create HelmRelease + kustomization.yaml**
+
+   Add a `# renovate:` comment above each Helm chart `version` field:
+
+   ```yaml
+   chart:
+     spec:
+       chart: <chart-name>
+       # renovate: datasource=helm depName=<chart-name> registryUrl=<chart-repo-url>
+       version: <version>
+   ```
 
 4. **Add Kustomization** in `clusters/production/ks/` with appropriate number prefix
 
@@ -296,7 +315,8 @@ pre-commit run check-yaml --all-files
 ## Renovate Integration
 
 Renovate is configured to:
-- Detect Flux HelmRelease versions
+- Track HelmRelease chart versions via `# renovate:` comments
+- Track app image tags via `# renovate:` comments
 - Auto-update minor/patch versions on Sundays
 - Group updates (observability, networking)
 - Require manual review for major versions and 0.x.x apps
