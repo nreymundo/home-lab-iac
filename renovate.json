@@ -8,7 +8,6 @@
   "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "regex", "terraform"],
   "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
-  "ignoreUnstable": true,
   "commitMessagePrefix": "chore(deps)",
   "ignorePaths": ["kubernetes/clusters/production/flux-system/**"],
 
@@ -29,6 +28,12 @@
       "automerge": true,
       "automergeType": "pr",
       "automergeSchedule": ["on Sunday after 9pm"]
+    },
+    {
+      "description": "Ignore RC/pre-release for Terraform providers",
+      "matchManagers": ["terraform"],
+      "matchCurrentVersion": "/-|rc|alpha|beta|pre|\\+/",
+      "ignoreUnstable": true
     },
     {
       "description": "Group Observability Stack",
