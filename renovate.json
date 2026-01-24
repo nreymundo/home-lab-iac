@@ -5,7 +5,7 @@
     ":disableDependencyDashboard",
     ":disableRateLimiting"
   ],
-  "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "regex", "terraform"],
+  "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "regex"],
   "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
   "commitMessagePrefix": "chore(deps)",
