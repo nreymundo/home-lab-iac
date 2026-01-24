@@ -46,8 +46,11 @@ spec:
               to: websecure
               scheme: https
       websecure:
-        tls:
-          enabled: true
+        http:
+          encodedCharacters:
+            allowEncodedSlash: false
+          tls:
+            enabled: true
       ssh:
         port: 22
         expose:
@@ -75,8 +78,6 @@ spec:
           enabled: true
           additionalLabels:
             release: observability-kube-prometheus-stack
-    requestPath:
-      allowEncodedSlashes: false
     providers:
       kubernetesIngress:
         enabled: true
