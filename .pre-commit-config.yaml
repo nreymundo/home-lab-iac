@@ -63,4 +63,5 @@ repos:
         entry: scripts/sops-auto-encrypt.sh
         language: system
         files: \.sops\.ya?ml$
+        exclude: ^\.sops\.yaml$
         pass_filenames: true
