@@ -5,7 +5,7 @@
     ":disableDependencyDashboard",
     ":disableRateLimiting"
   ],
-  "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "regex", "terraform"],
+  "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "regex"],
   "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
   "commitMessagePrefix": "chore(deps)",
@@ -28,12 +28,6 @@
       "automerge": true,
       "automergeType": "pr",
       "automergeSchedule": ["on Sunday after 9pm"]
-    },
-    {
-      "description": "Ignore RC/pre-release for Terraform providers",
-      "matchManagers": ["terraform"],
-      "matchCurrentVersion": "/-|rc|alpha|beta|pre|\\+/",
-      "ignoreUnstable": true
     },
     {
       "description": "Group Observability Stack",
