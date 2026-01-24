@@ -42,6 +42,16 @@ spec:
             secretKeyRef:
               name: grafana-sso-secret
               key: CLIENT_SECRET
+        - name: VAULTWARDEN_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-sso-secret
+              key: CLIENT_ID
+        - name: VAULTWARDEN_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-sso-secret
+              key: CLIENT_SECRET
 
         # Blueprint variables
         - name: AK_BLUEPRINT_USER

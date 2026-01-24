@@ -22,6 +22,24 @@ spec:
               SIGNUPS_VERIFY: "true"
               REQUIRE_DEVICE_EMAIL: "true"
               INVITATIONS_ALLOWED: "false"
+              SSO_ENABLED: "true"
+              SSO_ONLY: "true"
+              SSO_SIGNUPS_MATCH_EMAIL: "true"
+              SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION: "false"
+              SSO_AUTHORITY: "https://sso.${CLUSTER_DOMAIN}/application/o/vaultwarden/"
+              SSO_SCOPES: "openid email profile offline_access"
+              SSO_PKCE: "true"
+              SSO_CLIENT_CACHE_EXPIRATION: "0"
+              SSO_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: vaultwarden-sso-secret
+                    key: CLIENT_ID
+              SSO_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: vaultwarden-sso-secret
+                    key: CLIENT_SECRET
               SHOW_PASSWORD_HINT: "false"
               DISABLE_ADMIN_TOKEN: "false"
               ORG_EVENTS_ENABLED: "true"

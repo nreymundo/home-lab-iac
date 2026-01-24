@@ -127,3 +127,65 @@ data:
           name: "Grafana"
           provider: !KeyOf grafana-provider
           group: "Observability"
+
+  30-vaultwarden.yaml: |
+    version: 1
+    metadata:
+      name: vaultwarden-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Vaultwarden Users"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+
+      - model: authentik_providers_oauth2.scopemapping
+        id: vaultwarden-email-scope
+        identifiers:
+          name: "Vaultwarden Email Scope"
+        attrs:
+          scope_name: email
+          description: "Vaultwarden email scope mapping"
+          expression: |
+            return {"email": request.user.email, "email_verified": True}
+
+      - model: authentik_providers_oauth2.oauth2provider
+        id: vaultwarden-provider
+        identifiers:
+          name: "Vaultwarden"
+        attrs:
+          client_id: !Env VAULTWARDEN_CLIENT_ID
+          client_secret: !Env VAULTWARDEN_CLIENT_SECRET
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          client_type: confidential
+          client_authentication_method: client_secret_post
+          redirect_uris:
+            - url: "https://vault.${CLUSTER_DOMAIN}/identity/connect/oidc-signin"
+              matching_mode: strict
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+            - !KeyOf vaultwarden-email-scope
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, offline_access]]
+
+      - model: authentik_core.application
+        identifiers:
+          slug: "vaultwarden"
+        attrs:
+          name: "Vaultwarden"
+          provider: !KeyOf vaultwarden-provider
+          group: "Security"
+
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "vaultwarden"]]
+          order: 0
+        attrs:
+          group: !Find [authentik_core.group, [name, "Vaultwarden Users"]]

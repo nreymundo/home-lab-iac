@@ -11,3 +11,4 @@ resources:
   - helmrelease.yaml
   - blueprint-bootstrap-cm.yaml
   - grafana-sso-secret.sops.yaml
+  - vaultwarden-sso-secret.sops.yaml
