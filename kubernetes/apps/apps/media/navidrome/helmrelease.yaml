@@ -13,6 +13,7 @@ spec:
         containers:
           main:
             image:
+              # renovate: datasource=docker depName=deluan/navidrome
               repository: deluan/navidrome
               tag: 0.59.0
             ports:

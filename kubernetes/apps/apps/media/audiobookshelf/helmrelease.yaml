@@ -13,6 +13,7 @@ spec:
         containers:
           main:
             image:
+              # renovate: datasource=docker depName=advplyr/audiobookshelf registryUrl=https://ghcr.io
               repository: ghcr.io/advplyr/audiobookshelf
               tag: 2.32.1
             env:
