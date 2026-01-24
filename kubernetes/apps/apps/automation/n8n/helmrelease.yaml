@@ -36,6 +36,7 @@ spec:
         containers:
           main:
             image:
+              # renovate: datasource=docker depName=n8nio/n8n registryUrl=https://docker.n8n.io
               repository: docker.n8n.io/n8nio/n8n
               tag: 1.123.16
             env:
@@ -94,6 +95,7 @@ spec:
         containers:
           worker:
             image:
+              # renovate: datasource=docker depName=n8nio/n8n registryUrl=https://docker.n8n.io
               repository: docker.n8n.io/n8nio/n8n
               tag: 1.123.16
             command: ["/bin/sh", "-c", "n8n worker"]
