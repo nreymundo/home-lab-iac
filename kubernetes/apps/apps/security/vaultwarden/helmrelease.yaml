@@ -61,7 +61,6 @@ spec:
               SENDS_ALLOWED: "true"
               EMERGENCY_ACCESS_ALLOWED: "true"
               USE_SYSLOG: ""
-              LOG_FILE: /var/log/vaultwarden/vaultwarden.log
               LOG_LEVEL: warn
               ROCKET_CLI_COLORS: "false"
               EXTENDED_LOGGING: "true"
