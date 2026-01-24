@@ -142,9 +142,9 @@ spec:
     persistence:
       data:
         enabled: true
-         type: persistentVolumeClaim
-         storageClass: longhorn-r2
-         size: 1Gi
+        type: persistentVolumeClaim
+        storageClass: longhorn-r2
+        size: 1Gi
  ```
 
 ### Renovate Support
