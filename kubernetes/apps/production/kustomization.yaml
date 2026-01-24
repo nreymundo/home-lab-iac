@@ -7,6 +7,7 @@ resources:
   - ../apps/automation/n8n
   - ../apps/media/audiobookshelf
   - ../apps/media/sabnzbd
+  - ../apps/media/prowlarr
   - ../apps/development/gitea
   - ../apps/ai/openwebui
   - ../apps/security/vaultwarden
