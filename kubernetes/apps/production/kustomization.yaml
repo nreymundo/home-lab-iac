@@ -6,6 +6,7 @@ resources:
   - ../apps/external-proxy
   - ../apps/automation/n8n
   - ../apps/media/audiobookshelf
+  - ../apps/media/sabnzbd
   - ../apps/development/gitea
   - ../apps/ai/openwebui
   - ../apps/security/vaultwarden

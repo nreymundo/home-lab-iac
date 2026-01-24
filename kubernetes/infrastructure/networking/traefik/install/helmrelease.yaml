@@ -56,6 +56,16 @@ spec:
         expose:
           default: true
         protocol: TCP
+      privoxy:
+        port: 8118
+        expose:
+          default: true
+        protocol: TCP
+      socks:
+        port: 9118
+        expose:
+          default: true
+        protocol: TCP
       metrics:
         port: 9100
         expose:

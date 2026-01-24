@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: sabnzbd-socks
+  namespace: media
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: socks.lan.${CLUSTER_DOMAIN}
+spec:
+  entryPoints:
+    - socks
+  routes:
+    - match: HostSNI(`*`)
+      services:
+        - name: sabnzbd
+          port: 9118
