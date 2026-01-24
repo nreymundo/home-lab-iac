@@ -138,3 +138,11 @@ home-lab-iac/
 | Add Ansible role | Ansible | [ansible/AGENTS.md](ansible/AGENTS.md) |
 | Create new VM template | Packer | [packer/AGENTS.md](packer/AGENTS.md) |
 | Update node configuration | Ansible | [ansible/AGENTS.md](ansible/AGENTS.md) |
+
+## Renovate Notes
+
+Kubernetes manifests rely on Renovate comments to ensure updates are detected:
+
+- Add `# renovate:` comments above image tags and Helm chart versions in HelmRelease files
+- App-template version tracking is handled in `kubernetes/components/bjw-s-defaults/kustomization.yaml`
+- See `kubernetes/AGENTS.md` for examples and exact patterns

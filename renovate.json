@@ -55,6 +55,17 @@
       "matchStrings": [
         "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*(?<packageName>\\S+)\\s*\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
       ]
+    },
+    {
+      "description": "Track Helm chart versions",
+      "customType": "regex",
+      "fileMatch": [
+        "kubernetes/.*/helmrelease\\.ya?ml$",
+        "kubernetes/components/bjw-s-defaults/kustomization\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s+registryUrl=(?<registryUrl>\\S+)\\s*\\r?\\n\\s*(?:version|value):\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+      ]
     }
   ]
 }

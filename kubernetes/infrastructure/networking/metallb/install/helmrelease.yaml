@@ -11,6 +11,7 @@ spec:
   chart:
     spec:
       chart: metallb
+      # renovate: datasource=helm depName=metallb registryUrl=https://metallb.github.io/metallb
       version: "0.15.3"
       sourceRef:
         kind: HelmRepository
