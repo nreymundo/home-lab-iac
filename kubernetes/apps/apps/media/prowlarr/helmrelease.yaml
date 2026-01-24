@@ -1,0 +1,49 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: prowlarr
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=linuxserver/prowlarr registryUrl=https://lscr.io
+              repository: lscr.io/linuxserver/prowlarr
+              tag: 2.3.0
+            env:
+              TZ: Europe/Berlin
+            ports:
+              - name: http
+                containerPort: 9696
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 9696
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: prowlarr.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: prowlarr.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r1
+        globalMounts:
+          - path: /config
