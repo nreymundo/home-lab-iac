@@ -1,0 +1,303 @@
+DEBUG: Using RE2 regex engine
+DEBUG: Parsing configs
+(node:9) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+DEBUG: Checking for config file in /opt/renovate/config.json
+DEBUG: File config
+       "config": {
+         "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+         "repositories": ["nreymundo/home-lab-iac"]
+       }
+DEBUG: CLI config
+       "config": {}
+DEBUG: Env config
+       "config": {
+         "hostRules": [],
+         "platform": "github",
+         "endpoint": "https://api.github.com",
+         "token": "***********",
+         "autodiscover": false,
+         "gitAuthor": "Renovate Bot <renovate@noreply.com>"
+       }
+DEBUG: Combined config
+       "config": {
+         "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+         "repositories": ["nreymundo/home-lab-iac"],
+         "hostRules": [],
+         "platform": "github",
+         "endpoint": "https://api.github.com",
+         "token": "***********",
+         "autodiscover": false,
+         "gitAuthor": "Renovate Bot <renovate@noreply.com>"
+       }
+DEBUG: Adding trailing slash to endpoint
+DEBUG: Enabling forkProcessing while in non-autodiscover mode
+DEBUG: Enabling onboardingNoDeps while in non-autodiscover mode
+DEBUG: Found valid git version: 2.47.0
+DEBUG: Setting global hostRules
+DEBUG: hostRules: authentication already set for api.github.com
+DEBUG: Using queue: host=api.github.com, concurrency=16
+DEBUG: Platform config
+       "platformConfig": {
+         "hostType": "github",
+         "endpoint": "https://api.github.com/",
+         "isGHApp": false,
+         "isGhe": false,
+         "userDetails": {
+           "username": "nreymundo",
+           "name": "Nicolas Reymundo",
+           "id": 5833447
+         }
+       },
+       "renovateUsername": "nreymundo"
+DEBUG: Using configured gitAuthor (Renovate Bot <renovate@noreply.com>)
+DEBUG: Adding token authentication for api.github.com (hostType=github) to hostRules
+DEBUG: Using baseDir: /tmp/renovate
+DEBUG: Using cacheDir: /tmp/renovate/cache
+DEBUG: Using containerbaseDir: /tmp/renovate/cache/containerbase
+DEBUG: Initializing Renovate internal cache into /tmp/renovate/cache/renovate/renovate-cache-v1
+DEBUG: Commits limit = null
+DEBUG: Setting global hostRules
+DEBUG: Adding token authentication for api.github.com (hostType=github) to hostRules
+DEBUG: validatePresets()
+DEBUG: Reinitializing hostRules for repo
+DEBUG: Clearing hostRules
+DEBUG: Adding token authentication for api.github.com (hostType=github) to hostRules
+ INFO: Repository started (repository=nreymundo/home-lab-iac)
+       "renovateVersion": "39.4.0"
+DEBUG: Using localDir: /tmp/renovate/repos/github/nreymundo/home-lab-iac (repository=nreymundo/home-lab-iac)
+DEBUG: PackageFiles.clear() - Package files deleted (repository=nreymundo/home-lab-iac)
+DEBUG: initRepo("nreymundo/home-lab-iac") (repository=nreymundo/home-lab-iac)
+DEBUG: hostRules: authentication already set for api.github.com (repository=nreymundo/home-lab-iac)
+DEBUG: Using queue: host=api.github.com, concurrency=16 (repository=nreymundo/home-lab-iac)
+DEBUG: nreymundo/home-lab-iac default branch = master (repository=nreymundo/home-lab-iac)
+DEBUG: Using personal access token for git init (repository=nreymundo/home-lab-iac)
+DEBUG: Resetting npmrc (repository=nreymundo/home-lab-iac)
+DEBUG: Resetting npmrc (repository=nreymundo/home-lab-iac)
+DEBUG: checkOnboarding() (repository=nreymundo/home-lab-iac)
+DEBUG: isOnboarded() (repository=nreymundo/home-lab-iac)
+DEBUG: findPr(renovate/configure, Configure Renovate, !open) (repository=nreymundo/home-lab-iac)
+DEBUG: http cache: saving https://api.github.com/repos/nreymundo/home-lab-iac/pulls?per_page=100&state=all&sort=updated&direction=desc&page=1 (etag=W/"e9c0ee5d40750b7a3a630862a01671aa1826c21edcd96864b05deced4be8b4e7", lastModified=undefined) (repository=nreymundo/home-lab-iac)
+DEBUG: getPrList success (repository=nreymundo/home-lab-iac)
+       "pullsTotal": 151,
+       "requestsTotal": 1,
+       "apiQuotaAffected": true
+DEBUG: findPr(renovate/configure, chore: Configure Renovate, !open) (repository=nreymundo/home-lab-iac)
+DEBUG: Found PR #122 (repository=nreymundo/home-lab-iac)
+DEBUG: findFile(renovate.json) (repository=nreymundo/home-lab-iac)
+DEBUG: Initializing git repository into /tmp/renovate/repos/github/nreymundo/home-lab-iac (repository=nreymundo/home-lab-iac)
+DEBUG: Performing blobless clone (repository=nreymundo/home-lab-iac)
+DEBUG: git clone completed (repository=nreymundo/home-lab-iac)
+       "durationMs": 1352
+DEBUG: latest repository commit (repository=nreymundo/home-lab-iac)
+       "latestCommit": {
+         "hash": "d94807406e47dd1136016f49ea98fe21c6b7e951",
+         "date": "2026-01-24T14:25:31+01:00",
+         "message": "Fix renovate regex flag issue (#153)",
+         "refs": "HEAD -> master, origin/master, origin/HEAD",
+         "body": "Co-authored-by: opencode-agent[bot] <opencode-agent[bot]@users.noreply.github.com>\nCo-authored-by: nreymundo <nreymundo@users.noreply.github.com>",
+         "author_name": "opencode-agent[bot]",
+         "author_email": "219766164+opencode-agent[bot]@users.noreply.github.com"
+       }
+DEBUG: Config file exists, fileName: renovate.json (repository=nreymundo/home-lab-iac)
+DEBUG: Retrieving issueList (repository=nreymundo/home-lab-iac)
+DEBUG: Retrieved 1 issues (repository=nreymundo/home-lab-iac)
+DEBUG: Repo is onboarded (repository=nreymundo/home-lab-iac)
+DEBUG: Found renovate.json config file (repository=nreymundo/home-lab-iac)
+DEBUG: Repository config (repository=nreymundo/home-lab-iac)
+       "fileName": "renovate.json",
+       "config": {
+         "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+         "extends": [
+           "config:recommended",
+           ":disableDependencyDashboard",
+           ":disableRateLimiting"
+         ],
+         "enabledManagers": [
+           "flux",
+           "helm-values",
+           "dockerfile",
+           "kubernetes",
+           "custom.regex"
+         ],
+         "timezone": "UTC",
+         "labels": ["dependencies", "renovate"],
+         "commitMessagePrefix": "chore(deps)",
+         "ignorePaths": ["kubernetes/clusters/production/flux-system/**"],
+         "separateMajorMinor": true,
+         "lockFileMaintenance": {
+           "enabled": true,
+           "automerge": true,
+           "automergeType": "pr",
+           "automergeSchedule": ["on Sunday after 9pm"]
+         },
+         "packageRules": [
+           {
+             "description": "Global stability and automerge schedule",
+             "matchUpdateTypes": ["minor", "patch", "digest"],
+             "minimumReleaseAge": "5 days",
+             "matchCurrentVersion": "!/^0/",
+             "automerge": true,
+             "automergeType": "pr",
+             "automergeSchedule": ["on Sunday after 9pm"]
+           },
+           {
+             "description": "Group Observability Stack",
+             "matchPackageNames": ["/loki/", "/alloy/", "/kube-prometheus-stack/"],
+             "groupName": "observability"
+           },
+           {
+             "description": "Group Networking tools",
+             "matchPackageNames": ["/traefik/", "/metallb/", "/external-dns/"],
+             "groupName": "networking"
+           },
+           {
+             "description": "Manual review for Major updates or 0.x.x (unstable) apps",
+             "matchUpdateTypes": ["major"],
+             "matchCurrentVersion": "/^0/",
+             "automerge": false
+           }
+         ],
+         "customManagers": [
+           {
+             "description": "Enable # renovate: datasource=... comments (multiline repo/tag)",
+             "customType": "regex",
+             "fileMatch": ["\\.ya?ml$", "\\.sh$", "Dockerfile"],
+             "matchStrings": [
+               "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*\\S+(?:\\s*\\r?\\n(?!\\s*#\\s*renovate:).*)*?\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+             ]
+           }
+         ]
+       }
+DEBUG: migrateAndValidate() (repository=nreymundo/home-lab-iac)
+DEBUG: No config migration necessary (repository=nreymundo/home-lab-iac)
+DEBUG: Post-massage config (repository=nreymundo/home-lab-iac)
+       "config": {
+         "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+         "extends": [
+           "config:recommended",
+           ":disableDependencyDashboard",
+           ":disableRateLimiting"
+         ],
+         "enabledManagers": [
+           "flux",
+           "helm-values",
+           "dockerfile",
+           "kubernetes",
+           "custom.regex"
+         ],
+         "timezone": "UTC",
+         "labels": ["dependencies", "renovate"],
+         "commitMessagePrefix": "chore(deps)",
+         "ignorePaths": ["kubernetes/clusters/production/flux-system/**"],
+         "separateMajorMinor": true,
+         "lockFileMaintenance": {
+           "enabled": true,
+           "automerge": true,
+           "automergeType": "pr",
+           "automergeSchedule": ["on Sunday after 9pm"]
+         },
+         "packageRules": [
+           {
+             "description": ["Global stability and automerge schedule"],
+             "matchUpdateTypes": ["minor", "patch", "digest"],
+             "minimumReleaseAge": "5 days",
+             "matchCurrentVersion": "!/^0/",
+             "automerge": true,
+             "automergeType": "pr",
+             "automergeSchedule": ["on Sunday after 9pm"]
+           },
+           {
+             "description": ["Group Observability Stack"],
+             "matchPackageNames": ["/loki/", "/alloy/", "/kube-prometheus-stack/"],
+             "groupName": "observability"
+           },
+           {
+             "description": ["Group Networking tools"],
+             "matchPackageNames": ["/traefik/", "/metallb/", "/external-dns/"],
+             "groupName": "networking"
+           },
+           {
+             "description": [
+               "Manual review for Major updates or 0.x.x (unstable) apps"
+             ],
+             "matchUpdateTypes": ["major"],
+             "matchCurrentVersion": "/^0/",
+             "automerge": false
+           }
+         ],
+         "customManagers": [
+           {
+             "description": [
+               "Enable # renovate: datasource=... comments (multiline repo/tag)"
+             ],
+             "customType": "regex",
+             "fileMatch": ["\\.ya?ml$", "\\.sh$", "Dockerfile"],
+             "matchStrings": [
+               "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*\\S+(?:\\s*\\r?\\n(?!\\s*#\\s*renovate:).*)*?\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+             ]
+           }
+         ]
+       }
+DEBUG: customManager.matchStrings regEx validation error (repository=nreymundo/home-lab-iac)
+       "err": {
+         "validationMessage": "invalid perl operator: (?!",
+         "validationSource": "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*\\S+(?:\\s*\\r?\\n(?!\\s*#\\s*renovate:).*)*?\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?",
+         "validationError": "Invalid regular expression (re2): (?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*\\S+(?:\\s*\\r?\\n(?!\\s*#\\s*renovate:).*)*?\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?",
+         "message": "config-validation",
+         "stack": "Error: config-validation\n    at regEx (/usr/local/renovate/lib/util/regex.ts:62:19)\n    at validateRegexManagerFields (/usr/local/renovate/lib/config/validation.ts:889:14)\n    at Object.validateConfig (/usr/local/renovate/lib/config/validation.ts:567:25)\n    at migrateAndValidate (/usr/local/renovate/lib/config/migrate-validate.ts:35:9)\n    at mergeRenovateConfig (/usr/local/renovate/lib/workers/repository/init/merge.ts:196:26)\n    at getRepoConfig (/usr/local/renovate/lib/workers/repository/init/config.ts:14:12)\n    at initRepo (/usr/local/renovate/lib/workers/repository/init/index.ts:56:12)\n    at Object.renovateRepository (/usr/local/renovate/lib/workers/repository/index.ts:64:14)\n    at attributes.repository (/usr/local/renovate/lib/workers/global/index.ts:202:11)\n    at start (/usr/local/renovate/lib/workers/global/index.ts:187:7)\n    at /usr/local/renovate/lib/renovate.ts:18:22"
+       }
+ INFO: Found renovate config errors (repository=nreymundo/home-lab-iac)
+       "errors": [
+         {
+           "topic": "Configuration Error",
+           "message": "Invalid regExp for customManagers: `(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*\\S+(?:\\s*\\r?\\n(?!\\s*#\\s*renovate:).*)*?\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?`"
+         }
+       ]
+ INFO: Repository has invalid config (repository=nreymundo/home-lab-iac)
+       "error": {
+         "validationSource": "renovate.json",
+         "validationError": "The renovate configuration file contains some invalid settings",
+         "validationMessage": "Invalid regExp for customManagers: `(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*\\S+(?:\\s*\\r?\\n(?!\\s*#\\s*renovate:).*)*?\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?`",
+         "message": "config-validation",
+         "stack": "Error: config-validation\n    at mergeRenovateConfig (/usr/local/renovate/lib/workers/repository/init/merge.ts:198:19)\n    at getRepoConfig (/usr/local/renovate/lib/workers/repository/init/config.ts:14:12)\n    at initRepo (/usr/local/renovate/lib/workers/repository/init/index.ts:56:12)\n    at Object.renovateRepository (/usr/local/renovate/lib/workers/repository/index.ts:64:14)\n    at attributes.repository (/usr/local/renovate/lib/workers/global/index.ts:202:11)\n    at start (/usr/local/renovate/lib/workers/global/index.ts:187:7)\n    at /usr/local/renovate/lib/renovate.ts:18:22"
+       }
+DEBUG: raiseConfigWarningIssue() (repository=nreymundo/home-lab-iac)
+DEBUG: getBranchPr(renovate/configure) (repository=nreymundo/home-lab-iac)
+DEBUG: findPr(renovate/configure, undefined, open) (repository=nreymundo/home-lab-iac)
+DEBUG: ensureIssue(Action Required: Fix Renovate Configuration) (repository=nreymundo/home-lab-iac)
+DEBUG: Reopening previously closed issue (repository=nreymundo/home-lab-iac)
+DEBUG: http cache: saving https://api.github.com/repos/nreymundo/home-lab-iac/issues/152 (etag=W/"5521821ae436217a9674832eac00f06fb7e86b1037ef51b3c7e3a180e15900d3", lastModified=Sat, 24 Jan 2026 13:25:32 GMT) (repository=nreymundo/home-lab-iac)
+DEBUG: Patching issue (repository=nreymundo/home-lab-iac)
+DEBUG: Issue updated (repository=nreymundo/home-lab-iac)
+DEBUG: Repository result: config-validation, status: onboarded, enabled: true, onboarded: true (repository=nreymundo/home-lab-iac)
+DEBUG: Repository timing splits (milliseconds) (repository=nreymundo/home-lab-iac)
+       "splits": {},
+       "total": 4848
+DEBUG: Package cache statistics (repository=nreymundo/home-lab-iac)
+       "get": {"count": 0, "avgMs": 0, "medianMs": 0, "maxMs": 0, "totalMs": 0},
+       "set": {"count": 0, "avgMs": 0, "medianMs": 0, "maxMs": 0, "totalMs": 0}
+DEBUG: HTTP statistics (repository=nreymundo/home-lab-iac)
+       "hosts": {
+         "api.github.com": {
+           "count": 6,
+           "reqAvgMs": 462,
+           "reqMedianMs": 507,
+           "reqMaxMs": 694,
+           "queueAvgMs": 0,
+           "queueMedianMs": 0,
+           "queueMaxMs": 0
+         }
+       },
+       "requests": 6
+DEBUG: HTTP cache statistics (repository=nreymundo/home-lab-iac)
+       "https://api.github.com": {
+         "/repos/nreymundo/home-lab-iac/issues/152": {"hit": 0, "miss": 1},
+         "/repos/nreymundo/home-lab-iac/pulls": {"hit": 0, "miss": 1}
+       }
+DEBUG: Lookup statistics (repository=nreymundo/home-lab-iac)
+ INFO: Repository finished (repository=nreymundo/home-lab-iac)
+       "cloned": true,
+       "durationMs": 4848
+DEBUG: Checking file package cache for expired items
+DEBUG: Deleted 0 of 0 file cached entries in 2ms

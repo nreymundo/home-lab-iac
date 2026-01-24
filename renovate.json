@@ -49,11 +49,11 @@
 
   "customManagers": [
     {
-      "description": "Enable # renovate: datasource=... comments (multiline repo/tag)",
+      "description": "Enable # renovate: datasource=... comments (repo/tag directly below)",
       "customType": "regex",
-      "fileMatch": ["\\.ya?ml$", "\\.sh$", "Dockerfile"],
+      "fileMatch": ["\\.ya?ml$"],
       "matchStrings": [
-        "(?m)^\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\n\\s*repository:\\s*\\S+(?:\\s*\\n(?!\\s*#\\s*renovate:).*)*?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+        "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*(?<packageName>\\S+)\\s*\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
       ]
     }
   ]
