@@ -8,3 +8,4 @@ resources:
   - ../apps/media/audiobookshelf
   - ../apps/development/gitea
   - ../apps/ai/openwebui
+  - ../apps/security/vaultwarden

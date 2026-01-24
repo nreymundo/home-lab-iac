@@ -1,0 +1,119 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vaultwarden
+  namespace: security
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=vaultwarden/server
+              repository: vaultwarden/server
+              tag: 1.35.2
+            env:
+              DOMAIN: "https://vault.${CLUSTER_DOMAIN}"
+              SIGNUPS_ALLOWED: "false"
+              SIGNUPS_VERIFY: "true"
+              REQUIRE_DEVICE_EMAIL: "true"
+              INVITATIONS_ALLOWED: "false"
+              SHOW_PASSWORD_HINT: "false"
+              DISABLE_ADMIN_TOKEN: "false"
+              ORG_EVENTS_ENABLED: "true"
+              ORG_GROUPS_ENABLED: "true"
+              DATABASE_URL:
+                valueFrom:
+                  secretKeyRef:
+                    name: vaultwarden-secrets
+                    key: DATABASE_URL
+              SMTP_HOST: mail.smtp2go.com
+              SMTP_FROM: "vaultwarden@${CLUSTER_DOMAIN}"
+              SMTP_FROM_NAME: Vaultwarden
+              SMTP_PORT: "465"
+              SMTP_SECURITY: force_tls
+              SMTP_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: vaultwarden-secrets
+                    key: SMTP_USERNAME
+              SMTP_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: vaultwarden-secrets
+                    key: SMTP_PASSWORD
+              SMTP_EMBED_IMAGES: "true"
+              PUSH_ENABLED: "true"
+              PUSH_INSTALLATION_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: vaultwarden-secrets
+                    key: PUSH_INSTALLATION_ID
+              PUSH_INSTALLATION_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: vaultwarden-secrets
+                    key: PUSH_INSTALLATION_KEY
+              SENDS_ALLOWED: "true"
+              EMERGENCY_ACCESS_ALLOWED: "true"
+              USE_SYSLOG: ""
+              LOG_FILE: /var/log/vaultwarden/vaultwarden.log
+              LOG_LEVEL: warn
+              ROCKET_CLI_COLORS: "false"
+              EXTENDED_LOGGING: "true"
+              IP_HEADER: X-Forwarded-For
+              ADMIN_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: vaultwarden-secrets
+                    key: ADMIN_TOKEN
+            ports:
+              - name: http
+                containerPort: 80
+              - name: ws
+                containerPort: 3012
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 80
+            targetPort: 80
+          ws:
+            port: 3012
+            targetPort: 3012
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: vault.${CLUSTER_DOMAIN}
+        hosts:
+          - host: vault.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+              - path: /notifications/hub
+                service:
+                  identifier: main
+                  port: ws
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 2Gi
+        storageClass: longhorn-r2
+        globalMounts:
+          - path: /data
