@@ -53,7 +53,7 @@
       "customType": "regex",
       "fileMatch": ["\\.ya?ml$", "\\.sh$", "Dockerfile"],
       "matchStrings": [
-        "(?m)^\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\n\\s*repository:\\s*\\S+(?:\\s*\\n(?!\\s*#\\s*renovate:).*)*?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+        "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*\\S+(?:\\s*\\r?\\n(?!\\s*#\\s*renovate:).*)*?\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
       ]
     }
   ]
