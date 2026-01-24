@@ -1,4 +1,19 @@
 creation_rules:
-  - path_regex: .*\.sops\.ya?ml$
-    encrypted_regex: '^(data|stringData)$'
-    age: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+    - path_regex: .*\.sops\.ya?ml$
+      encrypted_regex: ^(data|stringData)$
+      age: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+sops:
+    age:
+        - recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAxS3g1QlQ0MTN6Z3EvKy8w
+            dmJZRWVteWJiRVVyMytMbElXK00rWVJkMDJrCmNXSHI0eGprajBxTmg4L1Q4V25T
+            enczTUs5UFlXOTcwQ0h1MlppQk5va00KLS0tIHZsWGZhbjJHblZ1Z3luRWh4NkFx
+            YTYwTUYwNEd3T0Zic2hGY2F6YzVqV3cKAqJ1w97VXPU7p9FbvR+WVipIqlTdCPj/
+            8vAK2B7r6XaNJ7uNcpHHVeK5EbKYHaNkfLNK0rL35dw6Rd/bYcYhEQ==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-01-24T12:09:18Z"
+    mac: ENC[AES256_GCM,data:FP6pv7+QDuVUqn4bRobZY5PSfr/V4E5GDA8AQj4zU+KH8vAbTO8Tfn4+5c2k/u0cjLABd5TmMvTPKMMArbdPn6FYJDKd/bVPXCnI8mQDa0T7BvehlE7M83LkYwXRVYjLByy6TN+xMZWDDrX6ZzanfBqETKYyBfAuU0qMw7T0WLc=,iv:yNmmjeX/ta4n3d928+67g9C1B1nZuQ3AEjhY8Vs0204=,tag:1+NwwP+i0D8VUwHX5wOUYw==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.11.0

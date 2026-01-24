@@ -142,10 +142,27 @@ spec:
     persistence:
       data:
         enabled: true
-        type: persistentVolumeClaim
-        storageClass: longhorn-r2
-        size: 1Gi
+         type: persistentVolumeClaim
+         storageClass: longhorn-r2
+         size: 1Gi
+ ```
+
+### Renovate Support
+
+For apps using **custom Docker registries** (not docker.io, ghcr.io, quay.io), add a Renovate datasource comment above the image definition:
+
+```yaml
+# renovate: datasource=docker depName=<image-name> registryUrl=<registry-url>
+image:
+  repository: <registry>/<image-name>
+  tag: <version>
 ```
+
+**Common custom registries:**
+- `docker.gitea.com` → `registryUrl=https://docker.gitea.com`
+- `docker.n8n.io` → `registryUrl=https://docker.n8n.io`
+
+This enables Renovate to track and update these images. Without the comment, Renovate's `helm-values` manager cannot detect custom registry images.
 
 ### Ingress Conventions
 - **Ingress class**: `traefik`
@@ -176,18 +193,31 @@ labels:
    mkdir -p kubernetes/apps/apps/<category>/<app-name>
    ```
 
-3. **Create HelmRelease** (`helmrelease.yaml`):
-   ```yaml
-   apiVersion: helm.toolkit.fluxcd.io/v2
-   kind: HelmRelease
-   metadata:
-     name: <app-name>
-     namespace: <namespace>
-   spec:
-     # ... see pattern above
-   ```
+ 3. **Create HelmRelease** (`helmrelease.yaml`):
+    ```yaml
+    apiVersion: helm.toolkit.fluxcd.io/v2
+    kind: HelmRelease
+    metadata:
+      name: <app-name>
+      namespace: <namespace>
+    spec:
+      # ... see pattern above
+    ```
 
-4. **Create kustomization.yaml** (with components):
+ 4. **Add Renovate datasource comment** (if using custom registry):
+
+    If the app uses a custom Docker registry (not docker.io, ghcr.io, quay.io), add a `# renovate:` comment above the image definition:
+
+    ```yaml
+    # renovate: datasource=docker depName=<image-name> registryUrl=<registry-url>
+    image:
+      repository: <registry>/<image-name>
+      tag: <version>
+    ```
+
+    See [Renovate Support](#renovate-support) section for examples.
+
+ 5. **Create kustomization.yaml** (with components):
    ```yaml
    apiVersion: kustomize.config.k8s.io/v1beta1
    kind: Kustomization
@@ -196,15 +226,15 @@ labels:
      # Add nfs-mount/media/rw or /ro if app needs NFS media access
    resources:
      - helmrelease.yaml
-   ```
+    ```
 
-5. **Add to parent kustomization** (`kubernetes/apps/apps/<category>/kustomization.yaml`):
-   ```yaml
-   resources:
-     - <app-name>
-   ```
+ 6. **Add to parent kustomization** (`kubernetes/apps/apps/<category>/kustomization.yaml`):
+    ```yaml
+    resources:
+      - <app-name>
+    ```
 
-6. **Commit and push** - Flux will automatically reconcile
+ 7. **Commit and push** - Flux will automatically reconcile
 
 ## How to Add Infrastructure
 
