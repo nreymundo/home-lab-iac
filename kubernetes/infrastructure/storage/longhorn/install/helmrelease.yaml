@@ -13,6 +13,7 @@ spec:
   chart:
     spec:
       chart: longhorn
+      # renovate: datasource=helm depName=longhorn registryUrl=https://charts.longhorn.io
       version: "1.*"
       sourceRef:
         kind: HelmRepository
