@@ -53,5 +53,13 @@ spec:
       - name: EXTERNAL_DNS_PIHOLE_TLS_SKIP_VERIFY
         value: "true"
 
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
     interval: 1m
     logLevel: info
