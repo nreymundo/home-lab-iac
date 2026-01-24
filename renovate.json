@@ -8,6 +8,7 @@
   "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "regex", "terraform"],
   "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
+  "ignoreUnstable": true,
   "commitMessagePrefix": "chore(deps)",
   "ignorePaths": ["kubernetes/clusters/production/flux-system/**"],
 
