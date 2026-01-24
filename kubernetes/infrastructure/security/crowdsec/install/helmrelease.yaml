@@ -30,6 +30,14 @@ spec:
               name: traefik-bouncer-key
               key: CROWDSEC_TRAEFIK_BOUNCER_API_KEY
 
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+
       metrics:
         enabled: true
         serviceMonitor:
