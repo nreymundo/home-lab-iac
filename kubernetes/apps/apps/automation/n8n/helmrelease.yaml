@@ -38,7 +38,7 @@ spec:
             image:
               # renovate: datasource=docker depName=n8nio/n8n registryUrl=https://docker.n8n.io
               repository: docker.n8n.io/n8nio/n8n
-              tag: 1.123.16
+              tag: 1.123.17
             env:
               DB_TYPE: postgresdb
               DB_POSTGRESDB_HOST: n8n-pg-rw
@@ -97,7 +97,7 @@ spec:
             image:
               # renovate: datasource=docker depName=n8nio/n8n registryUrl=https://docker.n8n.io
               repository: docker.n8n.io/n8nio/n8n
-              tag: 1.123.16
+              tag: 1.123.17
             command: ["/bin/sh", "-c", "n8n worker"]
             env:
               DB_TYPE: postgresdb
