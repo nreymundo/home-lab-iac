@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
   - helmrelease.yaml
   - grafana-admin-credentials.sops.yaml
-  - grafana-sso-secret.sops.yaml
