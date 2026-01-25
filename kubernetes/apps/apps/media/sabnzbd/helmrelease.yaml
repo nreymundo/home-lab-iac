@@ -51,8 +51,8 @@ spec:
                 cpu: 100m
                 memory: 256Mi
               limits:
-                cpu: 1000m
-                memory: 1Gi
+                cpu: 3000m
+                memory: 2Gi
     service:
       main:
         controller: main
