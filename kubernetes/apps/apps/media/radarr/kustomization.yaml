@@ -9,6 +9,7 @@ components:
   - ../../../../components/nfs-mount/media/rw
 resources:
   - helmrelease.yaml
+  - extended-configmap.yaml
 patches:
   - target:
       kind: HelmRelease

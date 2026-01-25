@@ -10,6 +10,21 @@ spec:
   values:
     controllers:
       main:
+        initContainers:
+          init-scripts:
+            image:
+              # renovate: datasource=docker depName=curlimages/curl registryUrl=https://docker.io
+              repository: curlimages/curl
+              tag: 8.10.1
+            command:
+              - /bin/sh
+              - -c
+              - |
+                set -e
+                mkdir -p /config/config /config/custom-services.d /config/custom-cont-init.d
+                curl -fsSL https://raw.githubusercontent.com/RandomNinjaAtk/arr-scripts/main/radarr/scripts_init.bash \
+                  -o /config/custom-cont-init.d/scripts_init.bash
+                chmod +x /config/custom-cont-init.d/scripts_init.bash
         containers:
           main:
             image:
@@ -46,5 +61,21 @@ spec:
         accessMode: ReadWriteOnce
         size: 1Gi
         storageClass: longhorn-r1
+        advancedMounts:
+          main:
+            init-scripts:
+              - path: /config
+            main:
+              - path: /config
+                subPath: config
+              - path: /custom-services.d
+                subPath: custom-services.d
+              - path: /custom-cont-init.d
+                subPath: custom-cont-init.d
+      extended-config:
+        enabled: true
+        type: configMap
+        name: radarr-extended-config
         globalMounts:
-          - path: /config
+          - path: /config/extended.conf
+            subPath: extended.conf
