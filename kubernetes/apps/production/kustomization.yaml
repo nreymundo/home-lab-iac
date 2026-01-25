@@ -9,6 +9,7 @@ resources:
   - ../apps/media/sabnzbd
   - ../apps/media/radarr
   - ../apps/media/sonarr
+  - ../apps/media/bazarr
   - ../apps/media/prowlarr
   - ../apps/development/gitea
   - ../apps/ai/openwebui
