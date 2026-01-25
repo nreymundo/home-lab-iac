@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - ../apps/storage/garage-webui
   - ../apps/media/navidrome
+  - ../apps/media/komga
   - ../apps/external-proxy
   - ../apps/automation/n8n
   - ../apps/media/audiobookshelf
