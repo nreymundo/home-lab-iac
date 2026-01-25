@@ -1,0 +1,50 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: radarr
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=linuxserver/radarr registryUrl=https://lscr.io
+              repository: lscr.io/linuxserver/radarr
+              tag: 6.0.4
+            env:
+              PUID: "99"
+              PGID: "100"
+            ports:
+              - name: http
+                containerPort: 7878
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 7878
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: radarr.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: radarr.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r1
+        globalMounts:
+          - path: /config
