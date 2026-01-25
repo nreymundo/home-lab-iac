@@ -13,3 +13,4 @@ resources:
   - audiobookshelf-sso-secret.sops.yaml
   - grafana-sso-secret.sops.yaml
   - vaultwarden-sso-secret.sops.yaml
+  - komga-sso-secret.sops.yaml

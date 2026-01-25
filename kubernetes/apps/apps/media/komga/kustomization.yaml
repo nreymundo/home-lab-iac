@@ -8,6 +8,7 @@ components:
   - ../../../../components/storage/backup-policy
   - ../../../../components/nfs-mount/media/ro
 resources:
+  - configmap-oidc.yaml
   - helmrelease.yaml
 patches:
   - target:

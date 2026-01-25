@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: komga-oidc-config
+  namespace: media
+data:
+  application.yml: |
+    komga:
+      oauth2-account-creation: true
+    spring:
+      security:
+        oauth2:
+          client:
+            registration:
+              authentik:
+                provider: authentik
+                client-id: __KOMGA_OIDC_CLIENT_ID__
+                client-secret: __KOMGA_OIDC_CLIENT_SECRET__
+                client-name: Authentik
+                scope: openid,profile,email
+                authorization-grant-type: authorization_code
+                redirect-uri: "{baseUrl}/{action}/oauth2/code/{registrationId}"
+            provider:
+              authentik:
+                issuer-uri: https://sso.${CLUSTER_DOMAIN}/application/o/komga/
+                user-name-attribute: preferred_username
