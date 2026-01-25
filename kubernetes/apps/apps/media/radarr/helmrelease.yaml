@@ -74,7 +74,7 @@ spec:
                 subPath: custom-cont-init.d
       extended-config:
         enabled: true
-        type: configMap
+        type: secret
         name: radarr-extended-config
         globalMounts:
           - path: /config/extended.conf
