@@ -30,6 +30,34 @@
       "automergeSchedule": ["on Sunday after 9pm"]
     },
     {
+      "description": "Kubernetes major updates require manual review",
+      "matchPaths": ["kubernetes/**"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Kubernetes minor/patch updates auto-merge immediately",
+      "matchPaths": ["kubernetes/**"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "platformAutomerge": true,
+      "automergeType": "pr",
+      "automergeSchedule": ["at any time"]
+    },
+    {
+      "description": "Kubernetes 0.x updates follow scheduled auto-merge",
+      "matchPaths": ["kubernetes/**"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchCurrentVersion": "/^0/",
+      "minimumReleaseAge": "5 days",
+      "automerge": true,
+      "platformAutomerge": true,
+      "automergeType": "pr",
+      "automergeSchedule": ["on Sunday after 9pm"]
+    },
+    {
       "description": "Group Observability Stack",
       "matchPackageNames": ["/loki/", "/alloy/", "/kube-prometheus-stack/"],
       "groupName": "observability"
