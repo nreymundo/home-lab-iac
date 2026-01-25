@@ -125,6 +125,17 @@ spec:
                 service:
                   identifier: main
                   port: ws
+      admin:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+        hosts:
+          - host: vault.${CLUSTER_DOMAIN}
+            paths:
+              - path: /admin
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
     persistence:
       data:
         enabled: true
