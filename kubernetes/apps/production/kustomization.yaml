@@ -8,6 +8,7 @@ resources:
   - ../apps/media/audiobookshelf
   - ../apps/media/sabnzbd
   - ../apps/media/radarr
+  - ../apps/media/sonarr
   - ../apps/media/prowlarr
   - ../apps/development/gitea
   - ../apps/ai/openwebui

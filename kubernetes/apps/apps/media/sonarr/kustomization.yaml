@@ -20,7 +20,7 @@ patches:
       apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
       metadata:
-        name: radarr
+        name: sonarr
       spec:
         values:
           persistence:
@@ -35,7 +35,7 @@ patches:
       apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
       metadata:
-        name: radarr
+        name: sonarr
       spec:
         values:
           controllers:
@@ -43,4 +43,4 @@ patches:
               initContainers:
                 init-scripts:
                   env:
-                    ARR_APP: radarr
+                    ARR_APP: sonarr

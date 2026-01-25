@@ -1,0 +1,59 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - target:
+      kind: HelmRelease
+      group: helm.toolkit.fluxcd.io
+      version: v2
+    patch: |-
+      apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      metadata:
+        name: all
+      spec:
+        values:
+          controllers:
+            main:
+              initContainers:
+                init-scripts:
+                  image:
+                    # renovate: datasource=docker depName=curlimages/curl registryUrl=https://docker.io
+                    repository: curlimages/curl
+                    tag: 8.10.1
+                  securityContext:
+                    runAsUser: 0
+                    runAsGroup: 0
+                  env:
+                    ARR_APP: ""
+                  command:
+                    - /bin/sh
+                    - -c
+                    - |
+                      set -e
+                      if [ -z "$$ARR_APP" ]; then
+                        echo "ARR_APP is not set" >&2
+                        exit 1
+                      fi
+                      mkdir -p /config/config /config/custom-services.d /config/custom-cont-init.d
+                      chown -R 99:100 /config/config /config/custom-services.d /config/custom-cont-init.d
+                      chmod 775 /config/config /config/custom-services.d /config/custom-cont-init.d
+                      sleep 5
+                      curl --retry 10 --retry-delay 5 --retry-connrefused --retry-all-errors \
+                        --connect-timeout 10 --fail -fsSL \
+                        "https://raw.githubusercontent.com./RandomNinjaAtk/arr-scripts/main/$$ARR_APP/scripts_init.bash" \
+                        -o /config/custom-cont-init.d/scripts_init.bash
+                      chmod 775 /config/custom-cont-init.d/scripts_init.bash
+          persistence:
+            data:
+              advancedMounts:
+                main:
+                  init-scripts:
+                    - path: /config
+                  main:
+                    - path: /config
+                      subPath: config
+                    - path: /custom-services.d
+                      subPath: custom-services.d
+                    - path: /custom-cont-init.d
+                      subPath: custom-cont-init.d
