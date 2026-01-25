@@ -20,7 +20,7 @@ patches:
                   image:
                     # renovate: datasource=docker depName=curlimages/curl registryUrl=https://docker.io
                     repository: curlimages/curl
-                    tag: 8.10.1
+                    tag: 8.18.0
                   securityContext:
                     runAsUser: 0
                     runAsGroup: 0
