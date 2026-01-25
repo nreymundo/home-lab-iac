@@ -50,9 +50,6 @@ spec:
               requests:
                 cpu: 100m
                 memory: 256Mi
-              limits:
-                cpu: 3000m
-                memory: 2Gi
     service:
       main:
         controller: main
