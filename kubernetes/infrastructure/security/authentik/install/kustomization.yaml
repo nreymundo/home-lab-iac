@@ -10,5 +10,6 @@ resources:
   - authentik-db-backup.yaml
   - helmrelease.yaml
   - blueprint-bootstrap-cm.yaml
+  - audiobookshelf-sso-secret.sops.yaml
   - grafana-sso-secret.sops.yaml
   - vaultwarden-sso-secret.sops.yaml

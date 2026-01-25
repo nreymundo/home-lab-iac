@@ -52,6 +52,16 @@ spec:
             secretKeyRef:
               name: vaultwarden-sso-secret
               key: CLIENT_SECRET
+        - name: AUDIOBOOKSHELF_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: audiobookshelf-sso-secret
+              key: CLIENT_ID
+        - name: AUDIOBOOKSHELF_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: audiobookshelf-sso-secret
+              key: CLIENT_SECRET
 
         # Blueprint variables
         - name: AK_BLUEPRINT_USER
