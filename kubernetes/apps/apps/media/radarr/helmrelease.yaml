@@ -1,0 +1,94 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: radarr
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        initContainers:
+          init-scripts:
+            image:
+              # renovate: datasource=docker depName=curlimages/curl registryUrl=https://docker.io
+              repository: curlimages/curl
+              tag: 8.10.1
+            securityContext:
+              runAsUser: 0
+              runAsGroup: 0
+            command:
+              - /bin/sh
+              - -c
+              - |
+                set -e
+                mkdir -p /config/config /config/custom-services.d /config/custom-cont-init.d
+                chown -R 99:100 /config/config /config/custom-services.d /config/custom-cont-init.d
+                chmod 775 /config/config /config/custom-services.d /config/custom-cont-init.d
+                curl --retry 5 --retry-delay 3 --retry-connrefused --fail -fsSL \
+                  https://raw.githubusercontent.com/RandomNinjaAtk/arr-scripts/main/radarr/scripts_init.bash \
+                  -o /config/custom-cont-init.d/scripts_init.bash
+                chmod 775 /config/custom-cont-init.d/scripts_init.bash
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=linuxserver/radarr registryUrl=https://lscr.io
+              repository: lscr.io/linuxserver/radarr
+              tag: 6.0.4
+            env:
+              PUID: "99"
+              PGID: "100"
+            ports:
+              - name: http
+                containerPort: 7878
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 7878
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: radarr.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: radarr.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r1
+        advancedMounts:
+          main:
+            init-scripts:
+              - path: /config
+            main:
+              - path: /config
+                subPath: config
+              - path: /custom-services.d
+                subPath: custom-services.d
+              - path: /custom-cont-init.d
+                subPath: custom-cont-init.d
+      extended-config:
+        enabled: true
+        type: secret
+        name: radarr-extended-config
+        globalMounts:
+          - path: /config/extended.conf
+            subPath: extended.conf
