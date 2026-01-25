@@ -21,6 +21,12 @@
 
   "packageRules": [
     {
+      "description": "Lidarr: parse 3- or 4-part tags, ignore nightly/develop",
+      "matchPackageNames": ["linuxserver/lidarr"],
+      "matchDatasources": ["docker"],
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<build>\\d+))?(?:-ls\\d+)?$"
+    },
+    {
       "description": "Global stability and automerge schedule",
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "minimumReleaseAge": "5 days",
@@ -42,7 +48,7 @@
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "platformAutomerge": true,
+      "platformAutomerge": false,
       "automergeType": "pr",
       "automergeSchedule": ["at any time"]
     },
