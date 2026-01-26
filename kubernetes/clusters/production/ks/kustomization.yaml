@@ -18,6 +18,7 @@ resources:
   - 61-longhorn-config.yaml
   - 62-cnpg-install.yaml
   - 70-observability-kube-prometheus-stack-install.yaml
+  - 71-observability-metrics-server-install.yaml
   - 72-observability-loki-install.yaml
   - 74-observability-alloy-install.yaml
   - 90-apps.yaml

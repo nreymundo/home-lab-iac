@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - bjw-s.yaml
   - jameswynn.yaml
+  - metrics-server.yaml
   - metallb.yaml
   - traefik.yaml
   - kube-replicator.yaml
