@@ -31,10 +31,17 @@ kind: Ingress
 metadata:
   name: pihole
   namespace: external-proxy
+  labels:
+    gethomepage.dev/enabled: "true"
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     external-dns.alpha.kubernetes.io/hostname: pihole.lan.${CLUSTER_DOMAIN}
+    gethomepage.dev/name: Pi-hole
+    gethomepage.dev/description: DNS and ad blocking
+    gethomepage.dev/group: External
+    gethomepage.dev/icon: pihole.png
+    gethomepage.dev/enabled: "true"
 spec:
   ingressClassName: traefik
   rules:

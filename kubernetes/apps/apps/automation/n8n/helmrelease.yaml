@@ -193,8 +193,15 @@ spec:
 
     ingress:
       main:
+        labels:
+          gethomepage.dev/enabled: "true"
         annotations:
           external-dns.alpha.kubernetes.io/hostname: n8n.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: n8n
+          gethomepage.dev/description: Workflow automation
+          gethomepage.dev/group: Automation
+          gethomepage.dev/icon: n8n.png
+          gethomepage.dev/enabled: "true"
         hosts:
           - host: n8n.${CLUSTER_DOMAIN}
             paths:

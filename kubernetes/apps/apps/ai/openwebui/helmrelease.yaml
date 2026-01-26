@@ -34,9 +34,16 @@ spec:
             port: 8080
     ingress:
       main:
+        labels:
+          gethomepage.dev/enabled: "true"
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: chat.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Open WebUI
+          gethomepage.dev/description: Chat UI for LLMs
+          gethomepage.dev/group: AI
+          gethomepage.dev/icon: open-webui.png
+          gethomepage.dev/enabled: "true"
         hosts:
           - host: chat.${CLUSTER_DOMAIN}
             paths:

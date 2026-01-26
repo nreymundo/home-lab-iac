@@ -84,9 +84,16 @@ spec:
       ingress:
         enabled: true
         ingressClassName: traefik
+        labels:
+          gethomepage.dev/enabled: "true"
         annotations:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
+          gethomepage.dev/name: Grafana
+          gethomepage.dev/description: Dashboards
+          gethomepage.dev/group: Observability
+          gethomepage.dev/icon: grafana.png
+          gethomepage.dev/enabled: "true"
         hosts:
           - grafana.lan.${CLUSTER_DOMAIN}
 

@@ -112,8 +112,15 @@ spec:
             targetPort: 3012
     ingress:
       main:
+        labels:
+          gethomepage.dev/enabled: "true"
         annotations:
           external-dns.alpha.kubernetes.io/hostname: vault.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Vaultwarden
+          gethomepage.dev/description: Password manager
+          gethomepage.dev/group: Security
+          gethomepage.dev/icon: vaultwarden.png
+          gethomepage.dev/enabled: "true"
         hosts:
           - host: vault.${CLUSTER_DOMAIN}
             paths:

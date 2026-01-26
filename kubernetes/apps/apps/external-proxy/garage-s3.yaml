@@ -28,10 +28,17 @@ kind: Ingress
 metadata:
   name: garage-s3
   namespace: external-proxy
+  labels:
+    gethomepage.dev/enabled: "true"
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # Here for docs. Created a wildcard cert directly in Pi-Hole
     #external-dns.alpha.kubernetes.io/hostname: s3.${CLUSTER_DOMAIN}
+    gethomepage.dev/name: Garage S3
+    gethomepage.dev/description: S3 endpoint
+    gethomepage.dev/group: External
+    gethomepage.dev/icon: s3.png
+    gethomepage.dev/enabled: "true"
 spec:
   ingressClassName: traefik
   rules:

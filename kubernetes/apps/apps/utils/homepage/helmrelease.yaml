@@ -108,12 +108,12 @@ spec:
                 href: http://localhost/
                 description: Homepage is 😎
       widgets:
-        - resources:
-            # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.
-            backend: kubernetes
-            expanded: true
-            cpu: true
-            memory: true
+        # - resources:
+        #     # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.
+        #     backend: kubernetes
+        #     expanded: true
+        #     cpu: true
+        #     memory: true
         - search:
             provider: duckduckgo
             target: _blank
@@ -132,6 +132,8 @@ spec:
       kubernetes:
         # change mode to 'cluster' to use RBAC service account
         mode: cluster
+        ingress: true
+        traefik: true
         # Uncomment to enable gateway api HttpRoute discovery.
         #gateway: true
       docker:

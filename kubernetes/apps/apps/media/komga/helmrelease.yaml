@@ -70,8 +70,15 @@ spec:
             port: 25600
     ingress:
       main:
+        labels:
+          gethomepage.dev/enabled: "true"
         annotations:
           external-dns.alpha.kubernetes.io/hostname: comics.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Komga
+          gethomepage.dev/description: Comics library
+          gethomepage.dev/group: Media
+          gethomepage.dev/icon: komga.png
+          gethomepage.dev/enabled: "true"
         hosts:
           - host: comics.lan.${CLUSTER_DOMAIN}
             paths:

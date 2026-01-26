@@ -37,8 +37,15 @@ spec:
             port: 8989
     ingress:
       main:
+        labels:
+          gethomepage.dev/enabled: "true"
         annotations:
           external-dns.alpha.kubernetes.io/hostname: sonarr.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Sonarr
+          gethomepage.dev/description: TV automation
+          gethomepage.dev/group: Media
+          gethomepage.dev/icon: sonarr.png
+          gethomepage.dev/enabled: "true"
         hosts:
           - host: sonarr.lan.${CLUSTER_DOMAIN}
             paths:

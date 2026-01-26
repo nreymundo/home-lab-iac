@@ -3,6 +3,15 @@ kind: IngressRoute
 metadata:
   name: traefik-dashboard
   namespace: traefik
+  labels:
+    gethomepage.dev/enabled: "true"
+  annotations:
+    gethomepage.dev/href: https://traefik.lan.${CLUSTER_DOMAIN}/dashboard/
+    gethomepage.dev/name: Traefik
+    gethomepage.dev/description: Ingress controller
+    gethomepage.dev/group: Networking
+    gethomepage.dev/icon: traefik.png
+    gethomepage.dev/enabled: "true"
 spec:
   entryPoints:
     - websecure

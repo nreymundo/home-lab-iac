@@ -37,8 +37,15 @@ spec:
             port: 7878
     ingress:
       main:
+        labels:
+          gethomepage.dev/enabled: "true"
         annotations:
           external-dns.alpha.kubernetes.io/hostname: radarr.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Radarr
+          gethomepage.dev/description: Movie automation
+          gethomepage.dev/group: Media
+          gethomepage.dev/icon: radarr.png
+          gethomepage.dev/enabled: "true"
         hosts:
           - host: radarr.lan.${CLUSTER_DOMAIN}
             paths:

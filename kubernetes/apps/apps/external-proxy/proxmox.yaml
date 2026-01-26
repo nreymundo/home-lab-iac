@@ -31,10 +31,17 @@ kind: Ingress
 metadata:
   name: proxmox
   namespace: external-proxy
+  labels:
+    gethomepage.dev/enabled: "true"
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     external-dns.alpha.kubernetes.io/hostname: pve1.lan.${CLUSTER_DOMAIN}
+    gethomepage.dev/name: Proxmox
+    gethomepage.dev/description: Proxmox VE
+    gethomepage.dev/group: External
+    gethomepage.dev/icon: proxmox.png
+    gethomepage.dev/enabled: "true"
 spec:
   ingressClassName: traefik
   rules:

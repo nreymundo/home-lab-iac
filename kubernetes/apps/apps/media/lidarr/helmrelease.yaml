@@ -37,8 +37,15 @@ spec:
             port: 8686
     ingress:
       main:
+        labels:
+          gethomepage.dev/enabled: "true"
         annotations:
           external-dns.alpha.kubernetes.io/hostname: lidarr.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Lidarr
+          gethomepage.dev/description: Music automation
+          gethomepage.dev/group: Media
+          gethomepage.dev/icon: lidarr.png
+          gethomepage.dev/enabled: "true"
         hosts:
           - host: lidarr.lan.${CLUSTER_DOMAIN}
             paths:
