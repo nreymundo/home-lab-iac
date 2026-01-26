@@ -97,15 +97,34 @@ spec:
             - Proxmox:
                 icon: proxmox.png
                 href: https://pve1.lan.${CLUSTER_DOMAIN}
+                widget:
+                  type: proxmox
+                  url: https://pve1.lan.${CLUSTER_DOMAIN}
+                  username: "api-ro@pam!homepage"
+                  password: "{{HOMEPAGE_VAR_PROXMOX_API_KEY}}"
             - Proxmox Backup Server:
                 icon: proxmox.png
                 href: https://pbs.lan.${CLUSTER_DOMAIN}
+                widget:
+                  type: proxmoxbackupserver
+                  url: https://pbs.lan.${CLUSTER_DOMAIN}
+                  username: "api-ro@pbs!homepage"
+                  password: "{{HOMEPAGE_VAR_PBS_API_KEY}}"
             - OPNsense:
                 icon: opnsense.png
                 href: http://opnsense.lan.${CLUSTER_DOMAIN}
+                widget:
+                  type: opnsense
+                  url: http://192.168.10.1
+                  username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
+                  password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
             - Unraid:
                 icon: unraid.png
                 href: http://unraid.lan.${CLUSTER_DOMAIN}
+                widget:
+                  type: unraid
+                  url: http://192.168.10.4:8001
+                  key: "{{HOMEPAGE_VAR_UNRAID_KEY}}"
             - Home Assistant:
                 icon: home-assistant.png
                 href: http://home.${CLUSTER_DOMAIN}
@@ -188,6 +207,10 @@ spec:
         value: start.lan.${CLUSTER_DOMAIN}
       - name: TZ
         value: Europe/Berlin
+
+    envFrom:
+      - secretRef:
+          name: homepage-secrets
 
     # To include environment variables from other configs or other secrets for use in
     # Homepage's variable substitutions. Refer to them here.
