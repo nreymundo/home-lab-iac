@@ -6,6 +6,7 @@ resources:
   - ../apps/media/komga
   - ../apps/external-proxy
   - ../apps/automation/n8n
+  - ../apps/utils/homepage
   - ../apps/media/audiobookshelf
   - ../apps/media/sabnzbd
   - ../apps/media/radarr
