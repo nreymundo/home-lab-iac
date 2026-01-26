@@ -28,16 +28,9 @@ kind: Ingress
 metadata:
   name: home
   namespace: external-proxy
-  labels:
-    gethomepage.dev/enabled: "true"
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     external-dns.alpha.kubernetes.io/hostname: home.${CLUSTER_DOMAIN}
-    gethomepage.dev/name: Home Assistant
-    gethomepage.dev/description: Home automation
-    gethomepage.dev/group: External
-    gethomepage.dev/icon: home-assistant.png
-    gethomepage.dev/enabled: "true"
 spec:
   ingressClassName: traefik
   rules:

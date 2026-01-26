@@ -16,6 +16,7 @@ metadata:
     gethomepage.dev/group: Storage
     gethomepage.dev/icon: longhorn.png
     gethomepage.dev/enabled: "true"
+    gethomepage.dev/pod-selector: app=longhorn-ui
 spec:
   ingressClassName: traefik
   rules:

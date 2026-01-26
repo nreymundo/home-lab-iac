@@ -121,6 +121,7 @@ spec:
           gethomepage.dev/group: Security
           gethomepage.dev/icon: vaultwarden.png
           gethomepage.dev/enabled: "true"
+          gethomepage.dev/pod-selector: app.kubernetes.io/name=vaultwarden
         hosts:
           - host: vault.${CLUSTER_DOMAIN}
             paths:

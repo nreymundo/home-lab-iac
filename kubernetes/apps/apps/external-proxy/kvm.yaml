@@ -28,17 +28,10 @@ kind: Ingress
 metadata:
   name: kvm
   namespace: external-proxy
-  labels:
-    gethomepage.dev/enabled: "true"
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     external-dns.alpha.kubernetes.io/hostname: kvm.lan.${CLUSTER_DOMAIN}
-    gethomepage.dev/name: KVM
-    gethomepage.dev/description: KVM console
-    gethomepage.dev/group: External
-    gethomepage.dev/icon: kvm.png
-    gethomepage.dev/enabled: "true"
 spec:
   ingressClassName: traefik
   rules:
