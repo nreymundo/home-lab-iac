@@ -44,14 +44,14 @@ spec:
       main:
         enabled: false
         labels:
-          gethomepage.dev/enabled: "true"
+          gethomepage.dev/enabled: "false"
         annotations:
           external-dns.alpha.kubernetes.io/hostname: music.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Navidrome
           gethomepage.dev/description: Music server
           gethomepage.dev/group: Media
           gethomepage.dev/icon: navidrome.png
-          gethomepage.dev/enabled: "true"
+          gethomepage.dev/enabled: "false"
         hosts:
           - host: music.lan.${CLUSTER_DOMAIN}
             paths:
