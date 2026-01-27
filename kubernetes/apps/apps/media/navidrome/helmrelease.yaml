@@ -10,6 +10,7 @@ spec:
   values:
     controllers:
       main:
+        replicas: 0
         containers:
           main:
             image:
@@ -41,6 +42,7 @@ spec:
             targetPort: 4533
     ingress:
       main:
+        enabled: false
         labels:
           gethomepage.dev/enabled: "true"
         annotations:
