@@ -13,8 +13,6 @@ metadata:
     gethomepage.dev/icon: traefik.png
     gethomepage.dev/enabled: "true"
     gethomepage.dev/pod-selector: app.kubernetes.io/name=traefik,app.kubernetes.io/instance=traefik-traefik-traefik
-    gethomepage.dev/widget.type: "traefik"
-    gethomepage.dev/widget.url: "http://traefik-traefik.traefik.svc.cluster.local:9000"
 spec:
   entryPoints:
     - websecure

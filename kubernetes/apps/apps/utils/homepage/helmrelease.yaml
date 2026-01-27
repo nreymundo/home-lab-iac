@@ -50,6 +50,12 @@ spec:
         maxSurge: 25%
         maxUnavailable: 25%
 
+    defaultPodOptions:
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "4"
+
     # Enable the ingress to expose Homepage to the network.
     ingress:
       main:
