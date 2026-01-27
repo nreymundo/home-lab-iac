@@ -79,6 +79,9 @@ spec:
           gethomepage.dev/group: Media
           gethomepage.dev/icon: sabnzbd.png
           gethomepage.dev/enabled: "true"
+          gethomepage.dev/widget.type: "sabnzbd"
+          gethomepage.dev/widget.url: "http://sabnzbd.media.svc.cluster.local:8080"
+          gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_SABNZBD_KEY}}"}}'
         hosts:
           - host: sabnzbd.lan.${CLUSTER_DOMAIN}
             paths:

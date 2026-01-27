@@ -46,6 +46,9 @@ spec:
           gethomepage.dev/group: Media
           gethomepage.dev/icon: radarr.png
           gethomepage.dev/enabled: "true"
+          gethomepage.dev/widget.type: "radarr"
+          gethomepage.dev/widget.url: "http://radarr.media.svc.cluster.local:7878"
+          gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_RADARR_KEY}}"}}'
         hosts:
           - host: radarr.lan.${CLUSTER_DOMAIN}
             paths:
