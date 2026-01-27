@@ -48,8 +48,10 @@
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "platformAutomerge": false,
+      "platformAutomerge": true,
+      "ignoreTests": true,
       "automergeType": "pr",
+      "automergeStrategy": "squash",
       "automergeSchedule": ["at any time"]
     },
     {
