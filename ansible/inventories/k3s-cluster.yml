@@ -9,4 +9,4 @@ all:
           children:
             k3s_nodes: {}
           hosts:
-            main-rpi4: {}
+            framework: {}
