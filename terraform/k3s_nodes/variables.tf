@@ -125,7 +125,7 @@ variable "vm_memory_mb" {
 variable "vm_disk_size_gb" {
   type        = number
   description = "Disk size in GB per node VM"
-  default     = 32
+  default     = 128
   validation {
     condition     = var.vm_disk_size_gb >= 20
     error_message = "Disk size must be at least 20 GB."
@@ -154,7 +154,7 @@ variable "secondary_disk_storage_pool" {
 variable "secondary_disk_size_gb" {
   type        = number
   description = "Size in GB for secondary vdisk"
-  default     = 200
+  default     = 300
   validation {
     condition     = var.secondary_disk_size_gb >= 0
     error_message = "Secondary disk size must be 0 or greater."
