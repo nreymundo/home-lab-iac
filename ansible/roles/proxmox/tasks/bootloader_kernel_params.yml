@@ -37,7 +37,7 @@
       register: proxmox_bootctl_status
       changed_when: false
       failed_when: false
-      check_mode: no
+      check_mode: false
 
     - name: Select bootloader backend
       ansible.builtin.set_fact:

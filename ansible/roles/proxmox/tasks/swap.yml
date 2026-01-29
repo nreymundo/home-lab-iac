@@ -1,0 +1,79 @@
+---
+- name: Check if swapfile exists
+  ansible.builtin.stat:
+    path: /swapfile
+  register: proxmox_swapfile_stat
+
+- name: Check swapfile attributes
+  ansible.builtin.command: lsattr /swapfile
+  register: proxmox_swapfile_attributes
+  changed_when: false
+  when: proxmox_swapfile_stat.stat.exists
+
+- name: Determine if swapfile needs recreation
+  ansible.builtin.set_fact:
+    proxmox_recreate_swapfile: >-
+      {{
+        not proxmox_swapfile_stat.stat.exists or
+        proxmox_swapfile_stat.stat.size | int != 17179869184 or
+        'C' not in proxmox_swapfile_attributes.stdout.split(' ')[1]
+      }}
+
+- name: Remove invalid swapfile
+  when: proxmox_recreate_swapfile
+  block:
+    - name: Disable swap
+      ansible.builtin.command: swapoff /swapfile
+      failed_when: false
+      changed_when: false
+
+    - name: Remove swapfile
+      ansible.builtin.file:
+        path: /swapfile
+        state: absent
+
+- name: Create BTRFS-compatible swapfile
+  when: proxmox_recreate_swapfile
+  block:
+    - name: Create empty swapfile
+      ansible.builtin.file:
+        path: /swapfile
+        state: touch
+        mode: '0600'
+        owner: root
+        group: root
+
+    - name: Set NoCOW attribute
+      ansible.builtin.command: chattr +C /swapfile
+      changed_when: false
+
+    - name: Allocate 16G to swapfile
+      ansible.builtin.command: fallocate -l 16G /swapfile
+      changed_when: false
+
+    - name: Format swapfile
+      ansible.builtin.command: mkswap /swapfile
+      changed_when: false
+
+- name: Enable swap
+  ansible.builtin.command: swapon /swapfile
+  changed_when: false
+  failed_when: false
+  when: proxmox_recreate_swapfile
+
+- name: Ensure swap is enabled and persists
+  ansible.posix.mount:
+    path: none
+    src: /swapfile
+    fstype: swap
+    opts: sw
+    state: present
+
+- name: Configure vm.swappiness
+  ansible.builtin.copy:
+    content: "vm.swappiness=10\n"
+    dest: /etc/sysctl.d/99-swappiness.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Apply sysctl
