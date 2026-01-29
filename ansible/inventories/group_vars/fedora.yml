@@ -18,6 +18,7 @@ common_packages:
   - git
   - htop
   - starship
+  - zsh
 
 common_sshd_hardening:
   PermitRootLogin: "no"

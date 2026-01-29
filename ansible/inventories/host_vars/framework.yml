@@ -41,8 +41,7 @@ common_nm_connections:
 
 # Kernel parameters.
 common_kernel_params_add:
-# - "nmi_watchdog=0"
-# - "nowatchdog" # Probably redundant
+  - "nowatchdog"
   - "ttm.pages_limit=25165824" # Sets unified memory to ~96GB
   - "ttm.page_pool_size=25165824" # Sets unified memory to ~96GB
   - "amd_iommu=off" # When not using PCI passthrough.
@@ -58,16 +57,15 @@ podman_enable_socket: true
 # Disable firewalld on the framework node
 common_mask_firewalld: true
 
-# Not using it as part of a k3s cluster for now so these aren't used.
 # Use the VLAN 10 IP for K3s traffic
-# k3s_node_ip: 192.168.10.6
-# k3s_iface: enp191s0.10
+k3s_node_ip: 192.168.10.6
+k3s_iface: enp191s0.10
 
-# k3s_node_labels:
-#   homelab.lan/role: "accelerator"
-#   homelab.lan/cpu-vendor: "amd"
-#   homelab.lan/runtime: "baremetal"
-#   homelab.lan/gpu: "amd-igpu"
-#   homelab.lan/ai-capable: "true"
-#   homelab.lan/storage-local: "true"
-#   topology.kubernetes.io/zone: "framework"
+k3s_node_labels:
+  homelab.lan/role: "accelerator"
+  homelab.lan/cpu-vendor: "amd"
+  homelab.lan/runtime: "baremetal"
+  homelab.lan/gpu: "amd-igpu"
+  homelab.lan/ai-capable: "true"
+  homelab.lan/storage-local: "true"
+  topology.kubernetes.io/zone: "framework"

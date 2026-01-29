@@ -83,8 +83,7 @@
   ansible.builtin.set_fact:
     k3s_node_label_args: >-
       {% for key, value in (k3s_node_labels | default({})).items() -%}
-      --node-label {{ key }}={{ value }} {{ ' ' }}
-      {%- endfor %}
+      --node-label {{ key }}={{ value }} {{ ' ' }}{%- endfor %}
 
 - name: Ensure K3s interface is set
   ansible.builtin.assert:
