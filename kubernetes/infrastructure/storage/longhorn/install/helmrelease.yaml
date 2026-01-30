@@ -21,11 +21,11 @@ spec:
         namespace: flux-system
       interval: 1h
   values:
-    metrics:
-      serviceMonitor:
-        enabled: true
-        additionalLabels:
-          release: observability-kube-prometheus-stack
+    # metrics:
+    #   serviceMonitor:
+    #     enabled: true
+        # additionalLabels:
+        #   release: observability-kube-prometheus-stack
 
     longhornManager:
       resources:

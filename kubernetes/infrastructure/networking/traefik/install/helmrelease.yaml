@@ -80,14 +80,14 @@ spec:
     logs:
       access:
         enabled: true
-    metrics:
-      prometheus:
-        enabled: true
-        entryPoint: metrics
-        serviceMonitor:
-          enabled: true
-          additionalLabels:
-            release: observability-kube-prometheus-stack
+    # metrics:
+    #   prometheus:
+    #     enabled: true
+    #     entryPoint: metrics
+        # serviceMonitor:
+        #   enabled: true
+        #   additionalLabels:
+        #     release: observability-kube-prometheus-stack
     providers:
       kubernetesIngress:
         enabled: true
