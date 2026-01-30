@@ -110,6 +110,14 @@ spec:
         subPath: CROWDSEC_TRAEFIK_BOUNCER_API_KEY
 
     deployment:
+      replicas: 3
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: traefik
+            topologyKey: kubernetes.io/hostname
+
       additionalVolumes:
         - name: crowdsec-bouncer-api-key
           secret:
