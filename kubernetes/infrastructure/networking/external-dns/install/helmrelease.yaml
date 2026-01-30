@@ -29,8 +29,8 @@ spec:
 
     serviceMonitor:
       enabled: true
-      # additionalLabels:
-      #   release: observability-kube-prometheus-stack
+      additionalLabels:
+        release: observability-kube-prometheus-stack
 
     sources:
       - ingress

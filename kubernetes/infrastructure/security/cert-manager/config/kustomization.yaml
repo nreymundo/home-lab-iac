@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - cloudflare-secrets.sops.yaml
   - clusterissuer-letsencrypt.yaml
-  # - servicemonitor-cainjector.yaml
-  # - servicemonitor-cert-manager.yaml
-  # - servicemonitor-webhook.yaml
+  - servicemonitor-cainjector.yaml
+  - servicemonitor-cert-manager.yaml
+  - servicemonitor-webhook.yaml
   - wildcard-cert.yaml
