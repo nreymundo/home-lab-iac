@@ -271,7 +271,7 @@ data:
               matching_mode: strict
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
-            - !KeyOf vaultwarden-email-scope
+            - !Find [authentik_providers_oauth2.scopemapping, [name, "Vaultwarden Email Scope"]]
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
 
       - model: authentik_core.application
