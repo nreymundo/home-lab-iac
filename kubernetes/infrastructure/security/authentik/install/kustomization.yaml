@@ -4,7 +4,6 @@ namespace: authentik
 resources:
   - authentik-env.sops.yaml
   - authentik-db-secrets.sops.yaml
-  - cnpg-backup-s3.sops.yaml
   - authentik-db.yaml
   - authentik-db-podmonitor.yaml
   - authentik-db-backup.yaml

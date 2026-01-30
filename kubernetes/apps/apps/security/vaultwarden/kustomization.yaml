@@ -8,6 +8,5 @@ components:
 resources:
   - vaultwarden-db-secrets.sops.yaml
   - vaultwarden-secrets.sops.yaml
-  - cnpg-backup-s3.sops.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml
