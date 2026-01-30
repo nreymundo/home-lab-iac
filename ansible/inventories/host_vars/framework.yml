@@ -70,8 +70,3 @@ k3s_node_labels:
   homelab.lan/ai-capable: "true"
   homelab.lan/storage-local: "true"
   topology.kubernetes.io/zone: "framework"
-
-# K3s seed node configuration
-# This host is designated as the K3s cluster seed node
-k3s_is_seed: true
-k3s_seed_ip: "{{ k3s_node_ip }}"
