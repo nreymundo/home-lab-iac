@@ -1,4 +1,0 @@
----
-# K3s seed node configuration
-# This host is designated as the K3s cluster seed node
-k3s_is_seed: true
