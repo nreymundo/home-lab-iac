@@ -10,9 +10,12 @@ spec:
     labels:
       recurring-job.longhorn.io/backup-daily: enabled
       recurring-job.longhorn.io/backup-weekly: enabled
+
   instances: 1
+
   monitoring:
     enablePodMonitor: true
+
   storage:
     size: 2Gi
     storageClass: longhorn-r2
@@ -23,20 +26,41 @@ spec:
       archive_timeout: "43200" # Wait 12 hours before shipping WALs when no activity
       archive_mode: "on"
 
-  bootstrap:
-    initdb:
-      database: vaultwarden
-      owner: vaultwarden
-      secret:
-        name: vaultwarden-db-secrets
+  # NEW: define the external backup source we want to restore FROM
+  externalClusters:
+    - name: vaultwarden-s3-old
+      barmanObjectStore:
+        wal:
+          compression: gzip
+        data:
+          compression: gzip
+        s3Credentials:
+          accessKeyId:
+            name: cnpg-backup-s3
+            key: ACCESS_KEY_ID
+          secretAccessKey:
+            name: cnpg-backup-s3
+            key: ACCESS_SECRET_KEY
+          region:
+            name: cnpg-backup-s3
+            key: AWS_DEFAULT_REGION
+        destinationPath: "s3://cloudnative-pg/vaultwarden"
+        endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+        serverName: "vaultwarden-pg-v1"
 
+  # CHANGED: bootstrap from recovery instead of initdb
+  bootstrap:
+    recovery:
+      source: vaultwarden-s3-old
+
+  # Keep backup config: after restore, this cluster will continue to use this location.
+  # If you later want a fresh backup chain, change serverName AFTER restore.
   backup:
     barmanObjectStore:
       wal:
         compression: gzip
       data:
         compression: gzip
-
       s3Credentials:
         accessKeyId:
           name: cnpg-backup-s3
@@ -59,7 +83,12 @@ metadata:
   namespace: security
 spec:
   schedule: "0 0 * * *"  # Daily at midnight
+
+  # OPTIONAL: while you are restoring, you can set this to "disabled" by removing/pausing
+  # the ScheduledBackup object in Git, or just leave it; it shouldn't break restore,
+  # but it can be noisy if the cluster isn't ready yet.
   backupOwnerReference: self
+
   cluster:
     name: vaultwarden-pg
   method: barmanObjectStore
