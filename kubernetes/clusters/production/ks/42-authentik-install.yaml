@@ -10,7 +10,8 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  dependsOn: []
+  dependsOn:
+    - name: observability-kube-prometheus-stack-install
   wait: true
   timeout: 10m
   decryption:

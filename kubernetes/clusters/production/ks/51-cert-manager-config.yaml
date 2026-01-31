@@ -12,6 +12,7 @@ spec:
     name: flux-system
   dependsOn:
     - name: cert-manager-install
+    - name: observability-kube-prometheus-stack-install
   wait: true
   decryption:
     provider: sops

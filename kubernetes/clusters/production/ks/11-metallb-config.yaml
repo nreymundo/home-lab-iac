@@ -12,6 +12,7 @@ spec:
     name: flux-system
   dependsOn:
     - name: metallb-install
+    - name: observability-kube-prometheus-stack-install
   wait: true
   postBuild:
     substituteFrom:
