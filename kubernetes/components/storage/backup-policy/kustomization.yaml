@@ -18,3 +18,18 @@ patches:
                 recurring-job.longhorn.io/source: enabled
                 recurring-job.longhorn.io/backup-daily: enabled
                 recurring-job.longhorn.io/backup-weekly: enabled
+  - target:
+      kind: Cluster
+      group: postgresql.cnpg.io
+      version: v1
+    patch: |-
+      apiVersion: postgresql.cnpg.io/v1
+      kind: Cluster
+      metadata:
+        name: all
+      spec:
+        inheritedMetadata:
+          labels:
+            recurring-job.longhorn.io/source: enabled
+            recurring-job.longhorn.io/backup-daily: enabled
+            recurring-job.longhorn.io/backup-weekly: enabled

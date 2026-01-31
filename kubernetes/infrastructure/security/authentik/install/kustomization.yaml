@@ -6,7 +6,6 @@ resources:
   - authentik-db-secrets.sops.yaml
   - authentik-db.yaml
   - authentik-db-podmonitor.yaml
-  - authentik-db-backup.yaml
   - helmrelease.yaml
   - blueprint-bootstrap-cm.yaml
   - audiobookshelf-sso-secret.sops.yaml
