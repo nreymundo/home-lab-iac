@@ -1,0 +1,26 @@
+---
+# Toggle Docker installation (per-host control)
+# Set to true in host_vars/<hostname>.yml to enable
+docker_install_enabled: false
+
+# Docker package state (present = latest, "x.y.z" to pin version)
+docker_package_state: present
+
+# Users to add to docker group
+docker_users:
+  - "{{ common_user }}"
+
+# Docker daemon.json configuration
+# Applied when daemon_config has content
+docker_daemon_config:
+  log-driver: "json-file"
+  log-opts:
+    max-size: "{{ docker_log_max_size }}"
+    max-file: "{{ docker_log_max_files }}"
+
+# Log rotation settings (prevents disk bloat)
+docker_log_max_size: "100m"
+docker_log_max_files: "3"
+
+# Docker APT repository base URL (auto-detected per OS)
+docker_repo_base_url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"

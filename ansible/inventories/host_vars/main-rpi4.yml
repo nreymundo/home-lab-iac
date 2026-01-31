@@ -33,6 +33,9 @@ common_netplan_config:
 
 # k3s_allow_workloads: false
 
+# Enable Docker installation on this host
+docker_install_enabled: true
+
 # K3s node labels
 # k3s_node_labels:
 #   homelab.lan/role: "quorum"
