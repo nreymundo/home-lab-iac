@@ -17,7 +17,7 @@ metadata:
   namespace: external-proxy
 subsets:
   - addresses:
-      - ip: ${UNRAID_IP}
+      - ip: ${RPI4_IP}
     ports:
       - name: s3
         port: 9000
