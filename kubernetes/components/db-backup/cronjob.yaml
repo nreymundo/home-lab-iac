@@ -19,13 +19,13 @@ spec:
                 - |
                   set -eo pipefail
                   BACKUP_DIR="/backup/kubernetes/apps/${APP_NAME}"
-                  BACKUP_FILE="$BACKUP_DIR/${APP_NAME}-$(date +%Y%m%d-%H%M%S).sql.gz"
+                  BACKUP_FILE="$BACKUP_DIR/${APP_NAME}-$(date +%Y%m%d-%H%M%S).dump"
                   mkdir -p "$BACKUP_DIR"
                   echo "Starting backup for ${APP_NAME}..."
-                  pg_dump -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" | gzip > "$BACKUP_FILE"
+                  pg_dump -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -Fc -f "$BACKUP_FILE"
                   echo "Backup created: $BACKUP_FILE"
-                  find "$BACKUP_DIR" -name "*.sql.gz" -mtime +14 -delete
-                  echo "Cleaned up *.sql.gz backups older than 14 days"
+                  find "$BACKUP_DIR" -name "*.dump" -mtime +14 -delete
+                  echo "Cleaned up *.dump backups older than 14 days"
               env:
                 - name: APP_NAME
                   value: placeholder

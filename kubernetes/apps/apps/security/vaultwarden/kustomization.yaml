@@ -18,24 +18,30 @@ patches:
       kind: CronJob
       name: db-backup
     patch: |-
-      - op: replace
-        path: /metadata/name
-        value: vaultwarden-db-backup
-      - op: replace
-        path: /metadata/namespace
-        value: security
-      - op: replace
-        path: /spec/jobTemplate/spec/template/spec/containers/0/env/0/value
-        value: "vaultwarden"
-      - op: replace
-        path: /spec/jobTemplate/spec/template/spec/containers/0/env/1/value
-        value: "vaultwarden-pg-rw.security.svc.cluster.local"
-      - op: replace
-        path: /spec/jobTemplate/spec/template/spec/containers/0/env/2/valueFrom/secretKeyRef/name
-        value: "vaultwarden-db-secrets"
-      - op: replace
-        path: /spec/jobTemplate/spec/template/spec/containers/0/env/3/valueFrom/secretKeyRef/name
-        value: "vaultwarden-db-secrets"
-      - op: replace
-        path: /spec/jobTemplate/spec/template/spec/containers/0/env/4/value
-        value: "vaultwarden"
+      apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: vaultwarden-db-backup
+        namespace: security
+      spec:
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: backup
+                    env:
+                      - name: APP_NAME
+                        value: "vaultwarden"
+                      - name: PGHOST
+                        value: "vaultwarden-pg-rw.security.svc.cluster.local"
+                      - name: PGUSER
+                        valueFrom:
+                          secretKeyRef:
+                            name: "vaultwarden-db-secrets"
+                      - name: PGPASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: "vaultwarden-db-secrets"
+                      - name: PGDATABASE
+                        value: "vaultwarden"

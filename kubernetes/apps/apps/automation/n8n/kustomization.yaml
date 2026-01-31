@@ -18,24 +18,30 @@ patches:
       kind: CronJob
       name: db-backup
     patch: |-
-      - op: replace
-        path: /metadata/name
-        value: n8n-db-backup
-      - op: replace
-        path: /metadata/namespace
-        value: automation
-      - op: replace
-        path: /spec/jobTemplate/spec/template/spec/containers/0/env/0/value
-        value: "n8n"
-      - op: replace
-        path: /spec/jobTemplate/spec/template/spec/containers/0/env/1/value
-        value: "n8n-pg-rw.automation.svc.cluster.local"
-      - op: replace
-        path: /spec/jobTemplate/spec/template/spec/containers/0/env/2/valueFrom/secretKeyRef/name
-        value: "n8n-db-secrets"
-      - op: replace
-        path: /spec/jobTemplate/spec/template/spec/containers/0/env/3/valueFrom/secretKeyRef/name
-        value: "n8n-db-secrets"
-      - op: replace
-        path: /spec/jobTemplate/spec/template/spec/containers/0/env/4/value
-        value: "n8n"
+      apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: n8n-db-backup
+        namespace: automation
+      spec:
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: backup
+                    env:
+                      - name: APP_NAME
+                        value: "n8n"
+                      - name: PGHOST
+                        value: "n8n-pg-rw.automation.svc.cluster.local"
+                      - name: PGUSER
+                        valueFrom:
+                          secretKeyRef:
+                            name: "n8n-db-secrets"
+                      - name: PGPASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: "n8n-db-secrets"
+                      - name: PGDATABASE
+                        value: "n8n"
