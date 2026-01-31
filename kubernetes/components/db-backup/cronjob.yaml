@@ -17,7 +17,7 @@ spec:
               command: ["/bin/sh", "-c"]
               args:
                 - |
-                  set -e
+                  set -eo pipefail
                   BACKUP_DIR="/backup/kubernetes/apps/${APP_NAME}"
                   BACKUP_FILE="$BACKUP_DIR/${APP_NAME}-$(date +%Y%m%d-%H%M%S).sql.gz"
                   mkdir -p "$BACKUP_DIR"
