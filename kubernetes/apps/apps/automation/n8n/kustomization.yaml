@@ -5,7 +5,9 @@ components:
   - ../../../../components/common-env
   - ../../../../components/ingress/traefik-base
   - ../../../../components/storage/backup-policy
+
 resources:
+  - db-backup.yaml
   - n8n-db-secrets.sops.yaml
   - n8n-secrets.sops.yaml
   - cnpg-cluster.yaml

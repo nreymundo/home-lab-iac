@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vaultwarden-db-backup
+  namespace: security
+spec:
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: postgres:17-alpine
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eo pipefail
+                  BACKUP_DIR="/backup/kubernetes/apps/$APP_NAME"
+                  BACKUP_FILE="$BACKUP_DIR/$APP_NAME-$(date +%Y%m%d-%H%M%S).dump"
+                  mkdir -p "$BACKUP_DIR"
+                  echo "Starting backup for $APP_NAME..."
+                  pg_dump -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -Fc -f "$BACKUP_FILE"
+                  echo "Backup created: $BACKUP_FILE"
+                  find "$BACKUP_DIR" -name "*.dump" -mtime +14 -delete
+                  echo "Cleaned up *.dump backups older than 14 days"
+              env:
+                - name: APP_NAME
+                  value: "vaultwarden"
+                - name: PGHOST
+                  value: "vaultwarden-pg-rw.security.svc.cluster.local"
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: "vaultwarden-db-secrets"
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: "vaultwarden-db-secrets"
+                      key: password
+                - name: PGDATABASE
+                  value: "vaultwarden"
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+          volumes:
+            - name: backup
+              nfs:
+                server: "${UNRAID_IP}"
+                path: /mnt/user/backup

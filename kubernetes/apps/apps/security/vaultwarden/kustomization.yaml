@@ -5,7 +5,9 @@ components:
   - ../../../../components/common-env
   - ../../../../components/ingress/traefik-base
   - ../../../../components/storage/backup-policy
+
 resources:
+  - db-backup.yaml
   - vaultwarden-db-secrets.sops.yaml
   - vaultwarden-secrets.sops.yaml
   - cnpg-cluster.yaml

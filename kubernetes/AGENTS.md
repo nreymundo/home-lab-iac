@@ -198,6 +198,70 @@ labels:
   recurring-job.longhorn.io/backup-weekly: enabled
 ```
 
+### Postgres Database Backups
+For apps using PostgreSQL, create a `db-backup.yaml` alongside the `kustomization.yaml` to backup the database to NFS:
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: <app-name>-db-backup
+  namespace: <namespace>
+spec:
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: postgres:17-alpine
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eo pipefail
+                  BACKUP_DIR="/backup/kubernetes/apps/$APP_NAME"
+                  # Use .dump extension and custom format (-Fc)
+                  BACKUP_FILE="$BACKUP_DIR/$APP_NAME-$(date +%Y%m%d-%H%M%S).dump"
+                  mkdir -p "$BACKUP_DIR"
+                  echo "Starting backup for $APP_NAME..."
+                  # $APP_NAME will be evaluated by the shell at runtime
+                  pg_dump -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -Fc -f "$BACKUP_FILE"
+                  echo "Backup created: $BACKUP_FILE"
+                  find "$BACKUP_DIR" -name "*.dump" -mtime +14 -delete
+                  echo "Cleaned up *.dump backups older than 14 days"
+              env:
+                - name: APP_NAME
+                  value: "<app-name>"
+                - name: PGHOST
+                  value: "<service-dns>" # e.g., app-pg-rw.namespace.svc.cluster.local
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: "<app>-db-secrets"
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: "<app>-db-secrets"
+                      key: password
+                - name: PGDATABASE
+                  value: "<db-name>"
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+          volumes:
+            - name: backup
+              nfs:
+                server: "${UNRAID_IP}"
+                path: /mnt/user/backup
+```
+
+**Note on Variables**: Use `$APP_NAME` (no braces) in `args` script so Flux ignores it and lets the shell evaluate it. Use `${UNRAID_IP}` (with braces) so Flux substitutes it.
+
 ## How to Add a New App
 
 1. **Create namespace** (if new) in `infrastructure/config/namespaces.yaml`
@@ -235,6 +299,8 @@ labels:
      # Add nfs-mount/media/rw or /ro if app needs NFS media access
    resources:
      - helmrelease.yaml
+     # Add db-backup.yaml if using Postgres (see Postgres Database Backups pattern)
+     - db-backup.yaml
     ```
 
  6. **Add to parent kustomization** (`kubernetes/apps/apps/<category>/kustomization.yaml`):
