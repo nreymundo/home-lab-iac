@@ -20,7 +20,7 @@ spec:
             image:
               # renovate: datasource=docker depName=gotson/komga registryUrl=https://ghcr.io
               repository: ghcr.io/gotson/komga
-              tag: 1.23.6
+              tag: 1.24.1
             env:
               KOMGA_OIDC_CLIENT_ID:
                 valueFrom:
