@@ -5,8 +5,37 @@ components:
   - ../../../../components/common-env
   - ../../../../components/ingress/traefik-base
   - ../../../../components/storage/backup-policy
+  - ../../../../components/db-backup
+
 resources:
   - vaultwarden-db-secrets.sops.yaml
   - vaultwarden-secrets.sops.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml
+
+patches:
+  - target:
+      kind: CronJob
+      name: db-backup
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: vaultwarden-db-backup
+      - op: replace
+        path: /metadata/namespace
+        value: security
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/0/value
+        value: "vaultwarden"
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/1/value
+        value: "vaultwarden-pg-rw.security.svc.cluster.local"
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/2/valueFrom/secretKeyRef/name
+        value: "vaultwarden-db-secrets"
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/3/valueFrom/secretKeyRef/name
+        value: "vaultwarden-db-secrets"
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/4/value
+        value: "vaultwarden"

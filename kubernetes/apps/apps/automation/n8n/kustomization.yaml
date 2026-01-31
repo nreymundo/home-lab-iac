@@ -5,8 +5,37 @@ components:
   - ../../../../components/common-env
   - ../../../../components/ingress/traefik-base
   - ../../../../components/storage/backup-policy
+  - ../../../../components/db-backup
+
 resources:
   - n8n-db-secrets.sops.yaml
   - n8n-secrets.sops.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml
+
+patches:
+  - target:
+      kind: CronJob
+      name: db-backup
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: n8n-db-backup
+      - op: replace
+        path: /metadata/namespace
+        value: automation
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/0/value
+        value: "n8n"
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/1/value
+        value: "n8n-pg-rw.automation.svc.cluster.local"
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/2/valueFrom/secretKeyRef/name
+        value: "n8n-db-secrets"
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/3/valueFrom/secretKeyRef/name
+        value: "n8n-db-secrets"
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/4/value
+        value: "n8n"
