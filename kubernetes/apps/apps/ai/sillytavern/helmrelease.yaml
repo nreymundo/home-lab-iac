@@ -1,0 +1,69 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sillytavern
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=sillytavern/sillytavern registryUrl=https://ghcr.io
+              repository: ghcr.io/sillytavern/sillytavern
+              tag: 1.15.0
+            env:
+              NODE_ENV: production
+              FORCE_COLOR: "1"
+            ports:
+              - name: http
+                containerPort: 8000
+            resources:
+              requests:
+                cpu: 250m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 1024Mi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8000
+    ingress:
+      main:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+          external-dns.alpha.kubernetes.io/hostname: tavern.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: SillyTavern
+          gethomepage.dev/description: Chat interface for LLM roleplay
+          gethomepage.dev/group: AI
+          gethomepage.dev/enabled: "true"
+        hosts:
+          - host: tavern.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r2
+        globalMounts:
+          - path: /home/node/app/config
+            subPath: config
+          - path: /home/node/app/data
+            subPath: data
+          - path: /home/node/app/plugins
+            subPath: plugins
+          - path: /home/node/app/public/scripts/extensions/third-party
+            subPath: extensions

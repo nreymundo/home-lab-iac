@@ -18,6 +18,7 @@ resources:
   - ../apps/media/prowlarr
   - ../apps/development/gitea
   - ../apps/ai/openwebui
+  - ../apps/ai/sillytavern
   - ../apps/security/vaultwarden
   - ../apps/media/jellyplex-watched
   - ../apps/utils/discord-presence
