@@ -1,0 +1,105 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: plextraktsync
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        initContainers:
+          copy-trakt-config:
+            image:
+              repository: busybox
+              tag: latest
+            command:
+              - /bin/sh
+              - -c
+              - |
+                if [ ! -f /app/config/.pytrakt.json ]; then
+                  echo "Copying initial .pytrakt.json to config volume..."
+                  cp /tmp/trakt-secret/.pytrakt.json /app/config/.pytrakt.json
+                  chmod 644 /app/config/.pytrakt.json
+                else
+                  echo ".pytrakt.json already exists, skipping copy."
+                fi
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=taxel/plextraktsync registryUrl=https://ghcr.io
+              repository: ghcr.io/taxel/plextraktsync
+              tag: 0.34.20
+            command:
+              - python
+              - -m
+              - plextraktsync
+              - watch
+            env:
+              TZ: Europe/Berlin
+              PLEX_SERVER:
+                valueFrom:
+                  secretKeyRef:
+                    name: plextraktsync-env
+                    key: PLEX_SERVER
+              PLEX_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: plextraktsync-env
+                    key: PLEX_USERNAME
+              TRAKT_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: plextraktsync-env
+                    key: TRAKT_USERNAME
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r2
+        advancedMounts:
+          main:
+            copy-trakt-config:
+              - path: /app/config
+            main:
+              - path: /app/config
+      config-file:
+        enabled: true
+        type: configMap
+        name: plextraktsync-config
+        advancedMounts:
+          main:
+            main:
+              - path: /app/config/config.yml
+                subPath: config.yml
+                readOnly: true
+      servers-file:
+        enabled: true
+        type: secret
+        name: plextraktsync-servers
+        advancedMounts:
+          main:
+            main:
+              - path: /app/config/servers.yml
+                subPath: servers.yml
+                readOnly: true
+      trakt-secret:
+        enabled: true
+        type: secret
+        name: plextraktsync-trakt
+        advancedMounts:
+          main:
+            copy-trakt-config:
+              - path: /tmp/trakt-secret
+                readOnly: true

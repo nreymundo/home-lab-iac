@@ -21,3 +21,4 @@ resources:
   - ../apps/security/vaultwarden
   - ../apps/media/jellyplex-watched
   - ../apps/utils/discord-presence
+  - ../apps/media/plextraktsync

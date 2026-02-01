@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: plextraktsync-servers
+    namespace: media
+type: Opaque
+stringData:
+    servers.yml: ENC[AES256_GCM,data:Y3MuB272c+Y45a4zwjtHOZqodOukJuQioXBpucDNKI2+wMONxzsFo9cxe4V6fSMtmoKW4JHouZAV1Oiz9EK20Nw6ie0ZbsZvAwHM4/mbo5267IsW2HCLtbt9SenTRrzdzVhW6YIf8elClBW/EwVe/AO29f3qLxw1eLxd7WXdgTJoxZtmZcUNLRGiZJoPy7iKv+zDtIMYDu93NflY+mOynB2WvDlFIF9b/Z1seaqRn6Gplnu8hkZrskyRUkcutv0kNgsqs0MhtYI7QUhbVpp0IBxd65WU7lsKFlA4EU/U8CFfHlIXQtqJ4SVGFfOGb9XzwEJQHkYfmj93ccTjpaq/rT492iABsrn/hMVM1cvJvL8qOqrwpdDSkazqDBQUa1GmZnzU9wi244JXHE0b6lc+H+GU7Pb2r6AzRCwL3ci2Pe+bvr3qtt3yO8Mg0UTkYPFYKUf+8LsRmmw6Zonl8rBDv8ypdCt0lYDkTvj5FB3QEVYJLQHyO8LHSmU+hFVO4dGBD4PL5sddJ7RwBiVW58A/CIl6mmqsqgv5CLkezZ03Pu71gmcabS7ihZoBffeB7OWSjIqzDXPgZVyt6hEbIWmpcJxna1IiyNzbKoAiEQt66F1MZUGpCTXW86feQ7UFusod8je8S8VbnNUXeAiuDtZOhTSo18UZcTvVtvzFoQP7iDqDzfXgzd/sPisIY4phd3TxyB2x6gWV/LygdajgtP0o6cf1SRimsbdibVjI8pQcO7nyYkURFr2h+9d4aSkmc/MTcPrveYKTLZiNZg==,iv:+LgD52ODVWhh/jwEi3k7+OGW5BEKQthlW0HLElAaQ8I=,tag:oBjgxr247WCYKuiJaJlfyw==,type:str]
+sops:
+    age:
+        - recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA3SGZBZktNMHZzZ3YyN1RD
+            eElIdzJVT0l3UURNVjJFTkdMa1A1VEloWEVvCkxWR09qV3RvR0srSzBva25lSVo1
+            Nzd5bjF4NklwVzZWKzV3TzY3MTJndjgKLS0tIGtHcmxFSEpEM201Lzh1V0RWMTd3
+            d1k5SW1UeVBuY1dpOStIRmFYQkZ0SUkKbDlaXDXUsGzohz0AQYfLC01iALAOXL82
+            DxIoNuVnMW8NaC2LE41ElkOITyltkeXjh66ykdvBPi19t8qKy5kotg==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-02-01T22:20:59Z"
+    mac: ENC[AES256_GCM,data:UPLtAlOhvoBRhu0tXpKuq5z84m52TZV7Y8w6l1YwzfmVuNOGAo192jZIIM3xA+urwhOgWuYjAouFmR1R/mHkJpmpPZEjhUD3dmDZQebrVUpVgcOx4AcGjzBnc2L3xCWLATbHhZSGsam44tNkicF9z9XPbsUnYX9IevZXL+o0GkI=,iv:2tdch1lAO44ar75H414yc1xIrEFrMLNmW4/lCJ1k1t0=,tag:Ds3kGB4QmB4KP4PFPAsDeA==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.11.0

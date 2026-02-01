@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: plextraktsync-trakt
+    namespace: media
+type: Opaque
+stringData:
+    #ENC[AES256_GCM,data:g2LMMtrmwc941ksQvX/Z5ydWc8Mj3xZDi7mYiUMER9aTvv/ar68xKUjR367eabE8,iv:B1JWSTS+px/FT01VA9DDIhINbJO7rgaq+pcQo1VFfYI=,tag:IfZHX1vUQ43l2EBN6PiPVw==,type:comment]
+    #ENC[AES256_GCM,data:w5cXK9fdyujpjkzHNC6FKtieKyd7YhSZYMYfxotjrepXRpbm/H7gz4aWHLiKJg==,iv:OsjhLPQ3Tg+eUapoYDzPoUbV+oYER9nmklH8wzM8eGk=,tag:J4Yyk5APwITFdUcNY/hwqg==,type:comment]
+    .pytrakt.json: ENC[AES256_GCM,data:SZOt18P9l6Ma/P1z/UP2Ot8pMl1fGGBfjxtFph+XtwbtYgDq6LKIoS9I5QjpRdvZ3D0+1SIciO9iCJwGgIVa3HQ8Po/nPS/1wwufkRHG9+O3Bp7tA6xuxwJH5BF1RdWSTb2FkVuFK5h9M3lywa6e4pUp/kv9hplq0RXZmREh4Sb0hJ3cH5P+d4eSbdhYwdRa5IiOlHHHVW0WierVDsY+0lR8INXgQS02sxrb6DhcTTuirAxiCddIGBWUCXbCitQ1q2MgrXxsdLquPHCSzSMs74PibbcBzrM4L3s0EUv4gJiZjZGzpG4Fgx+4l+VTIJMe9RXTmlEOm9986smzQDJyBzuF1vt1MeMy8YJS/23S6HATovnKoWoCreykm/dLXszLkOUOZ71BBgA+3td1H8Asr0In8HqJC0R3RBcisigjJMnJ01yk1W/BYzzg08V2c3ZILaB2KwOBEzuCy5/N9pFWz8va0c3fpfZIUOKFY2N1OYP5EsRIH7vh51k2VJAbTMufARi5AiCV0JgVGJyA5DNOMRSFrUPX,iv:ROwIIsagO1mPjE7x+HlUYQZywSkiH8HvSuMiBpgenGA=,tag:az4h9HQr6OvGdXgsIqE1VQ==,type:str]
+sops:
+    age:
+        - recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBGb0FPeGpxUWQwZlM4dFIw
+            M1FyaXc2Y1lhN2xkdzFqOFNkeHV6M3NvWmhjCktkLzBvbmFaYVdrVU9nWnNON2tO
+            L0lybEVhdkovemNkaC9ITDVVc2FBRU0KLS0tIEVSa2JMZGQ4Wmw5eW5aRmM1bERo
+            N2tWUWdUOWZqUUorL25NaHMwZjdBcUkKqL32cli167vH+1asdjRCuGtFxXQBAln/
+            BIVJtHlw8g4jMrvM09PKoDckS90TKWhhbhEbr3Pw9NiLVyejvRA24g==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-02-01T22:33:40Z"
+    mac: ENC[AES256_GCM,data:5LNz9ilxfPI2/6W0AyEntv2tndrgEyPPEaoLlqeEtRvEA9fyrJgEQyn65HUWdpLbVYFYKb7frNyGyRbOL+OOUuT0kbzsm5rce7dianP0KI4g3S+OJ/qbrL5sSrTzVIYoSKwcEj6y+pCeGdV9m/L5uYru6dloFWYM7hu20EbnmPc=,iv:9LtnOd1pwiHY4md4Vwx2QPnw7F+DQ4w4pWdvCaGd+NU=,tag:GOPGOYbolaUcLTRkGSxitg==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.11.0
