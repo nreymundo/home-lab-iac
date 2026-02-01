@@ -91,7 +91,7 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
           gethomepage.dev/name: Grafana
           gethomepage.dev/description: Dashboards
-          gethomepage.dev/group: Observability
+          gethomepage.dev/group: "Security & Monitoring"
           gethomepage.dev/icon: grafana.png
           gethomepage.dev/enabled: "true"
           gethomepage.dev/pod-selector: app.kubernetes.io/name=grafana,app.kubernetes.io/instance=observability-kube-prometheus-stack
@@ -99,6 +99,21 @@ spec:
           - grafana.lan.${CLUSTER_DOMAIN}
 
     prometheus:
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        annotations:
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+          external-dns.alpha.kubernetes.io/hostname: prometheus.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Prometheus
+          gethomepage.dev/description: Metrics
+          gethomepage.dev/group: "Security & Monitoring"
+          gethomepage.dev/icon: prometheus.png
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/pod-selector: app.kubernetes.io/name=prometheus,app.kubernetes.io/instance=observability-kube-prometh-prometheus
+        hosts:
+          - prometheus.lan.${CLUSTER_DOMAIN}
       prometheusSpec:
         resources:
           requests:
