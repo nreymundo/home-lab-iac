@@ -286,7 +286,7 @@ spec:
         layout:
           Media:
             style: row
-            columns: 4
+            columns: 5
 
           AI:
             style: column
