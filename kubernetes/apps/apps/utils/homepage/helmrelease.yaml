@@ -45,7 +45,6 @@ spec:
             port: 3000
 
     controller:
-      replicas: 3
       strategy: RollingUpdate
       rollingUpdate:
         maxSurge: 25%
