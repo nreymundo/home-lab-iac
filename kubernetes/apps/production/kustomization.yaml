@@ -4,6 +4,7 @@ resources:
   - ../apps/storage/garage-webui
   - ../apps/media/navidrome
   - ../apps/media/komga
+  - ../apps/media/tautulli
   - ../apps/external-proxy
   - ../apps/automation/n8n
   - ../apps/utils/homepage
