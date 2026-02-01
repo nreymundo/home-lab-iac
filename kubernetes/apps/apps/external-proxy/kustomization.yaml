@@ -9,3 +9,4 @@ resources:
   - proxmox.yaml
   - proxmox-backup.yaml
   - unraid.yaml
+  - framework-cockpit.yaml
