@@ -19,3 +19,4 @@ resources:
   - ../apps/development/gitea
   - ../apps/ai/openwebui
   - ../apps/security/vaultwarden
+  - ../apps/media/jellyplex-watched

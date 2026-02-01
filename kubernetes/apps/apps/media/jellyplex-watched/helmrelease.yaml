@@ -1,0 +1,52 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: jellyplex-watched
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=luigi311/jellyplex-watched registryUrl=https://ghcr.io
+              repository: ghcr.io/luigi311/jellyplex-watched
+              tag: 8.5.0
+            env:
+              DRYRUN: "False"
+              DEBUG: "False"
+              DEBUG_LEVEL: info
+              RUN_ONLY_ONCE: "False"
+              SLEEP_DURATION: "1800"
+              GENERATE_GUIDS: "False"
+              GENERATE_LOCATIONS: "True"
+              MAX_THREADS: "16"
+              USER_MAPPING: '{"nico_r":"nreymundo"}' # plex:jellyfin
+              LIBRARY_MAPPING: '{"TV Shows":"TV", "Movies":"Movies", "Anime Shows":"Anime Shows", "Anime Movies":"Anime", "Music":"Music"}'
+              BLACKLIST_LIBRARY: ""
+              WHITELIST_LIBRARY: ""
+              BLACKLIST_LIBRARY_TYPE: ""
+              WHITELIST_LIBRARY_TYPE: ""
+              BLACKLIST_USERS: ""
+              WHITELIST_USERS: ""
+              PLEX_BASEURL: http://192.168.10.12:32400
+              PLEX_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: jellyplex-watched-secrets
+                    key: PLEX_TOKEN
+              JELLYFIN_BASEURL: http://192.168.10.16:8096
+              JELLYFIN_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: jellyplex-watched-secrets
+                    key: JELLYFIN_TOKEN
+              SSL_BYPASS: "True"
+              SYNC_FROM_PLEX_TO_JELLYFIN: "True"
+              SYNC_FROM_JELLYFIN_TO_PLEX: "True"
+              SYNC_FROM_PLEX_TO_PLEX: "True"
+              SYNC_FROM_JELLYFIN_TO_JELLYFIN: "True"
