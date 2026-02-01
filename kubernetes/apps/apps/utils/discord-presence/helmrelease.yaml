@@ -1,0 +1,247 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: discord-presence-main
+  namespace: utils
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      securityContext:
+        fsGroup: 1000
+
+    controllers:
+      kasmcord:
+        containers:
+          kasmcord:
+            image:
+              repository: kasmweb/discord
+              tag: 1.14.0
+            env:
+              TZ: Europe/Berlin
+              VNC_PW:
+                valueFrom:
+                  secretKeyRef:
+                    name: discord-presence-secrets
+                    key: VNC_PW
+            securityContext:
+              runAsUser: 0
+              runAsGroup: 0
+            command:
+              - /bin/bash
+              - -lc
+              - |
+                set -e
+                mkdir -p /run/user/1000
+                chown -R 1000:1000 /run/user/1000
+                chmod 700 /run/user/1000
+                export XDG_RUNTIME_DIR=/run/user/1000
+                exec /usr/bin/setpriv --reuid=1000 --regid=1000 --clear-groups \
+                  /dockerstartup/kasm_default_profile.sh \
+                  /dockerstartup/vnc_startup.sh \
+                  /dockerstartup/kasm_startup.sh
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - pgrep -f '^/usr/share/discord/Discord' >/dev/null && test -S /run/user/1000/discord-ipc-0
+                  initialDelaySeconds: 45
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - pgrep -f '^/usr/share/discord/Discord' >/dev/null && test -S /run/user/1000/discord-ipc-0
+                  initialDelaySeconds: 45
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - test -S /run/user/1000/discord-ipc-0
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 12
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                cpu: 2000m
+                memory: 2Gi
+
+          drpp:
+            image:
+              repository: ghcr.io/phin05/discord-rich-presence-plex
+              tag: latest
+            env:
+              DRPP_UID: "1000"
+              DRPP_GID: "1000"
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+
+          steam-presence:
+            image:
+              repository: ghcr.io/nreymundo/steam-presence
+              tag: latest
+            env:
+              XDG_RUNTIME_DIR: /run/user/1000
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - test -S /run/user/1000/discord-ipc-0
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 10
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - test -S /run/user/1000/discord-ipc-0
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 12
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+
+    service:
+      app:
+        controller: kasmcord
+        ports:
+          http:
+            port: 6901
+
+    ingress:
+      app:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+          external-dns.alpha.kubernetes.io/hostname: discord1.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Discord - Main
+          gethomepage.dev/description: Web instance for Discord with Steam and Plex rich presence
+          gethomepage.dev/group: Utils
+          gethomepage.dev/icon: discord.png
+        className: traefik
+        hosts:
+          - host: discord1.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: app
+                  port: http
+
+    persistence:
+      # Persistent storage for Discord user data
+      home:
+        enabled: true
+        type: persistentVolumeClaim
+        storageClass: longhorn-r2
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        advancedMounts:
+          kasmcord:
+            kasmcord:
+              - path: /home/kasm-user
+        labels:
+          recurring-job.longhorn.io/source: enabled
+          recurring-job.longhorn.io/backup-daily: enabled
+          recurring-job.longhorn.io/backup-weekly: enabled
+
+      # Shared runtime directory for IPC socket communication
+      runtime:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          kasmcord:
+            kasmcord:
+              - path: /run/user/1000
+            drpp:
+              - path: /run/app
+                readOnly: true
+            steam-presence:
+              - path: /run/user/1000
+                readOnly: true
+
+      # Shared memory for Kasm (replaces shm_size)
+      shm:
+        enabled: true
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 512Mi
+        advancedMounts:
+          kasmcord:
+            kasmcord:
+              - path: /dev/shm
+
+      # Ephemeral storage for drpp data
+      drpp-data:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          kasmcord:
+            drpp:
+              - path: /app/data
+
+      # DRPP config from secret
+      drpp-config:
+        enabled: true
+        type: secret
+        name: drpp-config
+        advancedMounts:
+          kasmcord:
+            drpp:
+              - path: /app/data/config.yaml
+                subPath: config.yaml
+                readOnly: true
+
+      # Steam presence config from secret
+      steam-config:
+        enabled: true
+        type: secret
+        name: steam-presence-config
+        advancedMounts:
+          kasmcord:
+            steam-presence:
+              - path: /app/config.json
+                subPath: config.json
+                readOnly: true
