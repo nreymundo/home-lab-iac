@@ -93,10 +93,72 @@ spec:
       # To use an existing ConfigMap uncomment this line and specify the name
       # useExistingConfigMap: existing-homepage-configmap
       bookmarks:
-        - Developer:
+        - Dev:
             - Github:
                 - abbr: GH
                   href: https://github.com/
+            - AWS:
+                - abbr: AWS
+                  href: https://aws.amazon.com/
+            - Backblaze B2:
+                - abbr: B2
+                  href: https://secure.backblaze.com/b2_buckets.htm
+            - Cloudflare:
+                - abbr: CF
+                  href: https://dash.cloudflare.com/
+            - DigitalOcean:
+                - abbr: DO
+                  href: https://cloud.digitalocean.com/
+            - Google Cloud:
+                - abbr: GCE
+                  href: https://console.cloud.google.com/
+        - Finance:
+            - Berliner Sparkasse:
+                - abbr: SP
+                  href: https://www.berliner-sparkasse.de/de/home.html
+            - E*Trade:
+                - abbr: ET
+                  href: https://us.etrade.com/e/t/user/login
+            - Trade Republic:
+                - abbr: TR
+                  href: https://app.traderepublic.com/login
+        - Forums:
+            - Level1Techs:
+                - abbr: L1T
+                  href: https://forum.level1techs.com/
+            - Linus Tech Tips:
+                - abbr: LTT
+                  href: https://linustechtips.com/main/
+            - RolePlay Online:
+                - abbr: RPoL
+                  href: https://rpol.net/
+        - Media:
+            - Plex:
+                - abbr: Spotify
+                  href: https://open.spotify.com/
+            - YouTube:
+                - abbr: YT
+                  href: https://www.youtube.com/
+            - YouTube Music:
+                - abbr: YTM
+                  href: https://music.youtube.com/
+            - Tidal:
+                - abbr: TD
+                  href: https://tidal.com/
+        - Misc:
+            - Arch Wiki:
+                - abbr: AW
+                  href: https://wiki.archlinux.org/
+        - Social:
+            - Instagram:
+                - abbr: IG
+                  href: https://www.instagram.com/
+            - Reddit:
+                - abbr: RD
+                  href: https://www.reddit.com/
+            - LinkedIn:
+                - abbr: LI
+                  href: https://www.linkedin.com/
 
       services:
         - Management:
