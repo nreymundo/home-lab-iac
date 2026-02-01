@@ -16,8 +16,6 @@ spec:
               # renovate: datasource=docker depName=plexguide/huntarr registryUrl=https://ghcr.io
               repository: ghcr.io/plexguide/huntarr
               tag: 9.1.5
-            env:
-              TZ: Europe/Berlin
             ports:
               - name: http
                 containerPort: 9705
@@ -44,7 +42,6 @@ spec:
           gethomepage.dev/description: Media automation
           gethomepage.dev/group: Media
           gethomepage.dev/icon: huntarr.png
-          gethomepage.dev/enabled: "true"
         hosts:
           - host: huntarr.lan.${CLUSTER_DOMAIN}
             paths:
