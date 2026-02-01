@@ -99,7 +99,7 @@ spec:
                   href: https://github.com/
 
       services:
-        - External:
+        - Management:
             - Proxmox:
                 icon: proxmox.png
                 href: https://pve1.lan.${CLUSTER_DOMAIN}
@@ -108,14 +108,10 @@ spec:
                   url: https://pve1.lan.${CLUSTER_DOMAIN}
                   username: "api-ro@pam!homepage"
                   password: "{{HOMEPAGE_VAR_PROXMOX_API_KEY}}"
-            - Proxmox Backup Server:
-                icon: proxmox.png
-                href: https://pbs.lan.${CLUSTER_DOMAIN}
-                widget:
-                  type: proxmoxbackupserver
-                  url: https://pbs.lan.${CLUSTER_DOMAIN}
-                  username: "api-ro@pbs!homepage"
-                  password: "{{HOMEPAGE_VAR_PBS_API_KEY}}"
+            - JetKVM:
+                icon: jetkvm.png
+                href: http://kvm.lan.${CLUSTER_DOMAIN}
+        - Networking:
             - OPNsense:
                 icon: opnsense.png
                 href: http://opnsense.lan.${CLUSTER_DOMAIN}
@@ -124,19 +120,6 @@ spec:
                   url: http://192.168.10.1
                   username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
                   password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
-            - Unraid:
-                icon: unraid.png
-                href: http://unraid.lan.${CLUSTER_DOMAIN}
-                widget:
-                  type: unraid
-                  url: http://192.168.10.4:8001
-                  key: "{{HOMEPAGE_VAR_UNRAID_KEY}}"
-            - Home Assistant:
-                icon: home-assistant.png
-                href: http://home.${CLUSTER_DOMAIN}
-            - JetKVM:
-                icon: jetkvm.png
-                href: http://kvm.lan.${CLUSTER_DOMAIN}
             - Pi-hole:
                 icon: pi-hole.png
                 href: https://pihole.lan.${CLUSTER_DOMAIN}/admin
@@ -144,6 +127,26 @@ spec:
                   type: pihole
                   url: https://192.168.10.2
                   version: 6
+        - Storage:
+            - Unraid:
+                icon: unraid.png
+                href: http://unraid.lan.${CLUSTER_DOMAIN}
+                widget:
+                  type: unraid
+                  url: http://192.168.10.4:8001
+                  key: "{{HOMEPAGE_VAR_UNRAID_KEY}}"
+            - Proxmox Backup Server:
+                icon: proxmox.png
+                href: https://pbs.lan.${CLUSTER_DOMAIN}
+                widget:
+                  type: proxmoxbackupserver
+                  url: https://pbs.lan.${CLUSTER_DOMAIN}
+                  username: "api-ro@pbs!homepage"
+                  password: "{{HOMEPAGE_VAR_PBS_API_KEY}}"
+        - Automation:
+            - Home Assistant:
+                icon: home-assistant.png
+                href: http://home.${CLUSTER_DOMAIN}
       widgets:
         # - resources:
         #     # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.
@@ -183,10 +186,31 @@ spec:
         title: Homepage
         headerStyle: boxed
         target: _self
+        hideVersion: true
+        statusStyle: dot
+        useEqualHeights: true
+
         layout:
-          My First Group:
-          My Second Group:
-          My Third Group:
+          Media:
+            style: row
+            columns: 4
+
+          AI:
+            style: column
+          Security:
+            style: column
+          Automation:
+            style: column
+          Development:
+            style: column
+          Storage:
+            style: column
+          Observability:
+            style: column
+          Networking:
+            style: column
+          External:
+            style: column
 
     # -- Main environment variables. Template enabled.
     # Syntax options:
