@@ -8,6 +8,7 @@ resources:
   - ../apps/automation/n8n
   - ../apps/utils/homepage
   - ../apps/media/audiobookshelf
+  - ../apps/media/huntarr
   - ../apps/media/sabnzbd
   - ../apps/media/radarr
   - ../apps/media/sonarr
