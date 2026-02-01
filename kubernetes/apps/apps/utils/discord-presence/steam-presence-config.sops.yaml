@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: steam-presence-config
+    namespace: utils
+type: Opaque
+stringData:
+    config.json: ENC[AES256_GCM,data:kHIzL5xq6Zy/AD9lFL1qV+6DVLfu+uwY4mJyUCqBetE6CrWScDZYv5rAeMqImLCzSSHEyz7bG2H6s17RkdJRCRc9g4Nbo+KuTp3wl3p3pflFx2hmhQPpw7SQPSLZ50pMMqWARimwhdIclLssaTkIwLXFmAJX71I0X/liGYBNXGZvpV7vHo2JDZwmW2ScWwjEmtlK6ASu6Iy8dJtKzTVs3kOBCwg2kn8sVh49PsS3oW0qcEsdh7smPgBq9L8dJ3veAMzEz0NAWDDvjZx6pW2EnnBt/njqcyJWQ9NgbJOxhhH7Z1XKbuLpju6lZB7j10Z5nKI9QN0Toqj6OV6loA+GG3OsLRoLLlHAMJGVoltf30Gefy3S8fFnEve/lVXJ9Q56M7pZT1SqVR32xja26vGphgRpRJpG1PfLdiwvzWFp79IYAljbEGDFemzjcVrbrA8Fu/1vSMmZNvnfob7sdYqecoqVTJI/KsKsps0sxzz+iR5+aApXiyt9YImIhYs3R/tabK8K/9duU4mfz4vEaL7URolBbVnPGIAGrLoV2b+yObDzjwP1r9WntYn6bmZXxQYN3Cv5Gt2lcRZwPO4WoCbO1TOQt5GpZYJv9cvFiGhlfo5iLVnukCpsXrBgYVUTtjY4dDiKOW5sy3KMoNDDHSulo1N/yX1x0tzGhlYCEwXIEeXVKwQNLkrQ6Xkx1IEq9dMmqwTGawdSzglzWQ/aM6avifejsutL9g76oUIhVEwW1Ru8rQp+cpa4Mh1NAr+LaINBc07I0P5m7okgXVb8qB6uww0VhuTOVAxLu6uZui9foG/59d/yvoLha+ftO7zS9vbaU+2XH4g9Cj776x60AseOTuqv9NL9/pgW+K13232sFxNoI5rnm+qDWiQ8ZVK6LtMNKP0uu/Z5eRgCvnLVrQVrEOD+IgOIuvGCx77kbliNLeMYu11rIIA69ohauZ15Jr3w5+1Tqu6v+XKw3N0m0JkqOikhLvVzy+B5Lce/SO84gMQvtArZGGJIhOouIYDXf2XaTpN6wckAu6tPR7SvfVIbEAwCKolMT1iWJp9UGGqPoY0h75J617e3l8FfopisCDrpD73OaPegJUJVSeSrgl8ahkDlriTdqoNcuVeWIZMA,iv:az2+L25NR7HaUasf5H7vMgncmhGa27amrx2LJW5oCsg=,tag:085hhum0HTvHSyn0PmpEig==,type:str]
+sops:
+    age:
+        - recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBoUGJpODY1VGkxZ1BLREFw
+            RGhmZ3IwUU1UYWhET1kzNWVGcTNHeTk1aW13CjdVVW9EVzF6N3hjU3dQejlLWlZS
+            MTRCYWMzMHJseVpRQlE5cloyK0kwdTgKLS0tIDRoYnlyWDFvTCtYeUZpQW5VZDBj
+            Um9ablhlMmJUQTlXUkxrTjkxVFVwaXMK5pZUmb3XuZ2ISlzQ96l50+JYVPWo6ho7
+            uQSXP4YuJsdX35LnSPGRdt6q9hGW//1e0W6wTNU4TGdTph+vSFZSFg==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-02-01T18:09:37Z"
+    mac: ENC[AES256_GCM,data:OnT50XmFR2Yu+B9XwQaBOWhdi4y3Rv2G00idXKKV6f4TrwPTxxlpElJK8+iKYD0krKEagVzh7l9dePSBIyXZpfVS/0NKL7acMBlD8+cDLVAfRst2QsGvaP/YdKO28o8BMCdVAjQeAhN/odF7AEXQ34dH4iK/EX0hQIe41vni4M0=,iv:CuiJ07mbRsqh4O1xrAfRmPcc0MKtWPDB8y9/fyFEzzM=,tag:5jHLQy2RoB+HzhRJY0zcXw==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.11.0

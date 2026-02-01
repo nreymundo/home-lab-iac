@@ -20,3 +20,4 @@ resources:
   - ../apps/ai/openwebui
   - ../apps/security/vaultwarden
   - ../apps/media/jellyplex-watched
+  - ../apps/utils/discord-presence
