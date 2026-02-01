@@ -12,6 +12,10 @@ spec:
       template:
         spec:
           restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 99
+            runAsGroup: 100
+            fsGroup: 100
           containers:
             - name: backup
               image: postgres:18-alpine
