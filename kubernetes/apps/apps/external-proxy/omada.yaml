@@ -2,46 +2,49 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: unraid
+  name: omada
   namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
 spec:
   ports:
-    - name: http
-      port: 8001
-      targetPort: 8001
+    - name: https
+      port: 8043
+      targetPort: 8043
 ---
 apiVersion: v1
 kind: Endpoints
 metadata:
-  name: unraid
+  name: omada
   namespace: external-proxy
 subsets:
   - addresses:
-      - ip: ${UNRAID_IP}
+      - ip: 192.168.1.2
     ports:
-      - name: http
-        port: 8001
+      - name: https
+        port: 8043
         protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: unraid
+  name: omada
   namespace: external-proxy
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    external-dns.alpha.kubernetes.io/hostname: unraid.lan.${CLUSTER_DOMAIN}
+    external-dns.alpha.kubernetes.io/hostname: omada.lan.${CLUSTER_DOMAIN}
 spec:
   ingressClassName: traefik
   rules:
-    - host: unraid.lan.${CLUSTER_DOMAIN}
+    - host: omada.lan.${CLUSTER_DOMAIN}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: unraid
+                name: omada
                 port:
-                  name: http
+                  name: https

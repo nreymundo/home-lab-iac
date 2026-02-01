@@ -115,7 +115,7 @@ spec:
                 href: https://framework.lan.${CLUSTER_DOMAIN}
             - JetKVM:
                 icon: jetkvm.png
-                description: "JetKVM"
+                description: "IP KVM"
                 href: http://kvm.lan.${CLUSTER_DOMAIN}
         - Networking:
             - OPNsense:
@@ -135,6 +135,10 @@ spec:
                   type: pihole
                   url: https://192.168.10.2
                   version: 6
+            - Omada:
+                icon: omada.png
+                description: "TP-Link device manager"
+                href: https://omada.lan.${CLUSTER_DOMAIN}
         - Storage:
             - Unraid:
                 icon: unraid.png
@@ -144,6 +148,14 @@ spec:
                   type: unraid
                   url: http://192.168.10.4:8001
                   key: "{{HOMEPAGE_VAR_UNRAID_KEY}}"
+            - Syncthing:
+                icon: syncthing.png
+                description: "File synchronization"
+                href: https://syncthing.lan.${CLUSTER_DOMAIN}
+            - Duplicati:
+                icon: duplicati.png
+                description: "Backup software"
+                href: https://duplicati.lan.${CLUSTER_DOMAIN}
             - Proxmox Backup Server:
                 icon: proxmox.png
                 description: "Backup server for Proxmox"
@@ -158,6 +170,14 @@ spec:
                 icon: home-assistant.png
                 description: "Home automation server"
                 href: http://home.${CLUSTER_DOMAIN}
+            - Zigbee2MQTT:
+                icon: zigbee2mqtt.png
+                description: "Zigbee to MQTT bridge"
+                href: https://z2m.lan.${CLUSTER_DOMAIN}
+            - EMQX:
+                icon: emqx.png
+                description: "MQTT broker"
+                href: https://emqx.lan.${CLUSTER_DOMAIN}
       widgets:
         # - resources:
         #     # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.

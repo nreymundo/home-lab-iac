@@ -2,46 +2,46 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: unraid
+  name: duplicati
   namespace: external-proxy
 spec:
   ports:
     - name: http
-      port: 8001
-      targetPort: 8001
+      port: 8200
+      targetPort: 8200
 ---
 apiVersion: v1
 kind: Endpoints
 metadata:
-  name: unraid
+  name: duplicati
   namespace: external-proxy
 subsets:
   - addresses:
       - ip: ${UNRAID_IP}
     ports:
       - name: http
-        port: 8001
+        port: 8200
         protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: unraid
+  name: duplicati
   namespace: external-proxy
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    external-dns.alpha.kubernetes.io/hostname: unraid.lan.${CLUSTER_DOMAIN}
+    external-dns.alpha.kubernetes.io/hostname: duplicati.lan.${CLUSTER_DOMAIN}
 spec:
   ingressClassName: traefik
   rules:
-    - host: unraid.lan.${CLUSTER_DOMAIN}
+    - host: duplicati.lan.${CLUSTER_DOMAIN}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: unraid
+                name: duplicati
                 port:
                   name: http

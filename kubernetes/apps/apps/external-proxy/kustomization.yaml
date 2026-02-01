@@ -10,3 +10,8 @@ resources:
   - proxmox-backup.yaml
   - unraid.yaml
   - framework-cockpit.yaml
+  - emqx.yaml
+  - z2m.yaml
+  - omada.yaml
+  - duplicati.yaml
+  - syncthing.yaml
