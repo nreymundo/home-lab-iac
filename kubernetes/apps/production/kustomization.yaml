@@ -19,6 +19,7 @@ resources:
   - ../apps/development/gitea
   - ../apps/ai/openwebui
   - ../apps/ai/sillytavern
+  - ../apps/ai/llama-swap
   - ../apps/security/vaultwarden
   - ../apps/media/jellyplex-watched
   - ../apps/utils/discord-presence

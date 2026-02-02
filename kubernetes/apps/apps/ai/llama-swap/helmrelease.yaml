@@ -1,0 +1,88 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: llama-swap
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        pod:
+          nodeSelector:
+            topology.kubernetes.io/zone: "framework"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/mostlygeek/llama-swap
+              tag: rocm
+            args:
+              - -config
+              - /config/config.yaml
+              - -watch-config
+            securityContext:
+              privileged: true
+            ports:
+              - name: http
+                containerPort: 8080
+            resources:
+              requests:
+                cpu: 500m
+                memory: 4Gi
+              limits:
+                cpu: 8000m
+                memory: 120Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8080
+    ingress:
+      main:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+          external-dns.alpha.kubernetes.io/hostname: llama.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Llama Swap
+          gethomepage.dev/icon: ollama.png
+          gethomepage.dev/description: LLM model hot-swapping proxy
+          gethomepage.dev/group: AI
+          gethomepage.dev/enabled: "true"
+        hosts:
+          - host: llama.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      models:
+        enabled: true
+        type: hostPath
+        hostPath: /opt/llama-swap/models
+        hostPathType: DirectoryOrCreate
+        globalMounts:
+          - path: /models
+      config:
+        enabled: true
+        type: hostPath
+        hostPath: /opt/llama-swap/config
+        hostPathType: DirectoryOrCreate
+        globalMounts:
+          - path: /config
+      kfd:
+        enabled: true
+        type: hostPath
+        hostPath: /dev/kfd
+        hostPathType: CharDevice
+        globalMounts:
+          - path: /dev/kfd
+      dri:
+        enabled: true
+        type: hostPath
+        hostPath: /dev/dri
+        hostPathType: Directory
+        globalMounts:
+          - path: /dev/dri
