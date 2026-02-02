@@ -13,11 +13,14 @@ spec:
         pod:
           nodeSelector:
             topology.kubernetes.io/zone: "framework"
+          securityContext:
+            seccompProfile:
+              type: Unconfined
         containers:
           main:
             image:
               repository: ghcr.io/mostlygeek/llama-swap
-              tag: rocm
+              tag: vulkan
             args:
               - -config
               - /config/config.yaml
@@ -72,13 +75,6 @@ spec:
         hostPathType: DirectoryOrCreate
         globalMounts:
           - path: /config
-      kfd:
-        enabled: true
-        type: hostPath
-        hostPath: /dev/kfd
-        hostPathType: CharDevice
-        globalMounts:
-          - path: /dev/kfd
       dri:
         enabled: true
         type: hostPath
