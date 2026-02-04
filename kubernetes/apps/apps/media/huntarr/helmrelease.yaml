@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=plexguide/huntarr registryUrl=https://ghcr.io
               repository: ghcr.io/plexguide/huntarr
-              tag: 9.1.8
+              tag: 9.1.12
             ports:
               - name: http
                 containerPort: 9705
