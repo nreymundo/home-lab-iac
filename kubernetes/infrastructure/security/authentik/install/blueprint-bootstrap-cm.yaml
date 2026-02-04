@@ -46,6 +46,8 @@ data:
           internal_host: ""
           internal_host_ssl_validation: true
           skip_path_regex: ""
+          access_token_validity: "hours=24"
+          refresh_token_validity: "days=30"
 
       # 4. Define the Application
       - model: authentik_core.application
@@ -73,6 +75,7 @@ data:
             kubernetes_service_type: ClusterIP
             kubernetes_disabled_components:
               - traefik middleware
+            cookie_token_duration: 86400
 
   20-grafana.yaml: |
     version: 1
