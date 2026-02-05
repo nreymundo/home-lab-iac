@@ -66,12 +66,12 @@ spec:
                 echo "Gitea is ready!"
 
                 # Check if auth source already exists
-                if gitea admin auth list 2>/dev/null | grep -q "authentik"; then
+                if gitea admin auth list 2>/dev/null | grep -qi "authentik"; then
                   echo "OAuth source 'authentik' already configured, skipping..."
                 else
                   echo "Adding OAuth source..."
                   gitea admin auth add-oauth \
-                    --name "authentik" \
+                    --name "Authentik" \
                     --provider "openidConnect" \
                     --key "${CLIENT_ID}" \
                     --secret "${CLIENT_SECRET}" \
@@ -79,7 +79,8 @@ spec:
                     --scopes "openid email profile gitea" \
                     --group-claim-name "gitea" \
                     --admin-group "admin" \
-                    --skip-local-2fa
+                    --skip-local-2fa \
+                    --icon-url "https://raw.githubusercontent.com/goauthentik/authentik/main/web/icons/icon.png"
                   echo "OAuth source configured!"
                 fi
 
