@@ -31,6 +31,19 @@ spec:
         - name: AUTHENTIK_LISTEN__TRUSTED_PROXY_IPS
           value: "10.0.0.0/8"
 
+        # Email/SMTP configuration (username/password come from authentik-env secret)
+        - name: AUTHENTIK_EMAIL__HOST
+          value: "mail-eu.smtp2go.com"
+        - name: AUTHENTIK_EMAIL__PORT
+          value: "587"
+        - name: AUTHENTIK_EMAIL__USE_TLS
+          value: "true"
+        - name: AUTHENTIK_EMAIL__USE_SSL
+          value: "false"
+        - name: AUTHENTIK_EMAIL__TIMEOUT
+          value: "30"
+        - name: AUTHENTIK_EMAIL__FROM
+          value: "authentik@${CLUSTER_DOMAIN}"
         # SSO Credentials for Blueprint
         - name: GRAFANA_CLIENT_ID
           valueFrom:

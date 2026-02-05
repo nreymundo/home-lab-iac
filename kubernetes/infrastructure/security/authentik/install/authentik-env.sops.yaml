@@ -5,23 +5,25 @@ metadata:
     namespace: authentik
 type: Opaque
 stringData:
-    AUTHENTIK_SECRET_KEY: ENC[AES256_GCM,data:w8cszk33Va2Kjxj+vHyDeVyqsI5S9cWfSpni/+jdFVTvyAyDYmq0JwNkItTlDKnSQG4uuSU9uqdw0rYJkgia4w==,iv:4Trh0P4W6iQDoFKWODpN3+gMLpZ0BHMPeM5rob+1C+w=,tag:QcvNXTKhTqqnS4GO8H03JQ==,type:str]
-    AUTHENTIK_BOOTSTRAP_PASSWORD: ENC[AES256_GCM,data:VL8/tmuB+5KhppQkphrnvcOJHMrqAvGhiGwQdQaOuFxq3I5mBAXS9Uv8ZVVd3Qoh,iv:BWohVzRp4lJ/B548vBU/NA2DTDOvhEuwUgmT5kKaV30=,tag:CsUL9SEuNQq/+Cp2qkONoQ==,type:str]
-    AUTHENTIK_BOOTSTRAP_TOKEN: ENC[AES256_GCM,data:eeI/daVKL5UQ2v5DWW3GVzxkZ4B2xnmwxKrayLUSU9dSd4PK2ZObx/0ehpr+O8ZtGgd4WRa4l+Z8awoFZzZ8MAaEOoPD0jwz3RtIz6duwGHb58bsmdmCOA==,iv:vatyJf/PKXxDE+qccnXvkz9WPSnqoAxN9xBkL6SFV6I=,tag:Bemelbu6r2jQSt729a32pQ==,type:str]
-    AK_BLUEPRINT_USER_PASSWORD: ENC[AES256_GCM,data:9m2Ps+WKcG2exidJHM/1nQxAu2dlJVcOnFnKIElY3b/vE1JvUHm8pAQm6QK/s2aKZTUv,iv:VawvdAI7u6uZrlwyysSIXxb4N45UT8H6EJsaLM0EtiY=,tag:N7K0DY22IldHRhLqVUoLPQ==,type:str]
-    AK_BLUEPRINT_USER: ENC[AES256_GCM,data:im2iF1CGopDw,iv:S+zm6ok252EGzrrjmDbhqZlrFwz3cP6XChTEoGgeC9Q=,tag:jxMpdTrYZyH4/3N/zGQxWg==,type:str]
+    AUTHENTIK_SECRET_KEY: ENC[AES256_GCM,data:MXKWpGMY18FSVH9RXelCmDlvbPtrnlTTe7Wtub6fAvuri1EcUtqctiFr/ueCnNcZo82N8Cp0xeWB0pyNhjJKEQ==,iv:eTm09jf77OZX5fTEnpLGhtW3COImJxv/wYrK5cEucNw=,tag:4Z/v/muVRVZ95umHqH2Mgw==,type:str]
+    AUTHENTIK_BOOTSTRAP_PASSWORD: ENC[AES256_GCM,data:f2teQ2Btf1mfNmLSCzBBKGFtM8VvOvDw/D/F/EX8cNnx339TcY7s51wuWU9/svcX,iv:SriiL4kElUB/kTIw9Gs+EHieM8lUExAEPAsnU2wUzd0=,tag:UgZzRtCnByKuIs1u+hwj+g==,type:str]
+    AUTHENTIK_BOOTSTRAP_TOKEN: ENC[AES256_GCM,data:wVhU0gCJQKO5OJ7RSo6KrkDzU6Y+Kqgob6iCK61MgAJSUl3+SkIWrb3gyGCLw1q2WxvH7NY5j7gNV8nKW/vj8DODvVt3nZ9E8zO8YzRg9PxVPSpAvIy+bA==,iv:4dfQPX+q1eSSI0lrZixKTxy3j7HKm3M/Ev2WNiTT4bM=,tag:+cmKcQo5V5qSGZjPJVjGEQ==,type:str]
+    AK_BLUEPRINT_USER_PASSWORD: ENC[AES256_GCM,data:nBeIr+2UA3kT3P2oI1Tc5ciJ8STAOziukJ5bv4sb2dM3HLuiV1GPCJohe7OtN5SPSsj8,iv:Uqkejy1nNz81FSxYiz4y0MEUz+64GSg1z1FEulivcAo=,tag:EXXfuVA57DA6UH6WLp4WQA==,type:str]
+    AK_BLUEPRINT_USER: ENC[AES256_GCM,data:EoK298Z5/O2L,iv:jUzoXJWJujAqbw78mF0AbQWcdQbXZy+foF83vSNQuyE=,tag:B71QNUz5nmYqVO8qsSGL1w==,type:str]
+    AUTHENTIK_EMAIL__USERNAME: ENC[AES256_GCM,data:gfFxd1+GmYdumDtIeGkWa34142VG3bQcDylBHXLVkHb/Tw==,iv:CduyWG7+h/oMQuWIXNsga7yTtUV6DO4Ca3MuXfcIb58=,tag:CPAyDDnTyKynlop9bpwqKg==,type:str]
+    AUTHENTIK_EMAIL__PASSWORD: ENC[AES256_GCM,data:IbWMnBgXE1XuK8M7jrIMSg==,iv:xsDFAPKmg+Xk1rn7KdCHUnki4kXOE5piED6lfKtSKzs=,tag:VoGLqfeqD8KJKiLTmCrqXA==,type:str]
 sops:
     age:
         - recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAwS2lhWWFhR2dta3gzb3Fp
-            aDFkN240bExxK1NPV2kzZXJXaElkMnJBVG53CmZnMDlRQjFaSUw4YnMvVFhZMTJE
-            dzRKbGJkTHBGUHFYdmpMdmlZb0xiYjgKLS0tIEtPVFpnT2I2S1pHekgzWmJsZDdV
-            QmFPOEpzMnZDK2UrT3M3SnF2UzM2MGsK2U3mzqk7oCVoUWRsAVDvuVZGddroll4p
-            JSdSYYyNnc/au05rdeaJjx65bzWxY50bfhhIlpaElSGIiISDgNEQ7Q==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBhSEJYQVRJYm5tUzhSdEhq
+            a1BUSEhmSXRvVThxdjFlNHc0NXgwZ3FGTkVrCkFBYklvcHppSllZVllJQW8yVmcv
+            MGJiSFBiR0Irc2J0djV4aWJrNHMxOXcKLS0tIEZIOS9iSnpUa3RkZCtOVmEvRGFq
+            KzJ0eTIzdURpSFQrZ1M4WDVsZGFEY28K6v4vXK7UHj59qbrczReCkp1sBjxTKSiq
+            BhkcGiLcezZE3hQ51YFimTjbR5rmk7rJpwqyaDHhjXgjl/sn/vYPMQ==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2026-01-23T20:16:09Z"
-    mac: ENC[AES256_GCM,data:piBskdBsgyN1LAdywfWJgU28dznrECEVjRL3MxpOnhzvzHVycJsc+wwCAPc+t25fw3m1VwFnj8jfFmxpg1jmB32Sac5n13Z6S9QAM17SXzJEUgnhgKG5o1z0VpaurR4F5MvmSkZZdZtxLM7mPcYWMd2/K+z1a7rr6V6HWZebszs=,iv:cawZ3QCtLPdoWFnySMRm+STg21XFf0+1mx3ZTt1+5aw=,tag:lbddBDVW3qUp28+SCvak9w==,type:str]
+    lastmodified: "2026-02-05T21:26:08Z"
+    mac: ENC[AES256_GCM,data:RrsYgg7crJS6X7SNTlNgKI5FzNWoWEwZFUhNSwXcPH9Z6Umd/feRets6bwjwgByYtwttYaW+2aDABVXPtOgQ6QAP3wNAnrF89Fy/NX9zPJuHt/ifFljtBT52v65B95K/RIhJ5J4M8umeFm2F/sODg4/BLx/EyaTRUG7c3sATCO8=,iv:Z8glNNqEiYYUAWc5b1PW+MvzFigjc0B/q954b0uQlNg=,tag:Q81E7doPd4okCbJnWrh3SQ==,type:str]
     encrypted_regex: ^(data|stringData)$
     version: 3.11.0
