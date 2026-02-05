@@ -33,6 +33,64 @@ spec:
               limits:
                 cpu: 500m
                 memory: 512Mi
+          oauth-setup:
+            image:
+              # renovate: datasource=docker depName=gitea/gitea registryUrl=https://docker.gitea.com
+              repository: docker.gitea.com/gitea
+              tag: 1.25.4
+            command:
+              - /bin/sh
+              - -c
+              - |
+                echo "Waiting for Gitea to be ready..."
+                until curl -sf http://localhost:3000/api/v1/version > /dev/null 2>&1; do
+                  sleep 5
+                done
+                echo "Gitea is ready!"
+
+                # Check if auth source already exists
+                if gitea admin auth list 2>/dev/null | grep -q "authentik"; then
+                  echo "OAuth source 'authentik' already configured, skipping..."
+                else
+                  echo "Adding OAuth source..."
+                  gitea admin auth add-oauth \
+                    --name "authentik" \
+                    --provider "openidConnect" \
+                    --key "${CLIENT_ID}" \
+                    --secret "${CLIENT_SECRET}" \
+                    --auto-discover-url "https://sso.${CLUSTER_DOMAIN}/application/o/gitea/.well-known/openid-configuration" \
+                    --scopes "openid email profile gitea" \
+                    --group-claim-name "gitea" \
+                    --admin-group "admin" \
+                    --skip-local-2fa
+                  echo "OAuth source configured!"
+                fi
+
+                echo "Setup complete. Sleeping..."
+                sleep infinity
+            env:
+              - name: CLIENT_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: gitea-sso-secret
+                    key: CLIENT_ID
+              - name: CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: gitea-sso-secret
+                    key: CLIENT_SECRET
+              - name: CLUSTER_DOMAIN
+                value: "${CLUSTER_DOMAIN}"
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 50m
+                memory: 64Mi
+            securityContext:
+              runAsUser: 99
+              runAsGroup: 100
     service:
       main:
         controller: main

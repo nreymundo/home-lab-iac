@@ -352,7 +352,7 @@ data:
           client_type: confidential
           client_authentication_method: client_secret_post
           redirect_uris:
-            - url: "https://git.lan.${CLUSTER_DOMAIN}/user/oauth2/authentik/callback"
+            - url: "https://git.${CLUSTER_DOMAIN}/user/oauth2/authentik/callback"
               matching_mode: strict
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
