@@ -1,0 +1,77 @@
+# This job runs Posterizarr to download posters and then Kometa to enrich the Plex collections.
+# Right now the config files live in the PVC, I'll adapt them to config maps and proper gitops eventually.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: plex-media-enrichment
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        type: cronjob
+        cronjob:
+          # Run daily at 02:30 (posterizarr first, then kometa)
+          schedule: "30 2 * * *"
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 3
+        initContainers:
+          posterizarr:
+            image:
+              repository: ghcr.io/fscorrupt/posterizarr
+              tag: latest
+            env:
+              RUN_TIME: disabled
+              DISABLE_UI: true
+            command:
+              - pwsh
+              - /app/Posterizarr.ps1
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=linuxserver/kometa registryUrl=https://lscr.io
+              repository: lscr.io/linuxserver/kometa
+              tag: 2.2.0
+            env:
+              TZ: Europe/Berlin
+              KOMETA_CONFIG: /config/kometa/config.yml
+              KOMETA_RUN: "true"
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 5Gi
+        storageClass: longhorn-r2
+        advancedMounts:
+          main:
+            posterizarr:
+              - path: /config
+                subPath: posterizarr
+              - path: /assets
+                subPath: kometa/assets
+              - path: /assetsbackup
+                subPath: posterizarr/assetsbackup
+              - path: /manualassets
+                subPath: posterizarr/manualassets
+            main:
+              - path: /config
+                subPath: kometa
