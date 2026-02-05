@@ -92,6 +92,7 @@ spec:
     config:
       # To use an existing ConfigMap uncomment this line and specify the name
       # useExistingConfigMap: existing-homepage-configmap
+
       bookmarks:
         - Dev:
             - Github:
@@ -282,6 +283,10 @@ spec:
         hideVersion: true
         statusStyle: dot
         useEqualHeights: true
+        background:
+          image: https://i.imgur.com/s2BDTA0.jpeg
+        cardBlur: xl
+        theme: dark
 
         layout:
           Media:
