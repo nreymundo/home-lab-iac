@@ -12,3 +12,4 @@ resources:
   - grafana-sso-secret.sops.yaml
   - vaultwarden-sso-secret.sops.yaml
   - komga-sso-secret.sops.yaml
+  - gitea-sso-secret.sops.yaml

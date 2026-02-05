@@ -293,3 +293,94 @@ data:
           order: 0
         attrs:
           group: !Find [authentik_core.group, [name, "Media"]]
+
+  60-gitea.yaml: |
+    version: 1
+    metadata:
+      name: gitea-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Create gituser group (normal Gitea users)
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "gituser"
+        attrs:
+          is_superuser: false
+          parent: null
+
+      # Create gitadmin group with default user (Gitea administrators)
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "gitadmin"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+
+      # Create custom scope mapping for Gitea role claims
+      - model: authentik_providers_oauth2.scopemapping
+        id: gitea-scope
+        identifiers:
+          name: "Gitea Role Scope"
+        attrs:
+          scope_name: gitea
+          description: "Gitea role claim based on group membership"
+          expression: |
+            gitea_claims = {}
+            if request.user.ak_groups.filter(name="gituser").exists():
+                gitea_claims["gitea"] = "user"
+            if request.user.ak_groups.filter(name="gitadmin").exists():
+                gitea_claims["gitea"] = "admin"
+            return gitea_claims
+
+      # Create OAuth2 Provider for Gitea
+      - model: authentik_providers_oauth2.oauth2provider
+        id: gitea-provider
+        identifiers:
+          name: "Gitea"
+        attrs:
+          client_id: !Env GITEA_CLIENT_ID
+          client_secret: !Env GITEA_CLIENT_SECRET
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          jwt_algorithm: RS256
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
+          client_type: confidential
+          client_authentication_method: client_secret_post
+          redirect_uris:
+            - url: "https://git.lan.${CLUSTER_DOMAIN}/user/oauth2/authentik/callback"
+              matching_mode: strict
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+            - !KeyOf gitea-scope
+
+      # Create Gitea Application
+      - model: authentik_core.application
+        identifiers:
+          slug: "gitea"
+        attrs:
+          name: "Gitea"
+          provider: !KeyOf gitea-provider
+          group: "Development"
+
+      # Restrict access to gituser group members
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "gitea"]]
+          order: 0
+        attrs:
+          group: !Find [authentik_core.group, [name, "gituser"]]
+
+      # Also allow gitadmin group members
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "gitea"]]
+          order: 1
+        attrs:
+          group: !Find [authentik_core.group, [name, "gitadmin"]]
