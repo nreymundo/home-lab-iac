@@ -38,6 +38,15 @@ spec:
           cpu: 500m
           memory: 512Mi
 
+      # Make startup probe aggressive so repeated failures cause pod recreation
+      startupProbe:
+        httpGet:
+          path: /health
+          port: lapi
+        failureThreshold: 6
+        periodSeconds: 5
+        timeoutSeconds: 3
+
       metrics:
         enabled: true
         serviceMonitor:
@@ -60,6 +69,15 @@ spec:
       env:
         - name: COLLECTIONS
           value: "crowdsecurity/traefik crowdsecurity/base-http-scenarios firix/authentik LePresidente/gitea"
+
+      # Make startup probe aggressive so repeated failures cause pod recreation
+      startupProbe:
+        httpGet:
+          path: /metrics
+          port: metrics
+        failureThreshold: 6
+        periodSeconds: 5
+        timeoutSeconds: 3
 
       metrics:
         enabled: true
