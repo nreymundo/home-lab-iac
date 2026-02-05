@@ -21,6 +21,14 @@ spec:
               USER_UID: 99
               USER_GID: 100
               DISABLE_REGISTRATION: false
+              # Disable local login form - only OAuth
+              GITEA__service__ENABLE_BASIC_AUTHENTICATION: "false"
+              GITEA__service__ENABLE_PASSWORD_SIGNIN_FORM: "false"
+              # Disable OpenID signin (separate from OIDC)
+              GITEA__openid__ENABLE_OPENID_SIGNIN: "false"
+              GITEA__openid__ENABLE_OPENID_SIGNUP: "false"
+              # Disable WebAuthn/Passkeys
+              GITEA__webauthn__ENABLED: "false"
             ports:
               - name: http
                 containerPort: 3000
