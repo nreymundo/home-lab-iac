@@ -24,11 +24,10 @@ spec:
               # Disable local login form - only OAuth
               GITEA__service__ENABLE_BASIC_AUTHENTICATION: "false"
               GITEA__service__ENABLE_PASSWORD_SIGNIN_FORM: "false"
+              GITEA__service__ENABLE_PASSKEY_AUTHENTICATION: "false"
               # Disable OpenID signin (separate from OIDC)
               GITEA__openid__ENABLE_OPENID_SIGNIN: "false"
               GITEA__openid__ENABLE_OPENID_SIGNUP: "false"
-              # Disable WebAuthn/Passkeys
-              GITEA__webauthn__ENABLED: "false"
               # Mailer configuration
               GITEA__mailer__ENABLED: "true"
               GITEA__mailer__FROM: gitea@${CLUSTER_DOMAIN}
