@@ -1,8 +1,12 @@
 # Longhorn Recurring Backup Jobs
-# Volumes opt-in via labels:
-#   recurring-job.longhorn.io/source: enabled
-#   recurring-job-group.longhorn.io/backup-daily: enabled
-#   recurring-job-group.longhorn.io/backup-weekly: enabled
+# Volumes opt-in via PVC labels:
+#   recurring-job.longhorn.io/source: enabled       (indicates source for backup)
+#   recurring-job.longhorn.io/backup-daily: enabled  (enables daily backup job)
+#   recurring-job.longhorn.io/backup-weekly: enabled (enables weekly backup job)
+#
+# To apply labels, use the backup-policy kustomize component in app kustomizations:
+#   components:
+#     - ../../../../components/storage/backup-policy
 ---
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
