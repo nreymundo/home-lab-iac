@@ -1,5 +1,3 @@
-# This job runs Posterizarr to download posters and then Kometa to enrich the Plex collections.
-# Right now the config files live in the PVC, I'll adapt them to config maps and proper gitops eventually.
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -12,31 +10,8 @@ spec:
   values:
     controllers:
       main:
-        type: cronjob
-        cronjob:
-          # Run daily at 02:30 (posterizarr first, then kometa)
-          schedule: "30 2 * * *"
-          concurrencyPolicy: Forbid
-          successfulJobsHistory: 1
-          failedJobsHistory: 3
-        initContainers:
-          posterizarr:
-            image:
-              repository: ghcr.io/fscorrupt/posterizarr
-              tag: latest
-            env:
-              RUN_TIME: disabled
-              DISABLE_UI: true
-            command:
-              - pwsh
-              - /app/Posterizarr.ps1
-            resources:
-              requests:
-                cpu: 100m
-                memory: 256Mi
-              limits:
-                cpu: 500m
-                memory: 1Gi
+        type: deployment
+        strategy: Recreate
         containers:
           main:
             image:
@@ -44,9 +19,27 @@ spec:
               repository: lscr.io/linuxserver/kometa
               tag: 2.2.0
             env:
-              TZ: Europe/Berlin
               KOMETA_CONFIG: /config/config.yml
-              KOMETA_RUN: "true"
+              KOMETA_RUN: "false"
+              PUID: 1000
+              PGID: 1000
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+          posterizarr:
+            image:
+              repository: ghcr.io/fscorrupt/posterizarr
+              tag: latest
+            securityContext:
+              runAsUser: 1000
+              runAsGroup: 1000
+            env:
+              RUN_TIME: disabled
+              DISABLE_UI: true
             resources:
               requests:
                 cpu: 100m
