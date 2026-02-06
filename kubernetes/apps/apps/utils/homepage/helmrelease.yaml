@@ -18,7 +18,7 @@ spec:
     image:
       # renovate: datasource=docker depName=gethomepage/homepage registryUrl=https://ghcr.io
       repository: ghcr.io/gethomepage/homepage
-      tag: v1.9.0
+      tag: v1.10.1
 
     # Enable RBAC. RBAC is necessary to use Kubernetes integration
     enableRbac: true
