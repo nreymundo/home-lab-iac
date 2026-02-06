@@ -17,7 +17,7 @@ spec:
             image:
               # renovate: datasource=docker depName=linuxserver/kometa registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/kometa
-              tag: 2.2.0
+              tag: 2.2.2
             env:
               KOMETA_CONFIG: /config/config.yml
               KOMETA_RUN: "false"
