@@ -6,4 +6,4 @@ components:
   - ../../../../components/common-env
   - ../../../../components/storage/backup-policy
 resources:
-  - helmrelease.yaml
+  - cronjob.yaml
