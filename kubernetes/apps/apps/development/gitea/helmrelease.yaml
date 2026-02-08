@@ -121,8 +121,6 @@ spec:
             targetPort: 22
     ingress:
       main:
-        labels:
-          gethomepage.dev/enabled: "true"
         annotations:
           external-dns.alpha.kubernetes.io/hostname: git.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Gitea

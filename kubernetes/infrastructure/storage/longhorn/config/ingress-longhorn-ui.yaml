@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   name: longhorn-ui
   namespace: longhorn-system
-  labels:
-    gethomepage.dev/enabled: "true"
   annotations:
     # Attach your existing middleware chain (optional)
     traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd

@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   name: authentik
   namespace: authentik
-  labels:
-    gethomepage.dev/enabled: "true"
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure

@@ -37,8 +37,6 @@ spec:
             port: 8686
     ingress:
       main:
-        labels:
-          gethomepage.dev/enabled: "true"
         annotations:
           external-dns.alpha.kubernetes.io/hostname: lidarr.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Lidarr

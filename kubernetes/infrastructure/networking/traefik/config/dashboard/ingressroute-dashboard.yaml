@@ -3,8 +3,6 @@ kind: IngressRoute
 metadata:
   name: traefik-dashboard
   namespace: traefik
-  labels:
-    gethomepage.dev/enabled: "true"
   annotations:
     gethomepage.dev/href: https://traefik.lan.${CLUSTER_DOMAIN}/dashboard/
     gethomepage.dev/name: Traefik

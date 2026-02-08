@@ -48,8 +48,6 @@ spec:
       app:
         enabled: true
         className: traefik
-        labels:
-          gethomepage.dev/enabled: "true"
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: garage.lan.${CLUSTER_DOMAIN}

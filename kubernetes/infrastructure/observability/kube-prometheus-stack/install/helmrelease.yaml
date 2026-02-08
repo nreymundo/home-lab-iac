@@ -84,8 +84,6 @@ spec:
       ingress:
         enabled: true
         ingressClassName: traefik
-        labels:
-          gethomepage.dev/enabled: "true"
         annotations:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd

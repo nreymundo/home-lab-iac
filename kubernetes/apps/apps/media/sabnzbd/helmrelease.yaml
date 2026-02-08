@@ -69,8 +69,6 @@ spec:
             protocol: UDP
     ingress:
       main:
-        labels:
-          gethomepage.dev/enabled: "true"
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: sabnzbd.lan.${CLUSTER_DOMAIN}
