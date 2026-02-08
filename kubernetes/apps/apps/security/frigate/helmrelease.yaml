@@ -13,6 +13,7 @@ spec:
         fsGroup: 100
     controllers:
       main:
+        replicas: 0
         initContainers:
           init-config:
             image:
@@ -97,6 +98,7 @@ spec:
             protocol: UDP
     ingress:
       main:
+        enabled: false
         annotations:
           external-dns.alpha.kubernetes.io/hostname: frigate.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Frigate
