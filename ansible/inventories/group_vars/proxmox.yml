@@ -34,4 +34,4 @@ proxmox_kernel_params_base_add:
 
 proxmox_kernel_params_base_remove: []
 
-proxmox_corefreq_enabled: true
+proxmox_corefreq_enabled: false

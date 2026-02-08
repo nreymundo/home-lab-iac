@@ -126,25 +126,11 @@
         proxmox_kernel_params_add_deduped: >-
           {%- set ns = namespace(result=[]) -%}
           {%- for token in proxmox_kernel_params_add_merged -%}
-            {%- set key = token | regex_replace('=.*$', '') -%}
-            {%- set filtered = [] -%}
-            {%- for existing in ns.result -%}
-              {%- set existing_key = existing | regex_replace('=.*$', '') -%}
-              {%- if existing_key != key -%}
-                {%- set _ = filtered.append(existing) -%}
-              {%- endif -%}
-            {%- endfor -%}
-            {%- set ns.result = filtered -%}
-            {%- set _ = ns.result.append(token) -%}
+            {%- if token not in ns.result -%}
+              {%- set _ = ns.result.append(token) -%}
+            {%- endif -%}
           {%- endfor -%}
           {{ ns.result }}
-
-    - name: Build kernel param add keys
-      ansible.builtin.set_fact:
-        proxmox_kernel_params_add_keys: >-
-          {{ proxmox_kernel_params_add_deduped
-             | map('regex_replace', '=.*$', '')
-             | list }}
 
     - name: Build updated kernel cmdline tokens
       ansible.builtin.set_fact:
@@ -152,35 +138,28 @@
           {%- set protected = proxmox_kernel_params_protected_regex -%}
           {%- set remove_keys = proxmox_kernel_params_remove_keys -%}
           {%- set add_tokens = proxmox_kernel_params_add_deduped -%}
-          {%- set add_keys = proxmox_kernel_params_add_keys -%}
           {%- set result = [] -%}
-          {%- set seen_keys = [] -%}
+          {%- set seen_tokens = [] -%}
           {%- for token in proxmox_kernel_cmdline_tokens -%}
             {%- set key = token | regex_replace('=.*$', '') -%}
-            {%- if token is match(protected) -%}
-              {%- if key not in seen_keys -%}
+            {%- if token not in seen_tokens -%}
+              {%- if token is match(protected) -%}
                 {%- set _ = result.append(token) -%}
-                {%- set _ = seen_keys.append(key) -%}
-              {%- endif -%}
-            {%- elif token in add_tokens -%}
-              {%- if key not in seen_keys -%}
+                {%- set _ = seen_tokens.append(token) -%}
+              {%- elif key in remove_keys -%}
+              {%- elif token in add_tokens -%}
                 {%- set _ = result.append(token) -%}
-                {%- set _ = seen_keys.append(key) -%}
-              {%- endif -%}
-            {%- elif key in remove_keys -%}
-            {%- elif key in add_keys -%}
-            {%- else -%}
-              {%- if key not in seen_keys -%}
+                {%- set _ = seen_tokens.append(token) -%}
+              {%- else -%}
                 {%- set _ = result.append(token) -%}
-                {%- set _ = seen_keys.append(key) -%}
+                {%- set _ = seen_tokens.append(token) -%}
               {%- endif -%}
             {%- endif -%}
           {%- endfor -%}
           {%- for token in add_tokens -%}
-            {%- set key = token | regex_replace('=.*$', '') -%}
-            {%- if key not in seen_keys -%}
+            {%- if token not in seen_tokens -%}
               {%- set _ = result.append(token) -%}
-              {%- set _ = seen_keys.append(key) -%}
+              {%- set _ = seen_tokens.append(token) -%}
             {%- endif -%}
           {%- endfor -%}
           {{ result }}

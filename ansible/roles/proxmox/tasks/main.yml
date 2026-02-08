@@ -3,6 +3,9 @@
 - name: Manage Proxmox kernel parameters
   ansible.builtin.include_tasks: bootloader_kernel_params.yml
 
+- name: Manage GPU passthrough
+  ansible.builtin.include_tasks: gpu_passthrough.yml
+
 - name: Configure swap
   ansible.builtin.include_tasks: swap.yml
 
@@ -54,7 +57,6 @@
 
 - name: CoreFreq (DKMS)
   ansible.builtin.include_tasks: corefreq.yml
-  when: proxmox_corefreq_enabled | bool
 
 - name: Set root .profile
   ansible.builtin.template:

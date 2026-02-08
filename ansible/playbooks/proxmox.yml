@@ -3,5 +3,5 @@
   hosts: proxmox
   become: true
   roles:
-    - common
     - proxmox
+    - common
