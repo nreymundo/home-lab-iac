@@ -101,6 +101,8 @@ spec:
         controller: main
         type: LoadBalancer
         loadBalancerIP: ${FRIGATE_LB_IP}
+        loadBalancerSourceRanges:
+          - ${HOME_ASSISTANT_IP}/32
         ports:
           http:
             port: 8971
