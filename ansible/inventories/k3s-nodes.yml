@@ -15,7 +15,7 @@ all:
           node_os: "ubuntu"
           k3s_node_labels:
             homelab.lan/cpu-vendor: "intel"
-            homelab.lan/gpu: "none"
+            homelab.lan/gpu: "intel"
             homelab.lan/hypervisor: "proxmox"
             homelab.lan/role: "general"
             homelab.lan/runtime: "vm"

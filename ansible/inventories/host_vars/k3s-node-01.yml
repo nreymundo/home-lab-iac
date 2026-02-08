@@ -1,0 +1,9 @@
+---
+# K3s Node 01 - Intel GPU Passthrough Support
+# Packages for Intel Iris Xe GPU functionality inside the VM
+
+common_extra_packages:
+  - intel-gpu-tools        # intel_gpu_top and other GPU utilities
+  - intel-media-va-driver  # VA-API driver for Tiger Lake+ (Iris Xe)
+  - vainfo                 # Verifies VA-API support
+  - nvtop                  # GPU monitor (works better in VMs than intel_gpu_top)
