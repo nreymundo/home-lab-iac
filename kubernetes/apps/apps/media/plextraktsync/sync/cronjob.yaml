@@ -34,7 +34,7 @@ spec:
             image:
               # renovate: datasource=docker depName=taxel/plextraktsync registryUrl=https://ghcr.io
               repository: ghcr.io/taxel/plextraktsync
-              tag: 0.34.20
+              tag: 0.34.21
             command:
               - python
               - -m
