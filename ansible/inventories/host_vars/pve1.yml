@@ -22,4 +22,5 @@ proxmox_gpu_passthrough:
   blacklist_drivers:
     - i915
     - snd_hda_intel
+    - kvmgt
   disable_vga: true
