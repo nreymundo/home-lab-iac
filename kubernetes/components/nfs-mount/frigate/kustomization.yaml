@@ -18,4 +18,4 @@ patches:
               server: ${UNRAID_IP}
               path: /mnt/user/frigate_nvr
               globalMounts:
-                - path: /mnt/frigate
+                - path: /media/frigate

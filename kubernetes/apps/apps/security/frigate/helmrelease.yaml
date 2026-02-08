@@ -81,6 +81,9 @@ spec:
     service:
       main:
         controller: main
+        annotations:
+          traefik.ingress.kubernetes.io/service.serversscheme: https
+          traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
         ports:
           http:
             port: 8971
