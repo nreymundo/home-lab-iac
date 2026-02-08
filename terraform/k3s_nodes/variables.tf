@@ -67,8 +67,14 @@ variable "nodes" {
     vm_disk_size_gb        = optional(number)
     secondary_disk_size_gb = optional(number)
     labels                 = optional(map(string), {})
+    machine                = optional(string)
+    pci_devices = optional(list(object({
+      id     = string
+      pcie   = optional(bool, true)
+      rombar = optional(bool, true)
+    })), [])
   }))
-  description = "Per-node configuration; list length defines node count. Optional overrides: cpu, memory, and disk sizing."
+  description = "Per-node configuration; list length defines node count. Optional overrides: cpu, memory, disk sizing, and PCI passthrough devices. Note: PCI devices must be pre-configured as Resource Mappings in Proxmox."
   validation {
     condition     = length(var.nodes) > 0
     error_message = "At least one node must be defined in nodes."

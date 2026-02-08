@@ -109,6 +109,19 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
   agent  = 1
   tags   = "terraform,k3s-node"
 
+  machine = try(var.nodes[count.index].machine, null)
+
+  # PCI Passthrough
+  dynamic "pci" {
+    for_each = { for idx, dev in try(var.nodes[count.index].pci_devices, []) : idx => dev }
+    content {
+      id          = pci.key # Use index as PCI ID
+      mapping_id  = pci.value.id
+      pcie        = pci.value.pcie
+      rombar      = pci.value.rombar
+    }
+  }
+
   lifecycle {
     ignore_changes = [
       cipassword,
@@ -136,7 +149,7 @@ resource "local_file" "ansible_inventory" {
             "homelab.lan/cpu-vendor"      = "intel"
             "homelab.lan/runtime"         = "vm"
             "homelab.lan/hypervisor"      = "proxmox"
-            "homelab.lan/gpu"             = "none"
+            "homelab.lan/gpu"             = length(try(var.nodes[node_index].pci_devices, [])) > 0 ? "intel" : "none"
             "topology.kubernetes.io/zone" = local.node_target_nodes[node_index]
           },
           try(var.nodes[node_index].labels, {})
