@@ -1,5 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
+# NOTE: This component requires HelmReleases to use 'persistence.data' as their
+# primary PVC key. Apps with non-standard keys (e.g., n8n uses 'n8n-storage')
+# should NOT use this component and must add Longhorn backup labels manually.
 patches:
   - target:
       kind: HelmRelease
