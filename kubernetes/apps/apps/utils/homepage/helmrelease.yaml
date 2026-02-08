@@ -295,19 +295,19 @@ spec:
 
           AI:
             style: column
-          Security:
-            style: column
           Automation:
             style: column
           Development:
             style: column
-          Storage:
-            style: column
-          Observability:
+          Management:
             style: column
           Networking:
             style: column
-          External:
+          Storage:
+            style: column
+          Security & Monitoring:
+            style: column
+          Utils:
             style: column
 
     # -- Main environment variables. Template enabled.
