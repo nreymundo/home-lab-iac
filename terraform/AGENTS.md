@@ -1,6 +1,6 @@
 # Terraform - AI Agent Instructions
 
-This document provides instructions for AI agents working with the Terraform component of the home-lab-iac repository.
+This document provides instructions for AI coding assistants (Claude, Gemini, etc.) working with the Terraform component.
 
 ## Directory Structure
 

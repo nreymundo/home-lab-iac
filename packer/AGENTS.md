@@ -1,6 +1,6 @@
 # Packer - AI Agent Instructions
 
-This document provides instructions for AI agents working with the Packer component of the home-lab-iac repository.
+This document provides instructions for AI coding assistants (Claude, Gemini, etc.) working with the Packer component.
 
 ## Directory Structure
 

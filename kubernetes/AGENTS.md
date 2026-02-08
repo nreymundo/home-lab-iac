@@ -50,8 +50,14 @@ Reusable components in `kubernetes/components/` reduce duplication across HelmRe
 | Component | Path | Purpose |
 |-----------|------|---------|
 | bjw-s-defaults | `components/bjw-s-defaults` | Adds `interval`, `version`, `sourceRef` for bjw-s app-template |
+| common-env | `components/common-env` | Injects `TZ: Europe/Berlin` to main container |
+| traefik-base | `components/ingress/traefik-base` | Sets `enabled: true`, `className: traefik` for `ingress.main` |
+| auth-guard | `components/ingress/auth-guard` | Injects Authentik middleware for `ingress.main` |
+| backup-policy | `components/storage/backup-policy` | Longhorn daily/weekly backup labels for `persistence.data` and CNPG clusters |
 | NFS Media (RW) | `components/nfs-mount/media/rw` | NFS media mount at `/mnt/media` (read-write) + securityContext |
 | NFS Media (RO) | `components/nfs-mount/media/ro` | NFS media mount at `/mnt/media` (read-only) + securityContext |
+| NFS Backup | `components/nfs-mount/backup` | NFS backup mount at `/backup` |
+| arr-custom-scripts | `components/arr-custom-scripts` | Custom scripts volume for *arr applications |
 
 ### Usage
 
@@ -62,7 +68,10 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 components:
   - ../../../../components/bjw-s-defaults
-  - ../../../../components/nfs-mount/media/rw
+  - ../../../../components/common-env
+  - ../../../../components/ingress/traefik-base
+  - ../../../../components/storage/backup-policy
+  # - ../../../../components/nfs-mount/media/rw  # If NFS media needed
 resources:
   - helmrelease.yaml
 ```
@@ -70,10 +79,14 @@ resources:
 ### When to Use
 
 - **bjw-s-defaults**: Always use for apps using bjw-s `app-template` chart. Omit `interval`, `version`, and `sourceRef` from HelmRelease.
-- **nfs-mount/media/rw**: Apps that need read-write access to NFS media share
-- **nfs-mount/media/ro**: Apps that only need read access to NFS media share
+- **common-env**: Standard apps that need timezone set. Injects `TZ: Europe/Berlin`.
+- **ingress/traefik-base**: Apps with ingress. Sets `enabled: true` and `className: traefik`.
+- **ingress/auth-guard**: Apps requiring Authentik authentication.
+- **storage/backup-policy**: Apps with `persistence.data` or CNPG clusters needing Longhorn backups.
+- **nfs-mount/media/rw**: Apps that need read-write access to NFS media share.
+- **nfs-mount/media/ro**: Apps that only need read access to NFS media share.
 
-Both NFS components include `defaultPodOptions.securityContext` (runAsUser: 99, runAsGroup: 100, fsGroup: 100) for proper NFS permissions.
+NFS components include `defaultPodOptions.securityContext` (runAsUser: 99, runAsGroup: 100, fsGroup: 100) for proper NFS permissions.
 
 ## Flux GitOps Model
 
@@ -184,6 +197,25 @@ chart:
 - **Annotations**:
   - Auth: `traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd`
   - DNS: `external-dns.alpha.kubernetes.io/hostname: <fqdn>`
+
+### Homepage Integration
+Add `gethomepage.dev/*` annotations to ingress for [Homepage](https://gethomepage.dev) dashboard discovery:
+
+```yaml
+# Required annotations
+gethomepage.dev/enabled: "true"
+gethomepage.dev/name: <App Name>
+gethomepage.dev/description: <Short description>
+gethomepage.dev/group: <Category>           # Media, Security & Monitoring, Networking, Storage
+gethomepage.dev/icon: <app>.png             # From dashboard-icons
+
+# Optional: For widget integration (if app supports it)
+gethomepage.dev/widget.type: "<app-type>"
+gethomepage.dev/widget.url: "http://<service>.<namespace>.svc.cluster.local:<port>"
+gethomepage.dev/widget.key: '{{"{{"}}HOMEPAGE_VAR_<APP>_KEY{{"}}"}}'
+```
+
+**Current groups in use:** `Media`, `Security & Monitoring`, `Networking`, `Storage`
 
 ### Storage Classes
 - `longhorn-r2` - Longhorn with 2 replicas (default for apps)
@@ -398,3 +430,5 @@ Config file: `/renovate.json`
 3. **Dependency ordering**: Use `dependsOn` in Kustomizations for explicit dependencies
 
 4. **Secrets**: Use SOPS for secrets management, kube-replicator for cross-namespace replication
+
+5. **AI Agent Guidance**: Never run `flux reconcile` commands unless explicitly asked. Flux auto-reconciles on Git push. Manual reconciliation can interfere with deployments.

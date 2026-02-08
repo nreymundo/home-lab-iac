@@ -151,22 +151,29 @@ Nodes are distributed across Proxmox hosts for high availability:
 
 ## Secrets Management
 
-All components use **Bitwarden Secrets Manager** for sensitive data:
+Secrets are managed through **Bitwarden Secrets Manager** (infrastructure) and **SOPS** (Kubernetes):
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      SECRETS FLOW                                        │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
-│   Bitwarden Secrets Manager                                             │
-│           │                                                              │
-│           ├──▶ Packer (SSH keys during build)                           │
-│           │                                                              │
-│           ├──▶ Terraform (SSH keys for cloud-init)                      │
-│           │                                                              │
-│           └──▶ Kubernetes (Bitwarden Secrets Operator)                  │
-│                     │                                                    │
-│                     └──▶ kube-replicator (cross-namespace secrets)      │
+│   Bitwarden Secrets Manager              SOPS (AGE Encryption)          │
+│           │                                      │                       │
+│           ├──▶ Packer (SSH keys)                 │                       │
+│           │                                      │                       │
+│           ├──▶ Terraform (SSH keys)              │                       │
+│           │                                      ▼                       │
+│           │                              *.sops.yaml files               │
+│           │                                      │                       │
+│           │                                      ▼                       │
+│           │                              Flux SOPS Controller            │
+│           │                                      │                       │
+│           └────────────────────────────────────▶ │                       │
+│                                                  ▼                       │
+│                                          Kubernetes Secrets              │
+│                                                  │                       │
+│                                  kube-replicator (cross-namespace)       │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
 ```

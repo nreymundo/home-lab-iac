@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding assistants (Claude, Gemini, etc.) when working with code in this repository.
 
 ## Infrastructure Pipeline
 
@@ -104,25 +104,32 @@ kubernetes/
 
 **Never edit** `kubernetes/clusters/production/flux-system/` - these are Flux bootstrap files.
 
+> **⚠️ Important for AI Agents:** Never run `flux reconcile` commands unless explicitly asked by the user. Flux automatically reconciles on Git push. Manual reconciliation can interfere with in-progress deployments and cause unexpected behavior.
+
 ### Kustomize Components
 Reusable components in `kubernetes/components/` reduce duplication:
-- `bjw-s-defaults` - Adds interval/version/sourceRef for bjw-s app-template charts
-- `common-env` - Injects standard environment variables (e.g., `TZ: Europe/Berlin`)
-- `ingress/traefik-base` - Sets `enabled: true`, `className: traefik` for `ingress.main`
-- `ingress/auth-guard` - Injects Authentik middleware for `ingress.main`
-- `storage/backup-policy` - Injects Longhorn daily/weekly backup labels for `persistence.data`
-- `nfs-mount/media/rw` - NFS media mount (read-write) + securityContext
-- `nfs-mount/media/ro` - NFS media mount (read-only) + securityContext
+
+| Component | Path | Purpose |
+|-----------|------|---------|
+| bjw-s-defaults | `components/bjw-s-defaults` | Adds `interval`, `version`, `sourceRef` for bjw-s app-template |
+| common-env | `components/common-env` | Injects `TZ: Europe/Berlin` to main container |
+| traefik-base | `components/ingress/traefik-base` | Sets `enabled: true`, `className: traefik` for `ingress.main` |
+| auth-guard | `components/ingress/auth-guard` | Injects Authentik middleware for `ingress.main` |
+| backup-policy | `components/storage/backup-policy` | Longhorn daily/weekly backup labels for `persistence.data` and CNPG clusters |
+| NFS Media (RW) | `components/nfs-mount/media/rw` | NFS media mount at `/mnt/media` (read-write) + securityContext |
+| NFS Media (RO) | `components/nfs-mount/media/ro` | NFS media mount at `/mnt/media` (read-only) + securityContext |
+| NFS Backup | `components/nfs-mount/backup` | NFS backup mount at `/backup` |
+| arr-custom-scripts | `components/arr-custom-scripts` | Custom scripts volume for *arr applications |
 
 ## Secrets Management
 
-All components use **Bitwarden Secrets Manager** via `BWS_ACCESS_TOKEN` environment variable:
+Secrets are managed through **Bitwarden Secrets Manager** (infrastructure) and **SOPS** (Kubernetes):
 
-| Component | Usage |
-|-----------|-------|
-| Packer | SSH public keys injected during VM build |
-| Terraform | SSH public keys for cloud-init |
-| Kubernetes | Bitwarden Secrets Operator for app secrets |
+| Component | Method |
+|-----------|--------|
+| Packer | `bws` CLI for SSH public keys during VM build |
+| Terraform | `bitwarden-secrets` provider for SSH keys |
+| Kubernetes | SOPS (AGE-encrypted `*.sops.yaml` files in Git) |
 
 Kubernetes secrets are cross-namespace replicated via `kube-replicator`.
 
@@ -147,6 +154,20 @@ Kubernetes secrets are cross-namespace replicated via `kube-replicator`.
 - Domain pattern: `<app>.lan.${CLUSTER_DOMAIN}` for internal apps
 - Auth middleware: `traefik-gatekeeper-auth-chain@kubernetescrd` (injected by `ingress/auth-guard`)
 - DNS annotation: `external-dns.alpha.kubernetes.io/hostname: <fqdn>` (must be set in `helmrelease.yaml`)
+
+### Homepage Integration
+Add `gethomepage.dev/*` annotations to ingress for Homepage dashboard discovery:
+```yaml
+gethomepage.dev/enabled: "true"
+gethomepage.dev/name: <App Name>
+gethomepage.dev/description: <Short description>
+gethomepage.dev/group: <Category>           # Media, Security & Monitoring, Networking, Storage
+gethomepage.dev/icon: <app>.png             # From dashboard-icons
+# Optional: For widget integration
+gethomepage.dev/widget.type: "<app-type>"
+gethomepage.dev/widget.url: "http://<service>.<namespace>.svc.cluster.local:<port>"
+gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_<APP>_KEY}}"}}'
+```
 
 ### HelmRelease with bjw-s app-template (Standard Pattern)
 ```yaml

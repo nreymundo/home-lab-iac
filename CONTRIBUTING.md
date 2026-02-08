@@ -90,9 +90,11 @@ pre-commit autoupdate
 ### Kubernetes
 
 - Use `app-template` chart for applications
+- Use standard Kustomize components (`bjw-s-defaults`, `common-env`, `ingress/traefik-base`, `storage/backup-policy`)
 - Follow naming convention: `<app-name>.lan.${CLUSTER_DOMAIN}`
-- Add Longhorn backup labels where appropriate
+- Add Longhorn backup labels via `storage/backup-policy` component or manually
 - Include `kustomization.yaml` in app directories
+- Add Homepage annotations for dashboard integration
 
 ---
 

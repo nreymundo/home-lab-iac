@@ -173,8 +173,13 @@ flux get all -A
 
 1. Create directory: `kubernetes/apps/apps/<category>/<app-name>/`
 2. Create `helmrelease.yaml` and `kustomization.yaml`
-3. Add to parent kustomization
-4. Commit and push - Flux handles the rest
+3. Add standard components to `kustomization.yaml`:
+   - `bjw-s-defaults` - Required for app-template chart
+   - `common-env` - Timezone injection
+   - `ingress/traefik-base` - If app has ingress
+   - `storage/backup-policy` - For Longhorn backups
+4. Add to parent kustomization
+5. Commit and push - Flux handles the rest
 
 ### Checking Cluster Health
 

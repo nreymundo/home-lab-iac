@@ -1,6 +1,6 @@
 # Home Lab IaC - AI Agent Instructions
 
-This document provides an overview of the home-lab-iac repository and pointers to component-specific instructions for AI agents.
+This document provides an overview of the home-lab-iac repository for AI coding assistants (Claude, Gemini, etc.).
 
 ## Repository Overview
 
@@ -59,6 +59,8 @@ flux reconcile kustomization flux-system --with-source  # Force sync
 kubectl get helmreleases -A                           # List HelmReleases
 ```
 
+> **Note for AI agents:** Do not run `flux reconcile` unless explicitly asked. Flux auto-reconciles on Git push.
+
 ## Pre-commit Hooks
 
 The repository uses pre-commit for validation:
@@ -85,7 +87,7 @@ All components use **Bitwarden Secrets Manager** for sensitive data:
 |-----------|-------|
 | Packer | SSH public keys injection during build |
 | Terraform | SSH public keys for cloud-init |
-| Kubernetes | SOPS for app secrets |
+| Kubernetes | SOPS (AGE-encrypted secrets in Git) |
 
 Environment variable: `BWS_ACCESS_TOKEN`
 
@@ -126,7 +128,7 @@ home-lab-iac/
 ├── terraform/                # VM provisioning on Proxmox
 ├── packer/                   # VM template building
 ├── kubernetes/               # Flux GitOps manifests
-└── conductor/                # AI coding guidelines (legacy)
+└── docs/                     # Additional documentation
 ```
 
 ## Common Tasks
