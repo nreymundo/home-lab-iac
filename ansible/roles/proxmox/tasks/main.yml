@@ -54,7 +54,6 @@
 
 - name: CoreFreq (DKMS)
   ansible.builtin.include_tasks: corefreq.yml
-  when: proxmox_corefreq_enabled | bool
 
 - name: Set root .profile
   ansible.builtin.template:
