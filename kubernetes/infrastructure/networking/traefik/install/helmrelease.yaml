@@ -51,21 +51,6 @@ spec:
             allowEncodedSlash: false
           tls:
             enabled: true
-      frigate-rtsp:
-        port: 8554
-        expose:
-          default: true
-        protocol: TCP
-      frigate-webrtc-tcp:
-        port: 8555
-        expose:
-          default: true
-        protocol: TCP
-      frigate-webrtc-udp:
-        port: 8555
-        expose:
-          default: true
-        protocol: UDP
       ssh:
         port: 22
         expose:

@@ -11,6 +11,3 @@ resources:
   - helmrelease.yaml
   - frigate-config.sops.yaml
   - frigate-secrets.sops.yaml
-  - ingressroutetcp-rtsp.yaml
-  - ingressroutetcp-webrtc.yaml
-  - ingressrouteudp-webrtc.yaml

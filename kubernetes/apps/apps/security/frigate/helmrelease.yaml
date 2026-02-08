@@ -71,6 +71,8 @@ spec:
             ports:
               - name: http
                 containerPort: 8971
+              - name: http-alternate
+                containerPort: 5000
               - name: rtsp
                 containerPort: 8554
               - name: webrtc-tcp
@@ -95,13 +97,27 @@ spec:
         ports:
           http:
             port: 8971
+      loadbalancer:
+        controller: main
+        type: LoadBalancer
+        loadBalancerIP: ${FRIGATE_LB_IP}
+        ports:
+          http:
+            port: 8971
+            targetPort: 8971
+          http-alternate:
+            port: 5000
+            targetPort: 5000
           rtsp:
             port: 8554
+            targetPort: 8554
           webrtc-tcp:
             port: 8555
+            targetPort: 8555
             protocol: TCP
           webrtc-udp:
             port: 8555
+            targetPort: 8555
             protocol: UDP
     ingress:
       main:
