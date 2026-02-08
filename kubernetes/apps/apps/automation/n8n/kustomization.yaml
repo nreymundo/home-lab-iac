@@ -4,7 +4,6 @@ components:
   - ../../../../components/bjw-s-defaults
   - ../../../../components/common-env
   - ../../../../components/ingress/traefik-base
-  - ../../../../components/storage/backup-policy
 
 resources:
   - db-backup.yaml
