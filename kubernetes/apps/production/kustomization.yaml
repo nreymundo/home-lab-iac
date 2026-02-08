@@ -21,6 +21,7 @@ resources:
   - ../apps/ai/sillytavern
   - ../apps/ai/llama-swap
   - ../apps/security/vaultwarden
+  - ../apps/security/frigate
   - ../apps/media/jellyplex-watched
   - ../apps/utils/discord-presence
   - ../apps/media/plextraktsync
