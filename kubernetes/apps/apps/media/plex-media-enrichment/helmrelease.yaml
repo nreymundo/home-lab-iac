@@ -20,7 +20,7 @@ spec:
               tag: 2.2.2
             env:
               KOMETA_CONFIG: /config/config.yml
-              KOMETA_RUN: "true"
+              KOMETA_RUN: "false"
               PUID: 1000
               PGID: 1000
             resources:
