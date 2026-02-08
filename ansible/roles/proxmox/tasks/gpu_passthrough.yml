@@ -1,0 +1,73 @@
+---
+# GPU Passthrough configuration for Proxmox
+# Supports Intel iGPUs via VFIO-PCI binding
+
+- name: GPU Passthrough
+  when: proxmox_gpu_passthrough | default({}) | length > 0
+  block:
+    - name: Ensure /etc/modules-load.d directory exists
+      ansible.builtin.file:
+        path: /etc/modules-load.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Ensure VFIO modules load at boot
+      ansible.builtin.copy:
+        dest: /etc/modules-load.d/vfio.conf
+        content: |
+          # Managed by Ansible: VFIO modules for GPU passthrough
+          vfio
+          vfio_iommu_type1
+          vfio_pci
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Update initramfs
+
+    - name: Configure VFIO-PCI device binding
+      ansible.builtin.copy:
+        dest: /etc/modprobe.d/vfio-pci.conf
+        content: |
+          # Managed by Ansible: VFIO-PCI device IDs
+          options vfio-pci ids={{ proxmox_gpu_passthrough.pci_ids | join(',') }}{% if proxmox_gpu_passthrough.disable_vga | default(true) %} disable_vga=1{% endif %}
+
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Update initramfs
+
+    - name: Blacklist GPU drivers from host
+      ansible.builtin.copy:
+        dest: /etc/modprobe.d/gpu-blacklist.conf
+        content: |
+          # Managed by Ansible: Blacklist GPU drivers for passthrough
+          {% for driver in proxmox_gpu_passthrough.blacklist_drivers | default(['i915']) %}
+          blacklist {{ driver }}
+          {% endfor %}
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Update initramfs
+
+- name: GPU Passthrough - Cleanup when disabled
+  when: proxmox_gpu_passthrough | default({}) | length == 0
+  block:
+    - name: Remove VFIO modules config
+      ansible.builtin.file:
+        path: /etc/modules-load.d/vfio.conf
+        state: absent
+      notify: Update initramfs
+
+    - name: Remove VFIO-PCI config
+      ansible.builtin.file:
+        path: /etc/modprobe.d/vfio-pci.conf
+        state: absent
+      notify: Update initramfs
+
+    - name: Remove GPU blacklist
+      ansible.builtin.file:
+        path: /etc/modprobe.d/gpu-blacklist.conf
+        state: absent
+      notify: Update initramfs
