@@ -4,6 +4,7 @@ namespace: media
 components:
   - ../../../../components/bjw-s-defaults
   - ../../../../components/common-env
-  - ../../../../components/storage/backup-policy
 resources:
+  - pvc.yaml
   - helmrelease.yaml
+  - posterizarr-job.yaml

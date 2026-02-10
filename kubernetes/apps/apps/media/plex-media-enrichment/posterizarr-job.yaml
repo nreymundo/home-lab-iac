@@ -1,7 +1,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: plex-media-enrichment
+  name: posterizarr
   namespace: media
 spec:
   chart:
@@ -10,36 +10,26 @@ spec:
   values:
     controllers:
       main:
-        type: deployment
-        strategy: Recreate
+        type: cronjob
+        cronjob:
+          schedule: "0 0,6,12,18 * * *"
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 3
+          failedJobsHistory: 1
         containers:
           main:
             image:
-              # renovate: datasource=docker depName=linuxserver/kometa registryUrl=https://lscr.io
-              repository: lscr.io/linuxserver/kometa
-              tag: 2.3.0
-            env:
-              KOMETA_CONFIG: /config/config.yml
-              KOMETA_RUN: "false"
-              PUID: 1000
-              PGID: 1000
-            resources:
-              requests:
-                cpu: 100m
-                memory: 256Mi
-              limits:
-                cpu: 500m
-                memory: 1Gi
-          posterizarr:
-            image:
               repository: ghcr.io/fscorrupt/posterizarr
               tag: latest
+            command:
+              - /bin/sh
+              - -c
+              - |
+                rm -f /config/temp/Posterizarr.Running
+                pwsh /app/Posterizarr.ps1
             securityContext:
               runAsUser: 1000
               runAsGroup: 1000
-            env:
-              RUN_TIME: 00:00,06:00,12:00,18:00
-              DISABLE_UI: true
             resources:
               requests:
                 cpu: 100m
@@ -56,7 +46,7 @@ spec:
             claimName: plex-media-enrichment
         advancedMounts:
           main:
-            posterizarr:
+            main:
               - path: /config
                 subPath: posterizarr/config
               - path: /assets
@@ -65,6 +55,3 @@ spec:
                 subPath: posterizarr/assetsbackup
               - path: /manualassets
                 subPath: posterizarr/manualassets
-            main:
-              - path: /config
-                subPath: kometa
