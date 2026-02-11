@@ -15,6 +15,7 @@ spec:
           # Run daily at 3:00 AM
           schedule: "0 3 * * *"
           concurrencyPolicy: Forbid
+          suspend: true
           successfulJobsHistory: 3
           failedJobsHistory: 3
         initContainers:
