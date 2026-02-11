@@ -1,0 +1,70 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: lidatube
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=thewicklowwolf/lidatube
+              repository: thewicklowwolf/lidatube
+              tag: 0.2.45
+            env:
+              PUID: "99"
+              PGID: "100"
+              lidarr_address: http://lidarr:8686
+              lidarr_api_key:
+                valueFrom:
+                  secretKeyRef:
+                    name: lidatube-secrets
+                    key: lidarr_api_key
+              attempt_lidarr_import: "False"
+              preferred_codec: flac
+            ports:
+              - name: http
+                containerPort: 5000
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 5000
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: lidatube.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Lidatube
+          gethomepage.dev/description: Lidarr YouTube downloader
+          gethomepage.dev/group: Media
+          gethomepage.dev/icon: "https://i.imgur.com/WLHbWAK.png"
+          gethomepage.dev/enabled: "true"
+        hosts:
+          - host: lidatube.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r2
+        globalMounts:
+          - path: /lidatube/config
