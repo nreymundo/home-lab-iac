@@ -12,7 +12,7 @@ spec:
       main:
         type: cronjob
         cronjob:
-          schedule: "0 5 * * *"
+          schedule: "30 1,6,11,16,21 * * *"
           concurrencyPolicy: Forbid
           successfulJobsHistory: 3
           failedJobsHistory: 1
