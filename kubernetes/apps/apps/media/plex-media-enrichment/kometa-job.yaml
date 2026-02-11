@@ -1,0 +1,51 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kometa
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        type: cronjob
+        cronjob:
+          schedule: "0 5 * * *"
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 3
+          failedJobsHistory: 1
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=linuxserver/kometa registryUrl=https://lscr.io
+              repository: lscr.io/linuxserver/kometa
+              tag: 2.3.0
+            command:
+              - python3
+              - /app/kometa/kometa.py
+            env:
+              KOMETA_CONFIG: /config/config.yml
+              KOMETA_RUN: "true"
+              PUID: 1000
+              PGID: 1000
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: plex-media-enrichment
+        advancedMounts:
+          main:
+            main:
+              - path: /config
+                subPath: kometa
