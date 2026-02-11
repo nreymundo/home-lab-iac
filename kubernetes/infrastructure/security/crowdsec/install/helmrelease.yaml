@@ -38,13 +38,22 @@ spec:
           cpu: 500m
           memory: 512Mi
 
-      # Make startup probe aggressive so repeated failures cause pod recreation
+      # Startup probe: gives LAPI time to initialize before liveness checks begin
       startupProbe:
         httpGet:
           path: /health
           port: lapi
         failureThreshold: 6
         periodSeconds: 5
+        timeoutSeconds: 3
+
+      # Liveness probe: continuously checks LAPI health and restarts pod if unhealthy
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: lapi
+        failureThreshold: 3
+        periodSeconds: 10
         timeoutSeconds: 3
 
       metrics:
@@ -70,13 +79,22 @@ spec:
         - name: COLLECTIONS
           value: "crowdsecurity/traefik crowdsecurity/base-http-scenarios firix/authentik LePresidente/gitea"
 
-      # Make startup probe aggressive so repeated failures cause pod recreation
+      # Startup probe: gives agent time to initialize before liveness checks begin
       startupProbe:
         httpGet:
           path: /metrics
           port: metrics
         failureThreshold: 6
         periodSeconds: 5
+        timeoutSeconds: 3
+
+      # Liveness probe: continuously checks agent health and restarts pod if unhealthy
+      livenessProbe:
+        httpGet:
+          path: /metrics
+          port: metrics
+        failureThreshold: 3
+        periodSeconds: 10
         timeoutSeconds: 3
 
       metrics:
