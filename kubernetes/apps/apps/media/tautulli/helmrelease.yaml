@@ -28,6 +28,7 @@ spec:
     ingress:
       main:
         annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: tautulli.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Tautulli
           gethomepage.dev/description: Plex monitoring
@@ -38,6 +39,36 @@ spec:
           - host: tautulli.lan.${CLUSTER_DOMAIN}
             paths:
               - path: /
+                service:
+                  identifier: main
+                  port: http
+      api:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+        hosts:
+          - host: tautulli.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /api
+                service:
+                  identifier: main
+                  port: http
+      newsletter:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+        hosts:
+          - host: tautulli.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /newsletter
+                service:
+                  identifier: main
+                  port: http
+      image:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+        hosts:
+          - host: tautulli.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /image
                 service:
                   identifier: main
                   port: http
