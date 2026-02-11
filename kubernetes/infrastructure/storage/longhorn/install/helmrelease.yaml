@@ -36,7 +36,8 @@ spec:
           cpu: 500m
           memory: 512Mi
 
-    # Keep values minimal; policy will be in StorageClass.
+    defaultSettings:
+      allowRecurringJobWhileVolumeDetached: true
     persistence:
       defaultClass: false # we will create our own StorageClass + mark it default
     # S3 Backup Target (Garage)
