@@ -1,4 +1,3 @@
----
 name: opencode
 
 on:
@@ -22,11 +21,13 @@ jobs:
       issues: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Run opencode
-        uses: sst/opencode/github@latest
+        uses: anomalyco/opencode/github@latest
         env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
         with:
-          model: openrouter/openai/gpt-5.1-codex
+          model: zai-coding-plan/glm-4.7
