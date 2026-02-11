@@ -6,6 +6,5 @@ components:
   - ../../../../components/common-env
 resources:
   - pvc.yaml
-  - helmrelease.yaml
   - posterizarr-job.yaml
   - kometa-job.yaml
