@@ -20,6 +20,18 @@ spec:
   values:
     container_runtime: containerd
 
+    # --- TLS Configuration ---
+    # Enables TLS for internal communication between LAPI and agents.
+    # Uses cert-manager to auto-generate a self-signed CA (no external validation needed).
+    # Agents authenticate via TLS client certs instead of registration tokens,
+    # eliminating "user already exists" errors on pod restarts.
+    tls:
+      enabled: true
+      certManager:
+        enabled: true
+      agent:
+        tlsClientAuth: true
+
     # --- LAPI Configuration ---
     lapi:
       replicas: 1
@@ -43,6 +55,7 @@ spec:
         httpGet:
           path: /health
           port: lapi
+          scheme: HTTPS
         failureThreshold: 6
         periodSeconds: 5
         timeoutSeconds: 3
@@ -52,6 +65,7 @@ spec:
         httpGet:
           path: /health
           port: lapi
+          scheme: HTTPS
         failureThreshold: 3
         periodSeconds: 10
         timeoutSeconds: 3
