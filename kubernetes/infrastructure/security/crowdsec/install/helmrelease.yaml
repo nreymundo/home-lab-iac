@@ -20,6 +20,14 @@ spec:
   values:
     container_runtime: containerd
 
+    # --- TLS Configuration ---
+    # Enable TLS for LAPI-agent communication with cert-manager auto-generated CA.
+    # Agents authenticate via TLS client certs, eliminating "user already exists" errors.
+    tls:
+      enabled: true
+      certManager:
+        enabled: true
+
     lapi:
       replicas: 1
       env:
