@@ -35,6 +35,7 @@ spec:
           gethomepage.dev/group: Media
           gethomepage.dev/icon: tautulli.png
           gethomepage.dev/enabled: "true"
+          gethomepage.dev/pod-selector: app.kubernetes.io/name=tautulli,app.kubernetes.io/instance=tautulli
         hosts:
           - host: tautulli.lan.${CLUSTER_DOMAIN}
             paths:
