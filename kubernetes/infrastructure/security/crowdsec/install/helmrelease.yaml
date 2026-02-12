@@ -32,7 +32,14 @@ spec:
       agent:
         tlsClientAuth: true
 
-    # --- LAPI Configuration ---
+    # Disable auto_registration since TLS client auth is enabled (mutually exclusive)
+    config:
+      config.yaml.local: |
+        api:
+          server:
+            auto_registration:
+              enabled: false
+
     lapi:
       replicas: 1
       env:
@@ -62,6 +69,15 @@ spec:
 
       # Liveness probe: continuously checks LAPI health and restarts pod if unhealthy
       livenessProbe:
+        httpGet:
+          path: /health
+          port: lapi
+          scheme: HTTPS
+        failureThreshold: 3
+        periodSeconds: 10
+        timeoutSeconds: 3
+
+      readinessProbe:
         httpGet:
           path: /health
           port: lapi
