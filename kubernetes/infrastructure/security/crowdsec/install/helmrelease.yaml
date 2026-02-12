@@ -33,9 +33,13 @@ spec:
         tlsClientAuth: true
 
     # Disable auto_registration since TLS client auth is enabled (mutually exclusive)
+    # Also explicitly configure client to use TLS (avoid password/TLS conflict)
     config:
       config.yaml.local: |
         api:
+          client:
+            credentials:
+              url: https://crowdsec-service.crowdsec:8080
           server:
             auto_registration:
               enabled: false
