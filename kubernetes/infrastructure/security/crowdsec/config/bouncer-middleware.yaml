@@ -8,7 +8,9 @@ spec:
     crowdsec-bouncer-traefik-plugin:
       enabled: true
       crowdsecMode: stream
+      crowdsecLapiScheme: https
       crowdsecLapiHost: crowdsec-service.crowdsec.svc.cluster.local:8080
       crowdsecLapiKeyFile: /etc/traefik/crowdsec-bouncer-api-key
+      crowdsecLapiTlsInsecure: true
       updateIntervalSeconds: 60
       logLevel: INFO
