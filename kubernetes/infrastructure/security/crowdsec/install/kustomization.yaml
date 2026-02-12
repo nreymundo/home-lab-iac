@@ -5,3 +5,8 @@ resources:
   - helmrelease.yaml
   - traefik-bouncer-secret.sops.yaml
   - acquisition-configmap.yaml
+patches:
+  # Remove CS_LAPI_SECRET when TLS auth is enabled
+  # The chart sets this unconditionally, but CrowdSec rejects having both
+  # password auth and TLS auth configured simultaneously
+  - path: lapi-deployment-patch.yaml

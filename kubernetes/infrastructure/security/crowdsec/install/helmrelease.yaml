@@ -36,11 +36,6 @@ spec:
             secretKeyRef:
               name: traefik-bouncer-key
               key: CROWDSEC_TRAEFIK_BOUNCER_API_KEY
-        # Override CS_LAPI_SECRET to empty when using TLS client auth
-        # The chart sets this unconditionally, but CrowdSec rejects having both
-        # password auth and TLS auth configured simultaneously
-        - name: CS_LAPI_SECRET
-          value: ""
 
       resources:
         requests:

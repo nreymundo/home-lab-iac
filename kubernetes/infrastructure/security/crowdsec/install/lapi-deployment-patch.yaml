@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crowdsec-lapi
+  namespace: crowdsec
+spec:
+  template:
+    spec:
+      containers:
+        - name: crowdsec-lapi
+          env:
+            - $patch: delete
+              name: CS_LAPI_SECRET
