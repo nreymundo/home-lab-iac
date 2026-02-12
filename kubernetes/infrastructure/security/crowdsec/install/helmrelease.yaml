@@ -27,6 +27,8 @@ spec:
       enabled: true
       certManager:
         enabled: true
+      agent:
+        tlsClientAuth: true
 
     lapi:
       replicas: 1
