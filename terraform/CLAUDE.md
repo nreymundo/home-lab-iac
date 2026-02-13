@@ -1,4 +1,4 @@
-# Terraform - AI Agent Instructions
+# Terraform - AI Assistant Instructions
 
 This document provides instructions for AI coding assistants (Claude, Gemini, etc.) working with the Terraform component.
 

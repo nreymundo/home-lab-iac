@@ -1,4 +1,4 @@
-# Kubernetes - AI Agent Instructions
+# Kubernetes - AI Assistant Instructions
 
 This document provides instructions for AI agents working with the Kubernetes/Flux GitOps component of the home-lab-iac repository.
 

@@ -192,13 +192,27 @@ spec:
                   identifier: main
 ```
 
-## Component-Specific Agent Instructions
+## Component-Specific Instructions
 
 Detailed guidance for each component is maintained in:
-- `packer/AGENTS.md` - VM template building
-- `terraform/AGENTS.md` - K3s node provisioning
-- `ansible/AGENTS.md` - VM configuration and K3s deployment
-- `kubernetes/AGENTS.md` - Flux GitOps and application deployment
+- `packer/CLAUDE.md` - VM template building
+- `terraform/CLAUDE.md` - K3s node provisioning
+- `ansible/CLAUDE.md` - VM configuration and K3s deployment
+- `kubernetes/CLAUDE.md` - Flux GitOps and application deployment
+
+## Documentation Maintenance
+
+When making material changes to this repository, update the relevant documentation:
+
+| Change Type | Files to Update |
+|-------------|-----------------|
+| New/modified Terraform variables or workflow | `terraform/CLAUDE.md` |
+| New Packer template or build process changes | `packer/CLAUDE.md` |
+| New Ansible role or playbook changes | `ansible/CLAUDE.md` |
+| New Kubernetes component, pattern, or convention | `kubernetes/CLAUDE.md` |
+| Cross-cutting changes (workflow, conventions, commands) | Root `CLAUDE.md` |
+
+Keep documentation synchronized with code changes to ensure AI assistants have accurate context.
 
 ## Renovate Configuration
 

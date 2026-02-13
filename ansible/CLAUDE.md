@@ -1,4 +1,4 @@
-# Ansible - AI Agent Instructions
+# Ansible - AI Assistant Instructions
 
 This document provides instructions for AI coding assistants (Claude, Gemini, etc.) working with the Ansible component.
 

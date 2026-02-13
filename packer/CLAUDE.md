@@ -1,4 +1,4 @@
-# Packer - AI Agent Instructions
+# Packer - AI Assistant Instructions
 
 This document provides instructions for AI coding assistants (Claude, Gemini, etc.) working with the Packer component.
 
