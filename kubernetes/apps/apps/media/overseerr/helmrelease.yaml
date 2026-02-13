@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=linuxserver/overseerr registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/overseerr
-              tag: 1.34.0
+              tag: 2021.12.12
             env:
               PUID: "99"
               PGID: "100"
