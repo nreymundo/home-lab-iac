@@ -28,3 +28,4 @@ resources:
   - ../apps/media/plextraktsync
   - ../apps/media/plex-media-enrichment
   - ../apps/media/tidarr
+  - ../apps/media/overseerr
