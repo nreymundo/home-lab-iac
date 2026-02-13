@@ -18,17 +18,18 @@ patches:
       apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
       metadata:
-        name: lidarr
+        name: tidarr
       spec:
         values:
           persistence:
             media:
               globalMounts:
-                - path: /data
-            downloads:
+                - path: /music
+                  subPath: usenet/music
+            nzb-downloads:
               enabled: true
               type: nfs
               server: ${UNRAID_IP}
               path: /mnt/user/media/direct/tidarr
               globalMounts:
-                - path: /downloads
+                - path: /shared/nzb_downloads

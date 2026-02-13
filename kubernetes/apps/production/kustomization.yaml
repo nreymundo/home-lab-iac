@@ -27,3 +27,4 @@ resources:
   - ../apps/utils/discord-presence
   - ../apps/media/plextraktsync
   - ../apps/media/plex-media-enrichment
+  - ../apps/media/tidarr
