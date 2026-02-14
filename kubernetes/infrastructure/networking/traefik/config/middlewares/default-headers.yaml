@@ -13,5 +13,6 @@ spec:
     stsPreload: true
     contentSecurityPolicy: "frame-ancestors 'self'"
     customResponseHeaders:
+      X-Frame-Options: "SAMEORIGIN"
       X-Permitted-Cross-Domain-Policies: "none"
-      Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), vr=()"
+      Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), vr=(), interest-cohort=()"
