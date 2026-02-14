@@ -21,6 +21,8 @@ spec:
             image:
               repository: ghcr.io/fscorrupt/posterizarr
               tag: latest
+            env:
+              TZ: Europe/Berlin
             command:
               - /bin/sh
               - -c

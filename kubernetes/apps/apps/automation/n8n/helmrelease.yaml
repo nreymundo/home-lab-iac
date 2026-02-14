@@ -40,6 +40,7 @@ spec:
               repository: docker.n8n.io/n8nio/n8n
               tag: 2.8.3
             env:
+              TZ: Europe/Berlin
               DB_TYPE: postgresdb
               DB_POSTGRESDB_HOST: n8n-pg-rw
               DB_POSTGRESDB_PORT: 5432
@@ -100,6 +101,7 @@ spec:
               tag: 2.8.3
             command: ["/bin/sh", "-c", "n8n worker"]
             env:
+              TZ: Europe/Berlin
               DB_TYPE: postgresdb
               DB_POSTGRESDB_HOST: n8n-pg-rw
               DB_POSTGRESDB_PORT: 5432

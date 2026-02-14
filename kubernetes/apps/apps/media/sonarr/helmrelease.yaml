@@ -17,6 +17,7 @@ spec:
               repository: lscr.io/linuxserver/sonarr
               tag: 4.0.16
             env:
+              TZ: Europe/Berlin
               PUID: "99"
               PGID: "100"
             ports:

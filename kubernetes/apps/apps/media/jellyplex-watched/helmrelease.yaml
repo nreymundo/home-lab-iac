@@ -17,6 +17,7 @@ spec:
               repository: ghcr.io/luigi311/jellyplex-watched
               tag: 8.5.0
             env:
+              TZ: Europe/Berlin
               DRYRUN: "False"
               DEBUG: "False"
               DEBUG_LEVEL: info

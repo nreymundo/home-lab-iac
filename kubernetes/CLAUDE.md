@@ -50,7 +50,6 @@ Reusable components in `kubernetes/components/` reduce duplication across HelmRe
 | Component | Path | Purpose |
 |-----------|------|---------|
 | bjw-s-defaults | `components/bjw-s-defaults` | Adds `interval`, `version`, `sourceRef` for bjw-s app-template |
-| common-env | `components/common-env` | Injects `TZ: Europe/Berlin` to main container |
 | traefik-base | `components/ingress/traefik-base` | Sets `enabled: true`, `className: traefik` for `ingress.main` |
 | auth-guard | `components/ingress/auth-guard` | Injects Authentik middleware for `ingress.main` |
 | backup-policy | `components/storage/backup-policy` | Longhorn daily/weekly backup labels for `persistence.data` and CNPG clusters |
@@ -68,7 +67,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 components:
   - ../../../../components/bjw-s-defaults
-  - ../../../../components/common-env
   - ../../../../components/ingress/traefik-base
   - ../../../../components/storage/backup-policy
   # - ../../../../components/nfs-mount/media/rw  # If NFS media needed
@@ -79,7 +77,6 @@ resources:
 ### When to Use
 
 - **bjw-s-defaults**: Always use for apps using bjw-s `app-template` chart. Omit `interval`, `version`, and `sourceRef` from HelmRelease.
-- **common-env**: Standard apps that need timezone set. Injects `TZ: Europe/Berlin`.
 - **ingress/traefik-base**: Apps with ingress. Sets `enabled: true` and `className: traefik`.
 - **ingress/auth-guard**: Apps requiring Authentik authentication.
 - **storage/backup-policy**: Apps with `persistence.data` or CNPG clusters needing Longhorn backups.

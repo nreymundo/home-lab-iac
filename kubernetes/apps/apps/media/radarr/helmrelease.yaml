@@ -17,6 +17,7 @@ spec:
               repository: lscr.io/linuxserver/radarr
               tag: 6.0.4
             env:
+              TZ: Europe/Berlin
               PUID: "99"
               PGID: "100"
             ports:

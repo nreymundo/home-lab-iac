@@ -21,6 +21,7 @@ spec:
               - name: http
                 containerPort: 4533
             env:
+              TZ: Europe/Berlin
               ND_LOGLEVEL: info
               ND_PORT: "4533"
               ND_TRANSCODINGCACHESIZE: 100MB

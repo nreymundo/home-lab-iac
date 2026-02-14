@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: media
 components:
   - ../../../../components/bjw-s-defaults
-  - ../../../../components/common-env
 resources:
   - pvc.yaml
   - posterizarr-job.yaml

@@ -17,6 +17,7 @@ spec:
               repository: vaultwarden/server
               tag: 1.35.2
             env:
+              TZ: Europe/Berlin
               DOMAIN: "https://vault.${CLUSTER_DOMAIN}"
               SIGNUPS_ALLOWED: "false"
               SIGNUPS_VERIFY: "true"

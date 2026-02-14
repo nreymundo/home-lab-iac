@@ -17,6 +17,7 @@ spec:
               repository: ghcr.io/sillytavern/sillytavern
               tag: 1.15.0
             env:
+              TZ: Europe/Berlin
               NODE_ENV: production
               FORCE_COLOR: "1"
             ports:

@@ -112,7 +112,6 @@ Reusable components in `kubernetes/components/` reduce duplication:
 | Component | Path | Purpose |
 |-----------|------|---------|
 | bjw-s-defaults | `components/bjw-s-defaults` | Adds `interval`, `version`, `sourceRef` for bjw-s app-template |
-| common-env | `components/common-env` | Injects `TZ: Europe/Berlin` to main container |
 | traefik-base | `components/ingress/traefik-base` | Sets `enabled: true`, `className: traefik` for `ingress.main` |
 | auth-guard | `components/ingress/auth-guard` | Injects Authentik middleware for `ingress.main` |
 | backup-policy | `components/storage/backup-policy` | Longhorn daily/weekly backup labels for `persistence.data` and CNPG clusters |
@@ -143,7 +142,7 @@ Kubernetes secrets are cross-namespace replicated via `kube-replicator`.
 ### Adding a New Kubernetes App
 1. Create `kubernetes/apps/apps/<category>/<app-name>/`
 2. Create `helmrelease.yaml` and `kustomization.yaml`.
-3. In `kustomization.yaml`, include standard components (`bjw-s-defaults`, `common-env`, `ingress/traefik-base`).
+3. In `kustomization.yaml`, include standard components (`bjw-s-defaults`, `ingress/traefik-base`).
 4. In `helmrelease.yaml`, use standard `main` keys for controllers, containers, and ingress to ensure component compatibility.
 5. Add to parent kustomization in `<category>/kustomization.yaml`
 6. Commit and push - Flux auto-reconciles

@@ -17,6 +17,7 @@ spec:
               repository: thewicklowwolf/lidatube
               tag: 0.2.45
             env:
+              TZ: Europe/Berlin
               PUID: "99"
               PGID: "100"
               lidarr_address: http://lidarr:8686

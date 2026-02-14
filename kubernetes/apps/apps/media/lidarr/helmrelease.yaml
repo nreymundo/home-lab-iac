@@ -17,6 +17,7 @@ spec:
               repository: lscr.io/linuxserver/lidarr
               tag: 3.1.0
             env:
+              TZ: Europe/Berlin
               PUID: "99"
               PGID: "100"
             ports:

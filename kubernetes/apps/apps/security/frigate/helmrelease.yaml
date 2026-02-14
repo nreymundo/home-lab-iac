@@ -40,6 +40,7 @@ spec:
               repository: ghcr.io/blakeblackshear/frigate
               tag: stable
             env:
+              TZ: Europe/Berlin
               LIBVA_DRIVER_NAME: iHD
               FRIGATE_RTSP_PASSWORD:
                 valueFrom:

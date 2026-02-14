@@ -18,6 +18,7 @@ spec:
               repository: docker.gitea.com/gitea
               tag: 1.25.4
             env:
+              TZ: Europe/Berlin
               USER_UID: 99
               USER_GID: 100
               DISABLE_REGISTRATION: false

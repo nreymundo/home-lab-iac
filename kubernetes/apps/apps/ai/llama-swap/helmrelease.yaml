@@ -21,6 +21,8 @@ spec:
             image:
               repository: ghcr.io/mostlygeek/llama-swap
               tag: vulkan
+            env:
+              TZ: Europe/Berlin
             args:
               - -config
               - /config/config.yaml

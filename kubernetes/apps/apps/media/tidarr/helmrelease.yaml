@@ -17,6 +17,7 @@ spec:
               repository: cstaelen/tidarr
               tag: 1.1.8
             env:
+              TZ: Europe/Berlin
               PUID: "99"
               PGID: "100"
             ports:

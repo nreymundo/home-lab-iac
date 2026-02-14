@@ -18,6 +18,7 @@ spec:
               repository: binhex/arch-sabnzbdvpn
               tag: 4.5.5-1-01
             env:
+              TZ: Europe/Berlin
               VPN_ENABLED: "yes"
               VPN_PROV: custom
               VPN_CLIENT: wireguard

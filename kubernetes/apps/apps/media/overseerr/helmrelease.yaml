@@ -17,6 +17,7 @@ spec:
               repository: lscr.io/linuxserver/overseerr
               tag: 1.34.0
             env:
+              TZ: Europe/Berlin
               PUID: "99"
               PGID: "100"
             ports:
