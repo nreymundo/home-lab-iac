@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=sillytavern/sillytavern registryUrl=https://ghcr.io
               repository: ghcr.io/sillytavern/sillytavern
-              tag: 1.15.0
+              tag: 1.16.0
             env:
               TZ: Europe/Berlin
               NODE_ENV: production
