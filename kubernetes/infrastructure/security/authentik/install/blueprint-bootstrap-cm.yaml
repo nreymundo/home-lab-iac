@@ -384,3 +384,103 @@ data:
           order: 1
         attrs:
           group: !Find [authentik_core.group, [name, "gitadmin"]]
+
+  70-frigate.yaml: |
+    version: 1
+    metadata:
+      name: frigate-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Frigate Admins group
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Frigate Admins"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+
+      # Frigate Viewers group
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Frigate Viewers"
+        attrs:
+          is_superuser: false
+          parent: null
+
+      # Custom scope mapping that transforms Frigate groups to roles
+      - model: authentik_providers_oauth2.scopemapping
+        id: frigate-role-mapping
+        identifiers:
+          name: "Frigate Role Mapping"
+        attrs:
+          scope_name: frigate-role
+          description: "Maps Frigate Admins/Viewers groups to admin/viewer role"
+          expression: |
+            role = None
+            if request.user.ak_groups.filter(name="Frigate Admins").exists():
+                role = "admin"
+            elif request.user.ak_groups.filter(name="Frigate Viewers").exists():
+                role = "viewer"
+            return {
+                "ak_proxy": {
+                    "user_attributes": {
+                        "additionalHeaders": {
+                            "X-authentik-groups": role
+                        } if role else {}
+                    }
+                }
+            }
+
+      # Frigate Proxy Provider
+      - model: authentik_providers_proxy.proxyprovider
+        id: frigate-provider
+        identifiers:
+          name: "Frigate"
+        attrs:
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          mode: forward_single
+          external_host: "https://frigate.lan.${CLUSTER_DOMAIN}"
+          access_token_validity: "hours=24"
+          refresh_token_validity: "days=30"
+          property_mappings:
+            - !KeyOf frigate-role-mapping
+
+      # Frigate Application
+      - model: authentik_core.application
+        identifiers:
+          slug: "frigate"
+        attrs:
+          name: "Frigate"
+          provider: !KeyOf frigate-provider
+          group: "Security"
+
+      # Add Frigate provider to existing outpost
+      - model: authentik_outposts.outpost
+        identifiers:
+          name: "gatekeeper-proxy"
+        attrs:
+          providers:
+            - !Find [authentik_providers_proxy.proxyprovider, [name, "Traefik-Gatekeeper"]]
+            - !KeyOf frigate-provider
+
+      # Restrict access to Frigate Admins
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "frigate"]]
+          order: 0
+        attrs:
+          group: !Find [authentik_core.group, [name, "Frigate Admins"]]
+
+      # Restrict access to Frigate Viewers
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "frigate"]]
+          order: 1
+        attrs:
+          group: !Find [authentik_core.group, [name, "Frigate Viewers"]]

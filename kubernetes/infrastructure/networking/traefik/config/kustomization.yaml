@@ -4,6 +4,7 @@ resources:
   - middlewares/default-headers.yaml
   - middlewares/default-chain.yaml
   - middlewares/gatekeeper-auth-chain.yaml
+  - middlewares/frigate-auth-chain.yaml
   - middlewares/https-insecure.yaml
   - middlewares/ip-whitelist-lan.yaml
   - dashboard/ingressroute-dashboard.yaml

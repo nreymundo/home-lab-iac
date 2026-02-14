@@ -125,6 +125,7 @@ spec:
     ingress:
       main:
         annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: frigate-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: frigate.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Frigate
           gethomepage.dev/description: NVR with AI detection
