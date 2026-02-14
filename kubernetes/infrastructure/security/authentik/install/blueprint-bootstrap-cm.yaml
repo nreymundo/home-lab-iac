@@ -57,27 +57,6 @@ data:
           name: "Gatekeeper"
           provider: !KeyOf proxy-provider
 
-      # 5. Define the Outpost
-      - model: authentik_outposts.outpost
-        identifiers:
-          name: "gatekeeper-proxy"
-        attrs:
-          type: "proxy"
-          service_connection: !Find [authentik_outposts.kubernetesserviceconnection, [name, "Local Kubernetes Cluster"]]
-          providers:
-            - !KeyOf proxy-provider
-          config:
-            authentik_host: "http://authentik-server.authentik.svc.cluster.local"
-            authentik_host_browser: "https://sso.${CLUSTER_DOMAIN}"
-            log_level: debug
-            object_naming_template: "ak-outpost-%(name)s"
-            kubernetes_replicas: 1
-            kubernetes_service_type: ClusterIP
-            kubernetes_ingress_secret_name: wildcard-cluster-domain-tls
-            kubernetes_disabled_components:
-              - traefik middleware
-            cookie_token_duration: 86400
-
   20-grafana.yaml: |
     version: 1
     metadata:
@@ -450,6 +429,7 @@ data:
           access_token_validity: "hours=24"
           refresh_token_validity: "days=30"
           property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, "ak-proxy"]]
             - !KeyOf frigate-role-mapping
 
       # Frigate Application
@@ -460,15 +440,6 @@ data:
           name: "Frigate"
           provider: !KeyOf frigate-provider
           group: "Security"
-
-      # Add Frigate provider to existing outpost
-      - model: authentik_outposts.outpost
-        identifiers:
-          name: "gatekeeper-proxy"
-        attrs:
-          providers:
-            - !Find [authentik_providers_proxy.proxyprovider, [name, "Traefik-Gatekeeper"]]
-            - !KeyOf frigate-provider
 
       # Restrict access to Frigate Admins
       - model: authentik_policies.policybinding
@@ -485,3 +456,36 @@ data:
           order: 1
         attrs:
           group: !Find [authentik_core.group, [name, "Frigate Viewers"]]
+
+  99-outpost.yaml: |
+    version: 1
+    metadata:
+      name: outpost-assembly
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Shared proxy outpost for all proxy providers
+      # IMPORTANT: This MUST be the last blueprint to run (99- prefix)
+      # All proxy providers must be defined BEFORE this outpost is created
+      # Blueprint attrs REPLACE entire objects, not merge - defining outpost
+      # in multiple files will wipe configuration from earlier definitions
+      - model: authentik_outposts.outpost
+        identifiers:
+          name: "gatekeeper-proxy"
+        attrs:
+          type: "proxy"
+          service_connection: !Find [authentik_outposts.kubernetesserviceconnection, [name, "Local Kubernetes Cluster"]]
+          providers:
+            - !Find [authentik_providers_proxy.proxyprovider, [name, "Traefik-Gatekeeper"]]
+            - !Find [authentik_providers_proxy.proxyprovider, [name, "Frigate"]]
+          config:
+            authentik_host: "http://authentik-server.authentik.svc.cluster.local"
+            authentik_host_browser: "https://sso.${CLUSTER_DOMAIN}"
+            log_level: debug
+            object_naming_template: "ak-outpost-%(name)s"
+            kubernetes_replicas: 1
+            kubernetes_service_type: ClusterIP
+            kubernetes_ingress_secret_name: wildcard-cluster-domain-tls
+            kubernetes_disabled_components:
+              - traefik middleware
+            cookie_token_duration: 86400

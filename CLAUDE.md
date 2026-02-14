@@ -195,6 +195,7 @@ Detailed guidance for each component is maintained in:
 - `terraform/CLAUDE.md` - K3s node provisioning
 - `ansible/CLAUDE.md` - VM configuration and K3s deployment
 - `kubernetes/CLAUDE.md` - Flux GitOps and application deployment
+- `kubernetes/infrastructure/security/authentik/CLAUDE.md` - SSO blueprints and outpost management
 
 ## Documentation Maintenance
 
@@ -206,6 +207,7 @@ When making material changes to this repository, update the relevant documentati
 | New Packer template or build process changes | `packer/CLAUDE.md` |
 | New Ansible role or playbook changes | `ansible/CLAUDE.md` |
 | New Kubernetes component, pattern, or convention | `kubernetes/CLAUDE.md` |
+| New Authentik blueprint or SSO configuration | `kubernetes/infrastructure/security/authentik/CLAUDE.md` |
 | Cross-cutting changes (workflow, conventions, commands) | Root `CLAUDE.md` |
 
 Keep documentation synchronized with code changes to ensure AI assistants have accurate context.
