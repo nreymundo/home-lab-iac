@@ -27,12 +27,18 @@ spec:
               - sh
               - -c
               - |
-                if [ ! -f /config/config.yml ]; then
-                  echo "Config not found, copying default..."
-                  cp /defaults/config.yml /config/config.yml
-                else
-                  echo "Config exists, skipping..."
+                if [ -f /config/.donotoverride ]; then
+                  echo "Override disabled by .donotoverride file, skipping..."
+                  exit 0
                 fi
+
+                if [ -f /config/config.yml ]; then
+                  echo "Backing up existing config..."
+                  mv /config/config.yml /config/config.yml.bak
+                fi
+
+                echo "Copying default config..."
+                cp /defaults/config.yml /config/config.yml
         containers:
           main:
             image:
