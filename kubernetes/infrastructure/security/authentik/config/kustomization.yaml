@@ -4,4 +4,5 @@ namespace: authentik
 resources:
   - middleware.yaml
   - middleware-frigate.yaml
+  - middleware-discord.yaml
   - ingress.yaml

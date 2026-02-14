@@ -157,7 +157,7 @@ spec:
     ingress:
       app:
         annotations:
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-discord-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: discord1.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: Discord - Main

@@ -1,0 +1,11 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: discord-auth-chain
+  namespace: traefik
+spec:
+  chain:
+    middlewares:
+      - name: default-headers
+      - name: authentik-auth-discord
+        namespace: authentik

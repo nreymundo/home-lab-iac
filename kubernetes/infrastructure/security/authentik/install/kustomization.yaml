@@ -13,3 +13,4 @@ resources:
   - vaultwarden-sso-secret.sops.yaml
   - komga-sso-secret.sops.yaml
   - gitea-sso-secret.sops.yaml
+  - discord-auth-secret.sops.yaml

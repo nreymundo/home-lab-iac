@@ -104,7 +104,9 @@ kubernetes/
 
 **Never edit** `kubernetes/clusters/production/flux-system/` - these are Flux bootstrap files.
 
-> **⚠️ Important for AI Agents:** Never run `flux reconcile` commands unless explicitly asked by the user. Flux automatically reconciles on Git push. Manual reconciliation can interfere with in-progress deployments and cause unexpected behavior.
+> **⚠️ Important for AI Agents:**
+> 1. **NEVER commit changes unless explicitly asked by the user.** Even if all changes are ready and pre-commit passes, wait for the user to request a commit.
+> 2. **Never run `flux reconcile` commands unless explicitly asked by the user.** Flux automatically reconciles on Git push. Manual reconciliation can interfere with in-progress deployments and cause unexpected behavior.
 
 ### Kustomize Components
 Reusable components in `kubernetes/components/` reduce duplication:
