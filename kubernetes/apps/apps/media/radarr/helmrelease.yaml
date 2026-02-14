@@ -62,6 +62,12 @@ spec:
         accessMode: ReadWriteOnce
         size: 1Gi
         storageClass: longhorn-r1
+      media:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/media
+        globalMounts:
+          - path: /data
       extended-config:
         enabled: true
         type: secret

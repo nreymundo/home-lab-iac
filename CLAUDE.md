@@ -115,9 +115,6 @@ Reusable components in `kubernetes/components/` reduce duplication:
 | traefik-base | `components/ingress/traefik-base` | Sets `enabled: true`, `className: traefik` for `ingress.main` |
 | auth-guard | `components/ingress/auth-guard` | Injects Authentik middleware for `ingress.main` |
 | backup-policy | `components/storage/backup-policy` | Longhorn daily/weekly backup labels for `persistence.data` and CNPG clusters |
-| NFS Media (RW) | `components/nfs-mount/media/rw` | NFS media mount at `/mnt/media` (read-write) + securityContext |
-| NFS Media (RO) | `components/nfs-mount/media/ro` | NFS media mount at `/mnt/media` (read-only) + securityContext |
-| NFS Backup | `components/nfs-mount/backup` | NFS backup mount at `/backup` |
 | arr-custom-scripts | `components/arr-custom-scripts` | Custom scripts volume for *arr applications |
 
 ## Secrets Management

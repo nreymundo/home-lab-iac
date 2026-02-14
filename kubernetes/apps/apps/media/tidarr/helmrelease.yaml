@@ -61,3 +61,16 @@ spec:
         storageClass: longhorn-r2
         globalMounts:
           - path: /shared
+      media:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/media
+        globalMounts:
+          - path: /music
+            subPath: usenet/music
+      nzb-downloads:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/media/direct/tidarr
+        globalMounts:
+          - path: /shared/nzb_downloads

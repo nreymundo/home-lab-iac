@@ -69,3 +69,9 @@ spec:
             subPath: config
           - path: /metadata
             subPath: metadata
+      media:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/media
+        globalMounts:
+          - path: /mnt/media

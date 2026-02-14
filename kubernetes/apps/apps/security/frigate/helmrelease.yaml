@@ -151,7 +151,12 @@ spec:
         storageClass: longhorn-r2
         globalMounts:
           - path: /config
-      # NFS storage mount injected by nfs-mount/frigate component
+      storage:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/frigate_nvr
+        globalMounts:
+          - path: /media/frigate
       defaults:
         enabled: true
         type: secret

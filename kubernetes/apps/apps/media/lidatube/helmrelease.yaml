@@ -69,3 +69,10 @@ spec:
         storageClass: longhorn-r2
         globalMounts:
           - path: /lidatube/config
+      media:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/media
+        globalMounts:
+          - path: /lidatube/downloads
+            subPath: usenet/music

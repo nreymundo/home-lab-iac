@@ -5,7 +5,6 @@ components:
   - ../../../../components/ingress/traefik-base
   - ../../../../components/ingress/auth-guard
   - ../../../../components/storage/backup-policy
-  - ../../../../components/nfs-mount/frigate
 resources:
   - helmrelease.yaml
   - frigate-config.sops.yaml

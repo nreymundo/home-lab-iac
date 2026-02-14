@@ -64,3 +64,15 @@ spec:
         storageClass: longhorn-r1
         globalMounts:
           - path: /config
+      media:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/media
+        globalMounts:
+          - path: /data
+      downloads:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/media/direct/tidarr
+        globalMounts:
+          - path: /downloads

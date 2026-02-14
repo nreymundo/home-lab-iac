@@ -67,3 +67,10 @@ spec:
         storageClass: longhorn-r2
         globalMounts:
           - path: /data
+      media:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/media
+        globalMounts:
+          - path: /mnt/media
+            readOnly: true

@@ -148,3 +148,9 @@ spec:
         storageClass: longhorn-r2
         globalMounts:
           - path: /data
+      backup:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/backup
+        globalMounts:
+          - path: /mnt/backup

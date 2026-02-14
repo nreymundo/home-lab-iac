@@ -34,10 +34,7 @@ kubernetes/
 │       └── apps.yaml             # Kustomization for apps
 ├── components/                   # Reusable Kustomize components
 │   ├── bjw-s-defaults/           # Common HelmRelease fields
-│   └── nfs-mount/
-│       └── media/
-│           ├── ro/               # Read-only NFS media mount
-│           └── rw/               # Read-write NFS media mount
+│   └── ingress/                  # Ingress-related components
 └── renovate/                     # Renovate configuration
 ```
 
@@ -53,9 +50,6 @@ Reusable components in `kubernetes/components/` reduce duplication across HelmRe
 | traefik-base | `components/ingress/traefik-base` | Sets `enabled: true`, `className: traefik` for `ingress.main` |
 | auth-guard | `components/ingress/auth-guard` | Injects Authentik middleware for `ingress.main` |
 | backup-policy | `components/storage/backup-policy` | Longhorn daily/weekly backup labels for `persistence.data` and CNPG clusters |
-| NFS Media (RW) | `components/nfs-mount/media/rw` | NFS media mount at `/mnt/media` (read-write) + securityContext |
-| NFS Media (RO) | `components/nfs-mount/media/ro` | NFS media mount at `/mnt/media` (read-only) + securityContext |
-| NFS Backup | `components/nfs-mount/backup` | NFS backup mount at `/backup` |
 | arr-custom-scripts | `components/arr-custom-scripts` | Custom scripts volume for *arr applications |
 
 ### Usage
@@ -69,7 +63,6 @@ components:
   - ../../../../components/bjw-s-defaults
   - ../../../../components/ingress/traefik-base
   - ../../../../components/storage/backup-policy
-  # - ../../../../components/nfs-mount/media/rw  # If NFS media needed
 resources:
   - helmrelease.yaml
 ```
@@ -80,10 +73,6 @@ resources:
 - **ingress/traefik-base**: Apps with ingress. Sets `enabled: true` and `className: traefik`.
 - **ingress/auth-guard**: Apps requiring Authentik authentication.
 - **storage/backup-policy**: Apps with `persistence.data` or CNPG clusters needing Longhorn backups.
-- **nfs-mount/media/rw**: Apps that need read-write access to NFS media share.
-- **nfs-mount/media/ro**: Apps that only need read access to NFS media share.
-
-NFS components include `defaultPodOptions.securityContext` (runAsUser: 99, runAsGroup: 100, fsGroup: 100) for proper NFS permissions.
 
 ## Flux GitOps Model
 
@@ -217,7 +206,22 @@ gethomepage.dev/widget.key: '{{"{{"}}HOMEPAGE_VAR_<APP>_KEY{{"}}"}}'
 ### Storage Classes
 - `longhorn-r2` - Longhorn with 2 replicas (default for apps)
 - `longhorn-r1` - Longhorn with 1 replica (for less critical data)
-- NFS via built-in app-template type: `nfs` (see `components/nfs-mount/`)
+- NFS via built-in app-template `type: nfs`
+
+### NFS Mounts
+Add NFS mounts directly in the HelmRelease `persistence` section:
+
+```yaml
+persistence:
+  media:
+    type: nfs
+    server: ${UNRAID_IP}
+    path: /mnt/user/media
+    globalMounts:
+      - path: /data                    # Container mount path
+        # readOnly: true               # Optional: mount read-only
+        # subPath: usenet/music        # Optional: mount subdirectory
+```
 
 ### Longhorn Backup Labels
 Add to PVC labels for automatic backups:
@@ -320,16 +324,15 @@ spec:
     ```
 
  5. **Create kustomization.yaml** (with components):
-   ```yaml
-   apiVersion: kustomize.config.k8s.io/v1beta1
-   kind: Kustomization
-   components:
-     - ../../../../components/bjw-s-defaults
-     # Add nfs-mount/media/rw or /ro if app needs NFS media access
-   resources:
-     - helmrelease.yaml
-     # Add db-backup.yaml if using Postgres (see Postgres Database Backups pattern)
-     - db-backup.yaml
+    ```yaml
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    components:
+      - ../../../../components/bjw-s-defaults
+    resources:
+      - helmrelease.yaml
+      # Add db-backup.yaml if using Postgres (see Postgres Database Backups pattern)
+      - db-backup.yaml
     ```
 
  6. **Add to parent kustomization** (`kubernetes/apps/apps/<category>/kustomization.yaml`):
