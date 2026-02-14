@@ -95,6 +95,11 @@ spec:
             secretKeyRef:
               name: gitea-sso-secret
               key: CLIENT_SECRET
+        - name: DISCORD_BASIC_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: discord-auth-secret
+              key: BASIC_AUTH
 
         # Blueprint variables
         - name: AK_BLUEPRINT_USER
