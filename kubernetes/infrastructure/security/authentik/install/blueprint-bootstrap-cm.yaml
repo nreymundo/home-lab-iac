@@ -73,6 +73,7 @@ data:
             object_naming_template: "ak-outpost-%(name)s"
             kubernetes_replicas: 1
             kubernetes_service_type: ClusterIP
+            kubernetes_ingress_secret_name: wildcard-cluster-domain-tls
             kubernetes_disabled_components:
               - traefik middleware
             cookie_token_duration: 86400
