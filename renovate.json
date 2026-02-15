@@ -24,7 +24,8 @@
       "description": "Lidarr: parse 3- or 4-part tags, ignore nightly/develop",
       "matchPackageNames": ["linuxserver/lidarr"],
       "matchDatasources": ["docker"],
-      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<build>\\d+))?(?:-ls\\d+)?$"
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$",
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
     },
     {
       "description": "Global stability and automerge schedule",
@@ -88,6 +89,7 @@
       "description": "Enable # renovate: datasource=... comments (repo/tag directly below)",
       "customType": "regex",
       "fileMatch": ["\\.ya?ml$"],
+      "packageNameTemplate": "{{{depName}}}",
       "matchStrings": [
         "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*(?<packageName>\\S+)\\s*\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
       ]

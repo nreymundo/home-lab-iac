@@ -13,7 +13,7 @@ spec:
         containers:
           main:
             image:
-              # renovate: datasource=docker depName=open-webui/open-webui registryUrl=https://ghcr.io
+              # renovate: datasource=github-tags depName=open-webui/open-webui
               repository: ghcr.io/open-webui/open-webui
               tag: 0.7.2
             env:
