@@ -7,5 +7,12 @@ data:
   config.json: |
     {
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-      "repositories": ["nreymundo/home-lab-iac"]
+      "repositories": ["nreymundo/home-lab-iac"],
+      "hostRules": [
+        {
+          "matchHost": "ghcr.io",
+          "hostType": "docker",
+          "token": "{{ env.GHCR_TOKEN }}"
+        }
+      ]
     }
