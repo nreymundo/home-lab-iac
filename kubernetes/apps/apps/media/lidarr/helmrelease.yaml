@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=linuxserver/lidarr registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/lidarr
-              tag: 3.1.0
+              tag: 3.1.0.4875-ls20
             env:
               TZ: Europe/Berlin
               PUID: "99"
