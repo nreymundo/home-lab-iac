@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=vaultwarden/server
               repository: vaultwarden/server
-              tag: 1.35.2
+              tag: 1.35.3
             env:
               TZ: Europe/Berlin
               DOMAIN: "https://vault.${CLUSTER_DOMAIN}"
