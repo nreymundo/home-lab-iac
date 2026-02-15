@@ -100,6 +100,11 @@ spec:
             secretKeyRef:
               name: discord-auth-secret
               key: BASIC_AUTH
+        - name: FRIGATE_PROXY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: frigate-proxy-secret
+              key: FRIGATE_PROXY_SECRET
 
         # Blueprint variables
         - name: AK_BLUEPRINT_USER

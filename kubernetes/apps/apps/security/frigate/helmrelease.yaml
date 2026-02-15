@@ -73,6 +73,11 @@ spec:
                   secretKeyRef:
                     name: frigate-secrets
                     key: FRIGATE_MQTT_PASSWORD
+              FRIGATE_AUTH_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: frigate-secrets
+                    key: FRIGATE_AUTH_SECRET
             securityContext:
               privileged: true
             ports:
@@ -138,10 +143,10 @@ spec:
           gethomepage.dev/group: Security & Monitoring
           gethomepage.dev/icon: frigate.png
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/widget.type: frigate
-          gethomepage.dev/widget.url: "https://frigate-main.security.svc.cluster.local:8971"
-          gethomepage.dev/widget.username: "homepage"
-          gethomepage.dev/widget.password: '{{"{{HOMEPAGE_VAR_FRIGATE_PASSWORD}}"}}'
+          # gethomepage.dev/widget.type: frigate
+          # gethomepage.dev/widget.url: "https://frigate-main.security.svc.cluster.local:8971"
+          # gethomepage.dev/widget.username: "homepage"
+          # gethomepage.dev/widget.password: '{{"{{HOMEPAGE_VAR_FRIGATE_PASSWORD}}"}}'
         hosts:
           - host: frigate.lan.${CLUSTER_DOMAIN}
             paths:

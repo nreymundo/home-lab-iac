@@ -431,17 +431,22 @@ data:
           scope_name: frigate-role
           description: "Maps Frigate Admins/Viewers groups to admin/viewer role"
           expression: |
+            import os
             role = None
             if request.user.ak_groups.filter(name="Frigate Admins").exists():
                 role = "admin"
             elif request.user.ak_groups.filter(name="Frigate Viewers").exists():
                 role = "viewer"
+            secret = os.environ.get("FRIGATE_PROXY_SECRET", "")
+            headers = {}
+            if role:
+                headers["X-authentik-groups"] = role
+            if secret:
+                headers["X-Proxy-Secret"] = secret
             return {
                 "ak_proxy": {
                     "user_attributes": {
-                        "additionalHeaders": {
-                            "X-authentik-groups": role
-                        } if role else {}
+                        "additionalHeaders": headers
                     }
                 }
             }
