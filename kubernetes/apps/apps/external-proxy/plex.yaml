@@ -1,0 +1,52 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plex
+  namespace: external-proxy
+spec:
+  ports:
+    - name: http
+      port: 32400
+      targetPort: 32400
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: plex
+  namespace: external-proxy
+subsets:
+  - addresses:
+      - ip: 192.168.10.12
+    ports:
+      - name: http
+        port: 32400
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: plex
+  namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+    external-dns.alpha.kubernetes.io/hostname: plex.lan.${CLUSTER_DOMAIN}
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Plex
+    gethomepage.dev/description: Media server
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: plex.png
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: plex.lan.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: plex
+                port:
+                  name: http
