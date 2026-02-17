@@ -51,6 +51,9 @@ spec:
               requests:
                 cpu: 100m
                 memory: 256Mi
+              limits:
+                cpu: "2"
+                memory: 4Gi
     service:
       main:
         controller: main
