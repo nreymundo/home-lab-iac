@@ -15,12 +15,19 @@ spec:
             image:
               # renovate: datasource=docker depName=linuxserver/tautulli registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/tautulli
-              tag: 2.16.0
+              tag: 2.16.1
             env:
               TZ: Europe/Berlin
             ports:
               - name: http
                 containerPort: 8181
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
     service:
       main:
         controller: main

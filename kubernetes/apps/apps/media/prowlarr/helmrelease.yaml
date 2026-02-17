@@ -21,6 +21,13 @@ spec:
             ports:
               - name: http
                 containerPort: 9696
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
     service:
       main:
         controller: main

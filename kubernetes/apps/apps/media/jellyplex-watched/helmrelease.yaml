@@ -51,3 +51,10 @@ spec:
               SYNC_FROM_JELLYFIN_TO_PLEX: "True"
               SYNC_FROM_PLEX_TO_PLEX: "True"
               SYNC_FROM_JELLYFIN_TO_JELLYFIN: "True"
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi

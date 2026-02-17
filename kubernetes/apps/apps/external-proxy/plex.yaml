@@ -32,11 +32,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
     external-dns.alpha.kubernetes.io/hostname: plex.lan.${CLUSTER_DOMAIN}
-    gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: Plex
-    gethomepage.dev/description: Media server
-    gethomepage.dev/group: Media
-    gethomepage.dev/icon: plex.png
 spec:
   ingressClassName: traefik
   rules:
