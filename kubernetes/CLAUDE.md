@@ -185,7 +185,8 @@ chart:
   - DNS: `external-dns.alpha.kubernetes.io/hostname: <fqdn>`
 
 ### Homepage Integration
-Add `gethomepage.dev/*` annotations to ingress for [Homepage](https://gethomepage.dev) dashboard discovery:
+
+For apps deployed via HelmRelease in the cluster, add `gethomepage.dev/*` annotations to ingress for [Homepage](https://gethomepage.dev) dashboard discovery:
 
 ```yaml
 # Required annotations
@@ -202,6 +203,8 @@ gethomepage.dev/widget.key: '{{"{{"}}HOMEPAGE_VAR_<APP>_KEY{{"}}"}}'
 ```
 
 **Current groups in use:** `Media`, `Security & Monitoring`, `Networking`, `Storage`
+
+**External services** (proxied via `external-proxy/`): Do NOT use ingress annotations. Instead, add entries directly to the `services` section in `kubernetes/apps/apps/utils/homepage/helmrelease.yaml`. This keeps all external service configuration centralized in one place.
 
 ### Storage Classes
 - `longhorn-r2` - Longhorn with 2 replicas (default for apps)
