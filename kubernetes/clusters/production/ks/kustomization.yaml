@@ -22,5 +22,6 @@ resources:
   - 72-observability-loki-install.yaml
   - 74-observability-alloy-install.yaml
   - 75-nfd-install.yaml
+  - 75-nfd-config.yaml
   - 76-gpu-plugin-install.yaml
   - 90-apps.yaml
