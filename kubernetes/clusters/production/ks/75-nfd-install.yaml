@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./kubernetes/infrastructure/observability/node-feature-discovery
+  path: ./kubernetes/infrastructure/node-feature-discovery
   prune: true
   sourceRef:
     kind: GitRepository

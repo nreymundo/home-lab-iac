@@ -21,6 +21,6 @@ resources:
   - 71-observability-metrics-server-install.yaml
   - 72-observability-loki-install.yaml
   - 74-observability-alloy-install.yaml
-  - 75-observability-nfd-install.yaml
+  - 75-nfd-install.yaml
   - 76-gpu-plugin-install.yaml
   - 90-apps.yaml
