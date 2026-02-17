@@ -15,3 +15,5 @@ resources:
   - cloudnative-pg.yaml
   - authentik.yaml
   - crowdsec.yaml
+  - nfd.yaml
+  - intel.yaml
