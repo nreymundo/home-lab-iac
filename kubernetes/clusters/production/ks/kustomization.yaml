@@ -23,5 +23,6 @@ resources:
   - 74-observability-alloy-install.yaml
   - 75-nfd-install.yaml
   - 75-nfd-config.yaml
-  - 76-gpu-plugin-install.yaml
+  - 76-intel-device-plugins-operator-install.yaml
+  - 77-gpu-plugin-install.yaml
   - 90-apps.yaml
