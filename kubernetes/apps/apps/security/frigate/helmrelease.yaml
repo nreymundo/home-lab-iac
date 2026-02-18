@@ -11,11 +11,6 @@ spec:
     defaultPodOptions:
       nodeSelector:
         homelab.lan/gpu: intel
-      securityContext:
-        fsGroup: 100
-        supplementalGroups:
-          - 44  # video group
-          - 993  # render group
     controllers:
       main:
         initContainers:
@@ -79,7 +74,10 @@ spec:
                     name: frigate-secrets
                     key: FRIGATE_AUTH_SECRET
             securityContext:
-              privileged: true
+              capabilities:
+                add:
+                  - IPC_LOCK
+                  - SYS_RAWIO
             ports:
               - name: http
                 containerPort: 8971
@@ -95,9 +93,11 @@ spec:
                 protocol: UDP
             resources:
               requests:
+                gpu.intel.com/i915: 1
                 cpu: 500m
                 memory: 1Gi
               limits:
+                gpu.intel.com/i915: 1
                 cpu: 4
                 memory: 4Gi
     service:
@@ -189,9 +189,3 @@ spec:
         sizeLimit: 1Gi
         globalMounts:
           - path: /dev/shm
-      dri:
-        enabled: true
-        type: hostPath
-        hostPath: /dev/dri
-        globalMounts:
-          - path: /dev/dri
