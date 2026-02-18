@@ -81,7 +81,7 @@ All nodes receive these labels (override via Terraform):
 - `homelab.lan/role` - Node purpose (general, storage)
 - `homelab.lan/cpu-vendor` - CPU type (intel, amd)
 - `homelab.lan/runtime` - vm or baremetal
-- `homelab.lan/gpu` - GPU type or none
+- `homelab.lan/gpu` - GPU type or none (legacy; prefer NFD GPU labels for scheduling)
 - `topology.kubernetes.io/zone` - Proxmox node name for zone awareness
 
 ### Storage Classes
@@ -145,6 +145,13 @@ Kubernetes secrets are cross-namespace replicated via `kube-replicator`.
 4. In `helmrelease.yaml`, use standard `main` keys for controllers, containers, and ingress to ensure component compatibility.
 5. Add to parent kustomization in `<category>/kustomization.yaml`
 6. Commit and push - Flux auto-reconciles
+
+### GPU Workloads (Intel iGPU)
+- GPU discovery and scheduling are handled by NFD + Intel GPU device plugin.
+- Request a GPU share with `resources.limits.gpu.intel.com/i915: 1` (and match `requests`).
+- Do not mount `/dev/dri` via hostPath or run `privileged: true` for GPU access.
+- For OpenVINO workloads, add capabilities as needed: `IPC_LOCK`, `SYS_RAWIO`, `PERFMON`.
+- `sharedDevNum: 10` is per GPU device; each GPU advertises 10 allocatable shares.
 
 ### Ingress Conventions
 - Ingress class: `traefik` (handled by `ingress/traefik-base` component)

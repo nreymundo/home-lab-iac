@@ -139,13 +139,20 @@ spec:
         className: traefik
         hosts:
           - host: myapp.lan.${CLUSTER_DOMAIN}
-    persistence:
+  persistence:
       data:
         enabled: true
         type: persistentVolumeClaim
         storageClass: longhorn-r2
         size: 1Gi
  ```
+
+### GPU Workloads (Intel iGPU)
+- Discovery and scheduling are handled by NFD + Intel GPU device plugin.
+- Use `resources.limits.gpu.intel.com/i915: 1` (and match `requests`).
+- Avoid `/dev/dri` hostPath mounts and `privileged: true`.
+- OpenVINO workloads may require capabilities: `IPC_LOCK`, `SYS_RAWIO`, `PERFMON`.
+- `sharedDevNum: 10` is per GPU device (each GPU advertises 10 shares).
 
 ### Renovate Support
 
