@@ -8,9 +8,7 @@ spec:
     spec:
       chart: app-template
   values:
-    defaultPodOptions:
-      nodeSelector:
-        homelab.lan/gpu: intel
+    defaultPodOptions: {}
     controllers:
       main:
         initContainers:
@@ -78,6 +76,7 @@ spec:
                 add:
                   - IPC_LOCK
                   - SYS_RAWIO
+                  - PERFMON
             ports:
               - name: http
                 containerPort: 8971
