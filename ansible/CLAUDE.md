@@ -139,6 +139,12 @@ Node labels are defined via `k3s_node_labels` variable and use the `homelab.lan/
 ### Network Interface
 The `k3s_iface` variable must be set for each host to specify the network interface for K3s communication.
 
+### Intel GPU Perf Counters
+K3s OS tuning configures perf sysctls on Intel GPU nodes (detected via `/sys/class/drm/renderD128/device/vendor`).
+- `k3s_enable_gpu_perf_sysctl` (default: `true`)
+- `k3s_perf_event_paranoid` (default: `0`)
+- `k3s_kptr_restrict` (default: `0`)
+
 ## Common Tasks
 
 | Task | Command |

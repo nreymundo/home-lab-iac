@@ -34,6 +34,54 @@
   become: true
 
 # ---------------------------------------------------------------------------
+# Intel GPU perf counters (for OpenVINO stats)
+# ---------------------------------------------------------------------------
+
+- name: Check for Intel GPU render node vendor
+  ansible.builtin.stat:
+    path: /sys/class/drm/renderD128/device/vendor
+  register: k3s_gpu_vendor_file
+  changed_when: false
+  become: true
+
+- name: Read GPU vendor id
+  ansible.builtin.command: cat /sys/class/drm/renderD128/device/vendor
+  register: k3s_gpu_vendor_id
+  changed_when: false
+  when: k3s_gpu_vendor_file.stat.exists | default(false)
+  become: true
+
+- name: Set Intel GPU detection fact
+  ansible.builtin.set_fact:
+    k3s_intel_gpu_present: >-
+      {{
+        k3s_gpu_vendor_file.stat.exists | default(false)
+        and (k3s_gpu_vendor_id.stdout | default('') | trim) == '0x8086'
+      }}
+
+- name: Persist Intel GPU perf sysctl settings
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-zzz-k3s-gpu-perf.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      kernel.perf_event_paranoid={{ k3s_perf_event_paranoid }}
+      kernel.kptr_restrict={{ k3s_kptr_restrict }}
+  become: true
+  notify: Reload sysctl
+  when:
+    - k3s_enable_gpu_perf_sysctl | bool
+    - k3s_intel_gpu_present | bool
+
+- name: Remove Intel GPU perf sysctl settings when not applicable
+  ansible.builtin.file:
+    path: /etc/sysctl.d/99-zzz-k3s-gpu-perf.conf
+    state: absent
+  become: true
+  when: not (k3s_enable_gpu_perf_sysctl | bool and k3s_intel_gpu_present | bool)
+
+# ---------------------------------------------------------------------------
 # File descriptor limits (PAM / interactive shells)
 # ---------------------------------------------------------------------------
 

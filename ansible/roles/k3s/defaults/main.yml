@@ -33,3 +33,8 @@ k3s_fs_inotify_max_user_watches: 1048576
 k3s_fs_inotify_max_user_instances: 1024
 k3s_fs_inotify_max_queued_events: 32768
 k3s_nofile_limit: 1048576
+
+# Intel GPU perf counters (for OpenVINO stats in containers)
+k3s_enable_gpu_perf_sysctl: true
+k3s_perf_event_paranoid: 0
+k3s_kptr_restrict: 0
