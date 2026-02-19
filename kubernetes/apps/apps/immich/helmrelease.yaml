@@ -39,14 +39,13 @@ spec:
                     key: password
               REDIS_HOSTNAME: immich-redis
               IMMICH_MACHINE_LEARNING_URL: http://immich-machine-learning:3003
-              UPLOAD_LOCATION: /mnt/media/libraries/photos
             probes:
               liveness:
                 enabled: true
                 custom: true
                 spec:
                   httpGet:
-                    path: /api/health
+                    path: /api/server/ping
                     port: 2283
                   initialDelaySeconds: 30
                   periodSeconds: 10
@@ -57,7 +56,7 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /api/health
+                    path: /api/server/ping
                     port: 2283
                   initialDelaySeconds: 10
                   periodSeconds: 10
@@ -68,7 +67,7 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /api/health
+                    path: /api/server/ping
                     port: 2283
                   failureThreshold: 30
                   periodSeconds: 5
@@ -93,7 +92,7 @@ spec:
               HF_XET_CACHE: /cache/huggingface-xet
               MPLCONFIGDIR: /cache/matplotlib-config
             securityContext:
-              runAsNonRoot: true
+              runAsNonRoot: false
               capabilities:
                 add:
                   - IPC_LOCK
@@ -208,7 +207,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: Immich
           gethomepage.dev/description: Photo management and backup
-          gethomepage.dev/group: utils
+          gethomepage.dev/group: Utils
           gethomepage.dev/icon: immich.png
         hosts:
           - host: photos.${CLUSTER_DOMAIN}
@@ -236,4 +235,5 @@ spec:
         advancedMounts:
           server:
             server:
-              - path: /mnt/media
+              - path: /data
+                subPath: libraries/photos
