@@ -18,7 +18,7 @@ spec:
             fsGroup: 100
           containers:
             - name: backup
-              image: postgres:18-alpine
+              image: postgres:14-alpine
               command: ["/bin/sh", "-c"]
               args:
                 - |
