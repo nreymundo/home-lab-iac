@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+  - ../../../../components/bjw-s-defaults
+  - ../../../../components/ingress/traefik-base
+resources:
+  - cnpg-cluster.yaml
+  - db-backup.yaml
+  - immich-db-secrets.sops.yaml
+  - helmrelease.yaml

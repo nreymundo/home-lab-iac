@@ -23,6 +23,7 @@ resources:
   - ../apps/ai/llama-swap
   - ../apps/security/vaultwarden
   - ../apps/security/frigate
+  - ../apps/immich
   - ../apps/media/jellyplex-watched
   - ../apps/utils/discord-presence
   - ../apps/media/plextraktsync
