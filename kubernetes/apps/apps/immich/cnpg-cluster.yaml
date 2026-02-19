@@ -1,0 +1,72 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: immich-pg
+  namespace: immich
+  labels:
+    release: observability-kube-prometheus-stack
+spec:
+  inheritedMetadata:
+    labels:
+      recurring-job.longhorn.io/backup-daily: enabled
+      recurring-job.longhorn.io/backup-weekly: enabled
+  instances: 1
+  monitoring:
+    enablePodMonitor: true
+  storage:
+    size: 10Gi
+    storageClass: longhorn-r2
+
+  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:14.18-0.3.0
+
+  postgresql:
+    parameters:
+      wal_level: "replica"
+      archive_timeout: "43200" # Wait 12 hours before shipping WALs when no activity
+      archive_mode: "on"
+    shared_preload_libraries:
+      - "vchord.so"
+
+  bootstrap:
+    initdb:
+      database: immich
+      owner: immich
+      secret:
+        name: immich-db-secrets
+      postInitApplicationSQL:
+        - CREATE EXTENSION vchord CASCADE;
+        - CREATE EXTENSION earthdistance CASCADE;
+
+  backup:
+    barmanObjectStore:
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-backup-s3
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-backup-s3
+          key: ACCESS_SECRET_KEY
+        region:
+          name: cnpg-backup-s3
+          key: AWS_DEFAULT_REGION
+      destinationPath: "s3://cloudnative-pg/immich"
+      endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+      serverName: "immich-pg-v1"
+    retentionPolicy: "14d"
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: immich-pg-backup
+  namespace: immich
+spec:
+  schedule: "0 0 * * *"  # Daily at midnight
+  backupOwnerReference: self
+  cluster:
+    name: immich-pg
+  method: barmanObjectStore

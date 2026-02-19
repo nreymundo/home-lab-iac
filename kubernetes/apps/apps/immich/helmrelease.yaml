@@ -1,0 +1,239 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: immich
+  namespace: immich
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      server:
+        pod:
+          securityContext:
+            runAsUser: 99
+            runAsGroup: 100
+            fsGroup: 100
+            fsGroupChangePolicy: OnRootMismatch
+        containers:
+          server:
+            image:
+              # renovate: datasource=docker depName=immich-app/immich-server registryUrl=https://ghcr.io
+              repository: ghcr.io/immich-app/immich-server
+              tag: v2.5.6
+            env:
+              TZ: Europe/Berlin
+              DB_HOSTNAME: immich-pg-rw
+              DB_PORT: "5432"
+              DB_DATABASE_NAME: immich
+              DB_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-db-secrets
+                    key: username
+              DB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-db-secrets
+                    key: password
+              REDIS_HOSTNAME: immich-redis
+              IMMICH_MACHINE_LEARNING_URL: http://immich-machine-learning:3003
+              UPLOAD_LOCATION: /mnt/media/libraries/photos
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 2283
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 2283
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 2283
+                  failureThreshold: 30
+                  periodSeconds: 5
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 2000m
+                memory: 2Gi
+
+      machine-learning:
+        containers:
+          machine-learning:
+            image:
+              # renovate: datasource=docker depName=immich-app/immich-machine-learning registryUrl=https://ghcr.io
+              repository: ghcr.io/immich-app/immich-machine-learning
+              tag: v2.5.6-openvino
+            env:
+              TZ: Europe/Berlin
+              TRANSFORMERS_CACHE: /cache
+              HF_XET_CACHE: /cache/huggingface-xet
+              MPLCONFIGDIR: /cache/matplotlib-config
+            securityContext:
+              runAsNonRoot: true
+              capabilities:
+                add:
+                  - IPC_LOCK
+                  - SYS_RAWIO
+                  - PERFMON
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /ping
+                    port: 3003
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /ping
+                    port: 3003
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /ping
+                    port: 3003
+                  failureThreshold: 30
+                  periodSeconds: 5
+            resources:
+              requests:
+                gpu.intel.com/i915: 1
+                cpu: 500m
+                memory: 1Gi
+              limits:
+                gpu.intel.com/i915: 1
+                cpu: 4000m
+                memory: 6Gi
+
+      redis:
+        containers:
+          redis:
+            image:
+              # renovate: datasource=docker depName=valkey/valkey registryUrl=https://docker.io
+              repository: docker.io/valkey/valkey
+              tag: "9"
+              digest: sha256:546304417feac0874c3dd576e0952c6bb8f06bb4093ea0c9ca303c73cf458f63
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - redis-cli ping || exit 1
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - redis-cli ping || exit 1
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                cpu: 250m
+                memory: 256Mi
+
+    service:
+      main:
+        controller: server
+        ports:
+          http:
+            port: 2283
+      machine-learning:
+        controller: machine-learning
+        ports:
+          http:
+            port: 3003
+      redis:
+        controller: redis
+        ports:
+          redis:
+            port: 6379
+
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: photos.${CLUSTER_DOMAIN}
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Immich
+          gethomepage.dev/description: Photo management and backup
+          gethomepage.dev/group: utils
+          gethomepage.dev/icon: immich.png
+        hosts:
+          - host: photos.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      ml-cache:
+        enabled: true
+        type: persistentVolumeClaim
+        storageClass: longhorn-r2
+        accessMode: ReadWriteOnce
+        size: 10Gi
+        advancedMounts:
+          machine-learning:
+            machine-learning:
+              - path: /cache
+      media:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/media
+        advancedMounts:
+          server:
+            server:
+              - path: /mnt/media
