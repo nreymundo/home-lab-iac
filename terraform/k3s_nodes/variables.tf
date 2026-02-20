@@ -121,7 +121,7 @@ variable "vm_cores" {
 variable "vm_memory_mb" {
   type        = number
   description = "RAM in MB per node VM"
-  default     = 16384
+  default     = 32768
   validation {
     condition     = var.vm_memory_mb >= 512
     error_message = "Memory must be at least 512 MB."
