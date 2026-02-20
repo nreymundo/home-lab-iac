@@ -95,6 +95,16 @@ spec:
             secretKeyRef:
               name: gitea-sso-secret
               key: CLIENT_SECRET
+        - name: IMMICH_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: immich-sso-secret
+              key: CLIENT_ID
+        - name: IMMICH_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: immich-sso-secret
+              key: CLIENT_SECRET
         - name: DISCORD_BASIC_AUTH
           valueFrom:
             secretKeyRef:
