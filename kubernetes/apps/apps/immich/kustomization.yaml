@@ -7,4 +7,6 @@ resources:
   - cnpg-cluster.yaml
   - db-backup.yaml
   - immich-db-secrets.sops.yaml
+  - immich-secrets.sops.yaml
+  - auto-stack-cronjob.yaml
   - helmrelease.yaml

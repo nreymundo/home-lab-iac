@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: immich-auto-stack
+  namespace: immich
+spec:
+  schedule: "0 * * * *"
+  suspend: true
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: auto-stack
+              image: ghcr.io/tenekev/immich-auto-stack:latest
+              command:
+                - python
+                - /script/immich_auto_stack.py
+              env:
+                - name: API_URL
+                  value: "http://immich-main.immich.svc.cluster.local:2283/api"
+                - name: API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: immich-secrets
+                      key: api-key
+                - name: DRY_RUN
+                  value: "False"
+                - name: SKIP_PREVIOUS
+                  value: "True"
+                - name: TZ
+                  value: "Europe/Berlin"
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 250m
+                  memory: 256Mi
