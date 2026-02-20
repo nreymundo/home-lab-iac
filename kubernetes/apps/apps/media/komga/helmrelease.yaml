@@ -78,10 +78,10 @@ spec:
           gethomepage.dev/group: Media
           gethomepage.dev/icon: komga.png
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/widget.type: "komga"
-          gethomepage.dev/widget.url: "http://komga.media.svc.cluster.local:25600"
-          gethomepage.dev/widget.username: '{{"{{HOMEPAGE_VAR_DEFAULT_EMAIL}}"}}'
-          gethomepage.dev/widget.password: '{{"{{HOMEPAGE_VAR_KOMGA_PASSWORD}}"}}'
+          # gethomepage.dev/widget.type: "komga"
+          # gethomepage.dev/widget.url: "http://komga.media.svc.cluster.local:25600"
+          # gethomepage.dev/widget.username: '{{"{{HOMEPAGE_VAR_DEFAULT_EMAIL}}"}}'
+          # gethomepage.dev/widget.password: '{{"{{HOMEPAGE_VAR_KOMGA_PASSWORD}}"}}'
         hosts:
           - host: comics.lan.${CLUSTER_DOMAIN}
             paths:

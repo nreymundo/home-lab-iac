@@ -47,9 +47,9 @@ spec:
           gethomepage.dev/group: Media
           gethomepage.dev/icon: audiobookshelf.png
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/widget.type: "audiobookshelf"
-          gethomepage.dev/widget.url: "http://audiobookshelf.media.svc.cluster.local"
-          gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_AUDIOBOOKSHELF_KEY}}"}}'
+          # gethomepage.dev/widget.type: "audiobookshelf"
+          # gethomepage.dev/widget.url: "http://audiobookshelf.media.svc.cluster.local"
+          # gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_AUDIOBOOKSHELF_KEY}}"}}'
         hosts:
           - host: audiobooks.lan.${CLUSTER_DOMAIN}
             paths:

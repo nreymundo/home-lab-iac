@@ -172,11 +172,11 @@ spec:
                 icon: proxmox.png
                 description: "Proxmox Virtual Environment"
                 href: https://pve1.lan.${CLUSTER_DOMAIN}
-                widget:
-                  type: proxmox
-                  url: https://pve1.lan.${CLUSTER_DOMAIN}
-                  username: "api-ro@pam!homepage"
-                  password: "{{HOMEPAGE_VAR_PROXMOX_API_KEY}}"
+                # widget:
+                #   type: proxmox
+                #   url: https://pve1.lan.${CLUSTER_DOMAIN}
+                #   username: "api-ro@pam!homepage"
+                #   password: "{{HOMEPAGE_VAR_PROXMOX_API_KEY}}"
             - Framework Desktop:
                 icon: cockpit.png
                 description: "Framework Desktop management interface"
@@ -190,19 +190,19 @@ spec:
                 icon: opnsense.png
                 description: "Virtualized Firewall"
                 href: http://opnsense.lan.${CLUSTER_DOMAIN}
-                widget:
-                  type: opnsense
-                  url: http://192.168.10.1
-                  username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
-                  password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
+                # widget:
+                #   type: opnsense
+                #   url: http://192.168.10.1
+                #   username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
+                #   password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
             - Pi-hole:
                 icon: pi-hole.png
                 description: "DNS resolver and ad-blocker"
                 href: https://pihole.lan.${CLUSTER_DOMAIN}/admin
-                widget:
-                  type: pihole
-                  url: https://192.168.10.2
-                  version: 6
+                # widget:
+                #   type: pihole
+                #   url: https://192.168.10.2
+                #   version: 6
             - Omada:
                 icon: omada.png
                 description: "TP-Link device manager"
@@ -212,10 +212,10 @@ spec:
                 icon: unraid.png
                 description: "Virtual NAS running in Proxmox"
                 href: http://unraid.lan.${CLUSTER_DOMAIN}
-                widget:
-                  type: unraid
-                  url: http://192.168.10.4:8001
-                  key: "{{HOMEPAGE_VAR_UNRAID_KEY}}"
+                # widget:
+                #   type: unraid
+                #   url: http://192.168.10.4:8001
+                #   key: "{{HOMEPAGE_VAR_UNRAID_KEY}}"
             - Syncthing:
                 icon: syncthing.png
                 description: "File synchronization"
@@ -228,11 +228,11 @@ spec:
                 icon: proxmox.png
                 description: "Backup server for Proxmox"
                 href: https://pbs.lan.${CLUSTER_DOMAIN}
-                widget:
-                  type: proxmoxbackupserver
-                  url: https://pbs.lan.${CLUSTER_DOMAIN}
-                  username: "api-ro@pbs!homepage"
-                  password: "{{HOMEPAGE_VAR_PBS_API_KEY}}"
+                # widget:
+                #   type: proxmoxbackupserver
+                #   url: https://pbs.lan.${CLUSTER_DOMAIN}
+                #   username: "api-ro@pbs!homepage"
+                #   password: "{{HOMEPAGE_VAR_PBS_API_KEY}}"
         - Automation:
             - Home Assistant:
                 icon: home-assistant.png

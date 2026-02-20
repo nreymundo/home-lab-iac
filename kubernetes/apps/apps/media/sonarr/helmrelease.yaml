@@ -45,9 +45,9 @@ spec:
           gethomepage.dev/group: Media
           gethomepage.dev/icon: sonarr.png
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/widget.type: "sonarr"
-          gethomepage.dev/widget.url: "http://sonarr.media.svc.cluster.local:8989"
-          gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_SONARR_KEY}}"}}'
+          # gethomepage.dev/widget.type: "sonarr"
+          # gethomepage.dev/widget.url: "http://sonarr.media.svc.cluster.local:8989"
+          # gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_SONARR_KEY}}"}}'
         hosts:
           - host: sonarr.lan.${CLUSTER_DOMAIN}
             paths:

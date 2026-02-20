@@ -45,9 +45,9 @@ spec:
           gethomepage.dev/group: Media
           gethomepage.dev/icon: overseerr.png
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/widget.type: "overseerr"
-          gethomepage.dev/widget.url: "http://overseerr.media.svc.cluster.local:5055"
-          gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_OVERSEERR_KEY}}"}}'
+          # gethomepage.dev/widget.type: "overseerr"
+          # gethomepage.dev/widget.url: "http://overseerr.media.svc.cluster.local:5055"
+          # gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_OVERSEERR_KEY}}"}}'
         hosts:
           - host: overseerr.lan.${CLUSTER_DOMAIN}
             paths:
