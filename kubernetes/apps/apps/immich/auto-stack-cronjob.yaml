@@ -5,21 +5,20 @@ metadata:
   namespace: immich
 spec:
   schedule: "0 * * * *"
-  suspend: true
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      backoffLimit: 1
       template:
         spec:
           restartPolicy: OnFailure
           containers:
             - name: auto-stack
-              image: ghcr.io/tenekev/immich-auto-stack:latest
-              command:
-                - python
-                - /script/immich_auto_stack.py
+              image: localhost/immich-auto-stack:local
+              imagePullPolicy: Never
+              command: ["python", "/script/immich_auto_stack.py"]
               env:
                 - name: API_URL
                   value: "http://immich-main.immich.svc.cluster.local:2283/api"
