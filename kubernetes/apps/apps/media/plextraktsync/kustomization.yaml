@@ -9,3 +9,4 @@ resources:
   - servers.sops.yaml
   - trakt.sops.yaml
   - env.sops.yaml
+  - sync-job.yaml

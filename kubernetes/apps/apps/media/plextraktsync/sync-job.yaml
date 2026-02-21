@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: plextraktsync-exec-cron
+  namespace: media
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: plextraktsync-exec-into-pod
+  namespace: media
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: plextraktsync-exec-into-pod
+  namespace: media
+subjects:
+  - kind: ServiceAccount
+    name: plextraktsync-exec-cron
+    namespace: media
+roleRef:
+  kind: Role
+  name: plextraktsync-exec-into-pod
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: plextraktsync-sync
+  namespace: media
+spec:
+  schedule: "0 */12 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          serviceAccountName: plextraktsync-exec-cron
+          restartPolicy: Never
+          containers:
+            - name: runner
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/sh
+                - -lc
+                - |
+                  set -euo pipefail
+                  NS=media
+                  SELECTOR='app.kubernetes.io/controller=main,app.kubernetes.io/instance=plextraktsync,app.kubernetes.io/name=plextraktsync'
+                  POD="$(kubectl -n "$NS" get pods -l "$SELECTOR" -o jsonpath='{.items[0].metadata.name}')"
+                  if [ -z "$POD" ]; then
+                    echo "ERROR: No plextraktsync pod found with selector: $SELECTOR" >&2
+                    exit 1
+                  fi
+                  echo "Found pod: $POD, waiting for it to be ready..."
+                  kubectl -n "$NS" wait --for=condition=Ready "pod/$POD" --timeout=120s
+                  echo "Executing sync..."
+                  kubectl -n "$NS" exec "$POD" -c main -- /bin/sh -lc '/app/plextraktsync.sh sync'
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
