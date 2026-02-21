@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=cstaelen/tidarr registryUrl=https://docker.io
               repository: cstaelen/tidarr
-              tag: 1.1.8
+              tag: 1.1.9
             env:
               TZ: Europe/Berlin
               PUID: "99"
