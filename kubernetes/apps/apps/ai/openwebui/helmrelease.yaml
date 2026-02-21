@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=github-tags depName=open-webui/open-webui
               repository: ghcr.io/open-webui/open-webui
-              tag: 0.8.1
+              tag: 0.8.2
             env:
               TZ: Europe/Berlin
             ports:
