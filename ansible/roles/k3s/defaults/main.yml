@@ -1,13 +1,13 @@
 ---
 # K3s installation defaults
-k3s_version: "v1.34.2+k3s1"
+k3s_version: "v1.35.1+k3s1"
 k3s_cluster_init: false
 k3s_server_args: ""
 k3s_agent_args: ""
 
 # Checksums for K3s binaries - ensures integrity verification
-k3s_amd64_checksum: "15811d34187e03fe29d0e46108c42cc33e62cec1b3d9d80f50944536ebcad40a"
-k3s_arm64_checksum: "2e1db0e54a8b0d0ab8a264a119c9c617561f9290e7bb2722d795f8bc91b24cf8"
+k3s_amd64_checksum: "e406ca6e47673d747ab4665c90a9285615fe082e2593343725ed043ae163abbf"
+k3s_arm64_checksum: "c8d08bc38ad51be20ba531b3c412855c38d534f99cdff30fde6891b6f555a846"
 
 # Default to inventory IP, but allow overrides (e.g. for VLANs)
 k3s_node_ip: "{{ ansible_host }}"

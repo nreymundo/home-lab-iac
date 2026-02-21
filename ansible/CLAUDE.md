@@ -91,6 +91,12 @@ ansible-playbook playbooks/k3s_cluster.yml --check
 # Full run with verbose output
 ansible-playbook playbooks/k3s_cluster.yml -v
 
+# K3s upgrade (rolling, drain/uncordon)
+ansible-playbook playbooks/k3s_upgrade.yml
+
+# K3s upgrade with force drain (use with caution)
+ansible-playbook playbooks/k3s_upgrade.yml -e k3s_drain_force=true -e k3s_drain_disable_eviction=true
+
 # Target specific hosts
 ansible-playbook playbooks/k3s_cluster.yml --limit "k3s-node-01"
 

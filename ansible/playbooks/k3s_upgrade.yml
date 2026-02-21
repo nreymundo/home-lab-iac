@@ -1,0 +1,165 @@
+---
+- name: K3s upgrade prechecks
+  hosts: k3s_cluster
+  gather_facts: true
+  vars_files:
+    - ../roles/k3s/defaults/main.yml
+  vars:
+    k3s_upgrade_primary: >-
+      {{
+        (
+          hostvars
+          | dict2items
+          | selectattr('value.k3s_is_seed', 'defined')
+          | selectattr('value.k3s_is_seed', 'equalto', true)
+          | map(attribute='key')
+          | list
+          | first
+        )
+        | default((groups['k3s_nodes'] | default(groups['k3s_cluster'])) | first)
+      }}
+    k3s_upgrade_order: >-
+      {{
+        [k3s_upgrade_primary]
+        + (groups['k3s_cluster'] | difference([k3s_upgrade_primary]))
+      }}
+    k3s_drain_force: false
+    k3s_drain_disable_eviction: false
+  tasks:
+    - name: Ensure target version and checksums are set
+      ansible.builtin.assert:
+        that:
+          - k3s_version | length > 0
+          - k3s_amd64_checksum | length > 0
+          - k3s_arm64_checksum | length > 0
+        fail_msg: "k3s_version or checksums are missing; set them before upgrading"
+      when: inventory_hostname == k3s_upgrade_primary
+
+    - name: Check cgroup filesystem type
+      ansible.builtin.command: stat -fc %T /sys/fs/cgroup
+      register: k3s_cgroup_fs
+      changed_when: false
+      check_mode: false
+
+    - name: Check for deprecated kubelet pod infra flag
+      ansible.builtin.command: >-
+        grep -R --line-number --fixed-strings -- '--pod-infra-container-image'
+        /etc/rancher/k3s
+        /etc/systemd/system/k3s.service.d
+        /etc/default/k3s
+        /etc/sysconfig/k3s
+      register: k3s_pod_infra_flag
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Fail if deprecated pod infra flag is present
+      ansible.builtin.assert:
+        that:
+          - (k3s_pod_infra_flag.rc | default(1)) != 0
+        fail_msg: >-
+          Deprecated kubelet flag --pod-infra-container-image found on {{ inventory_hostname }}.
+          Remove it before upgrading to Kubernetes v1.35.
+
+    - name: Initialize cgroups v1 host list
+      ansible.builtin.set_fact:
+        k3s_cgroup_v1_hosts: []
+      when: inventory_hostname == k3s_upgrade_primary
+
+    - name: Collect hosts running cgroups v1
+      ansible.builtin.set_fact:
+        k3s_cgroup_v1_hosts: "{{ k3s_cgroup_v1_hosts | default([]) + [item] }}"
+      loop: "{{ ansible_play_hosts_all }}"
+      when:
+        - inventory_hostname == k3s_upgrade_primary
+        - hostvars[item].k3s_cgroup_fs.stdout != 'cgroup2fs'
+
+    - name: Fail if any hosts are using cgroups v1
+      ansible.builtin.assert:
+        that:
+          - (k3s_cgroup_v1_hosts | default([])) | length == 0
+        fail_msg: >-
+          cgroups v1 detected on: {{ (k3s_cgroup_v1_hosts | default([])) | join(', ') }}.
+          Upgrade requires cgroups v2 for Kubernetes v1.35.
+      when: inventory_hostname == k3s_upgrade_primary
+
+    - name: Check cluster node readiness
+      ansible.builtin.command: >-
+        kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}:{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}'
+      register: k3s_node_ready
+      changed_when: false
+      check_mode: false
+      when: inventory_hostname == k3s_upgrade_primary
+
+    - name: Fail if any nodes are NotReady
+      ansible.builtin.assert:
+        that:
+          - k3s_not_ready | length == 0
+        fail_msg: "Nodes not ready: {{ k3s_not_ready | join(', ') }}"
+      vars:
+        k3s_not_ready: "{{ k3s_node_ready.stdout_lines | reject('search', ':True$') | list }}"
+      when: inventory_hostname == k3s_upgrade_primary
+
+    - name: Build ordered upgrade host group
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: k3s_upgrade_targets
+      loop: "{{ k3s_upgrade_order }}"
+      check_mode: false
+
+- name: Upgrade K3s nodes sequentially
+  hosts: k3s_upgrade_targets
+  serial: 1
+  gather_facts: true
+  vars_files:
+    - ../roles/k3s/defaults/main.yml
+  vars:
+    k3s_upgrade_primary: >-
+      {{
+        (
+          hostvars
+          | dict2items
+          | selectattr('value.k3s_is_seed', 'defined')
+          | selectattr('value.k3s_is_seed', 'equalto', true)
+          | map(attribute='key')
+          | list
+          | first
+        )
+        | default((groups['k3s_nodes'] | default(groups['k3s_cluster'])) | first)
+      }}
+    k3s_drain_force: false
+    k3s_drain_disable_eviction: false
+  tasks:
+    - name: Warn when force drain is enabled
+      ansible.builtin.debug:
+        msg: "Force drain enabled; this may cause abrupt pod termination on {{ inventory_hostname }}."
+      when: k3s_drain_force | bool
+
+    - name: Drain node
+      ansible.builtin.command: >-
+        kubectl drain {{ inventory_hostname }}
+        --ignore-daemonsets
+        --delete-emptydir-data
+        --timeout=10m
+        {{ '--force' if (k3s_drain_force | bool) else '' }}
+        {{ '--disable-eviction' if (k3s_drain_disable_eviction | bool) else '' }}
+      changed_when: true
+      delegate_to: "{{ k3s_upgrade_primary }}"
+
+    - name: Upgrade K3s binary
+      ansible.builtin.include_role:
+        name: k3s
+        tasks_from: upgrade.yml
+
+    - name: Wait for node to become Ready
+      ansible.builtin.command: >-
+        kubectl wait node/{{ inventory_hostname }}
+        --for=condition=Ready
+        --timeout=10m
+      changed_when: false
+      delegate_to: "{{ k3s_upgrade_primary }}"
+
+    - name: Uncordon node
+      ansible.builtin.command: kubectl uncordon {{ inventory_hostname }}
+      changed_when: true
+      delegate_to: "{{ k3s_upgrade_primary }}"
