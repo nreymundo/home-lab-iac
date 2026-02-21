@@ -4,7 +4,7 @@ metadata:
   name: authentik-blueprints-bootstrap
   namespace: authentik
 data:
-  10-bootstrap.yaml: |
+  100-bootstrap.yaml: |
     version: 1
     metadata:
       name: homelab-bootstrap
@@ -57,7 +57,7 @@ data:
           name: "Gatekeeper"
           provider: !KeyOf proxy-provider
 
-  15-proxy-scope-mapping.yaml: |
+  110-proxy-scope-mapping.yaml: |
     version: 1
     metadata:
       name: proxy-scope-mapping
@@ -86,7 +86,7 @@ data:
                 }
             }
 
-  20-grafana.yaml: |
+  200-grafana.yaml: |
     version: 1
     metadata:
       name: grafana-sso
@@ -140,7 +140,7 @@ data:
           provider: !KeyOf grafana-provider
           group: "Observability"
 
-  30-vaultwarden.yaml: |
+  210-vaultwarden.yaml: |
     version: 1
     metadata:
       name: vaultwarden-sso
@@ -202,7 +202,7 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Vaultwarden Users"]]
 
-  40-audiobookshelf.yaml: |
+  220-audiobookshelf.yaml: |
     version: 1
     metadata:
       name: audiobookshelf-sso
@@ -259,7 +259,7 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Media"]]
 
-  50-komga.yaml: |
+  230-komga.yaml: |
     version: 1
     metadata:
       name: komga-sso
@@ -303,7 +303,7 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Media"]]
 
-  60-gitea.yaml: |
+  240-gitea.yaml: |
     version: 1
     metadata:
       name: gitea-sso
@@ -394,7 +394,7 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "gitadmin"]]
 
-  70-frigate.yaml: |
+  500-frigate.yaml: |
     version: 1
     metadata:
       name: frigate-sso
@@ -492,7 +492,7 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Frigate Viewers"]]
 
-  71-discord.yaml: |
+  510-discord.yaml: |
     version: 1
     metadata:
       name: discord-sso
@@ -599,7 +599,7 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Discord Users"]]
 
-  80-immich.yaml: |
+  250-immich.yaml: |
     version: 1
     metadata:
       name: immich-sso
@@ -693,7 +693,7 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Immich Admins"]]
 
-  99-outpost.yaml: |
+  999-outpost.yaml: |
     version: 1
     metadata:
       name: outpost-assembly
