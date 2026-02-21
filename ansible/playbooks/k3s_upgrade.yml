@@ -5,7 +5,24 @@
   vars_files:
     - ../roles/k3s/defaults/main.yml
   vars:
-    k3s_upgrade_primary: k3s-node-02
+    k3s_upgrade_primary: >-
+      {{
+        (
+          hostvars
+          | dict2items
+          | selectattr('value.k3s_is_seed', 'defined')
+          | selectattr('value.k3s_is_seed', 'equalto', true)
+          | map(attribute='key')
+          | list
+          | first
+        )
+        | default((groups['k3s_nodes'] | default(groups['k3s_cluster'])) | first)
+      }}
+    k3s_upgrade_order: >-
+      {{
+        [k3s_upgrade_primary]
+        + (groups['k3s_cluster'] | difference([k3s_upgrade_primary]))
+      }}
     k3s_drain_force: false
     k3s_drain_disable_eviction: false
   tasks:
@@ -71,6 +88,7 @@
         kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}:{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}'
       register: k3s_node_ready
       changed_when: false
+      check_mode: false
       when: inventory_hostname == k3s_upgrade_primary
 
     - name: Fail if any nodes are NotReady
@@ -82,95 +100,33 @@
         k3s_not_ready: "{{ k3s_node_ready.stdout_lines | reject('search', ':True$') | list }}"
       when: inventory_hostname == k3s_upgrade_primary
 
-- name: Upgrade K3s on primary control-plane node
-  hosts: k3s-node-02
+    - name: Build ordered upgrade host group
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: k3s_upgrade_targets
+      loop: "{{ k3s_upgrade_order }}"
+      check_mode: false
+
+- name: Upgrade K3s nodes sequentially
+  hosts: k3s_upgrade_targets
+  serial: 1
   gather_facts: true
+  vars_files:
+    - ../roles/k3s/defaults/main.yml
   vars:
-    k3s_upgrade_primary: k3s-node-02
-    k3s_drain_force: false
-    k3s_drain_disable_eviction: false
-  tasks:
-    - name: Warn when force drain is enabled
-      ansible.builtin.debug:
-        msg: "Force drain enabled; this may cause abrupt pod termination on {{ inventory_hostname }}."
-      when: k3s_drain_force | bool
-
-    - name: Drain node
-      ansible.builtin.command: >-
-        kubectl drain {{ inventory_hostname }}
-        --ignore-daemonsets
-        --delete-emptydir-data
-        --timeout=10m
-        {{ '--force' if (k3s_drain_force | bool) else '' }}
-        {{ '--disable-eviction' if (k3s_drain_disable_eviction | bool) else '' }}
-      changed_when: true
-      delegate_to: "{{ k3s_upgrade_primary }}"
-
-    - name: Upgrade K3s binary
-      ansible.builtin.include_role:
-        name: k3s
-        tasks_from: upgrade.yml
-
-    - name: Wait for node to become Ready
-      ansible.builtin.command: >-
-        kubectl wait node/{{ inventory_hostname }}
-        --for=condition=Ready
-        --timeout=10m
-      changed_when: false
-      delegate_to: "{{ k3s_upgrade_primary }}"
-
-    - name: Uncordon node
-      ansible.builtin.command: kubectl uncordon {{ inventory_hostname }}
-      changed_when: true
-      delegate_to: "{{ k3s_upgrade_primary }}"
-
-- name: Upgrade K3s on secondary control-plane node k3s-node-01
-  hosts: k3s-node-01
-  gather_facts: true
-  vars:
-    k3s_upgrade_primary: k3s-node-02
-    k3s_drain_force: false
-    k3s_drain_disable_eviction: false
-  tasks:
-    - name: Warn when force drain is enabled
-      ansible.builtin.debug:
-        msg: "Force drain enabled; this may cause abrupt pod termination on {{ inventory_hostname }}."
-      when: k3s_drain_force | bool
-
-    - name: Drain node
-      ansible.builtin.command: >-
-        kubectl drain {{ inventory_hostname }}
-        --ignore-daemonsets
-        --delete-emptydir-data
-        --timeout=10m
-        {{ '--force' if (k3s_drain_force | bool) else '' }}
-        {{ '--disable-eviction' if (k3s_drain_disable_eviction | bool) else '' }}
-      changed_when: true
-      delegate_to: "{{ k3s_upgrade_primary }}"
-
-    - name: Upgrade K3s binary
-      ansible.builtin.include_role:
-        name: k3s
-        tasks_from: upgrade.yml
-
-    - name: Wait for node to become Ready
-      ansible.builtin.command: >-
-        kubectl wait node/{{ inventory_hostname }}
-        --for=condition=Ready
-        --timeout=10m
-      changed_when: false
-      delegate_to: "{{ k3s_upgrade_primary }}"
-
-    - name: Uncordon node
-      ansible.builtin.command: kubectl uncordon {{ inventory_hostname }}
-      changed_when: true
-      delegate_to: "{{ k3s_upgrade_primary }}"
-
-- name: Upgrade K3s on secondary control-plane node framework
-  hosts: framework
-  gather_facts: true
-  vars:
-    k3s_upgrade_primary: k3s-node-02
+    k3s_upgrade_primary: >-
+      {{
+        (
+          hostvars
+          | dict2items
+          | selectattr('value.k3s_is_seed', 'defined')
+          | selectattr('value.k3s_is_seed', 'equalto', true)
+          | map(attribute='key')
+          | list
+          | first
+        )
+        | default((groups['k3s_nodes'] | default(groups['k3s_cluster'])) | first)
+      }}
     k3s_drain_force: false
     k3s_drain_disable_eviction: false
   tasks:
