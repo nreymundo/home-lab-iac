@@ -1,6 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+components:
+  - ../../../../components/bjw-s-defaults
+  - ../../../../components/storage/backup-policy
 resources:
-  - common
-  - watch
-  - sync
+  - helmrelease.yaml
+  - configmap.yaml
+  - servers.sops.yaml
+  - trakt.sops.yaml
+  - env.sops.yaml
