@@ -76,6 +76,11 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: renovate
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: development
 ---
 apiVersion: v1

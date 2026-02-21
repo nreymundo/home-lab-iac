@@ -23,7 +23,8 @@ kubernetes/
 │   ├── security/                 # Cert-manager, Authentik, Crowdsec
 │   ├── storage/                  # Longhorn, NFS shares
 │   ├── database/                 # CloudNative-PG
-│   └── observability/            # Prometheus, Loki, Alloy
+│   ├── observability/            # Prometheus, Loki, Alloy
+│   └── automation/               # Automation workloads (Renovate)
 ├── apps/                         # Application deployments
 │   ├── apps/                     # HelmRelease definitions
 │   │   ├── automation/
@@ -32,10 +33,9 @@ kubernetes/
 │   │   └── external-proxy/
 │   └── production/
 │       └── apps.yaml             # Kustomization for apps
-├── components/                   # Reusable Kustomize components
-│   ├── bjw-s-defaults/           # Common HelmRelease fields
-│   └── ingress/                  # Ingress-related components
-└── renovate/                     # Renovate configuration
+└── components/                   # Reusable Kustomize components
+    ├── bjw-s-defaults/           # Common HelmRelease fields
+    └── ingress/                  # Ingress-related components
 ```
 
 ## Kustomize Components

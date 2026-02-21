@@ -17,6 +17,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: renovate
+              # renovate: datasource=docker depName=renovate/renovate registryUrl=https://docker.io
               image: renovate/renovate:39.4.0
               env:
                 - name: LOG_LEVEL
