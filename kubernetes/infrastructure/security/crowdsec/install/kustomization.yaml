@@ -4,4 +4,5 @@ namespace: crowdsec
 resources:
   - helmrelease.yaml
   - traefik-bouncer-secret.sops.yaml
+  - opnsense-bouncer-secret.sops.yaml
   - acquisition-configmap.yaml

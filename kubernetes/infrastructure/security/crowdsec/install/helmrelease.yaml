@@ -38,6 +38,11 @@ spec:
             secretKeyRef:
               name: traefik-bouncer-key
               key: CROWDSEC_TRAEFIK_BOUNCER_API_KEY
+        - name: BOUNCER_KEY_OPNSENSE
+          valueFrom:
+            secretKeyRef:
+              name: opnsense-bouncer-key
+              key: CROWDSEC_OPNSENSE_BOUNCER_API_KEY
 
       resources:
         requests:
