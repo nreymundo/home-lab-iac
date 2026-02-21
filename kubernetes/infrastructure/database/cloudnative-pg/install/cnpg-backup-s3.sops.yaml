@@ -4,7 +4,7 @@ metadata:
     name: cnpg-backup-s3
     namespace: cnpg-system
     annotations:
-        replicator.v1.mittwald.de/replicate-to: "authentik,security,automation,immich"
+        replicator.v1.mittwald.de/replicate-to: "authentik,security,automation,immich,paperless"
 type: Opaque
 stringData:
     ACCESS_KEY_ID: ENC[AES256_GCM,data:06b8YomIByy36xm57/FQNwpaG9s+JQnK350=,iv:FSznzdC8KItFVWlWMNifn49ucK594y0f7ZGoYBlXrVU=,tag:469qtNa4tru+BynIgjwJxQ==,type:str]

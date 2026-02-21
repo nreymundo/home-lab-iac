@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+  - ../../../components/bjw-s-defaults
+  - ../../../components/ingress/traefik-base
+  - ../../../components/storage/backup-policy
+
+resources:
+  - db-backup.yaml
+  - paperless-db-secrets.sops.yaml
+  - paperless-secrets.sops.yaml
+  - cnpg-cluster.yaml
+  - helmrelease.yaml

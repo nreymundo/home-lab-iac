@@ -30,3 +30,4 @@ resources:
   - ../apps/media/plex-media-enrichment
   - ../apps/media/tidarr
   - ../apps/media/overseerr
+  - ../apps/paperless
