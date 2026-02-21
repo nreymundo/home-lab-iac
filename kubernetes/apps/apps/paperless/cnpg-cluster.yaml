@@ -1,0 +1,67 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: paperless-pg
+  namespace: paperless
+  labels:
+    release: observability-kube-prometheus-stack
+spec:
+  inheritedMetadata:
+    labels:
+      recurring-job.longhorn.io/backup-daily: enabled
+      recurring-job.longhorn.io/backup-weekly: enabled
+  instances: 1
+  monitoring:
+    enablePodMonitor: true
+  storage:
+    size: 5Gi
+    storageClass: longhorn-r2
+
+  imageName: ghcr.io/cloudnative-pg/postgresql:18
+
+  postgresql:
+    parameters:
+      wal_level: "replica"
+      archive_timeout: "43200" # Wait 12 hours before shipping WALs when no activity
+      archive_mode: "on"
+
+  bootstrap:
+    initdb:
+      database: paperless
+      owner: paperless
+      secret:
+        name: paperless-db-secrets
+
+  backup:
+    barmanObjectStore:
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-backup-s3
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-backup-s3
+          key: ACCESS_SECRET_KEY
+        region:
+          name: cnpg-backup-s3
+          key: AWS_DEFAULT_REGION
+      destinationPath: "s3://cloudnative-pg/paperless"
+      endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+      serverName: "paperless-pg-v1"
+    retentionPolicy: "14d"
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: paperless-pg-backup
+  namespace: paperless
+spec:
+  schedule: "0 0 * * *"  # Daily at midnight
+  backupOwnerReference: self
+  cluster:
+    name: paperless-pg
+  method: barmanObjectStore
