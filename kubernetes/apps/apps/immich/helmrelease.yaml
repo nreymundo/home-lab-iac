@@ -19,7 +19,7 @@ spec:
         containers:
           server:
             image:
-              # renovate: datasource=docker depName=immich-app/immich-server registryUrl=https://ghcr.io
+              # renovate: datasource=github-tags depName=immich-app/immich
               repository: ghcr.io/immich-app/immich-server
               tag: v2.5.6
             env:
@@ -83,7 +83,7 @@ spec:
         containers:
           machine-learning:
             image:
-              # renovate: datasource=docker depName=immich-app/immich-machine-learning registryUrl=https://ghcr.io
+              # renovate: datasource=github-tags depName=immich-app/immich
               repository: ghcr.io/immich-app/immich-machine-learning
               tag: v2.5.6-openvino
             env:
@@ -138,7 +138,7 @@ spec:
               limits:
                 gpu.intel.com/i915: 1
                 cpu: 4000m
-                memory: 6Gi
+                memory: 8Gi
 
       redis:
         containers:

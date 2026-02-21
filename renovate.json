@@ -86,6 +86,16 @@
 
   "customManagers": [
     {
+      "description": "Track tags with static -openvino suffix (strips suffix for version lookup, re-appends on update)",
+      "customType": "regex",
+      "fileMatch": ["\\.ya?ml$"],
+      "packageNameTemplate": "{{{depName}}}",
+      "matchStrings": [
+        "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*(?<packageName>\\S+)\\s*\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)-openvino[\"']?"
+      ],
+      "autoReplaceStringTemplate": "tag: {{{newValue}}}-openvino"
+    },
+    {
       "description": "Enable # renovate: datasource=... comments (repo/tag directly below)",
       "customType": "regex",
       "fileMatch": ["\\.ya?ml$"],
