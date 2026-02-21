@@ -105,6 +105,16 @@ spec:
             secretKeyRef:
               name: immich-sso-secret
               key: CLIENT_SECRET
+        - name: PAPERLESS_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: paperless-sso-secret
+              key: CLIENT_ID
+        - name: PAPERLESS_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: paperless-sso-secret
+              key: CLIENT_SECRET
         - name: DISCORD_BASIC_AUTH
           valueFrom:
             secretKeyRef:

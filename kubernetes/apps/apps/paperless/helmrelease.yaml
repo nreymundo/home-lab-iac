@@ -51,6 +51,18 @@ spec:
                   secretKeyRef:
                     name: paperless-secrets
                     key: PAPERLESS_SECRET_KEY
+              # OIDC / Authentik SSO
+              PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+              PAPERLESS_SOCIALACCOUNT_PROVIDERS:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-oidc-secrets
+                    key: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+              PAPERLESS_LOGOUT_REDIRECT_URL: "https://sso.lainternetdelpantano.xyz/application/o/paperless/end-session/"
+              PAPERLESS_SOCIAL_AUTO_SIGNUP: "false"
+              PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
+              PAPERLESS_DISABLE_REGULAR_LOGIN: "true"
+              PAPERLESS_REDIRECT_LOGIN_TO_SSO: "true"
             ports:
               - name: http
                 containerPort: 8000

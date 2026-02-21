@@ -9,5 +9,6 @@ resources:
   - db-backup.yaml
   - paperless-db-secrets.sops.yaml
   - paperless-secrets.sops.yaml
+  - paperless-oidc-secrets.sops.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml
