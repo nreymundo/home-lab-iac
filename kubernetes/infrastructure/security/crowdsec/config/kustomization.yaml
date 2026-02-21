@@ -3,3 +3,6 @@ kind: Kustomization
 namespace: crowdsec
 resources:
   - bouncer-middleware.yaml
+  - middleware-opnsense-allowlist.yaml
+  - ingress-lapi.yaml
+  - networkpolicy-lapi.yaml
