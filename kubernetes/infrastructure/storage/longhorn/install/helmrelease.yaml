@@ -27,6 +27,19 @@ spec:
         additionalLabels:
           release: observability-kube-prometheus-stack
 
+    preUpgradeChecker:
+      upgradeVersionCheck: false
+      jobEnabled: false
+
+    image:
+      longhorn:
+        manager:
+          # renovate: datasource=docker depName=longhornio/longhorn-manager registryUrl=https://registry-1.docker.io
+          tag: v1.11.0-hotfix-1
+        instanceManager:
+          # renovate: datasource=docker depName=longhornio/longhorn-instance-manager registryUrl=https://registry-1.docker.io
+          tag: v1.11.0-hotfix-1
+
     longhornManager:
       resources:
         requests:
