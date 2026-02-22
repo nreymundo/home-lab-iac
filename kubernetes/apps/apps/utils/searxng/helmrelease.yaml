@@ -1,0 +1,110 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: searxng
+  namespace: utils
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=searxng/searxng registryUrl=https://docker.io
+              repository: docker.io/searxng/searxng
+              tag: 2026.2.22-191818b86
+            env:
+              TZ: Europe/Berlin
+              SEARXNG_BASE_URL: https://search.lan.${CLUSTER_DOMAIN}
+              SEARXNG_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: searxng-secrets
+                    key: SEARXNG_SECRET
+              SEARXNG_VALKEY_URL: valkey://searxng-valkey:6379/0
+              SEARXNG_LIMITER: "false"
+              SEARXNG_PUBLIC_INSTANCE: "false"
+              SEARXNG_IMAGE_PROXY: "false"
+              SEARXNG_METHOD: POST
+            ports:
+              - name: http
+                containerPort: 8080
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+
+      valkey:
+        containers:
+          valkey:
+            image:
+              # renovate: datasource=docker depName=valkey/valkey registryUrl=https://docker.io
+              repository: docker.io/valkey/valkey
+              tag: 8-alpine
+            command:
+              - valkey-server
+              - --save
+              - "30"
+              - "1"
+              - --loglevel
+              - warning
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                cpu: 250m
+                memory: 256Mi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8080
+      valkey:
+        controller: valkey
+        ports:
+          valkey:
+            port: 6379
+
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: search.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: SearXNG
+          gethomepage.dev/description: Privacy-focused meta search
+          gethomepage.dev/group: Utils
+          gethomepage.dev/icon: searxng.png
+        hosts:
+          - host: search.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 2Gi
+        storageClass: longhorn-r2
+        globalMounts:
+          - path: /var/cache/searxng
+            subPath: cache
+      valkey-data:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          valkey:
+            valkey:
+              - path: /data
