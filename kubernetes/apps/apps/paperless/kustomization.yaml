@@ -14,3 +14,5 @@ resources:
   - cnpg-cluster.yaml
   - helmrelease.yaml
   - paperless-ai-helmrelease.yaml
+  - paperless-gpt-helmrelease.yaml
+  - paperless-gpt-secrets.sops.yaml

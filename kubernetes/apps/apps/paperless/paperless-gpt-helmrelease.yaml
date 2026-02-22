@@ -1,0 +1,117 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: paperless-gpt
+  namespace: paperless
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=icereed/paperless-gpt registryUrl=https://docker.io
+              repository: docker.io/icereed/paperless-gpt
+              tag: v0.25.0
+            env:
+              PAPERLESS_BASE_URL: http://paperless-main:8000
+              PAPERLESS_API_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-gpt-secrets
+                    key: PAPERLESS_API_TOKEN
+              PAPERLESS_PUBLIC_URL: https://docs.lan.${CLUSTER_DOMAIN}
+              MANUAL_TAG: paperless-gpt
+              AUTO_TAG: paperless-gpt-auto
+              LLM_PROVIDER: openai
+              LLM_MODEL: qwen3_14b
+              OPENAI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-gpt-secrets
+                    key: OPENAI_API_KEY
+              OPENAI_BASE_URL: http://llama-swap.ai.svc.cluster.local:8080/v1
+              OCR_PROVIDER: llm
+              VISION_LLM_PROVIDER: openai
+              VISION_LLM_MODEL: minicpm_v_2_6
+              OLLAMA_HOST: http://llama-swap.ai.svc.cluster.local:8080/v1
+              OCR_PROCESS_MODE: image
+              PDF_SKIP_EXISTING_OCR: "false"
+              CREATE_LOCAL_HOCR: "false"
+              LOCAL_HOCR_PATH: /app/hocr
+              CREATE_LOCAL_PDF: "false"
+              LOCAL_PDF_PATH: /app/pdf
+              PDF_UPLOAD: "false"
+              PDF_REPLACE: "false"
+              PDF_COPY_METADATA: "true"
+              PDF_OCR_TAGGING: "true"
+              AUTO_OCR_TAG: paperless-gpt-ocr-auto
+              OCR_LIMIT_PAGES: "0"
+              LOG_LEVEL: info
+              AUTO_GENERATE_TITLE: "false"
+              AUTO_GENERATE_TAGS: "false"
+              AUTO_GENERATE_CORRESPONDENTS: "false"
+              AUTO_GENERATE_DOCUMENT_TYPE: "false"
+              AUTO_GENERATE_CREATED_DATE: "false"
+            ports:
+              - name: http
+                containerPort: 8080
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 2Gi
+            probes:
+              liveness:
+                enabled: true
+              readiness:
+                enabled: true
+              startup:
+                enabled: true
+                spec:
+                  failureThreshold: 30
+                  periodSeconds: 5
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8080
+
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: paperless-gpt.lan.${CLUSTER_DOMAIN}
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Paperless GPT
+          gethomepage.dev/description: AI tagging and OCR assistant
+          gethomepage.dev/group: AI
+          gethomepage.dev/icon: https://i.imgur.com/mowFxHj.png
+        hosts:
+          - host: paperless-gpt.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r2
+        advancedMounts:
+          main:
+            main:
+              - path: /app/prompts
+              - path: /app/hocr
+              - path: /app/pdf
