@@ -20,7 +20,7 @@ spec:
           main:
             image:
               repository: ghcr.io/mostlygeek/llama-swap
-              tag: vulkan
+              tag: v194-vulkan-b8124
             env:
               TZ: Europe/Berlin
             args:
