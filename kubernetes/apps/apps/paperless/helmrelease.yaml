@@ -203,6 +203,14 @@ spec:
             main:
               - path: /usr/src/paperless/consume
                 subPath: consume
+      nfs-backup:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/backup
+        advancedMounts:
+          main:
+            main:
+              - path: /mnt/backup
       redis-data:
         enabled: true
         type: emptyDir

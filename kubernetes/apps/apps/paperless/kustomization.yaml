@@ -6,6 +6,7 @@ components:
   - ../../../components/storage/backup-policy
 
 resources:
+  - backup-job.yaml
   - db-backup.yaml
   - paperless-db-secrets.sops.yaml
   - paperless-secrets.sops.yaml
