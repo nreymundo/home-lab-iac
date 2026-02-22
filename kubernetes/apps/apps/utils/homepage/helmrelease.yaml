@@ -246,6 +246,11 @@ spec:
                 icon: emqx.png
                 description: "MQTT broker"
                 href: https://emqx.lan.${CLUSTER_DOMAIN}
+        - Utils:
+            - Nextcloud:
+                icon: nextcloud.png
+                description: "File sync and share"
+                href: https://cloud.${CLUSTER_DOMAIN}
       widgets:
         # - resources:
         #     # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.

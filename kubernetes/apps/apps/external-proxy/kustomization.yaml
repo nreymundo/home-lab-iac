@@ -16,3 +16,4 @@ resources:
   - duplicati.yaml
   - syncthing.yaml
   - plex.yaml
+  - nextcloud.yaml
