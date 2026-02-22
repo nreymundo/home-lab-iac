@@ -36,7 +36,6 @@ packer/**/http/user-data
 packer/**/http/ks.cfg
 # Terraform overrides and variable definitions
 *.auto.tfvars
-terraform.tfvars
 *_override.tf
 *_override.tf.json
 crash.log
