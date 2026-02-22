@@ -13,3 +13,4 @@ resources:
   - paperless-oidc-secrets.sops.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml
+  - paperless-ai-helmrelease.yaml
