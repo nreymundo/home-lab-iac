@@ -18,6 +18,9 @@ spec:
               tag: 0.8.2
             env:
               TZ: Europe/Berlin
+              ENABLE_PERSISTENT_CONFIG: false
+              OPENAI_API_BASE_URLS: http://llama-swap:8080/v1
+              ENABLE_OLLAMA_API: false
             ports:
               - name: http
                 containerPort: 8080
