@@ -69,7 +69,8 @@ Each node in the `nodes` list can override:
 | `ansible_user` | Same as `ci_user` | Ansible SSH user |
 | `target_node` | Round-robin across `proxmox_nodes` | Proxmox node to deploy on |
 | `vm_cores` | 8 | CPU cores |
-| `vm_memory_mb` | 8192 | RAM in MB |
+| `vm_memory_mb` | 24576 | RAM in MB |
+| `vm_balloon_mb` | 16384 | Minimum balloon memory in MB |
 | `vm_disk_size_gb` | 32 | Primary disk size |
 | `secondary_disk_size_gb` | 200 | Secondary disk size |
 | `labels` | `{}` | Additional K3s node labels |

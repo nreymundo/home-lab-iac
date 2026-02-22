@@ -64,6 +64,7 @@ variable "nodes" {
     target_node            = optional(string)
     vm_cores               = optional(number)
     vm_memory_mb           = optional(number)
+    vm_balloon_mb          = optional(number)
     vm_disk_size_gb        = optional(number)
     secondary_disk_size_gb = optional(number)
     labels                 = optional(map(string), {})
@@ -121,10 +122,20 @@ variable "vm_cores" {
 variable "vm_memory_mb" {
   type        = number
   description = "RAM in MB per node VM"
-  default     = 32768
+  default     = 24576
   validation {
     condition     = var.vm_memory_mb >= 512
     error_message = "Memory must be at least 512 MB."
+  }
+}
+
+variable "vm_balloon_mb" {
+  type        = number
+  description = "Minimum balloon memory in MB per node VM"
+  default     = 16384
+  validation {
+    condition     = var.vm_balloon_mb >= 0 && var.vm_balloon_mb <= var.vm_memory_mb
+    error_message = "Balloon memory must be between 0 and vm_memory_mb."
   }
 }
 

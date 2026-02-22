@@ -11,6 +11,7 @@ locals {
   node_resource_defaults = {
     vm_cores               = var.vm_cores
     vm_memory_mb           = var.vm_memory_mb
+    vm_balloon_mb          = var.vm_balloon_mb
     vm_disk_size_gb        = var.vm_disk_size_gb
     secondary_disk_size_gb = var.secondary_disk_size_gb
   }
@@ -20,6 +21,7 @@ locals {
   }
   node_cores                  = local._node_resource_overrides.vm_cores
   node_memory_mb              = local._node_resource_overrides.vm_memory_mb
+  node_balloon_mb             = local._node_resource_overrides.vm_balloon_mb
   node_disk_size_gb           = local._node_resource_overrides.vm_disk_size_gb
   node_secondary_disk_size_gb = local._node_resource_overrides.secondary_disk_size_gb
   node_target_nodes = [
@@ -51,7 +53,8 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
     sockets = 1
   }
 
-  memory = local.node_memory_mb[count.index]
+  memory  = local.node_memory_mb[count.index]
+  balloon = local.node_balloon_mb[count.index]
 
   os_type = "cloud-init"
   ciuser  = local.node_ci_users[count.index]
@@ -115,10 +118,10 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
   dynamic "pci" {
     for_each = { for idx, dev in try(var.nodes[count.index].pci_devices, []) : idx => dev }
     content {
-      id          = pci.key # Use index as PCI ID
-      mapping_id  = pci.value.id
-      pcie        = pci.value.pcie
-      rombar      = pci.value.rombar
+      id         = pci.key # Use index as PCI ID
+      mapping_id = pci.value.id
+      pcie       = pci.value.pcie
+      rombar     = pci.value.rombar
     }
   }
 
