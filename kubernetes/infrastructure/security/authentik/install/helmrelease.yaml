@@ -161,6 +161,7 @@ spec:
         - authentik-blueprints-bootstrap
 
     server:
+      replicas: 2
       resources:
         requests:
           cpu: 100m
@@ -168,6 +169,23 @@ spec:
         limits:
           cpu: 500m
           memory: 1536Mi
+      pdb:
+        enabled: true
+        minAvailable: 1
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - server
+              topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
       metrics:
         enabled: true
         serviceMonitor:
@@ -178,6 +196,7 @@ spec:
             release: observability-kube-prometheus-stack
 
     worker:
+      replicas: 2
       resources:
         requests:
           cpu: 100m
@@ -185,6 +204,23 @@ spec:
         limits:
           cpu: 500m
           memory: 1Gi
+      pdb:
+        enabled: true
+        minAvailable: 1
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - worker
+              topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
       metrics:
         enabled: true
         serviceMonitor:

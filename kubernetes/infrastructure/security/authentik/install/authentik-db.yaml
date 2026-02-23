@@ -11,12 +11,12 @@ spec:
       recurring-job.longhorn.io/source: enabled
       recurring-job.longhorn.io/backup-daily: enabled
       recurring-job.longhorn.io/backup-weekly: enabled
-  instances: 1
+  instances: 2
   monitoring:
     enablePodMonitor: false
   storage:
     size: 2Gi
-    storageClass: longhorn-r1
+    storageClass: longhorn-r2
 
   bootstrap:
     initdb:
