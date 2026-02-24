@@ -199,11 +199,34 @@ spec:
       replicas: 2
       resources:
         requests:
-          cpu: 100m
-          memory: 384Mi
-        limits:
           cpu: 500m
-          memory: 1Gi
+          memory: 512Mi
+        limits:
+          cpu: 1500m
+          memory: 1536Mi
+      startupProbe:
+        initialDelaySeconds: 30
+        timeoutSeconds: 10
+        periodSeconds: 10
+        failureThreshold: 60
+      readinessProbe:
+        initialDelaySeconds: 20
+        timeoutSeconds: 10
+        periodSeconds: 10
+        failureThreshold: 6
+      livenessProbe:
+        initialDelaySeconds: 20
+        timeoutSeconds: 10
+        periodSeconds: 10
+        failureThreshold: 6
+      extraVolumes:
+        - name: authentik-shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
+      extraVolumeMounts:
+        - name: authentik-shm
+          mountPath: /dev/shm
       pdb:
         enabled: true
         minAvailable: 1
