@@ -23,7 +23,7 @@ spec:
               args:
                 - |
                   set -eo pipefail
-                  BACKUP_DIR="/backup/kubernetes/apps/$APP_NAME"
+                  BACKUP_DIR="/backup/kubernetes/apps/$APP_NAME/db"
                   BACKUP_FILE="$BACKUP_DIR/$APP_NAME-$(date +%Y%m%d-%H%M%S).dump"
                   mkdir -p "$BACKUP_DIR"
                   echo "Starting backup for $APP_NAME..."

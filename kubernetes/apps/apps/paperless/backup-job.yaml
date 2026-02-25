@@ -68,7 +68,7 @@ spec:
                   echo "Running paperless document export and backup..."
                   kubectl -n "$NS" exec "$POD" -c main -- /bin/sh -c '
                     set -euo pipefail
-                    BACKUP_DIR="/mnt/backup/kubernetes/apps/paperless"
+                    BACKUP_DIR="/mnt/backup/kubernetes/apps/paperless/data"
                     DATE="$(date +%Y_%m_%d)"
 
                     echo "Running document exporter..."
