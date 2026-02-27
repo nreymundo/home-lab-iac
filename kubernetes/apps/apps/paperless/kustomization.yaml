@@ -7,7 +7,6 @@ components:
 
 resources:
   - backup-job.yaml
-  - db-backup.yaml
   - paperless-db-secrets.sops.yaml
   - paperless-secrets.sops.yaml
   - paperless-oidc-secrets.sops.yaml
