@@ -1,0 +1,105 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: seerr
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 99
+        runAsGroup: 100
+        fsGroup: 100
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=seerr-team/seerr registryUrl=https://ghcr.io
+              repository: ghcr.io/seerr-team/seerr
+              tag: v3.1.0
+            env:
+              TZ: Europe/Berlin
+              PUID: "99"
+              PGID: "100"
+            ports:
+              - name: http
+                containerPort: 5055
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v1/status
+                    port: 5055
+                  initialDelaySeconds: 20
+                  periodSeconds: 15
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v1/status
+                    port: 5055
+                  initialDelaySeconds: 20
+                  periodSeconds: 15
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v1/status
+                    port: 5055
+                  initialDelaySeconds: 20
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                  failureThreshold: 6
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 5055
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: seerr.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Seerr
+          gethomepage.dev/description: Media request manager
+          gethomepage.dev/group: Media
+          gethomepage.dev/icon: seerr.png
+          gethomepage.dev/enabled: "true"
+          # gethomepage.dev/widget.type: "seerr"
+          # gethomepage.dev/widget.url: "http://seerr.media.svc.cluster.local:5055"
+          # gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_SEERR_KEY}}"}}'
+        hosts:
+          - host: seerr.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: seerr-config
+        globalMounts:
+          - path: /app/config
