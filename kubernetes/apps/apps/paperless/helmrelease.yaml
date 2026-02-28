@@ -22,7 +22,7 @@ spec:
             image:
               # renovate: datasource=docker depName=paperless-ngx/paperless-ngx registryUrl=https://ghcr.io
               repository: ghcr.io/paperless-ngx/paperless-ngx
-              tag: 2.20.8
+              tag: 2.20.9
             env:
               TZ: Europe/Berlin
               PAPERLESS_REDIS: redis://paperless-redis:6379
