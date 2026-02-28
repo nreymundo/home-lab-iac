@@ -1,0 +1,47 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ollama-openai
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=eyalrot/ollama_openai registryUrl=https://ghcr.io
+              repository: ghcr.io/eyalrot/ollama_openai
+              tag: 0.7.0
+            env:
+              PROXY_PORT: "11434"
+              LOG_LEVEL: INFO
+              REQUEST_TIMEOUT: "60"
+              OPENAI_API_BASE_URL: http://llama-swap:8080/v1
+            envFrom:
+              - secretRef:
+                  name: ollama-openai-secrets
+            ports:
+              - name: http
+                containerPort: 11434
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 11434
+    ingress:
+      main:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+          external-dns.alpha.kubernetes.io/hostname: ollama-openai.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: ollama-openai.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
