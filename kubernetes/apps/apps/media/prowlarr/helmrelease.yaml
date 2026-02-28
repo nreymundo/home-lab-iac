@@ -56,9 +56,9 @@ spec:
     persistence:
       data:
         enabled: true
-        type: custom
-        volumeSpec:
-          persistentVolumeClaim:
-            claimName: prowlarr
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r1
         globalMounts:
           - path: /config

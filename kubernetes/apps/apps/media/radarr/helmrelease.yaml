@@ -58,10 +58,10 @@ spec:
     persistence:
       data:
         enabled: true
-        type: custom
-        volumeSpec:
-          persistentVolumeClaim:
-            claimName: radarr
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn-r1
       media:
         type: nfs
         server: ${UNRAID_IP}
