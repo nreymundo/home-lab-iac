@@ -26,4 +26,5 @@ resources:
   - 75-nfd-config.yaml
   - 76-intel-device-plugins-operator-install.yaml
   - 77-gpu-plugin-install.yaml
+  - 89-storage.yaml
   - 90-apps.yaml
