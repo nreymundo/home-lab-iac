@@ -92,7 +92,7 @@ spec:
           drpp:
             image:
               repository: ghcr.io/phin05/discord-rich-presence-plex
-              tag: latest
+              tag: v2.16.0
             env:
               DRPP_UID: "1000"
               DRPP_GID: "1000"
