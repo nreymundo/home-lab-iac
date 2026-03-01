@@ -168,10 +168,10 @@ spec:
     persistence:
       n8n-storage:
         enabled: true
-        type: persistentVolumeClaim
-        storageClass: longhorn-r2
-        accessMode: ReadWriteMany
-        size: 1Gi
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: n8n
         advancedMounts:
           main:
             init-permissions:
@@ -181,9 +181,6 @@ spec:
           worker:
             worker:
               - path: /home/node/.n8n
-        labels:
-          recurring-job.longhorn.io/backup-daily: enabled
-          recurring-job.longhorn.io/backup-weekly: enabled
 
       cache:
         enabled: true

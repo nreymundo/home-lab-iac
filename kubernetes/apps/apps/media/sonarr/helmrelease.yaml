@@ -58,10 +58,10 @@ spec:
     persistence:
       data:
         enabled: true
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 1Gi
-        storageClass: longhorn-r1
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: sonarr
       media:
         type: nfs
         server: ${UNRAID_IP}

@@ -64,10 +64,10 @@ spec:
     persistence:
       data:
         enabled: true
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 1Gi
-        storageClass: longhorn-r2
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: plextraktsync
         advancedMounts:
           main:
             copy-trakt-config:

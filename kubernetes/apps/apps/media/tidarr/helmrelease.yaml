@@ -55,10 +55,10 @@ spec:
     persistence:
       data:
         enabled: true
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 5Gi
-        storageClass: longhorn-r2
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: tidarr
         globalMounts:
           - path: /shared
       media:

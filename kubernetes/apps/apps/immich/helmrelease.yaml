@@ -220,10 +220,10 @@ spec:
     persistence:
       ml-cache:
         enabled: true
-        type: persistentVolumeClaim
-        storageClass: longhorn-r2
-        accessMode: ReadWriteOnce
-        size: 10Gi
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: immich
         advancedMounts:
           machine-learning:
             machine-learning:

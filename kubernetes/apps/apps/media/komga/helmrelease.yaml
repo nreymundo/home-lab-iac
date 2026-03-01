@@ -92,10 +92,10 @@ spec:
     persistence:
       data:
         enabled: true
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 1Gi
-        storageClass: longhorn-r1
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: komga
         globalMounts:
           - path: /config
       media:

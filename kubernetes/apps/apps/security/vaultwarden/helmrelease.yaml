@@ -146,9 +146,9 @@ spec:
     persistence:
       data:
         enabled: true
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 2Gi
-        storageClass: longhorn-r2
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: vaultwarden
         globalMounts:
           - path: /data
