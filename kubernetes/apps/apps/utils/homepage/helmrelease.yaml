@@ -220,10 +220,10 @@ spec:
                 icon: syncthing.png
                 description: "File synchronization"
                 href: https://syncthing.lan.${CLUSTER_DOMAIN}
-            - Duplicati:
-                icon: duplicati.png
+            - Kopia:
+                icon: kopia.png
                 description: "Backup software"
-                href: https://duplicati.lan.${CLUSTER_DOMAIN}
+                href: https://kopia.lan.${CLUSTER_DOMAIN}
             - Proxmox Backup Server:
                 icon: proxmox.png
                 description: "Backup server for Proxmox"

@@ -13,7 +13,7 @@ resources:
   - emqx.yaml
   - z2m.yaml
   - omada.yaml
-  - duplicati.yaml
+  - kopia.yaml
   - syncthing.yaml
   - plex.yaml
   - nextcloud.yaml
