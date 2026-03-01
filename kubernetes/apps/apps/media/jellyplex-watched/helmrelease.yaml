@@ -26,7 +26,11 @@ spec:
               GENERATE_GUIDS: "False"
               GENERATE_LOCATIONS: "True"
               MAX_THREADS: "16"
-              USER_MAPPING: '{"nico_r":"nreymundo"}' # plex:jellyfin
+              USER_MAPPING:
+                valueFrom:
+                  secretKeyRef:
+                    name: jellyplex-watched-secrets
+                    key: USER_MAPPING
               LIBRARY_MAPPING: '{"TV Shows":"TV", "Movies":"Movies", "Anime Shows":"Anime Shows", "Anime Movies":"Anime", "Music":"Music"}'
               BLACKLIST_LIBRARY: ""
               WHITELIST_LIBRARY: ""
