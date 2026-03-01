@@ -1,4 +1,18 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - prowlarr
+  - audiobookshelf-pvc.yaml
+  - bazarr-pvc.yaml
+  - komga-pvc.yaml
+  - lidarr-pvc.yaml
+  - lidatube-pvc.yaml
+  - navidrome-pvc.yaml
+  - plex-media-enrichment-pvc.yaml
+  - plextraktsync-pvc.yaml
+  - prowlarr-pvc.yaml
+  - radarr-pvc.yaml
+  - sabnzbd-pvc.yaml
+  - seerr-pvc.yaml
+  - sonarr-pvc.yaml
+  - tautulli-pvc.yaml
+  - tidarr-pvc.yaml

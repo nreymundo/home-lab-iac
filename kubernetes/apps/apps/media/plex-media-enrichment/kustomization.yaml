@@ -4,6 +4,5 @@ namespace: media
 components:
   - ../../../../components/bjw-s-defaults
 resources:
-  - pvc.yaml
   - posterizarr-job.yaml
   - kometa-job.yaml
