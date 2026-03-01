@@ -3,7 +3,6 @@ kind: Kustomization
 components:
   - ../../../../components/bjw-s-defaults
   - ../../../../components/ingress/traefik-base
-  - ../../../../components/storage/backup-policy
 
 resources:
   - db-backup.yaml
