@@ -7,3 +7,4 @@ resources:
   - middleware-discord.yaml
   - middleware-kopia.yaml
   - ingress.yaml
+  - outpost-callback-ingress.yaml

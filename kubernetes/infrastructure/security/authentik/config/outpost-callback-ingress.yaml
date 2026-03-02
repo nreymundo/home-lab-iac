@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: authentik-outpost-callback
+  namespace: authentik
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: "*.lan.${CLUSTER_DOMAIN}"
+      http:
+        paths:
+          - path: /outpost.goauthentik.io/
+            pathType: Prefix
+            backend:
+              service:
+                name: ak-outpost-gatekeeper-proxy
+                port:
+                  number: 9000
