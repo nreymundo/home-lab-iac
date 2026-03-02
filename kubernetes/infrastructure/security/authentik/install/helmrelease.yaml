@@ -120,6 +120,11 @@ spec:
             secretKeyRef:
               name: discord-auth-secret
               key: BASIC_AUTH
+        - name: KOPIA_BASIC_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: kopia-auth-secret
+              key: BASIC_AUTH
         - name: FRIGATE_PROXY_SECRET
           valueFrom:
             secretKeyRef:

@@ -5,4 +5,5 @@ resources:
   - middleware.yaml
   - middleware-frigate.yaml
   - middleware-discord.yaml
+  - middleware-kopia.yaml
   - ingress.yaml

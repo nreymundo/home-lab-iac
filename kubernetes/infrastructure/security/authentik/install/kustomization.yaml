@@ -16,4 +16,5 @@ resources:
   - immich-sso-secret.sops.yaml
   - paperless-sso-secret.sops.yaml
   - discord-auth-secret.sops.yaml
+  - kopia-auth-secret.sops.yaml
   - frigate-proxy-secret.sops.yaml

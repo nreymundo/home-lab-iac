@@ -29,7 +29,7 @@ metadata:
   name: kopia
   namespace: external-proxy
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-kopia-auth-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     external-dns.alpha.kubernetes.io/hostname: kopia.lan.${CLUSTER_DOMAIN}
 spec:
