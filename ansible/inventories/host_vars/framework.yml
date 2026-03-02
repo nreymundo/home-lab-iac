@@ -11,6 +11,7 @@ common_extra_packages:
   - topgrade
   - tuned
   - fzf
+  - toolbox
 
 # COPR repositories.
 common_copr_extra_repos:
