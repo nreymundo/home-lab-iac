@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=icereed/paperless-gpt registryUrl=https://docker.io
               repository: docker.io/icereed/paperless-gpt
-              tag: v0.25.0
+              tag: v0.25.1
             env:
               PAPERLESS_BASE_URL: http://paperless-main:8000
               PAPERLESS_API_TOKEN:
