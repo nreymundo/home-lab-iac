@@ -62,6 +62,17 @@ spec:
                 service:
                   identifier: main
                   port: http
+      api:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+        hosts:
+          - host: llama.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /v1
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
     persistence:
       models:
         enabled: true
