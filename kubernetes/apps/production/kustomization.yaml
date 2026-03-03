@@ -21,6 +21,7 @@ resources:
   - ../apps/ai/openwebui
   - ../apps/ai/sillytavern
   - ../apps/ai/llama-swap
+  - ../apps/ai/whisper
   - ../apps/ai/perplexica
   - ../apps/security/vaultwarden
   - ../apps/security/frigate

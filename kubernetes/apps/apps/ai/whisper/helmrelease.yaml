@@ -1,0 +1,60 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: whisper
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        pod:
+          nodeSelector:
+            topology.kubernetes.io/zone: "framework"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/ggml-org/whisper.cpp
+              tag: main
+            env:
+              TZ: Europe/Berlin
+            command:
+              - whisper-server
+            args:
+              - --host
+              - 0.0.0.0
+              - --port
+              - "8080"
+              - --model
+              - /models/ggml-large-v3-turbo-q8_0.bin
+              - --threads
+              - "8"
+              - --processors
+              - "1"
+              - --no-gpu
+              - --request-path
+              - /v1/audio/transcriptions
+              - --inference-path
+              - ""
+              - --convert
+              - --tmp-dir
+              - /tmp
+            ports:
+              - name: http
+                containerPort: 8080
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8080
+    persistence:
+      models:
+        enabled: true
+        type: hostPath
+        hostPath: /opt/whisper/models
+        hostPathType: DirectoryOrCreate
+        globalMounts:
+          - path: /models
