@@ -22,6 +22,7 @@ resources:
   - ../apps/ai/sillytavern
   - ../apps/ai/llama-swap
   - ../apps/ai/whisper
+  - ../apps/ai/kokoro
   - ../apps/ai/perplexica
   - ../apps/security/vaultwarden
   - ../apps/security/frigate
