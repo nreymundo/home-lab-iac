@@ -13,11 +13,14 @@ spec:
         pod:
           nodeSelector:
             topology.kubernetes.io/zone: "framework"
+          securityContext:
+            seccompProfile:
+              type: Unconfined
         containers:
           main:
             image:
               repository: ghcr.io/ggml-org/whisper.cpp
-              tag: main
+              tag: main-vulkan
             env:
               TZ: Europe/Berlin
             command:
@@ -33,7 +36,7 @@ spec:
               - "8"
               - --processors
               - "1"
-              - --no-gpu
+              # - --no-gpu
               - --request-path
               - /v1/audio/transcriptions
               - --inference-path
@@ -44,6 +47,8 @@ spec:
             ports:
               - name: http
                 containerPort: 8080
+            securityContext:
+              privileged: true
     service:
       main:
         controller: main
@@ -58,3 +63,10 @@ spec:
         hostPathType: DirectoryOrCreate
         globalMounts:
           - path: /models
+      dri:
+        enabled: true
+        type: hostPath
+        hostPath: /dev/dri
+        hostPathType: Directory
+        globalMounts:
+          - path: /dev/dri
