@@ -34,6 +34,8 @@ spec:
           http:
             port: 8880
     ingress:
+      main:
+        enabled: false
       web:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
