@@ -55,6 +55,7 @@ spec:
           gethomepage.dev/description: LLM model hot-swapping proxy
           gethomepage.dev/group: AI
           gethomepage.dev/enabled: "true"
+          gethomepage.dev/pod-selector: app.kubernetes.io/name=llama-swap,app.kubernetes.io/instance=llama-swap
         hosts:
           - host: llama.lan.${CLUSTER_DOMAIN}
             paths:

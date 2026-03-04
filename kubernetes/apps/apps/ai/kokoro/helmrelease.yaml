@@ -43,6 +43,7 @@ spec:
           gethomepage.dev/group: AI
           gethomepage.dev/icon: kokoro-web.png
           gethomepage.dev/enabled: "true"
+          gethomepage.dev/pod-selector: app.kubernetes.io/name=kokoro,app.kubernetes.io/instance=kokoro
           gethomepage.dev/href: https://kokoro.lan.${CLUSTER_DOMAIN}/web
         hosts:
           - host: kokoro.lan.${CLUSTER_DOMAIN}
