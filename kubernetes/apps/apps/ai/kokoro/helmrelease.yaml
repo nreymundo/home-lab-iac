@@ -34,9 +34,9 @@ spec:
           http:
             port: 8880
     ingress:
-      main:
+      web:
         annotations:
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: kokoro.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Kokoro
           gethomepage.dev/description: Text-to-speech API
@@ -45,16 +45,6 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/pod-selector: app.kubernetes.io/name=kokoro,app.kubernetes.io/instance=kokoro
           gethomepage.dev/href: https://kokoro.lan.${CLUSTER_DOMAIN}/web
-        hosts:
-          - host: kokoro.lan.${CLUSTER_DOMAIN}
-            paths:
-              - path: /
-                service:
-                  identifier: main
-                  port: http
-      web:
-        annotations:
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
         hosts:
           - host: kokoro.lan.${CLUSTER_DOMAIN}
             paths:
