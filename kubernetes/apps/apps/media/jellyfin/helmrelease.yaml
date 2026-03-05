@@ -1,0 +1,103 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: jellyfin
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=linuxserver/jellyfin registryUrl=https://lscr.io
+              repository: lscr.io/linuxserver/jellyfin
+              tag: 10.11.5
+            env:
+              TZ: Europe/Berlin
+              PUID: "99"
+              PGID: "100"
+            ports:
+              - name: http
+                containerPort: 8096
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 8096
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 8096
+                  initialDelaySeconds: 20
+                  periodSeconds: 15
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 8096
+                  initialDelaySeconds: 10
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 500m
+                memory: 1Gi
+              limits:
+                cpu: 2000m
+                memory: 4Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8096
+    ingress:
+      main:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
+          external-dns.alpha.kubernetes.io/hostname: jellyfin.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Jellyfin
+          gethomepage.dev/description: Media server
+          gethomepage.dev/group: Media
+          gethomepage.dev/icon: jellyfin.png
+          gethomepage.dev/enabled: "true"
+          # gethomepage.dev/widget.type: "jellyfin"
+          # gethomepage.dev/widget.url: "http://jellyfin.media.svc.cluster.local:8096"
+        hosts:
+          - host: jellyfin.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      config:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: jellyfin
+        globalMounts:
+          - path: /config
+      media:
+        type: nfs
+        server: ${UNRAID_IP}
+        path: /mnt/user/media
+        globalMounts:
+          - path: /data

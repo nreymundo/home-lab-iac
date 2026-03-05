@@ -10,6 +10,7 @@ resources:
   - ../apps/utils/homepage
   - ../apps/utils/searxng
   - ../apps/media/audiobookshelf
+  - ../apps/media/jellyfin
   - ../apps/media/sabnzbd
   - ../apps/media/radarr
   - ../apps/media/sonarr
