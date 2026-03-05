@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=linuxserver/jellyfin registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/jellyfin
-              tag: 10.11.5
+              tag: 10.11.6
             env:
               TZ: Europe/Berlin
               PUID: "99"
