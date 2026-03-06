@@ -3,6 +3,8 @@ kind: IngressRouteTCP
 metadata:
   name: gitea-ssh
   namespace: development
+  annotations:
+    external-dns.alpha.kubernetes.io/ignore: "true"
 spec:
   entryPoints:
     - ssh
