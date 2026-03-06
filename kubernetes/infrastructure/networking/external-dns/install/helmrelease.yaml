@@ -36,7 +36,7 @@ spec:
       - ingress
       - traefik-proxy
 
-    policy: upsert-only # Replace with sync once migration has been completed
+    policy: sync # WARNING: deletes any records within domainFilters
     registry: noop
 
     domainFilters:
