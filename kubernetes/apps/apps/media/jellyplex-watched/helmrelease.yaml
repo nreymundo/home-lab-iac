@@ -44,7 +44,7 @@ spec:
                   secretKeyRef:
                     name: jellyplex-watched-secrets
                     key: PLEX_TOKEN
-              JELLYFIN_BASEURL: http://192.168.10.16:8096
+              JELLYFIN_BASEURL: http://jellyfin-main:8096
               JELLYFIN_TOKEN:
                 valueFrom:
                   secretKeyRef:
