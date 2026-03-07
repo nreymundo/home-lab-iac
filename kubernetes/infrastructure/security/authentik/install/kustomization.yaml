@@ -9,6 +9,7 @@ resources:
   - helmrelease.yaml
   - blueprint-bootstrap-cm.yaml
   - ldap-search-secret.sops.yaml
+  - ldap-ldaps-cert.sops.yaml
   - audiobookshelf-sso-secret.sops.yaml
   - grafana-sso-secret.sops.yaml
   - vaultwarden-sso-secret.sops.yaml

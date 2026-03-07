@@ -147,6 +147,16 @@ spec:
             secretKeyRef:
               name: ldap-search-secret
               key: AK_LDAP_SEARCH_PASSWORD
+        - name: AK_LDAP_CERTIFICATE
+          valueFrom:
+            secretKeyRef:
+              name: ldap-ldaps-cert
+              key: AK_LDAP_CERTIFICATE
+        - name: AK_LDAP_CERTIFICATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ldap-ldaps-cert
+              key: AK_LDAP_CERTIFICATE_KEY
 
         # Database connection
         - name: AUTHENTIK_POSTGRESQL__HOST

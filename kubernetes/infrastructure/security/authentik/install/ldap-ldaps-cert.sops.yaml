@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: ldap-ldaps-cert
+    namespace: authentik
+type: Opaque
+stringData:
+    AK_LDAP_CERTIFICATE: ENC[AES256_GCM,data:xFRV+FcLZdsnEA==,iv:8vzABV+Q+7OAWz2V+N6wlbAWb4VEtjsaUSeZ0Y+iIBY=,tag:ADbLey3XV6MleWRAqjjlPA==,type:str]
+    AK_LDAP_CERTIFICATE_KEY: ENC[AES256_GCM,data:QMXUKWJ8gc2xcQ==,iv:jJXqC0KYf+HAUcXfcrs3DUYZc5GUUdB7z5bxFhkhxwA=,tag:g3yjtGY33cQ9ykZH6r6vJw==,type:str]
+sops:
+    age:
+        - recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA2N0N1bTVJYW1ONS80Y21E
+            OGJMZWNuelJXeWhIY1ZYdVh4by9XcURKRXprCk9WWDFGcm51Vzg0NGkrNFdWK1dL
+            Z0JTbWFqWWJtNVdUVm1WTWNMVEdodjQKLS0tIFZkY2poVDJ3YjZ6S0NEajRrZ25W
+            QWV4TEN5bjB5Q1NTeitnN1FCL3pOQkUKRNtf16ivgl3pQvZJzJ9r3QwEyDl29sk7
+            68ZO3PI5yU3cBGqqTz5dHWm9n0mB1MT4BRSqJkbz/vofqlluPKXjrA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-03-07T00:29:47Z"
+    mac: ENC[AES256_GCM,data:qGXrqc8KF463f/HhupB3lZj/pvOSeuAU52n2/NwWZY5+ohYvUEBd/MsnOmhk5XBgzWC9mhdhvSDK6Hp/lmLroqXUtcFa3gsuHr5O76mHP5oUSePHfSUfTwSOK/Eo61+xmNM8lEI4CKOBYF8PmmKDdkMw/j+1k6x9ccp1/z5pn5A=,iv:e3H6omZjJK3hfcUaSMwi4gt+SQPe0y9HLR1H/2KSkb8=,tag:tSBphsnhh1CoICoF4+c1/Q==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.12.1
