@@ -6,4 +6,5 @@ components:
 resources:
   - cnpg-cluster.yaml
   - helmrelease.yaml
+  - nextcloud-admin-secrets.sops.yaml
   - nextcloud-db-secrets.sops.yaml

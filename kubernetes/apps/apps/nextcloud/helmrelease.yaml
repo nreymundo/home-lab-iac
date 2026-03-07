@@ -20,6 +20,16 @@ spec:
               repository: lscr.io/linuxserver/nextcloud
               tag: 33.0.0
             env:
+              NEXTCLOUD_ADMIN_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-admin-secrets
+                    key: username
+              NEXTCLOUD_ADMIN_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-admin-secrets
+                    key: password
               POSTGRES_DB: nextcloud
               POSTGRES_HOST: nextcloud-pg-rw
               REDIS_HOST: nextcloud-valkey
