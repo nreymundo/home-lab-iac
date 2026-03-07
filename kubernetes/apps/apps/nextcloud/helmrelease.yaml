@@ -13,9 +13,6 @@ spec:
         pod:
           nodeSelector:
             topology.kubernetes.io/zone: "framework"
-          securityContext:
-            seccompProfile:
-              type: Unconfined
         containers:
           collabora:
             image:
@@ -24,19 +21,15 @@ spec:
               tag: 25.04.9.2.1
             env:
               TZ: Europe/Berlin
-              dictionaries: en_US
+              dictionaries: "en_US de_DE es_AR"
               server_name: office.${CLUSTER_DOMAIN}
               aliasgroup1: https://cloud.${CLUSTER_DOMAIN}
-              extra_params: --o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o:remote_font_config.url=https://cloud.${CLUSTER_DOMAIN}/apps/richdocuments/settings/fonts.json --o:net.frame_ancestors=https://cloud.${CLUSTER_DOMAIN} --o:home_mode.enable=true --o:mount_jail_tree=false --o:mount_namespaces=false --o:security.capabilities=false --o:security.seccomp=false
+              extra_params: --o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o:remote_font_config.url=https://cloud.${CLUSTER_DOMAIN}/apps/richdocuments/settings/fonts.json --o:net.content_security_policy.frame_ancestors=https://cloud.${CLUSTER_DOMAIN} --o:home_mode.enable=true
             securityContext:
-              privileged: true
               allowPrivilegeEscalation: true
               capabilities:
                 add:
-                  - CHOWN
-                  - FOWNER
                   - MKNOD
-                  - SYS_ADMIN
                   - SYS_CHROOT
             resources:
               requests:
@@ -126,6 +119,7 @@ spec:
           gethomepage.dev/group: Utils
           gethomepage.dev/icon: nextcloud.png
           gethomepage.dev/enabled: "true"
+          gethomepage.dev/pod-selector: "app.kubernetes.io/name=nextcloud,app.kubernetes.io/instance=nextcloud,app.kubernetes.io/controller=main"
           gethomepage.dev/href: https://cloud.${CLUSTER_DOMAIN}
         hosts:
           - host: cloud.${CLUSTER_DOMAIN}

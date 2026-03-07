@@ -48,7 +48,7 @@ spec:
       websecure:
         http:
           encodedCharacters:
-            allowEncodedSlash: false
+            allowEncodedSlash: true
           tls:
             enabled: true
       ssh:
