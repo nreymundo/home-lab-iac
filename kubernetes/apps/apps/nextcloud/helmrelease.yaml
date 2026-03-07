@@ -26,6 +26,8 @@ spec:
               aliasgroup1: https://cloud.${CLUSTER_DOMAIN}
               extra_params: --o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o:remote_font_config.url=https://cloud.${CLUSTER_DOMAIN}/apps/richdocuments/settings/fonts.json --o:net.frame_ancestors=https://cloud.${CLUSTER_DOMAIN} --o:home_mode.enable=true --o:mount_jail_tree=false --o:mount_namespaces=false --o:security.capabilities=false --o:security.seccomp=false
             securityContext:
+              runAsUser: 0
+              runAsGroup: 0
               capabilities:
                 add:
                   - CHOWN
