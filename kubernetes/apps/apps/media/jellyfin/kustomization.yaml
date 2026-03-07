@@ -6,5 +6,4 @@ components:
 resources:
   - helmrelease.yaml
   - jellyfin-exporter-secret.sops.yaml
-  - networkpolicy.yaml
   - servicemonitor.yaml
