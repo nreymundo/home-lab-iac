@@ -823,6 +823,33 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Immich Admins"]]
 
+  260-jellyfin.yaml: |
+    version: 1
+    metadata:
+      name: jellyfin-groups
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Jellyfin Admins group (default user gets admin role)
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Jellyfin Admins"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+
+      # Jellyfin Users group
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Jellyfin Users"
+        attrs:
+          is_superuser: false
+          parent: null
+
   900-ldap.yaml: |
     version: 1
     metadata:
