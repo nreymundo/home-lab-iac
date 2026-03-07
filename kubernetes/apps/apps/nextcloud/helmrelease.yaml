@@ -1,0 +1,69 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        pod:
+          nodeSelector:
+            topology.kubernetes.io/zone: "framework"
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=linuxserver/nextcloud registryUrl=https://lscr.io
+              repository: lscr.io/linuxserver/nextcloud
+              tag: 33.0.0
+            env:
+              TZ: Europe/Berlin
+              PUID: "1000"
+              PGID: "1000"
+            ports:
+              - name: https
+                containerPort: 443
+    service:
+      main:
+        controller: main
+        annotations:
+          traefik.ingress.kubernetes.io/service.serversscheme: https
+          traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
+        ports:
+          https:
+            port: 443
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: cloud.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Nextcloud
+          gethomepage.dev/description: File sync and share
+          gethomepage.dev/group: Utils
+          gethomepage.dev/icon: nextcloud.png
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/href: https://cloud.${CLUSTER_DOMAIN}
+        hosts:
+          - host: cloud.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: https
+    persistence:
+      config:
+        enabled: true
+        type: hostPath
+        hostPath: /opt/nextcloud/config
+        hostPathType: DirectoryOrCreate
+        globalMounts:
+          - path: /config
+      data:
+        enabled: true
+        type: hostPath
+        hostPath: /opt/nextcloud/data
+        hostPathType: DirectoryOrCreate
+        globalMounts:
+          - path: /data

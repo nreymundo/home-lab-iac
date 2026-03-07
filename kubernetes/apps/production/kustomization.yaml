@@ -9,6 +9,7 @@ resources:
   - ../apps/automation/n8n
   - ../apps/utils/homepage
   - ../apps/utils/searxng
+  - ../apps/nextcloud
   - ../apps/media/audiobookshelf
   - ../apps/media/jellyfin
   - ../apps/media/sabnzbd
