@@ -874,15 +874,6 @@ data:
           permissions:
             - authentik_providers_ldap.search_full_directory
 
-      # LDAP LDAPS certificate
-      - model: authentik_crypto.certificatekeypair
-        id: ldap-ldaps-cert
-        identifiers:
-          name: "LDAP LDAPS Certificate"
-        attrs:
-          name: "LDAP LDAPS Certificate"
-          certificate_data: !Env AK_LDAP_CERTIFICATE
-          key_data: !Env AK_LDAP_CERTIFICATE_KEY
 
       # LDAP authentication password stage
       - model: authentik_stages_password.passwordstage
@@ -966,7 +957,7 @@ data:
           name: "LDAP"
           authorization_flow: !KeyOf ldap-authentication-flow
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
-          certificate: !KeyOf ldap-ldaps-cert
+          certificate: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
           tls_server_name: "ak-outpost-ldap-outpost.authentik.svc.cluster.local"
           mfa_support: false
           bind_mode: "direct"
