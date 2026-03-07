@@ -8,3 +8,4 @@ resources:
   - helmrelease.yaml
   - nextcloud-admin-secrets.sops.yaml
   - nextcloud-db-secrets.sops.yaml
+  - nextcloud-mail-secrets.sops.yaml

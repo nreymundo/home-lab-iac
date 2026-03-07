@@ -32,10 +32,26 @@ spec:
                     name: nextcloud-admin-secrets
                     key: password
               NEXTCLOUD_TRUSTED_DOMAINS: cloud.${CLUSTER_DOMAIN}
+              MAIL_DOMAIN: ${CLUSTER_DOMAIN}
+              MAIL_FROM_ADDRESS: nextcloud
               POSTGRES_DB: nextcloud
               POSTGRES_HOST: nextcloud-pg-rw
               REDIS_HOST: nextcloud-valkey
+              SMTP_AUTHTYPE: LOGIN
+              SMTP_HOST: mail-eu.smtp2go.com
+              SMTP_PORT: "587"
+              SMTP_SECURE: tls
               TRUSTED_PROXIES: 10.42.0.0/16
+              SMTP_NAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-mail-secrets
+                    key: SMTP_NAME
+              SMTP_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-mail-secrets
+                    key: SMTP_PASSWORD
               POSTGRES_USER:
                 valueFrom:
                   secretKeyRef:
