@@ -20,6 +20,18 @@ spec:
               repository: lscr.io/linuxserver/nextcloud
               tag: 33.0.0
             env:
+              POSTGRES_DB: nextcloud
+              POSTGRES_HOST: nextcloud-pg-rw
+              POSTGRES_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-db-secrets
+                    key: username
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-db-secrets
+                    key: password
               TZ: Europe/Berlin
               PUID: "1000"
               PGID: "1000"
