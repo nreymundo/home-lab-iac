@@ -9,6 +9,32 @@ spec:
       chart: app-template
   values:
     controllers:
+      collabora:
+        pod:
+          nodeSelector:
+            topology.kubernetes.io/zone: "framework"
+        containers:
+          collabora:
+            image:
+              # renovate: datasource=docker depName=collabora/code registryUrl=https://docker.io
+              repository: docker.io/collabora/code
+              tag: 25.04.9.2.1
+            env:
+              TZ: Europe/Berlin
+              dictionaries: en_US
+              server_name: office.${CLUSTER_DOMAIN}
+              aliasgroup1: https://cloud.${CLUSTER_DOMAIN}
+              extra_params: --o:ssl.enable=false --o:ssl.termination=true --o:remote_font_config.url=https://cloud.${CLUSTER_DOMAIN}/apps/richdocuments/settings/fonts.json
+            resources:
+              requests:
+                cpu: 250m
+                memory: 512Mi
+              limits:
+                cpu: 2
+                memory: 2Gi
+            ports:
+              - name: http
+                containerPort: 9980
       main:
         pod:
           nodeSelector:
@@ -90,6 +116,11 @@ spec:
                 cpu: 250m
                 memory: 256Mi
     service:
+      collabora:
+        controller: collabora
+        ports:
+          http:
+            port: 9980
       main:
         controller: main
         annotations:
@@ -104,6 +135,16 @@ spec:
           valkey:
             port: 6379
     ingress:
+      collabora:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: office.${CLUSTER_DOMAIN}
+        hosts:
+          - host: office.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: collabora
+                  port: http
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: cloud.${CLUSTER_DOMAIN}
