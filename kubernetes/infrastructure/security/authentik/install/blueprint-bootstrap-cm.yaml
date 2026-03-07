@@ -823,6 +823,148 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Immich Admins"]]
 
+  900-ldap.yaml: |
+    version: 1
+    metadata:
+      name: ldap-provider
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # LDAP search service account
+      - model: authentik_core.user
+        id: ldap-search-user
+        identifiers:
+          username: "ldap-search"
+        attrs:
+          username: "ldap-search"
+          name: "LDAP Search Account"
+          is_active: true
+          path: "goauthentik.io/service-accounts"
+          attributes:
+            goauthentik.io/user/service-account: true
+            goauthentik.io/user/token-expires: false
+          password: !Env AK_LDAP_SEARCH_PASSWORD
+          permissions:
+            - authentik_providers_ldap.search_full_directory
+
+      # LDAP authentication password stage
+      - model: authentik_stages_password.passwordstage
+        id: ldap-authentication-password
+        identifiers:
+          name: "ldap-authentication-password"
+        attrs:
+          name: "ldap-authentication-password"
+          backends:
+            - "authentik.core.auth.InbuiltBackend"
+          configure_flow: !Find [authentik_flows.flow, [slug, default-password-change]]
+          failed_attempts_before_cancel: 5
+
+      # LDAP authentication identification stage
+      - model: authentik_stages_identification.identificationstage
+        id: ldap-authentication-identification
+        identifiers:
+          name: "ldap-authentication-identification"
+        attrs:
+          name: "ldap-authentication-identification"
+          user_fields:
+            - "username"
+            - "email"
+          password_stage: !KeyOf ldap-authentication-password
+          case_insensitive_matching: true
+          pretend_user_exists: true
+          show_matched_user: true
+
+      # LDAP authentication login stage
+      - model: authentik_stages_user_login.userloginstage
+        id: ldap-authentication-login
+        identifiers:
+          name: "ldap-authentication-login"
+        attrs:
+          name: "ldap-authentication-login"
+          session_duration: "seconds=0"
+          remember_me_offset: "seconds=0"
+
+      # LDAP authentication flow
+      - model: authentik_flows.flow
+        id: ldap-authentication-flow
+        identifiers:
+          slug: "ldap-authentication-flow"
+        attrs:
+          name: "ldap-authentication-flow"
+          title: "LDAP authentication flow"
+          slug: "ldap-authentication-flow"
+          designation: "authentication"
+          authentication: "none"
+          denied_action: "message_continue"
+          policy_engine_mode: "any"
+
+      # LDAP flow identification stage binding
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !KeyOf ldap-authentication-flow
+          stage: !KeyOf ldap-authentication-identification
+          order: 10
+          evaluate_on_plan: true
+          re_evaluate_policies: false
+          invalid_response_action: "retry"
+          policy_engine_mode: "any"
+
+      # LDAP flow login stage binding
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !KeyOf ldap-authentication-flow
+          stage: !KeyOf ldap-authentication-login
+          order: 30
+          evaluate_on_plan: true
+          re_evaluate_policies: false
+          invalid_response_action: "retry"
+          policy_engine_mode: "any"
+
+      # LDAP provider
+      - model: authentik_providers_ldap.ldapprovider
+        id: ldap-provider
+        identifiers:
+          name: "LDAP"
+        attrs:
+          name: "LDAP"
+          authorization_flow: !KeyOf ldap-authentication-flow
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
+          mfa_support: false
+          bind_mode: "direct"
+          search_mode: "direct"
+          base_dn: "dc=home,dc=lan"
+          uid_start_number: 2000
+          gid_start_number: 4000
+
+      # LDAP application
+      - model: authentik_core.application
+        id: ldap-application
+        identifiers:
+          slug: "ldap"
+        attrs:
+          name: "LDAP"
+          provider: !KeyOf ldap-provider
+          group: "Security"
+          policy_engine_mode: "any"
+
+      # LDAP outpost
+      - model: authentik_outposts.outpost
+        id: ldap-outpost
+        identifiers:
+          name: "ldap-outpost"
+        attrs:
+          type: "ldap"
+          service_connection: !Find [authentik_outposts.kubernetesserviceconnection, [name, "Local Kubernetes Cluster"]]
+          providers:
+            - !KeyOf ldap-provider
+          config:
+            log_level: info
+            authentik_host: "http://authentik-server.authentik.svc.cluster.local"
+            object_naming_template: "ak-outpost-%(name)s"
+            kubernetes_namespace: authentik
+            kubernetes_replicas: 1
+            kubernetes_service_type: ClusterIP
+
   999-outpost.yaml: |
     version: 1
     metadata:
