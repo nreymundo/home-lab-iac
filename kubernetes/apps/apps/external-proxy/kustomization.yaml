@@ -16,4 +16,3 @@ resources:
   - kopia.yaml
   - syncthing.yaml
   - plex.yaml
-  - nextcloud.yaml

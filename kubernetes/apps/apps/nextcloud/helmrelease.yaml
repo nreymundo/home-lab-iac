@@ -1,0 +1,185 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      collabora:
+        pod:
+          nodeSelector:
+            topology.kubernetes.io/zone: "framework"
+        containers:
+          collabora:
+            image:
+              # renovate: datasource=docker depName=collabora/code registryUrl=https://docker.io
+              repository: docker.io/collabora/code
+              tag: 25.04.9.2.1
+            env:
+              TZ: Europe/Berlin
+              dictionaries: en_US
+              server_name: office.${CLUSTER_DOMAIN}
+              aliasgroup1: https://cloud.${CLUSTER_DOMAIN}
+              extra_params: --o:ssl.enable=false --o:ssl.termination=true --o:remote_font_config.url=https://cloud.${CLUSTER_DOMAIN}/apps/richdocuments/settings/fonts.json
+            resources:
+              requests:
+                cpu: 250m
+                memory: 512Mi
+              limits:
+                cpu: 2
+                memory: 2Gi
+            ports:
+              - name: http
+                containerPort: 9980
+      main:
+        pod:
+          nodeSelector:
+            topology.kubernetes.io/zone: "framework"
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=linuxserver/nextcloud registryUrl=https://lscr.io
+              repository: lscr.io/linuxserver/nextcloud
+              tag: 33.0.0
+            env:
+              APACHE_DISABLE_REWRITE_IP: "1"
+              NEXTCLOUD_ADMIN_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-admin-secrets
+                    key: username
+              NEXTCLOUD_ADMIN_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-admin-secrets
+                    key: password
+              NEXTCLOUD_TRUSTED_DOMAINS: cloud.${CLUSTER_DOMAIN}
+              MAIL_DOMAIN: ${CLUSTER_DOMAIN}
+              MAIL_FROM_ADDRESS: nextcloud
+              POSTGRES_DB: nextcloud
+              POSTGRES_HOST: nextcloud-pg-rw
+              REDIS_HOST: nextcloud-valkey
+              SMTP_AUTHTYPE: LOGIN
+              SMTP_HOST: mail-eu.smtp2go.com
+              SMTP_PORT: "587"
+              SMTP_SECURE: tls
+              TRUSTED_PROXIES: 10.42.0.0/16
+              SMTP_NAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-mail-secrets
+                    key: SMTP_NAME
+              SMTP_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-mail-secrets
+                    key: SMTP_PASSWORD
+              POSTGRES_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-db-secrets
+                    key: username
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: nextcloud-db-secrets
+                    key: password
+              TZ: Europe/Berlin
+              PUID: "1000"
+              PGID: "1000"
+            ports:
+              - name: https
+                containerPort: 443
+      valkey:
+        containers:
+          valkey:
+            image:
+              # renovate: datasource=docker depName=valkey/valkey registryUrl=https://docker.io
+              repository: docker.io/valkey/valkey
+              tag: 9-alpine
+            command:
+              - valkey-server
+              - --save
+              - "30"
+              - "1"
+              - --loglevel
+              - warning
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                cpu: 250m
+                memory: 256Mi
+    service:
+      collabora:
+        controller: collabora
+        ports:
+          http:
+            port: 9980
+      main:
+        controller: main
+        annotations:
+          traefik.ingress.kubernetes.io/service.serversscheme: https
+          traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
+        ports:
+          https:
+            port: 443
+      valkey:
+        controller: valkey
+        ports:
+          valkey:
+            port: 6379
+    ingress:
+      collabora:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: office.${CLUSTER_DOMAIN}
+        hosts:
+          - host: office.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: collabora
+                  port: http
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: cloud.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Nextcloud
+          gethomepage.dev/description: File sync and share
+          gethomepage.dev/group: Utils
+          gethomepage.dev/icon: nextcloud.png
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/href: https://cloud.${CLUSTER_DOMAIN}
+        hosts:
+          - host: cloud.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: https
+    persistence:
+      config:
+        enabled: true
+        type: hostPath
+        hostPath: /opt/nextcloud/config
+        hostPathType: DirectoryOrCreate
+        globalMounts:
+          - path: /config
+      data:
+        enabled: true
+        type: hostPath
+        hostPath: /opt/nextcloud/data
+        hostPathType: DirectoryOrCreate
+        globalMounts:
+          - path: /data
+      valkey-data:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          valkey:
+            valkey:
+              - path: /data
