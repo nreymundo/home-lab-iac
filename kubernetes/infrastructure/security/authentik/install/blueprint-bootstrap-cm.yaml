@@ -932,7 +932,7 @@ data:
           mfa_support: false
           bind_mode: "direct"
           search_mode: "direct"
-          base_dn: "dc=ldap,dc=lan"
+          base_dn: "dc=home,dc=lan"
           uid_start_number: 2000
           gid_start_number: 4000
 
