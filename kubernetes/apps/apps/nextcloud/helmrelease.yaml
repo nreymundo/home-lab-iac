@@ -24,7 +24,7 @@ spec:
               dictionaries: en_US
               server_name: office.${CLUSTER_DOMAIN}
               aliasgroup1: https://cloud.${CLUSTER_DOMAIN}
-              extra_params: --o:ssl.enable=false --o:ssl.termination=true --o:remote_font_config.url=https://cloud.${CLUSTER_DOMAIN}/apps/richdocuments/settings/fonts.json --o:net.frame_ancestors=https://cloud.${CLUSTER_DOMAIN}
+              extra_params: --o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o:remote_font_config.url=https://cloud.${CLUSTER_DOMAIN}/apps/richdocuments/settings/fonts.json --o:net.frame_ancestors=https://cloud.${CLUSTER_DOMAIN} --o:home_mode.enable=true --o:mount_jail_tree=false --o:mount_namespaces=false
             resources:
               requests:
                 cpu: 250m
