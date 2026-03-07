@@ -79,6 +79,20 @@ spec:
               limits:
                 cpu: 250m
                 memory: 256Mi
+      clamav:
+        containers:
+          clamav:
+            image:
+              # renovate: datasource=docker depName=clamav/clamav registryUrl=https://docker.io
+              repository: docker.io/clamav/clamav
+              tag: "1.5"
+            resources:
+              requests:
+                cpu: 50m
+                memory: 512Mi
+              limits:
+                cpu: 1000m
+                memory: 2Gi
     service:
       collabora:
         controller: collabora
@@ -98,6 +112,11 @@ spec:
         ports:
           valkey:
             port: 6379
+      clamav:
+        controller: clamav
+        ports:
+          clamav:
+            port: 3310
     ingress:
       collabora:
         annotations:
@@ -154,3 +173,10 @@ spec:
           valkey:
             valkey:
               - path: /data
+      clamav-data:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          clamav:
+            clamav:
+              - path: /var/lib/clamav
