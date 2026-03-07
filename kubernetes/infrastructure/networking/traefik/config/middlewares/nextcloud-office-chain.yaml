@@ -1,0 +1,12 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: nextcloud-office-chain
+  namespace: traefik
+spec:
+  chain:
+    middlewares:
+      - name: rate-limit
+      - name: nextcloud-office-headers
+      - name: crowdsec-bouncer
+        namespace: crowdsec

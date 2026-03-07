@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: nextcloud-office-headers
+  namespace: traefik
+spec:
+  headers:
+    contentTypeNosniff: true
+    browserXssFilter: true
+    referrerPolicy: "strict-origin-when-cross-origin"
+    stsSeconds: 31536000
+    stsIncludeSubdomains: true
+    stsPreload: true
+    customResponseHeaders:
+      X-Permitted-Cross-Domain-Policies: "none"
+      Permissions-Policy: "camera=*, microphone=*, geolocation=*, payment=(), usb=(), vr=(), interest-cohort=()"

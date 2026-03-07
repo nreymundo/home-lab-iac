@@ -2,8 +2,10 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - middlewares/default-headers.yaml
+  - middlewares/nextcloud-office-headers.yaml
   - middlewares/rate-limit.yaml
   - middlewares/default-chain.yaml
+  - middlewares/nextcloud-office-chain.yaml
   - middlewares/gatekeeper-auth-chain.yaml
   - middlewares/frigate-auth-chain.yaml
   - middlewares/discord-auth-chain.yaml

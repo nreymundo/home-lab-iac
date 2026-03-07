@@ -96,7 +96,7 @@ spec:
       collabora:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: office.${CLUSTER_DOMAIN}
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-nextcloud-office-chain@kubernetescrd
         hosts:
           - host: office.${CLUSTER_DOMAIN}
             paths:
@@ -107,7 +107,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: cloud.${CLUSTER_DOMAIN}
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-nextcloud-office-chain@kubernetescrd
           gethomepage.dev/name: Nextcloud
           gethomepage.dev/description: File sync and share
           gethomepage.dev/group: Utils
