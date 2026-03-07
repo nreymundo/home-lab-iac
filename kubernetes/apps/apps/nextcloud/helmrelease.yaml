@@ -20,6 +20,7 @@ spec:
               repository: lscr.io/linuxserver/nextcloud
               tag: 33.0.0
             env:
+              APACHE_DISABLE_REWRITE_IP: "1"
               NEXTCLOUD_ADMIN_USER:
                 valueFrom:
                   secretKeyRef:
@@ -30,9 +31,11 @@ spec:
                   secretKeyRef:
                     name: nextcloud-admin-secrets
                     key: password
+              NEXTCLOUD_TRUSTED_DOMAINS: cloud.${CLUSTER_DOMAIN}
               POSTGRES_DB: nextcloud
               POSTGRES_HOST: nextcloud-pg-rw
               REDIS_HOST: nextcloud-valkey
+              TRUSTED_PROXIES: 10.42.0.0/16
               POSTGRES_USER:
                 valueFrom:
                   secretKeyRef:
