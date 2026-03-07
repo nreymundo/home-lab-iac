@@ -167,15 +167,19 @@ spec:
         type: hostPath
         hostPath: /opt/nextcloud/config
         hostPathType: DirectoryOrCreate
-        globalMounts:
-          - path: /config
+        advancedMounts:
+          main:
+            main:
+              - path: /config
       data:
         enabled: true
         type: hostPath
         hostPath: /opt/nextcloud/data
         hostPathType: DirectoryOrCreate
-        globalMounts:
-          - path: /data
+        advancedMounts:
+          main:
+            main:
+              - path: /data
       valkey-data:
         enabled: true
         type: emptyDir
