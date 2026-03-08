@@ -254,8 +254,21 @@ spec:
         #     cpu: true
         #     memory: true
         - search:
-            provider: duckduckgo
-            target: _blank
+            provider: custom
+            url: https://search.lan.lainternetdelpantano.xyz/search?q=
+            target: _self
+        - longhorn:
+            expanded: true
+            total: true
+            labels: true
+            nodes: false
+        - openmeteo:
+            label: Berlin
+            latitude: "{{HOMEPAGE_VAR_WEATHER_LATITUDE}}"
+            longitude: "{{HOMEPAGE_VAR_WEATHER_LONGITUDE}}"
+            timezone: Europe/Berlin
+            units: metric
+            cache: 5
         - kubernetes:
             cluster:
               show: true
@@ -264,7 +277,7 @@ spec:
               showLabel: true
               label: "cluster"
             nodes:
-              show: true
+              show: false
               cpu: true
               memory: true
               showLabel: true
@@ -292,6 +305,10 @@ spec:
           image: https://i.imgur.com/s2BDTA0.jpeg
         cardBlur: xl
         theme: dark
+
+        providers:
+          longhorn:
+            url: http://longhorn-frontend.longhorn-system.svc.cluster.local
 
         layout:
           Media:
