@@ -17,5 +17,5 @@ data:
           podName: gitea-*
           program: gitea
         - namespace: nextcloud
-          podName: nextcloud-main-*
+          podName: nextcloud-log-tailer-*
           program: nextcloud

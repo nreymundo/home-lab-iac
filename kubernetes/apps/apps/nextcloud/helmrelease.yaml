@@ -58,6 +58,26 @@ spec:
             ports:
               - name: https
                 containerPort: 443
+      log-tailer:
+        pod:
+          nodeSelector:
+            topology.kubernetes.io/zone: "framework"
+        containers:
+          log-tailer:
+            image:
+              repository: docker.io/busybox
+              tag: latest
+            command:
+              - /bin/sh
+              - -c
+              - "tail -n 1 -F /data/nextcloud.log"
+            resources:
+              requests:
+                cpu: 5m
+                memory: 16Mi
+              limits:
+                cpu: 50m
+                memory: 32Mi
       valkey:
         containers:
           valkey:
@@ -166,6 +186,10 @@ spec:
           main:
             main:
               - path: /data
+          log-tailer:
+            log-tailer:
+              - path: /data
+                readOnly: true
       valkey-data:
         enabled: true
         type: emptyDir
