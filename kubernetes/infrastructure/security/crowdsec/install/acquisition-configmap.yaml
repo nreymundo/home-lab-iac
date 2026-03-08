@@ -16,3 +16,6 @@ data:
         - namespace: development
           podName: gitea-*
           program: gitea
+        - namespace: nextcloud
+          podName: nextcloud-main-*
+          program: nextcloud

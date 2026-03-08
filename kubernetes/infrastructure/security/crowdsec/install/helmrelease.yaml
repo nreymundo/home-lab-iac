@@ -103,7 +103,7 @@ spec:
     agent:
       env:
         - name: COLLECTIONS
-          value: "crowdsecurity/traefik crowdsecurity/base-http-scenarios firix/authentik LePresidente/gitea"
+          value: "crowdsecurity/traefik crowdsecurity/base-http-scenarios firix/authentik LePresidente/gitea crowdsecurity/nextcloud"
 
       # Startup probe: gives agent time to initialize before liveness checks begin
       startupProbe:
