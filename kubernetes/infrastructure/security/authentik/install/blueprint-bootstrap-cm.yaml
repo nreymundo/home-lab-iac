@@ -450,6 +450,111 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Paperless Users"]]
 
+  255-nextcloud.yaml: |
+    version: 1
+    metadata:
+      name: nextcloud-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Nextcloud Admins group (default user gets admin role)
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Nextcloud Admins"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+
+      # Nextcloud Users group (regular users, 15 GB quota)
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Nextcloud Users"
+        attrs:
+          is_superuser: false
+          parent: null
+          attributes:
+            nextcloud_quota: "15 GB"
+
+      # Custom scope mapping for Nextcloud claims
+      - model: authentik_providers_oauth2.scopemapping
+        id: nextcloud-scope
+        identifiers:
+          name: "Nextcloud Profile"
+        attrs:
+          scope_name: nextcloud
+          description: "Nextcloud claims for groups, quota, and existing user mapping"
+          expression: |
+            groups = [group.name for group in request.user.ak_groups.all()]
+
+            is_nextcloud_admin = "Nextcloud Admins" in groups
+            if is_nextcloud_admin and "admin" not in groups:
+                groups.append("admin")
+
+            quota = None
+            if not is_nextcloud_admin:
+                quota = request.user.group_attributes().get("nextcloud_quota", None)
+
+            return {
+                "name": request.user.name,
+                "email": request.user.email,
+                "groups": groups,
+                "quota": quota,
+                "user_id": request.user.attributes.get("nextcloud_user_id", request.user.username),
+            }
+
+      # OAuth2 provider for Nextcloud
+      - model: authentik_providers_oauth2.oauth2provider
+        id: nextcloud-provider
+        identifiers:
+          name: "Nextcloud"
+        attrs:
+          client_id: !Env NEXTCLOUD_CLIENT_ID
+          client_secret: !Env NEXTCLOUD_CLIENT_SECRET
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          jwt_algorithm: RS256
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
+          client_type: confidential
+          client_authentication_method: client_secret_post
+          redirect_uris:
+            - url: "https://cloud.${CLUSTER_DOMAIN}/apps/user_oidc/code"
+              matching_mode: strict
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+            - !KeyOf nextcloud-scope
+
+      # Nextcloud application
+      - model: authentik_core.application
+        identifiers:
+          slug: "nextcloud"
+        attrs:
+          name: "Nextcloud"
+          provider: !KeyOf nextcloud-provider
+          group: "Utils"
+          meta_launch_url: "https://cloud.${CLUSTER_DOMAIN}"
+
+      # Allow Nextcloud Users
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "nextcloud"]]
+          order: 0
+        attrs:
+          group: !Find [authentik_core.group, [name, "Nextcloud Users"]]
+
+      # Allow Nextcloud Admins
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "nextcloud"]]
+          order: 1
+        attrs:
+          group: !Find [authentik_core.group, [name, "Nextcloud Admins"]]
+
   500-frigate.yaml: |
     version: 1
     metadata:

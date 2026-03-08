@@ -16,6 +16,7 @@ resources:
   - gitea-sso-secret.sops.yaml
   - immich-sso-secret.sops.yaml
   - paperless-sso-secret.sops.yaml
+  - nextcloud-sso-secret.sops.yaml
   - discord-auth-secret.sops.yaml
   - kopia-auth-secret.sops.yaml
   - frigate-proxy-secret.sops.yaml
