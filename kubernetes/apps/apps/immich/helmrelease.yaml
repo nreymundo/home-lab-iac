@@ -44,9 +44,11 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /api/server/ping
-                    port: 2283
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - immich-healthcheck && ls /data >/dev/null
                   initialDelaySeconds: 30
                   periodSeconds: 10
                   timeoutSeconds: 5
@@ -55,9 +57,11 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /api/server/ping
-                    port: 2283
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - immich-healthcheck && ls /data >/dev/null
                   initialDelaySeconds: 10
                   periodSeconds: 10
                   timeoutSeconds: 5

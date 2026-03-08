@@ -28,8 +28,11 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  tcpSocket:
-                    port: 8096
+                  exec:
+                    command:
+                      - /bin/bash
+                      - -c
+                      - exec 3<>/dev/tcp/127.0.0.1/8096 && ls /data >/dev/null
                   initialDelaySeconds: 30
                   periodSeconds: 15
                   timeoutSeconds: 3
@@ -38,8 +41,11 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  tcpSocket:
-                    port: 8096
+                  exec:
+                    command:
+                      - /bin/bash
+                      - -c
+                      - exec 3<>/dev/tcp/127.0.0.1/8096 && ls /data >/dev/null
                   initialDelaySeconds: 20
                   periodSeconds: 15
                   timeoutSeconds: 3

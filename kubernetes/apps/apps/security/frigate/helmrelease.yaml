@@ -106,6 +106,32 @@ spec:
               - name: webrtc-udp
                 containerPort: 8555
                 protocol: UDP
+            probes:
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - ls /media/frigate >/dev/null
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 1
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - ls /media/frigate >/dev/null
+                  initialDelaySeconds: 120
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 4
             resources:
               requests:
                 gpu.intel.com/i915: 1

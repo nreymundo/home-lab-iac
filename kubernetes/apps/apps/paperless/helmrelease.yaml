@@ -66,6 +66,32 @@ spec:
             ports:
               - name: http
                 containerPort: 8000
+            probes:
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - ls /usr/src/paperless/media >/dev/null
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 1
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - ls /usr/src/paperless/media >/dev/null
+                  initialDelaySeconds: 120
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 4
             resources:
               requests:
                 cpu: 100m
