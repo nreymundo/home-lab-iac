@@ -32,6 +32,22 @@ spec:
 
                 echo "Copying default config..."
                 cp /defaults/config.yml /config/config.yml
+          init-media-dirs:
+            image:
+              repository: docker.io/library/busybox
+              tag: 1.37.0
+            command:
+              - sh
+              - -c
+              - |
+                echo "Pre-creating Frigate media directories..."
+                mkdir -p /media/frigate/clips/thumbs
+                mkdir -p /media/frigate/clips/previews
+                mkdir -p /media/frigate/clips/review
+                mkdir -p /media/frigate/recordings
+                mkdir -p /media/frigate/exports
+                ls -la /media/frigate/
+                echo "Done."
         containers:
           main:
             image:
