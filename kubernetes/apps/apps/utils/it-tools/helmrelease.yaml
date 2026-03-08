@@ -1,0 +1,52 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: it-tools
+  namespace: utils
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=corentinth/it-tools registryUrl=https://docker.io
+              repository: docker.io/corentinth/it-tools
+              tag: 2024.10.22-7ca5933
+            env:
+              TZ: Europe/Berlin
+            ports:
+              - name: http
+                containerPort: 80
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 80
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: tools.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: IT-Tools
+          gethomepage.dev/description: Handy tools for developers
+          gethomepage.dev/group: Development
+          gethomepage.dev/icon: it-tools.png
+        hosts:
+          - host: tools.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http

@@ -8,6 +8,7 @@ resources:
   - ../apps/external-proxy
   - ../apps/automation/n8n
   - ../apps/utils/homepage
+  - ../apps/utils/it-tools
   - ../apps/utils/searxng
   - ../apps/nextcloud
   - ../apps/media/audiobookshelf
