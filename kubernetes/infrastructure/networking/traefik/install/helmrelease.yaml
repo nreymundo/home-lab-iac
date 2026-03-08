@@ -40,12 +40,18 @@ spec:
       name: traefik # Overriding this so the ingressClass becomes "traefik" instead of "traefik-traefik"
     ports:
       web:
+        forwardedHeaders:
+          trustedIPs:
+            - 10.42.0.0/16
         http:
           redirections:
             entryPoint:
               to: websecure
               scheme: https
       websecure:
+        forwardedHeaders:
+          trustedIPs:
+            - 10.42.0.0/16
         http:
           encodedCharacters:
             allowEncodedSlash: true

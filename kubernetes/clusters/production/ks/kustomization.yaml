@@ -8,6 +8,7 @@ resources:
   - 20-traefik-install.yaml
   - 21-traefik-config.yaml
   - 25-external-dns-install.yaml
+  - 26-cloudflared-install.yaml
   - 30-kube-replicator-install.yaml
   - 42-authentik-install.yaml
   - 43-authentik-config.yaml
