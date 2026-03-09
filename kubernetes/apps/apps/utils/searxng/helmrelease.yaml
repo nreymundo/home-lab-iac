@@ -98,11 +98,13 @@ spec:
         volumeSpec:
           persistentVolumeClaim:
             claimName: searxng
-        globalMounts:
-          - path: /etc/searxng
-            subPath: config
-          - path: /var/cache/searxng
-            subPath: cache
+        advancedMounts:
+          main:
+            main:
+              - path: /etc/searxng
+                subPath: config
+              - path: /var/cache/searxng
+                subPath: cache
       valkey-data:
         enabled: true
         type: emptyDir
