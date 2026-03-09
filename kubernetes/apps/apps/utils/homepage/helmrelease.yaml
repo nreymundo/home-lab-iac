@@ -255,7 +255,7 @@ spec:
         #     memory: true
         - search:
             provider: custom
-            url: https://search.lan.lainternetdelpantano.xyz/search?q=
+            url: https://search.lan.${CLUSTER_DOMAIN}/search?q=
             target: _self
         - longhorn:
             expanded: true
