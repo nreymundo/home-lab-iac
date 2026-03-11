@@ -6,6 +6,8 @@ This repository is GitOps-first.
 
 If a change can be expressed in the repo, make it in the repo and let Flux reconcile it.
 
+If the user asks to fix one specific thing, change only the files and resources required for that exact fix unless they explicitly ask to broaden the scope.
+
 Do not manually patch, apply, edit, scale, restart, or otherwise mutate Kubernetes resources just to "speed things up" or "verify quickly" when the correct path is a GitOps change.
 
 ## Default behavior for this repo
