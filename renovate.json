@@ -21,11 +21,25 @@
 
   "packageRules": [
     {
-      "description": "Lidarr: parse 3- or 4-part tags, ignore nightly/develop",
-      "matchPackageNames": ["linuxserver/lidarr"],
+      "description": "Keep Jellyfin on stable semver tags",
       "matchDatasources": ["docker"],
-      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$",
+      "matchDepNames": ["linuxserver/jellyfin"],
+      "matchPackageNames": ["linuxserver/jellyfin", "lscr.io/linuxserver/jellyfin"],
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
+      "description": "Keep Tautulli on stable semver tags",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["linuxserver/tautulli"],
+      "matchPackageNames": ["linuxserver/tautulli", "lscr.io/linuxserver/tautulli"],
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
+      "description": "Keep Lidarr on the deployed 3.x semver line",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["linuxserver/lidarr"],
+      "matchPackageNames": ["linuxserver/lidarr", "lscr.io/linuxserver/lidarr"],
+      "allowedVersions": "/^3\\.\\d+\\.\\d+$/"
     },
     {
       "description": "Global stability and automerge schedule",
