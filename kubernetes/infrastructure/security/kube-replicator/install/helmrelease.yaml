@@ -12,7 +12,7 @@ spec:
     spec:
       chart: kubernetes-replicator
       # renovate: datasource=helm depName=kubernetes-replicator registryUrl=https://helm.mittwald.de
-      version: "2.*"
+      version: "2.12.3"
       sourceRef:
         kind: HelmRepository
         name: mittwald
