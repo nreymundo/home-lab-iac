@@ -35,10 +35,10 @@ spec:
       longhorn:
         manager:
           # renovate: datasource=docker depName=longhornio/longhorn-manager registryUrl=https://registry-1.docker.io
-          tag: v1.11.0-hotfix-1
+          tag: v1.11.1
         instanceManager:
           # renovate: datasource=docker depName=longhornio/longhorn-instance-manager registryUrl=https://registry-1.docker.io
-          tag: v1.11.0-hotfix-1
+          tag: v1.11.1
 
     longhornManager:
       resources:
