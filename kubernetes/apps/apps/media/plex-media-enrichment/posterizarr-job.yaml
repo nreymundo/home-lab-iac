@@ -20,7 +20,7 @@ spec:
           main:
             image:
               repository: ghcr.io/fscorrupt/posterizarr
-              tag: latest
+              tag: 2.2.29
             env:
               TZ: Europe/Berlin
             command:
