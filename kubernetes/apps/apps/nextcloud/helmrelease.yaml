@@ -18,7 +18,7 @@ spec:
             image:
               # renovate: datasource=docker depName=collabora/code registryUrl=https://docker.io
               repository: docker.io/collabora/code
-              tag: 25.04.9.2.1
+              tag: 25.04.9.3.1
             env:
               TZ: Europe/Berlin
               dictionaries: "en_US de_DE es_AR"
