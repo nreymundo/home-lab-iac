@@ -5,6 +5,9 @@ k3s_cluster_init: false
 k3s_server_args: ""
 k3s_agent_args: ""
 
+# Virtual IP set up in OPNSense for K3s API load balancing
+k3s_api_vip: 192.168.10.10
+
 # Checksums for K3s binaries - ensures integrity verification
 k3s_amd64_checksum: "e406ca6e47673d747ab4665c90a9285615fe082e2593343725ed043ae163abbf"
 k3s_arm64_checksum: "c8d08bc38ad51be20ba531b3c412855c38d534f99cdff30fde6891b6f555a846"

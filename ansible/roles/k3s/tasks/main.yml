@@ -134,6 +134,7 @@
           --node-ip {{ k3s_node_ip }}
           --flannel-iface {{ k3s_iface }}
           --write-kubeconfig-mode 644
+          --tls-san {{ k3s_api_vip }}
           --disable traefik
           --disable metrics-server
           --disable servicelb
@@ -191,7 +192,7 @@
       ansible.builtin.replace:
         path: "{{ playbook_dir }}/k3s.yaml"
         regexp: 'https://127.0.0.1:6443'
-        replace: "https://{{ k3s_node_ip | default(ansible_host) }}:6443"
+        replace: "https://{{ k3s_api_vip }}:6443"
       delegate_to: localhost
       become: false
       when: not ansible_check_mode
@@ -231,10 +232,11 @@
       vars:
         k3s_exec_args: >
           server
-          --server https://{{ k3s_seed_ip }}:6443
+          --server https://{{ k3s_api_vip }}:6443
           --token {{ k3s_cluster_token }}
           --node-ip {{ k3s_node_ip }}
           --flannel-iface {{ k3s_iface }}
+          --tls-san {{ k3s_api_vip }}
           --disable traefik
           --disable metrics-server
           --disable servicelb
