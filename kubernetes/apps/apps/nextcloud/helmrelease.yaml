@@ -58,11 +58,6 @@ spec:
             ports:
               - name: https
                 containerPort: 443
-      log-tailer:
-        pod:
-          nodeSelector:
-            topology.kubernetes.io/zone: "framework"
-        containers:
           log-tailer:
             image:
               repository: docker.io/busybox
@@ -186,7 +181,6 @@ spec:
           main:
             main:
               - path: /data
-          log-tailer:
             log-tailer:
               - path: /data
                 readOnly: true
