@@ -44,6 +44,8 @@ home-lab-iac/
 - Never patch, apply, edit, scale, or restart Kubernetes resources directly when the repo can express the change.
 - Never treat `kubernetes/clusters/production/flux-system/gotk-*.yaml` as normal edit targets.
 - Never commit plaintext secrets, private keys, or unencrypted Kubernetes Secret manifests.
+- Do not attribute commits to any person or tool unless explicitly instructed to do so.
+- Do not add anything to commit messages beyond the requested change summary unless explicitly instructed to do so.
 - Never broaden a narrowly requested fix beyond the files needed for that exact change.
 - Do not use docs or generated manifests as evidence that a subtree needs its own AGENTS file.
 
