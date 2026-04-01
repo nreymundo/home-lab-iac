@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: crowdsec-acquisition
   namespace: crowdsec
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |
     agent:
