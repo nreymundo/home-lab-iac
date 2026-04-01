@@ -18,6 +18,10 @@ data:
         - namespace: development
           podName: gitea-*
           program: gitea
-        - namespace: nextcloud
-          podName: nextcloud-main-*
-          program: nextcloud
+      additionalAcquisition:
+        - source: file
+          filenames:
+            - /var/log/containers/nextcloud-main-*_nextcloud_log-tailer-*.log
+          labels:
+            type: containerd
+            program: nextcloud
