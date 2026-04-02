@@ -21,7 +21,7 @@ spec:
             image:
               # renovate: datasource=docker depName=linuxserver/kometa registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/kometa
-              tag: 2.3.0
+              tag: 2.3.1
             command:
               - python3
               - /app/kometa/kometa.py
