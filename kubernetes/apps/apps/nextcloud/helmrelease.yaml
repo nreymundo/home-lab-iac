@@ -42,6 +42,7 @@ spec:
               - name: http
                 containerPort: 9980
       main:
+        replicas: 0
         pod:
           nodeSelector:
             topology.kubernetes.io/zone: "framework"
