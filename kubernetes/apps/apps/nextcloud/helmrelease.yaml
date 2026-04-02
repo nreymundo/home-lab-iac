@@ -10,9 +10,6 @@ spec:
   values:
     controllers:
       collabora:
-        pod:
-          nodeSelector:
-            topology.kubernetes.io/zone: "framework"
         containers:
           collabora:
             image:
@@ -42,9 +39,6 @@ spec:
               - name: http
                 containerPort: 9980
       main:
-        pod:
-          nodeSelector:
-            topology.kubernetes.io/zone: "framework"
         containers:
           main:
             image:
