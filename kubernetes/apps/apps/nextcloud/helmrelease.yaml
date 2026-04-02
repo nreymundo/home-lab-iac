@@ -42,7 +42,6 @@ spec:
               - name: http
                 containerPort: 9980
       main:
-        replicas: 0
         pod:
           nodeSelector:
             topology.kubernetes.io/zone: "framework"
@@ -166,18 +165,20 @@ spec:
     persistence:
       config:
         enabled: true
-        type: hostPath
-        hostPath: /opt/nextcloud/config
-        hostPathType: DirectoryOrCreate
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: nextcloud-config
         advancedMounts:
           main:
             main:
               - path: /config
       data:
         enabled: true
-        type: hostPath
-        hostPath: /opt/nextcloud/data
-        hostPathType: DirectoryOrCreate
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: nextcloud-data
         advancedMounts:
           main:
             main:
