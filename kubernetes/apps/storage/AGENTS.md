@@ -26,3 +26,6 @@ kubectl apply --dry-run=client -f kubernetes/apps/storage
 
 ## NOTES
 - When changing app persistence, inspect both this subtree and the app deployment subtree; they are intentionally split.
+- `kustomize.toolkit.fluxcd.io/ssa: IfNotPresent` is mainly for migrated, pre-existing, or retained PVCs that Flux should create when absent but not keep mutating after they already exist.
+- New PVCs usually should not need `kustomize.toolkit.fluxcd.io/ssa: IfNotPresent`; only add it when you intentionally want create-only behavior for an existing-data or migration scenario.
+- When changing a PVC that already has `kustomize.toolkit.fluxcd.io/ssa: IfNotPresent`, do not assume Flux will apply the update. Call this out to the user and prompt for the required manual live change instead (for example, PVC size expansion).
