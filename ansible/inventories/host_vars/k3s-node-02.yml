@@ -1,3 +1,11 @@
 # K3s seed node configuration
 # This host is designated as the K3s cluster seed node
 k3s_is_seed: true
+
+common_extra_packages:
+  - intel-gpu-tools
+  - intel-media-va-driver
+  - vainfo
+  - nvtop
+  - intel-opencl-icd
+  - ocl-icd-libopencl1
