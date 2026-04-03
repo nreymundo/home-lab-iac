@@ -107,10 +107,10 @@ resource "proxmox_vm_qemu" "k3s_nodes" {
     }
   }
 
-  boot   = "order=scsi0"
-  onboot = true
-  agent  = 1
-  tags   = "terraform,k3s-node"
+  boot               = "order=scsi0"
+  start_at_node_boot = true
+  agent              = 1
+  tags               = "terraform,k3s-node"
 
   machine = try(var.nodes[count.index].machine, null)
 
