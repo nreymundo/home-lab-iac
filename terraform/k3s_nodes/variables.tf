@@ -171,7 +171,7 @@ variable "secondary_disk_storage_pool" {
 variable "secondary_disk_size_gb" {
   type        = number
   description = "Size in GB for secondary vdisk"
-  default     = 300
+  default     = 600
   validation {
     condition     = var.secondary_disk_size_gb >= 0
     error_message = "Secondary disk size must be 0 or greater."
