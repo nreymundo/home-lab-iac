@@ -18,6 +18,7 @@ spec:
               tag: "1.43.0"
             env:
               TZ: Europe/Berlin
+              LIBVA_DRIVER_NAME: iHD
               PUID: "99"
               PGID: "100"
               VERSION: docker
@@ -57,9 +58,11 @@ spec:
                   failureThreshold: 30
             resources:
               requests:
+                gpu.intel.com/i915: 1
                 cpu: 500m
                 memory: 1Gi
               limits:
+                gpu.intel.com/i915: 1
                 cpu: 2000m
                 memory: 4Gi
     service:
