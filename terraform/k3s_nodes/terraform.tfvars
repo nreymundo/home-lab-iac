@@ -15,5 +15,6 @@ nodes = [
     template_name = "ubuntu-24.04-base"
     ci_user       = "ubuntu"
     target_node   = "pve2"
+    machine       = "q35"
   }
 ]
