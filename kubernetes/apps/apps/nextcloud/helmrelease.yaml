@@ -44,7 +44,7 @@ spec:
             image:
               # renovate: datasource=docker depName=linuxserver/nextcloud registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/nextcloud
-              tag: 33.0.1
+              tag: 33.0.2
             env:
               TZ: Europe/Berlin
               PUID: "1000"
