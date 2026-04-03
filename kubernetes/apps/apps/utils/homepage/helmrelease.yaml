@@ -162,11 +162,6 @@ spec:
                   href: https://www.linkedin.com/
 
       services:
-        - Media:
-            - Plex:
-                icon: plex.png
-                description: "Media server"
-                href: https://plex.lan.${CLUSTER_DOMAIN}
         - Management:
             - Proxmox:
                 icon: proxmox.png

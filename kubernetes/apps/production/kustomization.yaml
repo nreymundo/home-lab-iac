@@ -34,6 +34,7 @@ resources:
   - ../apps/utils/discord-presence
   - ../apps/media/plextraktsync
   - ../apps/media/plex-media-enrichment
+  - ../apps/media/plex
   - ../apps/media/tidarr
   - ../apps/media/seerr
   - ../apps/paperless

@@ -15,4 +15,3 @@ resources:
   - omada.yaml
   - kopia.yaml
   - syncthing.yaml
-  - plex.yaml
