@@ -31,7 +31,8 @@
         dest: /etc/modprobe.d/vfio-pci.conf
         content: |
           # Managed by Ansible: VFIO-PCI device IDs
-          options vfio-pci ids={{ proxmox_gpu_passthrough.pci_ids | join(',') }}{% if proxmox_gpu_passthrough.disable_vga | default(true) %} disable_vga=1{% endif %}
+          {% set disable_vga = proxmox_gpu_passthrough.disable_vga | default(true) %}
+          options vfio-pci ids={{ proxmox_gpu_passthrough.pci_ids | join(',') }}{% if disable_vga %} disable_vga=1{% endif %}
 
         owner: root
         group: root

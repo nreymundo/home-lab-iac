@@ -1,5 +1,7 @@
 ---
 # Secondary disk configuration for K3s Longhorn storage
+secondary_disk_disable_multipathd: true
+secondary_disk_multipathd_service_name: "multipathd"
 secondary_disk_device: "/dev/sdb"
 secondary_disk_partition: "/dev/sdb1"
 secondary_disk_mountpoint: "/var/lib/longhorn"

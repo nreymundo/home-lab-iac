@@ -184,13 +184,13 @@
     - name: Fetch Kubeconfig to ansible directory
       ansible.builtin.fetch:
         src: /etc/rancher/k3s/k3s.yaml
-        dest: "{{ playbook_dir }}/k3s.yaml"
+        dest: "{{ playbook_dir }}/../k3s.yaml"
         flat: true
       when: not ansible_check_mode
 
     - name: Update Kubeconfig server address
       ansible.builtin.replace:
-        path: "{{ playbook_dir }}/k3s.yaml"
+        path: "{{ playbook_dir }}/../k3s.yaml"
         regexp: 'https://127.0.0.1:6443'
         replace: "https://{{ k3s_api_vip }}:6443"
       delegate_to: localhost

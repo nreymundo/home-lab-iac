@@ -19,6 +19,23 @@
 - name: Configure secondary disk for Longhorn storage
   when: secondary_disk_stat.stat.exists
   block:
+    - name: Gather service facts for multipath management
+      ansible.builtin.service_facts:
+      when: secondary_disk_disable_multipathd | bool
+
+    - name: Disable multipathd on Longhorn storage nodes
+      ansible.builtin.systemd:
+        name: "{{ secondary_disk_multipathd_service_name }}"
+        state: stopped
+        enabled: false
+        masked: true
+      when:
+        - secondary_disk_disable_multipathd | bool
+        - ansible_facts.services is defined
+        - >-
+          (secondary_disk_multipathd_service_name ~ '.service') in ansible_facts.services
+          or secondary_disk_multipathd_service_name in ansible_facts.services
+
     - name: Read partition information
       community.general.parted:
         device: "{{ secondary_disk_device }}"
