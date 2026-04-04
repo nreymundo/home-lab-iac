@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: jellyfin-exporter
+  namespace: media
+  labels:
+    release: observability-kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: jellyfin-exporter
+      app.kubernetes.io/name: jellyfin-exporter
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

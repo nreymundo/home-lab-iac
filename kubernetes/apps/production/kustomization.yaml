@@ -13,6 +13,7 @@ resources:
   - ../apps/nextcloud
   - ../apps/media/audiobookshelf
   - ../apps/media/jellyfin
+  - ../apps/media/jellyfin-exporter
   - ../apps/media/sabnzbd
   - ../apps/media/radarr
   - ../apps/media/sonarr
@@ -35,6 +36,7 @@ resources:
   - ../apps/media/plextraktsync
   - ../apps/media/plex-media-enrichment
   - ../apps/media/plex
+  - ../apps/media/plex-exporter
   - ../apps/media/tidarr
   - ../apps/media/seerr
   - ../apps/paperless

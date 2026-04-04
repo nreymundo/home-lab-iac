@@ -38,13 +38,13 @@ spec:
               WHITELIST_LIBRARY_TYPE: ""
               BLACKLIST_USERS: ""
               WHITELIST_USERS: ""
-              PLEX_BASEURL: http://plex:32400
+              PLEX_BASEURL: http://plex.media.svc.cluster.local:32400
               PLEX_TOKEN:
                 valueFrom:
                   secretKeyRef:
                     name: jellyplex-watched-secrets
                     key: PLEX_TOKEN
-              JELLYFIN_BASEURL: http://jellyfin-main:8096
+              JELLYFIN_BASEURL: http://jellyfin.media.svc.cluster.local:8096
               JELLYFIN_TOKEN:
                 valueFrom:
                   secretKeyRef:
