@@ -8,9 +8,6 @@ spec:
     spec:
       chart: app-template
   values:
-    serviceAccount:
-      name: ""
-      create: true
     controllers:
       main:
         containers:
