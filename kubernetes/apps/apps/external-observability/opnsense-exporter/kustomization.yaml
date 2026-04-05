@@ -5,4 +5,5 @@ components:
 resources:
   - helmrelease.yaml
   - opnsense-exporter-secret.sops.yaml
+  - scrapeconfig.yaml
   - servicemonitor.yaml
