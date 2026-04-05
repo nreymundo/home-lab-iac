@@ -121,7 +121,7 @@ spec:
             cpu: 2000m
             memory: 3Gi
         retention: 7d
-        retentionSize: 25GiB
+        retentionSize: 55GiB
         scrapeConfigSelector:
           matchLabels:
             release: observability-kube-prometheus-stack
@@ -135,7 +135,7 @@ spec:
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
-                  storage: 30Gi
+                  storage: 60Gi
 
     alertmanager:
       alertmanagerSpec:
