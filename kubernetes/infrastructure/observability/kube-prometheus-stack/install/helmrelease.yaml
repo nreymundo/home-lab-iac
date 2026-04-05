@@ -122,6 +122,10 @@ spec:
             memory: 3Gi
         retention: 7d
         retentionSize: 25GiB
+        scrapeConfigSelector:
+          matchLabels:
+            release: observability-kube-prometheus-stack
+        scrapeConfigNamespaceSelector: {}
         serviceMonitorNamespaceSelector: {}
         podMonitorNamespaceSelector: {}
         storageSpec:
