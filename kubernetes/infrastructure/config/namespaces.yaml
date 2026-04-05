@@ -66,6 +66,11 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: external-observability
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: storage
 ---
 apiVersion: v1
