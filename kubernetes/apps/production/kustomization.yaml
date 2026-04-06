@@ -7,6 +7,7 @@ resources:
   - ../apps/media/tautulli
   - ../apps/external-proxy
   - ../apps/external-observability/opnsense-exporter
+  - ../apps/external-observability/omada-exporter
   - ../apps/automation/n8n
   - ../apps/utils/homepage
   - ../apps/utils/it-tools
