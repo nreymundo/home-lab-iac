@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=linuxserver/radarr registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/radarr
-              tag: 6.0.4
+              tag: 6.1.1
             env:
               TZ: Europe/Berlin
               PUID: "99"
