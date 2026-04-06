@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: omada-exporter
+  namespace: external-observability
+  labels:
+    release: observability-kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: omada-exporter
+      app.kubernetes.io/name: omada-exporter
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

@@ -1,0 +1,75 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: omada-exporter
+  namespace: external-observability
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=chhaley/omada_exporter
+              repository: chhaley/omada_exporter
+              tag: v0.13.1
+            env:
+              OMADA_HOST: https://192.168.1.2:8043
+              OMADA_SITE: Home
+              OMADA_INSECURE: "true"
+            envFrom:
+              - secretRef:
+                  name: omada-exporter-secret
+            ports:
+              - name: metrics
+                containerPort: 9202
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /metrics
+                    port: 9202
+                  initialDelaySeconds: 10
+                  periodSeconds: 15
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /metrics
+                    port: 9202
+                  initialDelaySeconds: 5
+                  periodSeconds: 15
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /metrics
+                    port: 9202
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                  failureThreshold: 12
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 200m
+                memory: 128Mi
+    service:
+      main:
+        controller: main
+        ports:
+          metrics:
+            port: 9202
