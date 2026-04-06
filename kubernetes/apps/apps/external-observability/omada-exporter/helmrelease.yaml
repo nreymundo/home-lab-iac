@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=chhaley/omada_exporter
               repository: chhaley/omada_exporter
-              tag: v0.13.1
+              tag: 0.13.1
             env:
               OMADA_HOST: https://192.168.1.2:8043
               OMADA_SITE: Home
