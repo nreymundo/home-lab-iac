@@ -16,9 +16,8 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: auto-stack
-              image: localhost/immich-auto-stack:local
-              imagePullPolicy: Never
-              command: ["python", "/script/immich_auto_stack.py"]
+              image: majorfi/immich-stack:latest
+              imagePullPolicy: IfNotPresent
               env:
                 - name: API_URL
                   value: "http://immich-main.immich.svc.cluster.local:2283/api"
@@ -27,12 +26,18 @@ spec:
                     secretKeyRef:
                       name: immich-secrets
                       key: api-key
+                - name: RUN_MODE
+                  value: once
                 - name: DRY_RUN
                   value: "False"
-                - name: SKIP_PREVIOUS
-                  value: "True"
+                - name: CRITERIA
+                  value: '{"mode":"advanced","expression":{"operator":"AND","children":[{"operator":"OR","children":[{"criteria":{"key":"originalFileName","regex":{"key":"BURST(\\d+)","index":1}}},{"criteria":{"key":"originalFileName","split":{"delimiters":["~","."],"index":0}}}]},{"criteria":{"key":"localDateTime","delta":{"milliseconds":1000}}}]}}'
                 - name: TZ
                   value: "Europe/Berlin"
+                - name: PARENT_FILENAME_PROMOTE
+                  value: "cover,sequence,edit,crop,hdr,biggestNumber"
+                - name: PARENT_EXT_PROMOTE
+                  value: ".jpg,.png,.jpeg,.heic,.dng,.cr2,.cr3,.nef,.arw,.raf,.orf,.rw2"
               resources:
                 requests:
                   cpu: 50m
