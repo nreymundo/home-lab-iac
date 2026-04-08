@@ -21,7 +21,7 @@ spec:
             image:
               # renovate: datasource=docker depName=linuxserver/plex registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/plex
-              tag: "1.43.0"
+              tag: "1.43.1"
             env:
               TZ: Europe/Berlin
               LIBVA_DRIVER_NAME: iHD
