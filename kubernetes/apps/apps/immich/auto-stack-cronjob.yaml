@@ -38,6 +38,8 @@ spec:
                   value: "cover,sequence,edit,crop,hdr,biggestNumber"
                 - name: PARENT_EXT_PROMOTE
                   value: ".jpg,.png,.jpeg,.heic,.dng,.cr2,.cr3,.nef,.arw,.raf,.orf,.rw2"
+                - name: REPLACE_STACKS
+                  value: "False"
               resources:
                 requests:
                   cpu: 50m
