@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=rebelcore/jellyfin-exporter registryUrl=https://registry-1.docker.io
               repository: docker.io/rebelcore/jellyfin-exporter
-              tag: v1.4.0
+              tag: v1.5.0
             envFrom:
               - secretRef:
                   name: jellyfin-exporter-secret
