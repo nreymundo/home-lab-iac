@@ -8,7 +8,7 @@
   "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "custom.regex"],
   "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
-  "commitMessagePrefix": "chore(deps)",
+  "commitMessagePrefix": "chore(deps):",
   "ignorePaths": ["kubernetes/clusters/production/flux-system/**"],
 
   "separateMajorMinor": true,
