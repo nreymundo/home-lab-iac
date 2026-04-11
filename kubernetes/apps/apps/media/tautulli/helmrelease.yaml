@@ -18,6 +18,18 @@ spec:
               tag: 2.17.0
             env:
               TZ: Europe/Berlin
+              PLEX_URL: http://plex.media.svc.cluster.local:32400
+              PLEX_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: tautulli-secrets
+                    key: PLEX_TOKEN
+              RADARR_URL: http://radarr.media.svc.cluster.local:7878
+              RADARR_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: tautulli-secrets
+                    key: RADARR_API_KEY
             ports:
               - name: http
                 containerPort: 8181
@@ -91,3 +103,11 @@ spec:
             claimName: tautulli
         globalMounts:
           - path: /config
+      scripts:
+        enabled: true
+        type: configMap
+        name: tautulli-scripts
+        defaultMode: 365
+        globalMounts:
+          - path: /config/scripts
+            readOnly: true
