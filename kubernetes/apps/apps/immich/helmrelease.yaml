@@ -21,7 +21,7 @@ spec:
             image:
               # renovate: datasource=github-tags depName=immich-app/immich
               repository: ghcr.io/immich-app/immich-server
-              tag: v2.6.3
+              tag: v2.7.2
             env:
               TZ: Europe/Berlin
               DB_HOSTNAME: immich-pg-rw
@@ -89,7 +89,7 @@ spec:
             image:
               # renovate: datasource=github-tags depName=immich-app/immich
               repository: ghcr.io/immich-app/immich-machine-learning
-              tag: v2.6.3
+              tag: v2.7.2
             env:
               TZ: Europe/Berlin
               TRANSFORMERS_CACHE: /cache
