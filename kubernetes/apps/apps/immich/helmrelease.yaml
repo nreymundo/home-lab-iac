@@ -24,6 +24,7 @@ spec:
               tag: v2.7.2
             env:
               TZ: Europe/Berlin
+              IMMICH_HELMET_FILE: true
               DB_HOSTNAME: immich-pg-rw
               DB_PORT: "5432"
               DB_DATABASE_NAME: immich
