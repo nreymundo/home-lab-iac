@@ -1,0 +1,11 @@
+---
+- name: Install requested Homebrew packages
+  community.general.homebrew:
+    name: "{{ homebrew_brew_packages }}"
+    path: "{{ homebrew_prefix }}/bin"
+    state: present
+  become: true
+  become_user: "{{ homebrew_user }}"
+  environment:
+    HOME: "{{ getent_passwd[homebrew_user][4] }}"
+  when: homebrew_brew_packages | default([]) | length > 0

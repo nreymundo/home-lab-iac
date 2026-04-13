@@ -2,6 +2,7 @@
 common_extra_packages:
   - corosync
   - linux-raspi
+  - lm-sensors
 
 common_netplan_config:
   network:

@@ -29,3 +29,7 @@ homebrew_packages_redhat:
   - curl
   - file
   - git
+
+# Homebrew packages to install after bootstrap.
+# Intended for host/group overrides in inventory vars.
+homebrew_brew_packages: []
