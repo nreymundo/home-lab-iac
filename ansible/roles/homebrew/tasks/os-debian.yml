@@ -16,7 +16,7 @@
     path: "{{ homebrew_home }}"
     state: directory
     owner: "{{ homebrew_user }}"
-    group: "{{ homebrew_user }}"
+    group: "{{ getent_passwd[homebrew_user][2] }}"
     mode: "0755"
 
 - name: Ensure Homebrew prefix directory exists
@@ -24,7 +24,7 @@
     path: "{{ homebrew_prefix }}"
     state: directory
     owner: "{{ homebrew_user }}"
-    group: "{{ homebrew_user }}"
+    group: "{{ getent_passwd[homebrew_user][2] }}"
     mode: "0755"
 
 - name: Install Homebrew on Debian family
@@ -47,9 +47,9 @@
   ansible.builtin.lineinfile:
     path: "{{ homebrew_shell_rc }}"
     regexp: 'brew shellenv'
-    line: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+    line: 'eval "$({{ homebrew_prefix }}/bin/brew shellenv)"'
     owner: "{{ homebrew_user }}"
-    group: "{{ homebrew_user }}"
+    group: "{{ getent_passwd[homebrew_user][2] }}"
     mode: "0644"
     create: true
 
