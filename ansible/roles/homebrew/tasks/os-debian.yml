@@ -1,0 +1,69 @@
+---
+- name: Install Homebrew prerequisites on Debian family
+  ansible.builtin.apt:
+    name: "{{ homebrew_packages_debian }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Get Homebrew user account information
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ homebrew_user }}"
+
+- name: Ensure Homebrew parent directory exists
+  ansible.builtin.file:
+    path: "{{ homebrew_home }}"
+    state: directory
+    owner: "{{ homebrew_user }}"
+    group: "{{ homebrew_user }}"
+    mode: "0755"
+
+- name: Ensure Homebrew prefix directory exists
+  ansible.builtin.file:
+    path: "{{ homebrew_prefix }}"
+    state: directory
+    owner: "{{ homebrew_user }}"
+    group: "{{ homebrew_user }}"
+    mode: "0755"
+
+- name: Install Homebrew on Debian family
+  ansible.builtin.shell: /bin/bash -c "$(curl -fsSL {{ homebrew_installer_url }})"
+  args:
+    creates: "{{ homebrew_prefix }}/bin/brew"
+  become: true
+  become_user: "{{ homebrew_user }}"
+  environment:
+    NONINTERACTIVE: "1"
+    HOME: "{{ getent_passwd[homebrew_user][4] }}"
+  when: not ansible_check_mode
+
+- name: Report Homebrew install would run on Debian family
+  ansible.builtin.debug:
+    msg: "Homebrew installer would run for {{ homebrew_user }} on {{ inventory_hostname }}"
+  when: ansible_check_mode
+
+- name: Ensure Homebrew shellenv is loaded in bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ homebrew_shell_rc }}"
+    regexp: 'brew shellenv'
+    line: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+    owner: "{{ homebrew_user }}"
+    group: "{{ homebrew_user }}"
+    mode: "0644"
+    create: true
+
+- name: Check Homebrew version on Debian family
+  ansible.builtin.command: "{{ homebrew_prefix }}/bin/brew --version"
+  register: homebrew_version_check
+  changed_when: false
+  become: true
+  become_user: "{{ homebrew_user }}"
+  environment:
+    HOME: "{{ getent_passwd[homebrew_user][4] }}"
+  when: not ansible_check_mode
+
+- name: Display Homebrew installation summary for Debian family
+  ansible.builtin.debug:
+    msg: "{{ homebrew_version_check.stdout_lines | default(['Homebrew installed']) }}"
+  when: not ansible_check_mode

@@ -1,0 +1,34 @@
+---
+- name: Skip Homebrew installation if disabled
+  ansible.builtin.debug:
+    msg: "Homebrew installation disabled by homebrew_install_enabled=false"
+  when: not homebrew_install_enabled | bool
+
+- name: Ensure Homebrew install user is configured
+  ansible.builtin.assert:
+    that:
+      - homebrew_user is string
+      - homebrew_user | length > 0
+    fail_msg: "Set homebrew_user to the account that should own the Linuxbrew installation"
+    quiet: true
+  when: homebrew_install_enabled | bool
+
+- name: Ensure Homebrew supports this OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family in ['Debian', 'RedHat']
+    fail_msg: "Homebrew role currently supports only Debian and RedHat OS families"
+    quiet: true
+  when: homebrew_install_enabled | bool
+
+- name: Include Debian/Ubuntu Homebrew tasks
+  ansible.builtin.include_tasks: os-debian.yml
+  when:
+    - homebrew_install_enabled | bool
+    - ansible_os_family == 'Debian'
+
+- name: Include Fedora/RedHat Homebrew tasks
+  ansible.builtin.include_tasks: os-fedora.yml
+  when:
+    - homebrew_install_enabled | bool
+    - ansible_os_family == 'RedHat'

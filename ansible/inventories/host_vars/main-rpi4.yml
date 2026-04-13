@@ -36,6 +36,9 @@ common_netplan_config:
 # Enable Docker installation on this host
 docker_install_enabled: true
 
+# Enable Homebrew installation on this host
+homebrew_install_enabled: true
+
 # K3s node labels
 # k3s_node_labels:
 #   homelab.lan/role: "quorum"
