@@ -1,0 +1,31 @@
+---
+# Toggle Homebrew installation (per-host/group control)
+homebrew_install_enabled: false
+
+# User that should own and use the Linuxbrew installation
+homebrew_user: "{{ common_user }}"
+
+# Linuxbrew install locations
+homebrew_prefix: /home/linuxbrew/.linuxbrew
+homebrew_home: /home/linuxbrew
+homebrew_shell_rc: "{{ getent_passwd[homebrew_user][4] }}/.bashrc"
+
+# Homebrew installer configuration
+homebrew_installer_url: https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+
+# Homebrew prerequisites per OS family
+homebrew_packages_debian:
+  - build-essential
+  - procps
+  - curl
+  - file
+  - git
+
+homebrew_packages_redhat:
+  - gcc
+  - gcc-c++
+  - make
+  - procps-ng
+  - curl
+  - file
+  - git
