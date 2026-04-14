@@ -8,6 +8,10 @@ spec:
     spec:
       chart: app-template
   values:
+    defaultPodOptions:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
     controllers:
       main:
         type: cronjob
@@ -16,6 +20,21 @@ spec:
           concurrencyPolicy: Forbid
           successfulJobsHistory: 3
           failedJobsHistory: 1
+        initContainers:
+          init-permissions:
+            image:
+              repository: docker.io/library/busybox
+              tag: 1.36.1
+            command:
+              - sh
+              - -c
+              - |
+                chown -R 1000:1000 /assets /assetsbackup /manualassets
+                find /assets /assetsbackup /manualassets -type d -exec chmod 2775 {} +
+                find /assets /assetsbackup /manualassets -type f -exec chmod 0664 {} +
+            securityContext:
+              runAsUser: 0
+              runAsGroup: 0
         containers:
           main:
             image:
