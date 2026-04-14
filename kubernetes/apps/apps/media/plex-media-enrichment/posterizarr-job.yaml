@@ -68,6 +68,13 @@ spec:
             claimName: plex-media-enrichment
         advancedMounts:
           main:
+            init-permissions:
+              - path: /assets
+                subPath: kometa/assets
+              - path: /assetsbackup
+                subPath: posterizarr/assetsbackup
+              - path: /manualassets
+                subPath: posterizarr/manualassets
             main:
               - path: /config
                 subPath: posterizarr/config
