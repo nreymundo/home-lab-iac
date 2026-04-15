@@ -6,6 +6,7 @@ common_extra_packages:
   - python3
   - python3-pip
   - python3-venv
+  - yq
 
 common_netplan_config:
   network:
@@ -42,6 +43,13 @@ docker_install_enabled: true
 
 # Enable Homebrew installation on this host
 homebrew_install_enabled: true
+
+# Homebrew formulae to install on this host
+homebrew_brew_packages:
+  - nvm
+  - gh
+  - yaml-language-server
+  - yamllint
 
 # K3s node labels
 # k3s_node_labels:
