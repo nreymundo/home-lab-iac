@@ -21,7 +21,7 @@ spec:
             image:
               # renovate: datasource=github-tags depName=immich-app/immich
               repository: ghcr.io/immich-app/immich-server
-              tag: v2.7.3
+              tag: v2.7.4
             env:
               TZ: Europe/Berlin
               IMMICH_HELMET_FILE: true
@@ -90,7 +90,7 @@ spec:
             image:
               # renovate: datasource=github-tags depName=immich-app/immich
               repository: ghcr.io/immich-app/immich-machine-learning
-              tag: v2.7.3
+              tag: v2.7.4
             env:
               TZ: Europe/Berlin
               TRANSFORMERS_CACHE: /cache
