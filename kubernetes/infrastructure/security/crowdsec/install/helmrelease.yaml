@@ -102,6 +102,8 @@ spec:
     # --- Agent Configuration ---
     agent:
       env:
+        - name: PARSERS
+          value: "crowdsecurity/whitelists"
         - name: COLLECTIONS
           value: "crowdsecurity/traefik crowdsecurity/base-http-scenarios firix/authentik LePresidente/gitea crowdsecurity/nextcloud"
 
