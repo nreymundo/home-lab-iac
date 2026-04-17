@@ -29,7 +29,7 @@ metadata:
   name: opencode
   namespace: external-proxy
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-opencode-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     external-dns.alpha.kubernetes.io/hostname: code.lan.${CLUSTER_DOMAIN}
 spec:
