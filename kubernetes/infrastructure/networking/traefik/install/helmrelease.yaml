@@ -52,6 +52,11 @@ spec:
         forwardedHeaders:
           trustedIPs:
             - 10.42.0.0/16
+        transport:
+          respondingTimeouts:
+            readTimeout: 10m
+            writeTimeout: 0s
+            idleTimeout: 1h
         http:
           encodedCharacters:
             allowEncodedSlash: true
