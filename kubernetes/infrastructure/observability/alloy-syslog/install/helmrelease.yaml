@@ -63,13 +63,13 @@ spec:
 
           loki.source.syslog "tcp" {
             listener {
-              address      = "0.0.0.0:1514"
-              protocol     = "tcp"
+              address       = "0.0.0.0:1514"
+              protocol      = "tcp"
               syslog_format = "rfc3164"
               labels = {
-                job       = "syslog"
-                receiver  = "alloy-syslog"
-                transport = "tcp"
+                job       = "syslog",
+                receiver  = "alloy-syslog",
+                transport = "tcp",
               }
             }
 
@@ -78,13 +78,13 @@ spec:
 
           loki.source.syslog "udp" {
             listener {
-              address      = "0.0.0.0:1514"
-              protocol     = "udp"
+              address       = "0.0.0.0:1514"
+              protocol      = "udp"
               syslog_format = "rfc3164"
               labels = {
-                job       = "syslog"
-                receiver  = "alloy-syslog"
-                transport = "udp"
+                job       = "syslog",
+                receiver  = "alloy-syslog",
+                transport = "udp",
               }
             }
 
@@ -100,7 +100,7 @@ spec:
 
             rule {
               action = "labeldrop"
-              regex = "__syslog_.*"
+              regex  = "__syslog_.*"
             }
 
             forward_to = [loki.write.default.receiver]
