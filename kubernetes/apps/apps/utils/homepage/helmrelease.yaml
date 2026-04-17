@@ -241,6 +241,11 @@ spec:
                 icon: emqx.png
                 description: "MQTT broker"
                 href: https://emqx.lan.${CLUSTER_DOMAIN}
+        - Development:
+            - OpenCode:
+                icon: opencode.png
+                description: "OpenCode web instance"
+                href: https://code.lan.${CLUSTER_DOMAIN}
       widgets:
         # - resources:
         #     # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.

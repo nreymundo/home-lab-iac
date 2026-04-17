@@ -1,0 +1,47 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opencode
+  namespace: external-proxy
+spec:
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: opencode
+  namespace: external-proxy
+subsets:
+  - addresses:
+      - ip: ${RPI4_IP}
+    ports:
+      - name: http
+        port: 3000
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: opencode
+  namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    external-dns.alpha.kubernetes.io/hostname: code.lan.${CLUSTER_DOMAIN}
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: code.lan.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: opencode
+                port:
+                  name: http
