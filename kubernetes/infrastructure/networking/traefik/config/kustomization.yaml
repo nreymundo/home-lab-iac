@@ -10,6 +10,9 @@ resources:
   - middlewares/frigate-auth-chain.yaml
   - middlewares/discord-auth-chain.yaml
   - middlewares/kopia-auth-chain.yaml
+  - middlewares/opencode-buffering.yaml
+  - middlewares/opencode-streaming-headers.yaml
+  - middlewares/opencode-chain.yaml
   - middlewares/https-insecure.yaml
   - middlewares/ip-whitelist-lan.yaml
   - dashboard/ingressroute-dashboard.yaml

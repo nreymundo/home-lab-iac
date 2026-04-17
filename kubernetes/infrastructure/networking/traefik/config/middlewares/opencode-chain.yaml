@@ -1,0 +1,11 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: opencode-chain
+  namespace: traefik
+spec:
+  chain:
+    middlewares:
+      - name: gatekeeper-auth-chain
+      - name: opencode-buffering
+      - name: opencode-streaming-headers
