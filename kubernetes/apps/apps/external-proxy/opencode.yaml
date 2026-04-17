@@ -17,7 +17,7 @@ metadata:
   namespace: external-proxy
 subsets:
   - addresses:
-      - ip: ${RPI4_IP}
+      - ip: ${OPENCODE_IP}
     ports:
       - name: http
         port: 3000
