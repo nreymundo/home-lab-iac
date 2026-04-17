@@ -1,0 +1,115 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy-syslog
+  namespace: flux-system
+spec:
+  interval: 30m
+  releaseName: alloy-syslog
+  targetNamespace: observability
+
+  install:
+    createNamespace: false
+
+  chart:
+    spec:
+      chart: alloy
+      # renovate: datasource=helm depName=alloy registryUrl=https://grafana.github.io/helm-charts
+      version: "1.7.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 12h
+
+  values:
+    controller:
+      type: deployment
+      replicas: 1
+
+    service:
+      type: ClusterIP
+
+    serviceAccount:
+      create: true
+
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: observability-kube-prometheus-stack
+
+    alloy:
+      extraPorts:
+        - name: syslog-tcp
+          port: 1514
+          targetPort: 1514
+          protocol: TCP
+        - name: syslog-udp
+          port: 1514
+          targetPort: 1514
+          protocol: UDP
+      configMap:
+        create: true
+        content: |
+          logging {
+            level = "info"
+          }
+
+          loki.source.syslog "tcp" {
+            listener {
+              address      = "0.0.0.0:1514"
+              protocol     = "tcp"
+              syslog_format = "rfc3164"
+              labels = {
+                job       = "syslog"
+                receiver  = "alloy-syslog"
+                transport = "tcp"
+              }
+            }
+
+            forward_to = [loki.relabel.syslog.receiver]
+          }
+
+          loki.source.syslog "udp" {
+            listener {
+              address      = "0.0.0.0:1514"
+              protocol     = "udp"
+              syslog_format = "rfc3164"
+              labels = {
+                job       = "syslog"
+                receiver  = "alloy-syslog"
+                transport = "udp"
+              }
+            }
+
+            forward_to = [loki.relabel.syslog.receiver]
+          }
+
+          loki.relabel "syslog" {
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_connection_ip_address"]
+              target_label  = "source_ip"
+            }
+
+            rule {
+              action = "labeldrop"
+              regex = "__syslog_.*"
+            }
+
+            forward_to = [loki.write.default.receiver]
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "http://observability-loki-gateway.observability.svc.cluster.local:80/loki/api/v1/push"
+            }
+          }
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi

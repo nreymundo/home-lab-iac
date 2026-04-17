@@ -22,6 +22,7 @@ resources:
   - 70-observability-kube-prometheus-stack-install.yaml
   - 71-observability-metrics-server-install.yaml
   - 72-observability-loki-install.yaml
+  - 73-observability-alloy-syslog-install.yaml
   - 74-observability-alloy-install.yaml
   - 75-nfd-install.yaml
   - 75-nfd-config.yaml
