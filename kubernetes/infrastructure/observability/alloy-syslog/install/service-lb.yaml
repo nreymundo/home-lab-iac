@@ -21,11 +21,11 @@ spec:
       port: 514
       targetPort: 1514
       protocol: UDP
-    - name: syslog-rfc5424-tcp
+    - name: sys5424-tcp
       port: 2514
       targetPort: 2514
       protocol: TCP
-    - name: syslog-rfc5424-udp
+    - name: sys5424-udp
       port: 2514
       targetPort: 2514
       protocol: UDP
