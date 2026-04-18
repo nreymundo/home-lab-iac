@@ -54,11 +54,103 @@ spec:
           port: 1514
           targetPort: 1514
           protocol: UDP
+        - name: syslog-rfc5424-tcp
+          port: 2514
+          targetPort: 2514
+          protocol: TCP
+        - name: syslog-rfc5424-udp
+          port: 2514
+          targetPort: 2514
+          protocol: UDP
       configMap:
         create: true
         content: |
           logging {
             level = "info"
+          }
+
+          loki.relabel "syslog_metadata" {
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_connection_ip_address"]
+              target_label  = "source_ip"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_connection_hostname"]
+              target_label  = "connection_hostname"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_message_hostname"]
+              target_label  = "hostname"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_message_app_name"]
+              target_label  = "app_name"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_message_facility"]
+              target_label  = "facility"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_message_severity"]
+              target_label  = "severity"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_message_severity"]
+              target_label  = "detected_level"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_message_severity"]
+              regex         = "(?i)(emerg|emergency|alert|crit|critical)"
+              replacement   = "critical"
+              target_label  = "detected_level"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_message_severity"]
+              regex         = "(?i)(err|error)"
+              replacement   = "error"
+              target_label  = "detected_level"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_message_severity"]
+              regex         = "(?i)(warn|warning)"
+              replacement   = "warn"
+              target_label  = "detected_level"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_message_severity"]
+              regex         = "(?i)(notice|informational|info)"
+              replacement   = "info"
+              target_label  = "detected_level"
+            }
+
+            rule {
+              action        = "replace"
+              source_labels = ["__syslog_message_severity"]
+              regex         = "(?i)(debug)"
+              replacement   = "debug"
+              target_label  = "detected_level"
+            }
           }
 
           loki.source.syslog "tcp" {
@@ -69,11 +161,14 @@ spec:
               labels = {
                 job       = "syslog",
                 receiver  = "alloy-syslog",
+                format    = "rfc3164",
                 transport = "tcp",
               }
             }
 
-            forward_to = [loki.relabel.syslog.receiver]
+            relabel_rules = loki.relabel.syslog_metadata.rules
+
+            forward_to = [loki.write.default.receiver]
           }
 
           loki.source.syslog "udp" {
@@ -84,24 +179,48 @@ spec:
               labels = {
                 job       = "syslog",
                 receiver  = "alloy-syslog",
+                format    = "rfc3164",
                 transport = "udp",
               }
             }
 
-            forward_to = [loki.relabel.syslog.receiver]
+            relabel_rules = loki.relabel.syslog_metadata.rules
+
+            forward_to = [loki.write.default.receiver]
           }
 
-          loki.relabel "syslog" {
-            rule {
-              action        = "replace"
-              source_labels = ["__syslog_connection_ip_address"]
-              target_label  = "source_ip"
+          loki.source.syslog "tcp_rfc5424" {
+            listener {
+              address       = "0.0.0.0:2514"
+              protocol      = "tcp"
+              syslog_format = "rfc5424"
+              labels = {
+                job       = "syslog",
+                receiver  = "alloy-syslog",
+                format    = "rfc5424",
+                transport = "tcp",
+              }
             }
 
-            rule {
-              action = "labeldrop"
-              regex  = "__syslog_.*"
+            relabel_rules = loki.relabel.syslog_metadata.rules
+
+            forward_to = [loki.write.default.receiver]
+          }
+
+          loki.source.syslog "udp_rfc5424" {
+            listener {
+              address       = "0.0.0.0:2514"
+              protocol      = "udp"
+              syslog_format = "rfc5424"
+              labels = {
+                job       = "syslog",
+                receiver  = "alloy-syslog",
+                format    = "rfc5424",
+                transport = "udp",
+              }
             }
+
+            relabel_rules = loki.relabel.syslog_metadata.rules
 
             forward_to = [loki.write.default.receiver]
           }
