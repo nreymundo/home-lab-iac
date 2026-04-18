@@ -132,7 +132,7 @@ spec:
               selector = "{multiline_profile=\"level_prefix\"}"
 
               stage.multiline {
-                firstline     = "^(?:TRACE|DEBUG|INFO|WARN|ERROR|FATAL|trace|debug|info|warn|error|fatal):|^\\(node:\\d+\\)"
+                firstline     = "^(?:(?:TRACE|DEBUG|INFO|WARN|ERROR|FATAL|trace|debug|info|warn|error|fatal):|(?:Error|TypeError|ReferenceError|SyntaxError|RangeError|URIError|EvalError|AggregateError):|\\(node:\\d+\\))"
                 max_wait_time = "3s"
                 max_lines     = 64
               }
