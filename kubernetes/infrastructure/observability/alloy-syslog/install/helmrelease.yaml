@@ -170,7 +170,7 @@ spec:
 
             relabel_rules = loki.relabel.syslog_metadata.rules
 
-            forward_to = [loki.write.default.receiver]
+            forward_to = [loki.process.syslog_body.receiver]
           }
 
           loki.source.syslog "udp" {
@@ -188,7 +188,7 @@ spec:
 
             relabel_rules = loki.relabel.syslog_metadata.rules
 
-            forward_to = [loki.write.default.receiver]
+            forward_to = [loki.process.syslog_body.receiver]
           }
 
           loki.source.syslog "tcp_rfc5424" {
@@ -206,7 +206,7 @@ spec:
 
             relabel_rules = loki.relabel.syslog_metadata.rules
 
-            forward_to = [loki.write.default.receiver]
+            forward_to = [loki.process.syslog_body.receiver]
           }
 
           loki.source.syslog "udp_rfc5424" {
@@ -223,6 +223,19 @@ spec:
             }
 
             relabel_rules = loki.relabel.syslog_metadata.rules
+
+            forward_to = [loki.process.syslog_body.receiver]
+          }
+
+          loki.process "syslog_body" {
+            stage.match {
+              selector = "{hostname=\"opnsense.local\", app_name=\"filterlog\"}"
+
+              stage.regex {
+                expression = "^(?:[^,]*,){4}(?P<opnsense_interface>[^,]*),(?:[^,]*),(?P<opnsense_action>[^,]*),(?P<opnsense_direction>[^,]*)(?:,.*)?$"
+                labels_from_groups = true
+              }
+            }
 
             forward_to = [loki.write.default.receiver]
           }
