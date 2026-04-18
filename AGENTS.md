@@ -49,6 +49,13 @@ home-lab-iac/
 - Never broaden a narrowly requested fix beyond the files needed for that exact change.
 - Do not use docs or generated manifests as evidence that a subtree needs its own AGENTS file.
 
+## DEBUGGING / INCIDENT VALIDATION
+- Do not assume a root cause from config review, static reasoning, or pattern matching alone when live evidence is available.
+- Before claiming a fix, identify the actual root cause using the most direct evidence available in the current environment: real logs, live cluster state, runtime behavior, failing requests, rendered config, or other production-facing signals.
+- If live validation is possible from the current environment, do it before proposing or applying a fix. Do not stop at a plausible theory.
+- If live validation is not possible, say so explicitly, state that the diagnosis is provisional, and do not present the fix as confirmed.
+- After applying a fix for a runtime issue, validate the live result against the original failure mode whenever access permits. Do not declare success based only on linting, dry-run validation, or code inspection.
+
 ## UNIQUE STYLES
 - Repo guidance is intentionally operational: commands, boundaries, and “where to edit” matter more than prose style.
 - Validation is centralized through pre-commit plus domain-specific CLI checks, not a large traditional CI test suite.
