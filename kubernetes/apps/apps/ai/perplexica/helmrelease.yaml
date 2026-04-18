@@ -8,6 +8,10 @@ spec:
     spec:
       chart: app-template
   values:
+    defaultPodOptions:
+      labels:
+        observability_multiline_profile: level_prefix
+
     controllers:
       main:
         containers:

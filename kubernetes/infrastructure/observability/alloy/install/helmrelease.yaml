@@ -61,12 +61,83 @@ spec:
             role = "pod"
           }
 
+          discovery.relabel "pod_logs" {
+            targets = discovery.kubernetes.pods.targets
+
+            rule {
+              source_labels = ["__meta_kubernetes_namespace"]
+              target_label  = "namespace"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_name"]
+              target_label  = "pod"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_container_name"]
+              target_label  = "container"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+              target_label  = "app_kubernetes_io_name"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+              target_label  = "app_kubernetes_io_instance"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_controller"]
+              target_label  = "app_kubernetes_io_controller"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_label_observability_multiline_profile"]
+              target_label  = "multiline_profile"
+            }
+          }
+
           loki.source.kubernetes "pods" {
-            targets    = discovery.kubernetes.pods.targets
+            targets    = discovery.relabel.pod_logs.output
             forward_to = [loki.process.filter_levels.receiver]
           }
 
           loki.process "filter_levels" {
+            // Opt-in multiline profiles keyed by pod labels so workloads can be
+            // enabled incrementally without risking cluster-wide false joins.
+            stage.match {
+              selector = "{multiline_profile=\"timestamp\"}"
+
+              stage.multiline {
+                firstline     = "^\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}(?:[.,]\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?"
+                max_wait_time = "3s"
+                max_lines     = 64
+              }
+            }
+
+            stage.match {
+              selector = "{multiline_profile=\"bracketed_timestamp\"}"
+
+              stage.multiline {
+                firstline     = "^\\[\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}(?:[.,]\\d+)?\\]"
+                max_wait_time = "3s"
+                max_lines     = 64
+              }
+            }
+
+            stage.match {
+              selector = "{multiline_profile=\"level_prefix\"}"
+
+              stage.multiline {
+                firstline     = "^(?:TRACE|DEBUG|INFO|WARN|ERROR|FATAL|trace|debug|info|warn|error|fatal):|^\\(node:\\d+\\)"
+                max_wait_time = "3s"
+                max_lines     = 64
+              }
+            }
+
             // Try JSON first (common structured logs)
             stage.json {
               expressions = { level = "level" }
