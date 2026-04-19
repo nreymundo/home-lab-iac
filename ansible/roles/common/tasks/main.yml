@@ -70,6 +70,14 @@
   ansible.builtin.include_tasks: os-fedora.yml
   when: ansible_os_family == 'RedHat'
 
+- name: Ensure sshd runtime directory exists for config validation
+  ansible.builtin.file:
+    path: /run/sshd
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Harden sshd configuration
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
