@@ -1,0 +1,21 @@
+---
+# Toggle UFW package installation.
+ufw_install_enabled: true
+
+# Final firewall state.
+ufw_enabled: false
+
+# Default UFW policies.
+ufw_default_incoming_policy: deny
+ufw_default_outgoing_policy: allow
+
+# Convenience toggle for inbound SSH access.
+ufw_allow_ssh: false
+
+# Additional inbound rules.
+# Example:
+# ufw_inbound_rules:
+#   - port: 80
+#     proto: tcp
+#     rule: allow
+ufw_inbound_rules: []

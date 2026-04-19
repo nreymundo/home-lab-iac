@@ -1,0 +1,13 @@
+---
+# OpenClaw application user defaults.
+openclaw_user_name: openclaw
+openclaw_user_state: present
+openclaw_user_home: "/home/{{ openclaw_user_name }}"
+openclaw_user_shell: /bin/bash
+openclaw_sudoers_path: "/etc/sudoers.d/{{ openclaw_user_name }}"
+openclaw_systemctl_commands:
+  - /usr/bin/systemctl start *
+  - /usr/bin/systemctl stop *
+  - /usr/bin/systemctl enable *
+  - /usr/bin/systemctl disable *
+  - /usr/bin/systemctl status *

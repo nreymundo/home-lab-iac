@@ -1,0 +1,18 @@
+---
+- name: Ensure OpenClaw user exists
+  ansible.builtin.user:
+    name: "{{ openclaw_user_name }}"
+    state: "{{ openclaw_user_state }}"
+    create_home: true
+    home: "{{ openclaw_user_home }}"
+    shell: "{{ openclaw_user_shell }}"
+
+- name: Allow OpenClaw user to manage systemd units without password
+  ansible.builtin.copy:
+    dest: "{{ openclaw_sudoers_path }}"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "/usr/sbin/visudo -cf %s"
+    content: |
+      {{ openclaw_user_name }} ALL=(root) NOPASSWD: {{ openclaw_systemctl_commands | join(', ') }}
