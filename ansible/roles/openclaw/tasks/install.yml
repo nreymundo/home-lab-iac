@@ -1,25 +1,52 @@
 ---
-- name: Install OpenClaw CLI globally
-  community.general.npm:
-    name: "{{ openclaw_npm_package }}"
-    global: true
-    state: present
-    executable: "{{ openclaw_npm_executable }}"
+- name: Check whether OpenClaw CLI binary exists
+  ansible.builtin.stat:
+    path: "{{ openclaw_binary_path }}"
+  register: openclaw_binary_check
+  changed_when: false
   become: true
   become_user: "{{ openclaw_user_name }}"
   environment:
     HOME: "{{ openclaw_user_home }}"
-    PATH: "{{ openclaw_homebrew_prefix }}/bin:{{ ansible_env.PATH }}"
+  when: not ansible_check_mode
+
+- name: Install OpenClaw with upstream installer
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-prompt --no-onboard
+  register: openclaw_install_run
+  changed_when: openclaw_install_run.rc == 0
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ openclaw_user_name }}"
+  environment:
+    HOME: "{{ openclaw_user_home }}"
+  when:
+    - not ansible_check_mode
+    - not openclaw_binary_check.stat.exists
+
+- name: Ensure OpenClaw npm bin directory is on bash PATH
+  ansible.builtin.lineinfile:
+    path: "{{ openclaw_user_home }}/.bashrc"
+    create: true
+    owner: "{{ openclaw_user_name }}"
+    group: "{{ openclaw_user_name }}"
+    mode: "0644"
+    line: 'export PATH="$HOME/.npm-global/bin:$PATH"'
+  become: true
+  become_user: "{{ openclaw_user_name }}"
+  environment:
+    HOME: "{{ openclaw_user_home }}"
 
 - name: Verify OpenClaw CLI is available
-  ansible.builtin.command: openclaw --version
+  ansible.builtin.command: "{{ openclaw_binary_path }} --version"
   register: openclaw_version_check
   changed_when: false
   become: true
   become_user: "{{ openclaw_user_name }}"
   environment:
     HOME: "{{ openclaw_user_home }}"
-    PATH: "{{ openclaw_homebrew_prefix }}/bin:{{ ansible_env.PATH }}"
   when: not ansible_check_mode
 
 - name: Display OpenClaw installation summary

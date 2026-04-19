@@ -66,7 +66,7 @@ variable "vlan_id" {
 variable "default_ci_user" {
   type        = string
   description = "cloud-init user configured on the VM"
-  default     = "ubuntu"
+  default     = "openclaw"
 }
 
 variable "ansible_user" {
@@ -98,7 +98,7 @@ variable "vm_cores" {
 variable "vm_memory_mb" {
   type        = number
   description = "RAM in MB assigned to the VM"
-  default     = 8192
+  default     = 4096
   validation {
     condition     = var.vm_memory_mb >= 512
     error_message = "Memory must be at least 512 MB."
@@ -108,7 +108,7 @@ variable "vm_memory_mb" {
 variable "vm_balloon_mb" {
   type        = number
   description = "Minimum balloon memory in MB"
-  default     = 1024
+  default     = 4096
   validation {
     condition     = var.vm_balloon_mb >= 0 && var.vm_balloon_mb <= var.vm_memory_mb
     error_message = "Balloon memory must be between 0 and vm_memory_mb."

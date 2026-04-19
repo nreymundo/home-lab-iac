@@ -20,10 +20,6 @@
         name: openclaw
         tasks_from: bootstrap.yml
 
-    - name: Apply homebrew role
-      ansible.builtin.include_role:
-        name: homebrew
-
     - name: Run OpenClaw install phase
       ansible.builtin.include_role:
         name: openclaw
