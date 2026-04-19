@@ -38,6 +38,8 @@
     rule: "{{ item.rule | default('allow') }}"
     port: "{{ item.port }}"
     proto: "{{ item.proto | default('tcp') }}"
+    from_ip: "{{ item.from_ip | default(omit) }}"
+    comment: "{{ item.comment | default(omit) }}"
   loop: "{{ ufw_inbound_rules }}"
   when: ufw_install_enabled | bool
 

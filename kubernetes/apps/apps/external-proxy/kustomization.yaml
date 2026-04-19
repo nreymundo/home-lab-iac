@@ -16,3 +16,4 @@ resources:
   - kopia.yaml
   - syncthing.yaml
   - opencode.yaml
+  - openclaw.yaml
