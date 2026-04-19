@@ -241,6 +241,11 @@ spec:
                 icon: emqx.png
                 description: "MQTT broker"
                 href: https://emqx.lan.${CLUSTER_DOMAIN}
+        - AI:
+            - OpenClaw:
+                icon: sh-openclaw.png
+                description: "OpenClaw dashboard"
+                href: https://openclaw.lan.${CLUSTER_DOMAIN}
         - Development:
             - OpenCode:
                 icon: opencode.png

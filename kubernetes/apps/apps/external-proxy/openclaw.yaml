@@ -1,0 +1,47 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openclaw
+  namespace: external-proxy
+spec:
+  ports:
+    - name: http
+      port: 18789
+      targetPort: 18789
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: openclaw
+  namespace: external-proxy
+subsets:
+  - addresses:
+      - ip: ${OPENCLAW_IP}
+    ports:
+      - name: http
+        port: 18789
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openclaw
+  namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-openclaw-auth-chain@kubernetescrd
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    external-dns.alpha.kubernetes.io/hostname: openclaw.lan.${CLUSTER_DOMAIN}
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: openclaw.lan.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: openclaw
+                port:
+                  name: http
