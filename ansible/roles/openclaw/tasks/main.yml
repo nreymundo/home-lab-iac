@@ -1,0 +1,3 @@
+---
+- name: Run OpenClaw bootstrap tasks
+  ansible.builtin.include_tasks: bootstrap.yml

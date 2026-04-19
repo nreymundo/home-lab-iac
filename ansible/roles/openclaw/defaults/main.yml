@@ -1,0 +1,8 @@
+---
+# OpenClaw application user defaults.
+openclaw_user_name: openclaw
+openclaw_user_state: present
+openclaw_user_home: "/home/{{ openclaw_user_name }}"
+openclaw_user_shell: /bin/bash
+openclaw_bin_dir: "{{ openclaw_user_home }}/.npm-global/bin"
+openclaw_binary_path: "{{ openclaw_bin_dir }}/openclaw"

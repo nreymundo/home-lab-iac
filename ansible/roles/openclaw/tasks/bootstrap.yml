@@ -1,0 +1,8 @@
+---
+- name: Ensure OpenClaw user exists
+  ansible.builtin.user:
+    name: "{{ openclaw_user_name }}"
+    state: "{{ openclaw_user_state }}"
+    create_home: true
+    home: "{{ openclaw_user_home }}"
+    shell: "{{ openclaw_user_shell }}"

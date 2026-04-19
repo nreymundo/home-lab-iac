@@ -1,0 +1,10 @@
+docker_install_enabled: true
+docker_users:
+  - openclaw
+
+ufw_install_enabled: true
+ufw_enabled: true
+ufw_allow_ssh: true
+ufw_inbound_rules:
+  - port: 18789
+    proto: tcp

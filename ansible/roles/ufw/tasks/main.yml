@@ -1,0 +1,58 @@
+---
+- name: Ensure UFW supports this OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == 'Debian'
+    fail_msg: "UFW role currently supports only Debian-family hosts"
+    quiet: true
+
+- name: Install UFW package
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+    update_cache: true
+  when: ufw_install_enabled | bool
+
+- name: Set default incoming policy
+  community.general.ufw:
+    direction: incoming
+    default: "{{ ufw_default_incoming_policy }}"
+  when: ufw_install_enabled | bool
+
+- name: Set default outgoing policy
+  community.general.ufw:
+    direction: outgoing
+    default: "{{ ufw_default_outgoing_policy }}"
+  when: ufw_install_enabled | bool
+
+- name: Allow inbound SSH
+  community.general.ufw:
+    rule: allow
+    name: OpenSSH
+  when:
+    - ufw_install_enabled | bool
+    - ufw_allow_ssh | bool
+
+- name: Apply additional inbound UFW rules
+  community.general.ufw:
+    rule: "{{ item.rule | default('allow') }}"
+    port: "{{ item.port }}"
+    proto: "{{ item.proto | default('tcp') }}"
+  loop: "{{ ufw_inbound_rules }}"
+  when: ufw_install_enabled | bool
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+  when:
+    - ufw_install_enabled | bool
+    - ufw_enabled | bool
+    - not ansible_check_mode
+
+- name: Disable UFW
+  community.general.ufw:
+    state: disabled
+  when:
+    - ufw_install_enabled | bool
+    - not ufw_enabled | bool
+    - not ansible_check_mode
