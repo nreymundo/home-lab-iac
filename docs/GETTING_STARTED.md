@@ -113,7 +113,7 @@ This creates VM templates on each Proxmox node for fast local cloning.
 ### Step 2: Provision K3s Nodes (Terraform)
 
 ```bash
-cd terraform/k3s_nodes
+cd terraform/instances/k3s_nodes
 
 # Initialize providers
 terraform init
@@ -159,11 +159,12 @@ flux get all -A
 
 ### Adding a New K3s Node
 
-1. Edit `terraform/k3s_nodes/terraform.tfvars`:
+1. Edit `terraform/instances/k3s_nodes/vm_definition.tf` and add another entry in `local.k3s.nodes`:
    ```hcl
    nodes = [
-     {},  # existing nodes
-     {},  # new node
+     { ... }, # existing node
+     { ... }, # existing node
+     { ... }, # new node
    ]
    ```
 2. Run `terraform apply`

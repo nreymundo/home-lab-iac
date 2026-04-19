@@ -27,4 +27,4 @@ ansible-playbook ansible/playbooks/k3s_cluster.yml --check
 ```
 
 ## NOTES
-- Terraform and Ansible are coupled here: node topology and labels originate upstream in `terraform/k3s_nodes`.
+- Terraform and Ansible are coupled here: node topology and labels originate upstream in `terraform/instances/k3s_nodes`.

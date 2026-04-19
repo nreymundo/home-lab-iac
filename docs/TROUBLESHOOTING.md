@@ -63,7 +63,7 @@ Common issues and solutions for each component.
 **Solutions:**
 1. Verify template exists: `qm list | grep 9000`
 2. Ensure template is on the target Proxmox node
-3. Check `template_name` in `terraform.tfvars`
+3. Check the instance VM definition in `terraform/instances/<instance>/vm_definition.tf` and confirm any `template_name` override matches an existing Proxmox template
 
 ### State Lock Issues
 
