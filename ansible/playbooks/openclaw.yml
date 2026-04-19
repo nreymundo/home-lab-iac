@@ -1,0 +1,11 @@
+---
+- name: Provision OpenClaw hosts
+  hosts: openclaw_vms
+  become: true
+  roles:
+    - common
+    - disk_expand
+    - ufw
+    - openclaw
+    - homebrew
+    - docker

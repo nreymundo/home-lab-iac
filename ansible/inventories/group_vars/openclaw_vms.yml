@@ -1,0 +1,14 @@
+---
+homebrew_install_enabled: true
+homebrew_user: openclaw
+homebrew_brew_packages:
+  - node@24
+
+docker_install_enabled: true
+docker_users:
+  - openclaw
+
+ufw_install_enabled: true
+ufw_enabled: true
+ufw_allow_ssh: true
+ufw_inbound_rules: []
