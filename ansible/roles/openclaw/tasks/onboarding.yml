@@ -1,0 +1,13 @@
+---
+- name: Show OpenClaw onboarding instructions
+  ansible.builtin.debug:
+    msg: |
+      OpenClaw installation complete on {{ inventory_hostname }}.
+
+      Next steps:
+        1. SSH into the VM.
+        2. Switch to the OpenClaw user:
+           sudo su - {{ openclaw_user_name }}
+        3. Run:
+           openclaw onboard --install-daemon
+  when: not ansible_check_mode

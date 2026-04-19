@@ -1,0 +1,28 @@
+---
+- name: Install OpenClaw CLI globally
+  community.general.npm:
+    name: "{{ openclaw_npm_package }}"
+    global: true
+    state: present
+    executable: "{{ openclaw_npm_executable }}"
+  become: true
+  become_user: "{{ openclaw_user_name }}"
+  environment:
+    HOME: "{{ openclaw_user_home }}"
+    PATH: "{{ openclaw_homebrew_prefix }}/bin:{{ ansible_env.PATH }}"
+
+- name: Verify OpenClaw CLI is available
+  ansible.builtin.command: openclaw --version
+  register: openclaw_version_check
+  changed_when: false
+  become: true
+  become_user: "{{ openclaw_user_name }}"
+  environment:
+    HOME: "{{ openclaw_user_home }}"
+    PATH: "{{ openclaw_homebrew_prefix }}/bin:{{ ansible_env.PATH }}"
+  when: not ansible_check_mode
+
+- name: Display OpenClaw installation summary
+  ansible.builtin.debug:
+    msg: "{{ openclaw_version_check.stdout_lines | default(['OpenClaw installed']) }}"
+  when: not ansible_check_mode

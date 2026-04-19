@@ -5,6 +5,9 @@ openclaw_user_state: present
 openclaw_user_home: "/home/{{ openclaw_user_name }}"
 openclaw_user_shell: /bin/bash
 openclaw_sudoers_path: "/etc/sudoers.d/{{ openclaw_user_name }}"
+openclaw_homebrew_prefix: /home/linuxbrew/.linuxbrew
+openclaw_npm_executable: "{{ openclaw_homebrew_prefix }}/bin/npm"
+openclaw_npm_package: openclaw
 openclaw_systemctl_commands:
   - /usr/bin/systemctl start *
   - /usr/bin/systemctl stop *

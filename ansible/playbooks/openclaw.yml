@@ -2,10 +2,38 @@
 - name: Provision OpenClaw hosts
   hosts: openclaw_vms
   become: true
-  roles:
-    - common
-    - disk_expand
-    - ufw
-    - openclaw
-    - homebrew
-    - docker
+  tasks:
+    - name: Apply common role
+      ansible.builtin.include_role:
+        name: common
+
+    - name: Apply disk_expand role
+      ansible.builtin.include_role:
+        name: disk_expand
+
+    - name: Apply ufw role
+      ansible.builtin.include_role:
+        name: ufw
+
+    - name: Bootstrap OpenClaw user and permissions
+      ansible.builtin.include_role:
+        name: openclaw
+        tasks_from: bootstrap.yml
+
+    - name: Apply homebrew role
+      ansible.builtin.include_role:
+        name: homebrew
+
+    - name: Run OpenClaw install phase
+      ansible.builtin.include_role:
+        name: openclaw
+        tasks_from: install.yml
+
+    - name: Apply docker role
+      ansible.builtin.include_role:
+        name: docker
+
+    - name: Run OpenClaw onboarding phase
+      ansible.builtin.include_role:
+        name: openclaw
+        tasks_from: onboarding.yml
