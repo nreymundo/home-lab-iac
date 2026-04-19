@@ -11,7 +11,7 @@ Home-lab IaC repo with a staged provisioning pipeline: Packer builds VM template
 ```text
 home-lab-iac/
 ├── kubernetes/   # GitOps state: Flux, cluster bootstrap, infra, apps
-├── terraform/    # Proxmox VM provisioning; currently centered on k3s_nodes
+├── terraform/    # Proxmox VM provisioning via shared modules and instance roots
 ├── ansible/      # Host and cluster configuration playbooks and roles
 ├── packer/       # Proxmox template builds with Bitwarden-backed SSH injection
 ├── docs/         # Human guidance; useful context, not runtime state
@@ -27,7 +27,7 @@ home-lab-iac/
 | Cluster infra services | `kubernetes/infrastructure/` | Repeated `install/` and `config/` split |
 | App deployments | `kubernetes/apps/apps/` | Mostly app-template HelmReleases + kustomizations |
 | App PVCs and storage overlays | `kubernetes/apps/storage/` | PVC catalogs and storage-scoped overlays |
-| VM provisioning | `terraform/k3s_nodes/` | Also generates Ansible inventory |
+| VM provisioning | `terraform/instances/k3s_nodes/`, `terraform/instances/openclaw/` | Instance roots; also generate Ansible inventory |
 | Host / K3s config | `ansible/playbooks/`, `ansible/roles/` | `k3s_cluster.yml` is the main cluster playbook |
 | VM template builds | `packer/*/` | Run template-local `build.sh` after validation |
 
@@ -38,7 +38,7 @@ home-lab-iac/
 - Standard app components recur: `bjw-s-defaults`, `ingress/traefik-base`, and `storage/backup-policy`.
 - Internal hostnames follow `*.lan.${CLUSTER_DOMAIN}`.
 - Infrastructure secrets use Bitwarden; Kubernetes secrets are committed only as `*.sops.yaml`.
-- Terraform is upstream of Ansible here: `terraform/k3s_nodes` writes `ansible/inventories/k3s-nodes.yml`.
+- Terraform is upstream of Ansible here: `terraform/instances/k3s_nodes` writes `ansible/inventories/k3s-nodes.yml` and `terraform/instances/openclaw` writes `ansible/inventories/openclaw.yml`.
 
 ## ANTI-PATTERNS (THIS PROJECT)
 - Never patch, apply, edit, scale, or restart Kubernetes resources directly when the repo can express the change.
@@ -72,8 +72,10 @@ flux get all -A
 flux reconcile kustomization flux-system --with-source
 
 # Terraform
-terraform -chdir=terraform/k3s_nodes validate
-terraform -chdir=terraform/k3s_nodes plan
+terraform -chdir=terraform/instances/k3s_nodes validate
+terraform -chdir=terraform/instances/k3s_nodes plan
+terraform -chdir=terraform/instances/openclaw validate
+terraform -chdir=terraform/instances/openclaw plan
 
 # Ansible
 ansible-lint ansible/playbooks/ ansible/roles/

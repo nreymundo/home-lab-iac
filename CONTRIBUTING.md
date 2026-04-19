@@ -103,7 +103,7 @@ pre-commit autoupdate
 | Directory | Purpose | Notes |
 |-----------|---------|-------|
 | `packer/<distro>-<version>-base/` | VM template definitions | One folder per template |
-| `terraform/k3s_nodes/` | K3s node provisioning | Main Terraform module |
+| `terraform/instances/<instance>/` | Terraform instance roots | Concrete deployments using shared modules |
 | `ansible/roles/<role>/` | Reusable Ansible roles | Standard role structure |
 | `kubernetes/apps/apps/<category>/<app>/` | Application deployments | HelmRelease + kustomization |
 | `kubernetes/infrastructure/<category>/` | Cluster infrastructure | Core services |
@@ -123,7 +123,7 @@ packer validate .
 ### Terraform
 
 ```bash
-cd terraform/k3s_nodes
+cd terraform/instances/k3s_nodes
 terraform validate
 terraform plan
 ```
