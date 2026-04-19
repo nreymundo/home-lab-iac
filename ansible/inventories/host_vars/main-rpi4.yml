@@ -7,6 +7,7 @@ common_extra_packages:
   - python3-pip
   - python3-venv
   - yq
+  - zram-tools
 
 common_netplan_config:
   network:
@@ -50,6 +51,7 @@ homebrew_brew_packages:
   - gh
   - yaml-language-server
   - yamllint
+  - starship
 
 # K3s node labels
 # k3s_node_labels:
