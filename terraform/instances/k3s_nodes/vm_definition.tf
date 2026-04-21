@@ -79,8 +79,12 @@ locals {
         vm_disk_size_gb        = local.node_disk_size_gb[node_index]
         secondary_disk_enabled = local.k3s.secondary_disk_enabled
         secondary_disk_size_gb = local.node_secondary_disk_size_gb[node_index]
-        proxmox_tags           = ["k3s-node"]
-        pci_devices            = try(node.pci_devices, [])
+        proxmox_tags = distinct(concat(
+          ["k3s-node"],
+          try(node.proxmox_tags, []),
+          length(try(node.pci_devices, [])) > 0 ? ["gpu"] : []
+        ))
+        pci_devices = try(node.pci_devices, [])
       },
       try(node.template_name, null) == null ? {} : { template_name = node.template_name },
       try(node.machine, null) == null ? {} : { machine = node.machine }
