@@ -20,3 +20,4 @@ resources:
   - discord-auth-secret.sops.yaml
   - kopia-auth-secret.sops.yaml
   - frigate-proxy-secret.sops.yaml
+  - openclaw-gateway-secret.sops.yaml

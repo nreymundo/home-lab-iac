@@ -141,6 +141,11 @@ spec:
             secretKeyRef:
               name: frigate-proxy-secret
               key: FRIGATE_PROXY_SECRET
+        - name: OPENCLAW_GATEWAY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-gateway-secret
+              key: OPENCLAW_GATEWAY_PASSWORD
 
         # Blueprint variables
         - name: AK_BLUEPRINT_USER
