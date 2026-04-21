@@ -98,7 +98,7 @@ resource "proxmox_vm_qemu" "this" {
   boot               = "order=scsi0"
   start_at_node_boot = true
   agent              = 1
-  tags               = join(",", local.normalized_vms[count.index].proxmox_tags)
+  tags               = join(";", local.normalized_vms[count.index].proxmox_tags)
   machine            = try(local.normalized_vms[count.index].machine, null)
 
   dynamic "pci" {
