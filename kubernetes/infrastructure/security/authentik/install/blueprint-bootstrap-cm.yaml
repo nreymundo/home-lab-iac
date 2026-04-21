@@ -851,6 +851,28 @@ data:
           users:
             - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
 
+      - model: authentik_providers_oauth2.scopemapping
+        state: present
+        id: openclaw-gateway-password-mapping
+        identifiers:
+          name: "OpenClaw Gateway Password Mapping"
+        attrs:
+          scope_name: openclaw-gateway-password
+          description: "Injects the OpenClaw gateway password header"
+          expression: |
+            import os
+            gateway_password = os.environ.get("OPENCLAW_GATEWAY_PASSWORD", "")
+            headers = {}
+            if gateway_password:
+                headers["X-Gateway-Password"] = gateway_password
+            return {
+                "ak_proxy": {
+                    "user_attributes": {
+                        "additionalHeaders": headers
+                    }
+                }
+            }
+
       - model: authentik_providers_proxy.proxyprovider
         id: openclaw-provider
         identifiers:
@@ -864,6 +886,7 @@ data:
           refresh_token_validity: "days=30"
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, "ak-proxy"]]
+            - !KeyOf openclaw-gateway-password-mapping
 
       - model: authentik_core.application
         identifiers:

@@ -11,3 +11,4 @@ spec:
     authResponseHeaders:
       - X-authentik-username
       - X-authentik-email
+      - X-Gateway-Password
