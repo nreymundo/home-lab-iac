@@ -1,9 +1,4 @@
 ---
-- name: Restart sshd
-  ansible.builtin.service:
-    name: "{{ _common_ssh_service | default('ssh') }}"
-    state: restarted
-
 - name: Apply netplan
   ansible.builtin.command: netplan apply
   changed_when: false
