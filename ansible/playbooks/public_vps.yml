@@ -1,0 +1,8 @@
+---
+- name: Provision public VPS hosts
+  hosts: public_vps
+  become: true
+  roles:
+    - common
+    - ssh_hardening
+    - ufw
