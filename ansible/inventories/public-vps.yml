@@ -1,0 +1,22 @@
+---
+# Tracked public VPS inventory structure.
+#
+# Keep real public IPs and any sensitive connection details in the local-only
+# overlay file `ansible/inventories/public-vps.local.yml`, which is ignored by git.
+#
+# Example local overlay:
+# all:
+#   children:
+#     public_vps:
+#       hosts:
+#         vps-app-01:
+#           ansible_host: 203.0.113.10
+#           ansible_user: ubuntu
+#         vps-app-02:
+#           ansible_host: 203.0.113.11
+#           ansible_user: ubuntu
+
+all:
+  children:
+    public_vps:
+      hosts: {}
