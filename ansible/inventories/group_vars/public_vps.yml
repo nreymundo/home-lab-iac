@@ -1,0 +1,14 @@
+---
+# Baseline hardening for internet-facing Ubuntu VPS.
+
+ssh_hardening_sshd_settings:
+  PermitRootLogin: "no"
+  PasswordAuthentication: "no"
+  ChallengeResponseAuthentication: "no"
+
+ufw_install_enabled: true
+ufw_enabled: true
+ufw_default_incoming_policy: deny
+ufw_default_outgoing_policy: allow
+ufw_allow_ssh: true
+ufw_inbound_rules: []
