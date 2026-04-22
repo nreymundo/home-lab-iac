@@ -11,4 +11,5 @@ spec:
     authResponseHeaders:
       - X-authentik-username
       - X-authentik-email
+      # This doesn't really work - Will either fix later or remove it.
       - X-Gateway-Password
