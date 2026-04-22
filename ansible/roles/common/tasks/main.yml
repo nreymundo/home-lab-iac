@@ -14,6 +14,3 @@
 - name: Run Fedora/RedHat specific tasks
   ansible.builtin.include_tasks: os-fedora.yml
   when: ansible_os_family == 'RedHat'
-
-- name: Run common SSH and access tasks
-  ansible.builtin.include_tasks: ssh.yml

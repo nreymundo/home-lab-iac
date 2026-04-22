@@ -1,0 +1,3 @@
+---
+- name: Apply SSH hardening tasks
+  ansible.builtin.include_tasks: ssh.yml
