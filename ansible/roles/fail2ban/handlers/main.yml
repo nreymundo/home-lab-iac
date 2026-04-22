@@ -3,3 +3,4 @@
   ansible.builtin.service:
     name: fail2ban
     state: restarted
+  when: fail2ban_enabled | bool
