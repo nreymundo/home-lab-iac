@@ -5,3 +5,4 @@
   roles:
     - proxmox
     - common
+    - ssh_hardening
