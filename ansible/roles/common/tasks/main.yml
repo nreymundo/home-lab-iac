@@ -1,122 +1,19 @@
 ---
-# Common role - OS-agnostic tasks with OS-specific includes.
+# Common role - shared host bootstrap entrypoint.
 
-- name: Gather service facts
-  ansible.builtin.service_facts:
+- name: Run common preflight tasks
+  ansible.builtin.include_tasks: preflight.yml
 
-- name: Check cloud-init config directory
-  ansible.builtin.stat:
-    path: /etc/cloud/cloud.cfg.d
-  register: common_cloud_cfg_dir
-  changed_when: false
+- name: Run common identity tasks
+  ansible.builtin.include_tasks: identity.yml
 
-- name: Check current timezone
-  ansible.builtin.command: timedatectl show -p Timezone --value
-  register: common_timezone_status
-  changed_when: false
-  failed_when: false
-
-- name: Set SSH service name based on OS family
-  ansible.builtin.set_fact:
-    _common_ssh_service: "{{ 'sshd' if ansible_os_family == 'RedHat' else 'ssh' }}"
-
-- name: Set hostname via hostnamectl
-  ansible.builtin.command: hostnamectl set-hostname "{{ inventory_hostname }}"
-  when:
-    - not ansible_check_mode
-    - ansible_hostname != inventory_hostname
-  changed_when: true
-
-- name: Ensure /etc/hostname matches inventory name
-  ansible.builtin.copy:
-    content: "{{ inventory_hostname }}\n"
-    dest: /etc/hostname
-    owner: root
-    group: root
-    mode: "0644"
-
-- name: Ensure 127.0.1.1 maps to hostname
-  ansible.builtin.lineinfile:
-    path: /etc/hosts
-    regexp: "^127\\.0\\.1\\.1\\s+"
-    line: "127.0.1.1 {{ inventory_hostname }}"
-    state: present
-    create: true
-    mode: "0644"
-
-- name: Ensure cloud-init preserves hostname
-  ansible.builtin.copy:
-    content: "preserve_hostname: true\n"
-    dest: /etc/cloud/cloud.cfg.d/99-preserve-hostname.cfg
-    owner: root
-    group: root
-    mode: "0644"
-  when:
-    - common_cloud_cfg_dir.stat.isdir | default(false)
-
-- name: Ensure timezone is set
-  ansible.builtin.command: timedatectl set-timezone {{ common_timezone }}
-  when:
-    - common_timezone is defined
-    - common_timezone_status.stdout != common_timezone
-  changed_when: true
-
-# Include OS-specific tasks
-- name: Include Debian/Ubuntu specific tasks
+- name: Run Debian/Ubuntu specific tasks
   ansible.builtin.include_tasks: os-debian.yml
   when: ansible_os_family == 'Debian'
 
-- name: Include Fedora/RedHat specific tasks
+- name: Run Fedora/RedHat specific tasks
   ansible.builtin.include_tasks: os-fedora.yml
   when: ansible_os_family == 'RedHat'
 
-- name: Ensure sshd runtime directory exists for config validation
-  ansible.builtin.file:
-    path: /run/sshd
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-
-- name: Harden sshd configuration
-  ansible.builtin.lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: "^{{ item.key }}\\s+"
-    line: "{{ item.key }} {{ item.value }}"
-    validate: "/usr/sbin/sshd -t -f %s"
-    create: false
-    state: present
-    backup: true
-  loop: "{{ common_sshd_hardening | dict2items }}"
-  notify: Restart sshd
-
-- name: Ensure user home exists
-  ansible.builtin.file:
-    path: "/home/{{ common_user }}"
-    state: directory
-    owner: "{{ common_user }}"
-    group: "{{ common_user }}"
-    mode: "0755"
-  when: common_user | lower != 'root'
-
-- name: Ensure authorized SSH keys are present
-  ansible.posix.authorized_key:
-    user: "{{ common_user }}"
-    state: present
-    key: "{{ item }}"
-  loop: "{{ common_authorized_keys }}"
-  when: common_authorized_keys | length > 0
-
-- name: Ensure hush login file exists
-  ansible.builtin.file:
-    path: "/home/{{ common_user }}/.hushlogin"
-    state: touch
-    owner: "{{ common_user }}"
-    group: "{{ common_user }}"
-    mode: "0644"
-  when:
-    - common_enable_hushlogin | bool
-    - common_user | lower != 'root'
-
-- name: Refresh sshd to pick up config changes
-  ansible.builtin.meta: flush_handlers
+- name: Run common SSH and access tasks
+  ansible.builtin.include_tasks: ssh.yml
