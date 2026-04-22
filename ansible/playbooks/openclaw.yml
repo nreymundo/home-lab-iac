@@ -7,6 +7,10 @@
       ansible.builtin.include_role:
         name: common
 
+    - name: Apply SSH hardening role
+      ansible.builtin.include_role:
+        name: ssh_hardening
+
     - name: Apply disk_expand role
       ansible.builtin.include_role:
         name: disk_expand
