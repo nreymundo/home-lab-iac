@@ -20,6 +20,7 @@ venv/
 .ansible
 ansible-facts/
 ansible_collections/
+ansible/inventories/*.local.yml
 
 # Terraform / Packer / Kube
 .terraform/

@@ -140,6 +140,38 @@ ansible-playbook playbooks/k3s_cluster.yml --check
 ansible-playbook playbooks/k3s_cluster.yml
 ```
 
+### Optional: Local-only public VPS inventory overlay
+
+If you want to manage internet-facing VPS without committing their public IPs,
+keep the tracked group definition in `ansible/inventories/public-vps.yml` and
+create a local-only overlay file at `ansible/inventories/public-vps.local.yml`.
+
+That overlay is ignored by git and loaded automatically because
+`ansible/ansible.cfg` points Ansible at the full `ansible/inventories/`
+directory.
+
+Example local overlay:
+
+```yaml
+all:
+  children:
+    public_vps:
+      hosts:
+        vps-app-01:
+          ansible_host: 203.0.113.10
+          ansible_user: ubuntu
+        vps-app-02:
+          ansible_host: 203.0.113.11
+          ansible_user: ubuntu
+```
+
+You can validate the combined inventory with:
+
+```bash
+cd ansible
+ansible-inventory --list
+```
+
 ### Step 4: Verify Kubernetes Cluster
 
 ```bash
