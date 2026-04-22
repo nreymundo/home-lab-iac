@@ -1,0 +1,19 @@
+---
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Check cloud-init config directory
+  ansible.builtin.stat:
+    path: /etc/cloud/cloud.cfg.d
+  register: common_cloud_cfg_dir
+  changed_when: false
+
+- name: Check current timezone
+  ansible.builtin.command: timedatectl show -p Timezone --value
+  register: common_timezone_status
+  changed_when: false
+  failed_when: false
+
+- name: Set SSH service name based on OS family
+  ansible.builtin.set_fact:
+    _common_ssh_service: "{{ 'sshd' if ansible_os_family == 'RedHat' else 'ssh' }}"

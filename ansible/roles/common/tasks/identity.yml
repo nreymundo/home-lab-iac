@@ -1,0 +1,41 @@
+---
+- name: Set hostname via hostnamectl
+  ansible.builtin.command: hostnamectl set-hostname "{{ inventory_hostname }}"
+  when:
+    - not ansible_check_mode
+    - ansible_hostname != inventory_hostname
+  changed_when: true
+
+- name: Ensure /etc/hostname matches inventory name
+  ansible.builtin.copy:
+    content: "{{ inventory_hostname }}\n"
+    dest: /etc/hostname
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure 127.0.1.1 maps to hostname
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^127\\.0\\.1\\.1\\s+"
+    line: "127.0.1.1 {{ inventory_hostname }}"
+    state: present
+    create: true
+    mode: "0644"
+
+- name: Ensure cloud-init preserves hostname
+  ansible.builtin.copy:
+    content: "preserve_hostname: true\n"
+    dest: /etc/cloud/cloud.cfg.d/99-preserve-hostname.cfg
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - common_cloud_cfg_dir.stat.isdir | default(false)
+
+- name: Ensure timezone is set
+  ansible.builtin.command: timedatectl set-timezone {{ common_timezone }}
+  when:
+    - common_timezone is defined
+    - common_timezone_status.stdout != common_timezone
+  changed_when: true
