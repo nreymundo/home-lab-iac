@@ -1,0 +1,14 @@
+---
+# Toggle fail2ban package installation.
+fail2ban_install_enabled: true
+
+# Final fail2ban service state.
+fail2ban_enabled: false
+
+# SSH jail defaults for internet-facing hosts.
+fail2ban_sshd_enabled: true
+fail2ban_sshd_backend: systemd
+fail2ban_sshd_port: ssh
+fail2ban_sshd_maxretry: 5
+fail2ban_sshd_findtime: 10m
+fail2ban_sshd_bantime: 1h
