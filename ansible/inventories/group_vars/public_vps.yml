@@ -14,3 +14,6 @@ ufw_default_incoming_policy: deny
 ufw_default_outgoing_policy: allow
 ufw_allow_ssh: true
 ufw_inbound_rules: []
+
+fail2ban_install_enabled: true
+fail2ban_enabled: true
