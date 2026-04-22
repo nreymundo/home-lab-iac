@@ -20,7 +20,7 @@ common_packages:
   - starship
   - zsh
 
-common_sshd_hardening:
+ssh_hardening_sshd_settings:
   PermitRootLogin: "no"
   PasswordAuthentication: "no"
   ChallengeResponseAuthentication: "no"

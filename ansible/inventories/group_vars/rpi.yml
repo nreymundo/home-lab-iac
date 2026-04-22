@@ -11,7 +11,7 @@ common_packages:
   - wireless-tools
 
 # SSH daemon hardening applied to all Pi hosts.
-common_sshd_hardening:
+ssh_hardening_sshd_settings:
   PermitRootLogin: "no"
   PasswordAuthentication: "no"
   ChallengeResponseAuthentication: "no"

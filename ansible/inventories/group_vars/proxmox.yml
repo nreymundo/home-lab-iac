@@ -22,7 +22,7 @@ common_packages:
   - powertop
 
 # Allow root login with keys for Proxmox, but disable passwords.
-common_sshd_hardening:
+ssh_hardening_sshd_settings:
   PermitRootLogin: "prohibit-password"
   PasswordAuthentication: "no"
 
