@@ -17,7 +17,7 @@ locals {
     })
   }
 
-  volumes_by_key = merge([
+  volumes_by_key = length(local.vms_by_name) == 0 ? {} : merge([
     for vm_name, vm in local.vms_by_name : {
       for volume in vm.volumes : format("%s/%s", vm_name, volume.name) => merge(volume, {
         key      = format("%s/%s", vm_name, volume.name)
