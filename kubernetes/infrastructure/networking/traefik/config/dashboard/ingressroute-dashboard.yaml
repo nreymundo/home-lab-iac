@@ -9,7 +9,7 @@ metadata:
     gethomepage.dev/href: https://traefik.lan.${CLUSTER_DOMAIN}/dashboard/
     gethomepage.dev/name: Traefik
     gethomepage.dev/description: Ingress controller
-    gethomepage.dev/group: Networking
+    gethomepage.dev/group: "Apps/Services"
     gethomepage.dev/icon: traefik.png
     gethomepage.dev/enabled: "true"
     gethomepage.dev/pod-selector: app.kubernetes.io/name=traefik,app.kubernetes.io/instance=traefik-traefik-traefik

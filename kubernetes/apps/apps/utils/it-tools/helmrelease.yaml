@@ -41,7 +41,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: IT-Tools
           gethomepage.dev/description: Handy tools for developers
-          gethomepage.dev/group: Development
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: it-tools.png
         hosts:
           - host: tools.lan.${CLUSTER_DOMAIN}

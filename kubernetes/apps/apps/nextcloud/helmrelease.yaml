@@ -144,7 +144,7 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-nextcloud-office-chain@kubernetescrd
           gethomepage.dev/name: Nextcloud
           gethomepage.dev/description: File sync and share
-          gethomepage.dev/group: Utils
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: nextcloud.png
           gethomepage.dev/enabled: "true"
           gethomepage.dev/pod-selector: "app.kubernetes.io/name=nextcloud,app.kubernetes.io/instance=nextcloud,app.kubernetes.io/controller=main"

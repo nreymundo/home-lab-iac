@@ -162,7 +162,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: Discord - Main
           gethomepage.dev/description: Web instance for Discord with Steam and Plex rich presence
-          gethomepage.dev/group: Utils
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: discord.png
         className: traefik
         hosts:

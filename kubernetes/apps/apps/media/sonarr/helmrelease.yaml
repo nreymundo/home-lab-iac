@@ -43,7 +43,7 @@ spec:
           external-dns.alpha.kubernetes.io/hostname: sonarr.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Sonarr
           gethomepage.dev/description: TV automation
-          gethomepage.dev/group: Media
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: sonarr.png
           gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: "sonarr"

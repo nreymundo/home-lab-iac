@@ -162,7 +162,7 @@ spec:
                   href: https://www.linkedin.com/
 
       services:
-        - Management:
+        - Apps/Services:
             - Proxmox:
                 icon: proxmox.png
                 description: "Proxmox Virtual Environment"
@@ -180,7 +180,6 @@ spec:
                 icon: jetkvm.png
                 description: "IP KVM"
                 href: http://kvm.lan.${CLUSTER_DOMAIN}
-        - Networking:
             - OPNsense:
                 icon: opnsense.png
                 description: "Virtualized Firewall"
@@ -202,7 +201,6 @@ spec:
                 icon: omada.png
                 description: "TP-Link device manager"
                 href: https://omada.lan.${CLUSTER_DOMAIN}
-        - Storage:
             - Unraid:
                 icon: unraid.png
                 description: "Virtual NAS running in Proxmox"
@@ -228,7 +226,6 @@ spec:
                 #   url: https://pbs.lan.${CLUSTER_DOMAIN}
                 #   username: "api-ro@pbs!homepage"
                 #   password: "{{HOMEPAGE_VAR_PBS_API_KEY}}"
-        - Automation:
             - Home Assistant:
                 icon: home-assistant.png
                 description: "Home automation server"
@@ -241,12 +238,10 @@ spec:
                 icon: emqx.png
                 description: "MQTT broker"
                 href: https://emqx.lan.${CLUSTER_DOMAIN}
-        - AI:
             - OpenClaw:
                 icon: sh-openclaw.png
                 description: "OpenClaw dashboard"
                 href: https://openclaw.lan.${CLUSTER_DOMAIN}
-        - Development:
             - OpenCode:
                 icon: opencode.png
                 description: "OpenCode web instance"
@@ -316,26 +311,9 @@ spec:
             url: http://longhorn-frontend.longhorn-system.svc.cluster.local
 
         layout:
-          Media:
+          Apps/Services:
             style: row
             columns: 5
-
-          AI:
-            style: column
-          Automation:
-            style: column
-          Development:
-            style: column
-          Management:
-            style: column
-          Networking:
-            style: column
-          Storage:
-            style: column
-          Security & Monitoring:
-            style: column
-          Utils:
-            style: column
 
     # -- Main environment variables. Template enabled.
     # Syntax options:

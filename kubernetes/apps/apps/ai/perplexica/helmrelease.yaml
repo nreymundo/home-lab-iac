@@ -39,7 +39,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: Perplexica
           gethomepage.dev/description: AI search assistant
-          gethomepage.dev/group: AI
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: "https://i.imgur.com/9E2W5BY.png"
         hosts:
           - host: perplexica.lan.${CLUSTER_DOMAIN}

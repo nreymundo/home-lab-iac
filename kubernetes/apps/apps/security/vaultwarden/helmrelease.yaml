@@ -117,7 +117,7 @@ spec:
           external-dns.alpha.kubernetes.io/hostname: vault.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Vaultwarden
           gethomepage.dev/description: Password manager
-          gethomepage.dev/group: "Security & Monitoring"
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: vaultwarden.png
           gethomepage.dev/enabled: "true"
           gethomepage.dev/pod-selector: app.kubernetes.io/name=vaultwarden

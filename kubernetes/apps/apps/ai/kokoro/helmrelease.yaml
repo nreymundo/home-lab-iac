@@ -40,7 +40,7 @@ spec:
           external-dns.alpha.kubernetes.io/hostname: kokoro.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Kokoro
           gethomepage.dev/description: Text-to-speech API
-          gethomepage.dev/group: AI
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: kokoro-web.png
           gethomepage.dev/enabled: "true"
           gethomepage.dev/pod-selector: app.kubernetes.io/name=kokoro,app.kubernetes.io/instance=kokoro

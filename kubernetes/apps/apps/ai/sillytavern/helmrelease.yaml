@@ -44,7 +44,7 @@ spec:
           gethomepage.dev/name: SillyTavern
           gethomepage.dev/description: Chat interface for LLM roleplay
           gethomepage.dev/icon: "https://upload.wikimedia.org/wikipedia/commons/6/6b/SillyTavern_logo_%28dark_background%29.png"
-          gethomepage.dev/group: AI
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/enabled: "true"
         hosts:
           - host: tavern.lan.${CLUSTER_DOMAIN}

@@ -181,7 +181,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: Paperless
           gethomepage.dev/description: Document management
-          gethomepage.dev/group: Utils
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: paperless-ngx.png
         hosts:
           - host: docs.lan.${CLUSTER_DOMAIN}

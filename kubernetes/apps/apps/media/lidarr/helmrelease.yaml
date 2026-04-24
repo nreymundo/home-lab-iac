@@ -43,7 +43,7 @@ spec:
           external-dns.alpha.kubernetes.io/hostname: lidarr.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Lidarr
           gethomepage.dev/description: Music automation
-          gethomepage.dev/group: Media
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: lidarr.png
           gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: "lidarr"
