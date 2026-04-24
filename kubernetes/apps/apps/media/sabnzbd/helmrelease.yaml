@@ -11,6 +11,7 @@ spec:
     fullnameOverride: sabnzbd
     controllers:
       main:
+        strategy: Recreate
         containers:
           main:
             image:

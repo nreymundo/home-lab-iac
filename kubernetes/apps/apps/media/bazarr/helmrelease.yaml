@@ -15,6 +15,7 @@ spec:
             value: "1"
     controllers:
       main:
+        strategy: Recreate
         containers:
           main:
             image:
