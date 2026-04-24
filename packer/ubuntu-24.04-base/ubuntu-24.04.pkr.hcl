@@ -166,7 +166,7 @@ build {
   }
 
   provisioner "shell" {
-    execute_command  = "sudo -E sh -c '{{ .Vars }} {{ .Path }}'"
+    execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     environment_vars = ["UBUNTU_RELEASE=24.04"]
     inline = [
       "chmod +x /tmp/setup.sh",
@@ -175,7 +175,7 @@ build {
   }
 
   provisioner "shell" {
-    execute_command = "sudo -E sh -c '{{ .Vars }} {{ .Path }}'"
+    execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     inline = [
       "rm -rf /root/.ssh || true"
     ]
