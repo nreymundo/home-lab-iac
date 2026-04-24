@@ -21,6 +21,8 @@ spec:
   values:
     grafana:
       enabled: true
+      deploymentStrategy:
+        type: Recreate
       env:
         # SERVER SETTINGS - THIS FIXES THE REDIRECT MISMATCH
         GF_SERVER_ROOT_URL: "https://grafana.lan.${CLUSTER_DOMAIN}"

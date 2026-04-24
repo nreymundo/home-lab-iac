@@ -4,6 +4,7 @@ resources:
   - storageclass-longhorn-r1.yaml
   - storageclass-longhorn-r2.yaml
   - storageclass-local-path.yaml
+  - settings-failover.yaml
   - ingress-longhorn-ui.yaml
   - longhorn-backup-secret.sops.yaml
   - recurring-backup-jobs.yaml
