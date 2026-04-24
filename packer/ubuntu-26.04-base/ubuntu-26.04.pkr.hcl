@@ -161,12 +161,13 @@ build {
   # Run: ./build.sh instead of packer build .
 
   provisioner "file" {
-    source      = "${path.root}/scripts/setup.sh"
+    source      = "${path.root}/../scripts/setup-ubuntu-base.sh"
     destination = "/tmp/setup.sh"
   }
 
   provisioner "shell" {
-    execute_command = "sudo -E sh -c '{{ .Vars }} {{ .Path }}'"
+    execute_command  = "sudo -E sh -c '{{ .Vars }} {{ .Path }}'"
+    environment_vars = ["UBUNTU_RELEASE=26.04"]
     inline = [
       "chmod +x /tmp/setup.sh",
       "/tmp/setup.sh"
