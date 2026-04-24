@@ -10,6 +10,7 @@ spec:
   values:
     controllers:
       main:
+        strategy: Recreate
         initContainers:
           copy-trakt-config:
             image:
