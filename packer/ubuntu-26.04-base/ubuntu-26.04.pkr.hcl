@@ -8,8 +8,8 @@ packer {
 }
 
 locals {
-  vm_name              = "ubuntu-24.04-base"
-  template_desc_prefix = "Ubuntu 24.04 LTS Base Image for"
+  vm_name              = "ubuntu-26.04-base"
+  template_desc_prefix = "Ubuntu 26.04 LTS Base Image for"
   template_desc_suffix = "- Built on ${timestamp()}"
   cores                = 2
   memory               = 2048
@@ -37,10 +37,10 @@ locals {
   ssh_handshake_attempts = 100
   http_directory         = "${path.root}/${var.http_directory}"
 
-  # VM ID calculation: Ubuntu base (9000) + node number
-  distro_base_id = 9000
-  pve1_vm_id     = 9001 # 9000 + 1
-  pve2_vm_id     = 9002 # 9000 + 2
+  # VM ID calculation: Ubuntu base (9010) + node number
+  distro_base_id = 9010
+  pve1_vm_id     = 9011 # 9010 + 1
+  pve2_vm_id     = 9012 # 9010 + 2
 }
 
 # ------------------------------------------------------------------------------
@@ -167,7 +167,7 @@ build {
 
   provisioner "shell" {
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-    environment_vars = ["UBUNTU_RELEASE=24.04"]
+    environment_vars = ["UBUNTU_RELEASE=26.04"]
     inline = [
       "chmod +x /tmp/setup.sh",
       "/tmp/setup.sh"
