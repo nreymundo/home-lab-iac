@@ -4,7 +4,7 @@ set -euo pipefail
 # Non-interactive mode
 export DEBIAN_FRONTEND=noninteractive
 
-echo "==> Packer: Building K3s-ready Ubuntu 24.04 base image"
+echo "==> Packer: Building K3s-ready Ubuntu 26.04 base image"
 
 echo "==> 1. System Update & Essential Packages"
 apt-get update
