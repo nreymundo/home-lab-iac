@@ -32,6 +32,8 @@ spec:
 
     lapi:
       replicas: 1
+      strategy:
+        type: Recreate
       service:
         annotations:
           traefik.ingress.kubernetes.io/service.serversscheme: https
