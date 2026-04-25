@@ -12,6 +12,7 @@ resources:
   - longhorn.yaml
   - prometheus-community.yaml
   - grafana.yaml
+  - grafana-community.yaml
   - cloudnative-pg.yaml
   - authentik.yaml
   - crowdsec.yaml
