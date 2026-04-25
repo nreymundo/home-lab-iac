@@ -4,33 +4,6 @@
 **Commit:** cad43be
 **Branch:** master
 
-## OVERVIEW
-Home-lab IaC repo with a staged provisioning pipeline: Packer builds VM templates, Terraform creates K3s node VMs, Ansible configures them, and Kubernetes/Flux reconciles cluster state.
-
-## STRUCTURE
-```text
-home-lab-iac/
-├── kubernetes/   # GitOps state: Flux, cluster bootstrap, infra, apps
-├── terraform/    # Proxmox VM provisioning via shared modules and instance roots
-├── ansible/      # Host and cluster configuration playbooks and roles
-├── packer/       # Proxmox template builds with Bitwarden-backed SSH injection
-├── docs/         # Human guidance; useful context, not runtime state
-└── scripts/      # Pre-commit and secret-safety helpers
-```
-
-## WHERE TO LOOK
-| Task | Location | Notes |
-|------|----------|-------|
-| Cluster bootstrap order | `kubernetes/clusters/production/ks/` | Numbered Kustomizations define install/config order |
-| Flux bootstrap state | `kubernetes/clusters/production/flux-system/` | Generated; not normal edit targets |
-| Shared infra sources | `kubernetes/infrastructure/sources/` | HelmRepository/other source definitions |
-| Cluster infra services | `kubernetes/infrastructure/` | Repeated `install/` and `config/` split |
-| App deployments | `kubernetes/apps/apps/` | Mostly app-template HelmReleases + kustomizations |
-| App PVCs and storage overlays | `kubernetes/apps/storage/` | PVC catalogs and storage-scoped overlays |
-| VM provisioning | `terraform/instances/k3s_nodes/`, `terraform/instances/openclaw/` | Instance roots; also generate Ansible inventory |
-| Host / K3s config | `ansible/playbooks/`, `ansible/roles/` | `k3s_cluster.yml` is the main cluster playbook |
-| VM template builds | `packer/*/` | Run template-local `build.sh` after validation |
-
 ## CONVENTIONS
 - GitOps-first. If a Kubernetes change can live in git, make it in git and let Flux reconcile.
 - Root Kubernetes flow is `kubernetes/clusters/production/kustomization.yaml` → `flux-system/` + `ks/`.
@@ -44,6 +17,7 @@ home-lab-iac/
 - Never patch, apply, edit, scale, or restart Kubernetes resources directly when the repo can express the change.
 - Never treat `kubernetes/clusters/production/flux-system/gotk-*.yaml` as normal edit targets.
 - Never commit plaintext secrets, private keys, or unencrypted Kubernetes Secret manifests.
+- Do not edit root `README.md`.
 - Do not attribute commits to any person or tool unless explicitly instructed to do so.
 - Do not add anything to commit messages beyond the requested change summary unless explicitly instructed to do so.
 - Never broaden a narrowly requested fix beyond the files needed for that exact change.
