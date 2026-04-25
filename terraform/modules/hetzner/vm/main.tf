@@ -1,85 +1,10 @@
 locals {
-  base_cloud_init_packages = ["fail2ban", "ufw"]
-
-  normalized_default_cloud_init = var.default_cloud_init == null ? null : {
-    username            = trimspace(var.default_cloud_init.username)
-    ssh_authorized_keys = var.default_cloud_init.ssh_authorized_keys
-    ssh_port            = coalesce(try(var.default_cloud_init.ssh_port, null), 22)
-    extra_packages      = coalesce(try(var.default_cloud_init.extra_packages, null), [])
-  }
-
   vms_by_name = {
     for vm in var.vms : vm.name => merge(vm, {
-      cloud_init = (try(vm.cloud_init, null) == null && local.normalized_default_cloud_init == null) ? null : {
-        username = trimspace(coalesce(
-          try(vm.cloud_init.username, null),
-          try(local.normalized_default_cloud_init.username, null),
-          ""
-        ))
-        ssh_authorized_keys = coalesce(
-          try(vm.cloud_init.ssh_authorized_keys, null),
-          try(local.normalized_default_cloud_init.ssh_authorized_keys, null),
-          []
-        )
-        ssh_port = coalesce(
-          try(vm.cloud_init.ssh_port, null),
-          try(local.normalized_default_cloud_init.ssh_port, null),
-          22
-        )
-        extra_packages = distinct(concat(
-          try(local.normalized_default_cloud_init.extra_packages, []),
-          coalesce(try(vm.cloud_init.extra_packages, null), [])
-        ))
-      }
+      cloud_init   = local.cloud_init_by_vm_name[vm.name]
       firewall_ids = coalesce(vm.firewall_ids, [])
       labels       = merge(var.default_labels, coalesce(vm.labels, {}))
-      user_data = try(vm.user_data, null) != null ? vm.user_data : (
-        (try(vm.cloud_init, null) == null && local.normalized_default_cloud_init == null) ? null : join("", [
-          "#cloud-config\n",
-          yamlencode({
-            users = [{
-              name                = trimspace(coalesce(try(vm.cloud_init.username, null), try(local.normalized_default_cloud_init.username, null), ""))
-              groups              = "users, admin"
-              sudo                = "ALL=(ALL) NOPASSWD:ALL"
-              shell               = "/bin/bash"
-              ssh_authorized_keys = coalesce(try(vm.cloud_init.ssh_authorized_keys, null), try(local.normalized_default_cloud_init.ssh_authorized_keys, null), [])
-            }]
-            packages = distinct(concat(
-              local.base_cloud_init_packages,
-              distinct(concat(
-                try(local.normalized_default_cloud_init.extra_packages, []),
-                coalesce(try(vm.cloud_init.extra_packages, null), [])
-              ))
-            ))
-            package_update  = true
-            package_upgrade = true
-            write_files = [{
-              path = "/etc/ssh/sshd_config.d/ssh-hardening.conf"
-              content = join("\n", [
-                "PermitRootLogin no",
-                "PasswordAuthentication no",
-                format("Port %d", coalesce(try(vm.cloud_init.ssh_port, null), try(local.normalized_default_cloud_init.ssh_port, null), 22)),
-                "KbdInteractiveAuthentication no",
-                "ChallengeResponseAuthentication no",
-                "MaxAuthTries 2",
-                "AllowTcpForwarding no",
-                "X11Forwarding no",
-                "AllowAgentForwarding no",
-                "AuthorizedKeysFile .ssh/authorized_keys",
-                format("AllowUsers %s", trimspace(coalesce(try(vm.cloud_init.username, null), try(local.normalized_default_cloud_init.username, null), ""))),
-                "",
-              ])
-            }]
-            runcmd = [
-              format("printf '[sshd]\\nenabled = true\\nport = ssh, %d\\nbanaction = iptables-multiport' > /etc/fail2ban/jail.local", coalesce(try(vm.cloud_init.ssh_port, null), try(local.normalized_default_cloud_init.ssh_port, null), 22)),
-              "systemctl enable fail2ban",
-              format("ufw allow %d", coalesce(try(vm.cloud_init.ssh_port, null), try(local.normalized_default_cloud_init.ssh_port, null), 22)),
-              "ufw --force enable",
-              "systemctl restart ssh",
-            ]
-          })
-        ])
-      )
+      user_data = local.generated_user_data_by_vm_name[vm.name]
       volumes = [
         for volume in coalesce(vm.volumes, []) : merge(volume, {
           labels = merge(
