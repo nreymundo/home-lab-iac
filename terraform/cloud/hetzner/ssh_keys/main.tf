@@ -26,7 +26,7 @@ locals {
   ssh_key_name_by_public_key = {
     for ssh_key in local.ssh_public_keys : ssh_key.public_key => (
       ssh_key.comment != ""
-      ? ssh_key.comment
+      ? format("%s-%s", ssh_key.comment, ssh_key.key_hash)
       : format("ssh-key-%s", ssh_key.key_hash)
     )
   }
