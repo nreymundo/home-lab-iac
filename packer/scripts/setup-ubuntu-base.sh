@@ -4,7 +4,9 @@ set -euo pipefail
 # Non-interactive mode
 export DEBIAN_FRONTEND=noninteractive
 
-echo "==> Packer: Building K3s-ready Ubuntu 24.04 base image"
+ubuntu_release="${UBUNTU_RELEASE:-Ubuntu}"
+
+echo "==> Packer: Building K3s-ready Ubuntu ${ubuntu_release} base image"
 
 echo "==> 1. System Update & Essential Packages"
 apt-get update
@@ -61,7 +63,7 @@ rm -rf /var/tmp/*
 
 # Clear bash history
 rm -f /root/.bash_history
-> /home/ubuntu/.bash_history
+rm -f /home/ubuntu/.bash_history
 history -c
 
 echo "==> Base image preparation complete!"

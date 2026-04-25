@@ -82,7 +82,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: SearXNG
           gethomepage.dev/description: Privacy-focused meta search
-          gethomepage.dev/group: Utils
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: searxng.png
         hosts:
           - host: search.lan.${CLUSTER_DOMAIN}

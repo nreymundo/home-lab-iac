@@ -86,7 +86,7 @@ spec:
           external-dns.alpha.kubernetes.io/hostname: jellyfin.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Jellyfin
           gethomepage.dev/description: Media server
-          gethomepage.dev/group: Media
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: jellyfin.png
           gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: "jellyfin"

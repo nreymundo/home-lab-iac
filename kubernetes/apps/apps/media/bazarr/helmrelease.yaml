@@ -15,6 +15,7 @@ spec:
             value: "1"
     controllers:
       main:
+        strategy: Recreate
         containers:
           main:
             image:
@@ -47,7 +48,7 @@ spec:
           external-dns.alpha.kubernetes.io/hostname: bazarr.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Bazarr
           gethomepage.dev/description: Subtitle management
-          gethomepage.dev/group: Media
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: bazarr.png
           gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: "bazarr"

@@ -84,7 +84,7 @@ spec:
           external-dns.alpha.kubernetes.io/hostname: plex.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Plex
           gethomepage.dev/description: Media server
-          gethomepage.dev/group: Media
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: plex.png
           gethomepage.dev/enabled: "true"
         hosts:

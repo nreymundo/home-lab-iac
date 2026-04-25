@@ -38,7 +38,7 @@ spec:
             image:
               # renovate: datasource=docker depName=n8nio/n8n registryUrl=https://docker.n8n.io
               repository: docker.n8n.io/n8nio/n8n
-              tag: 2.18.1
+              tag: 2.18.3
             env:
               TZ: Europe/Berlin
               DB_TYPE: postgresdb
@@ -98,7 +98,7 @@ spec:
             image:
               # renovate: datasource=docker depName=n8nio/n8n registryUrl=https://docker.n8n.io
               repository: docker.n8n.io/n8nio/n8n
-              tag: 2.18.1
+              tag: 2.18.3
             command: ["/bin/sh", "-c", "n8n worker"]
             env:
               TZ: Europe/Berlin
@@ -196,7 +196,7 @@ spec:
           external-dns.alpha.kubernetes.io/hostname: n8n.${CLUSTER_DOMAIN}
           gethomepage.dev/name: n8n
           gethomepage.dev/description: Workflow automation
-          gethomepage.dev/group: Automation
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: n8n.png
           gethomepage.dev/enabled: "true"
         hosts:

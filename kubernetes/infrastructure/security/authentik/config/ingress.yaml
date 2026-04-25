@@ -9,7 +9,7 @@ metadata:
     external-dns.alpha.kubernetes.io/hostname: sso.${CLUSTER_DOMAIN}
     gethomepage.dev/name: Authentik
     gethomepage.dev/description: SSO
-    gethomepage.dev/group: "Security & Monitoring"
+    gethomepage.dev/group: "Apps/Services"
     gethomepage.dev/icon: authentik.png
     gethomepage.dev/enabled: "true"
 spec:

@@ -182,7 +182,7 @@ spec:
           external-dns.alpha.kubernetes.io/hostname: frigate.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Frigate
           gethomepage.dev/description: NVR with AI detection
-          gethomepage.dev/group: Security & Monitoring
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: frigate.png
           gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: frigate

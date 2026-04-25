@@ -33,7 +33,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: Paperless AI
           gethomepage.dev/description: AI assistant for Paperless
-          gethomepage.dev/group: AI
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: https://i.imgur.com/vFbypY5.png
         hosts:
           - host: paperless-ai.lan.${CLUSTER_DOMAIN}

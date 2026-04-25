@@ -126,7 +126,7 @@ spec:
           external-dns.alpha.kubernetes.io/hostname: git.${CLUSTER_DOMAIN}
           gethomepage.dev/name: Gitea
           gethomepage.dev/description: Git service
-          gethomepage.dev/group: Development
+          gethomepage.dev/group: "Apps/Services"
           gethomepage.dev/icon: gitea.png
           gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: "gitea"
