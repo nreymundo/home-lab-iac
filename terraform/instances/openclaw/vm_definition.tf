@@ -7,8 +7,8 @@ locals {
     ci_user         = "openclaw"
     ansible_user    = null
     vm_cores        = 4
-    vm_memory_mb    = 4096
-    vm_balloon_mb   = 4096
+    vm_memory_mb    = 6144
+    vm_balloon_mb   = 6144
     vm_disk_size_gb = 64
     proxmox_tags    = []
   }
