@@ -4,7 +4,13 @@ variable "vms" {
     server_type        = string
     image              = string
     location           = string
-    ssh_key_ids        = list(number)
+    ssh_key_ids        = optional(list(number), [])
+    cloud_init = optional(object({
+      username            = optional(string)
+      ssh_authorized_keys = optional(list(string))
+      ssh_port            = optional(number)
+      extra_packages      = optional(list(string), [])
+    }), null)
     firewall_ids       = optional(list(number), [])
     placement_group_id = optional(number, null)
     labels             = optional(map(string), {})
@@ -35,11 +41,6 @@ variable "vms" {
   }
 
   validation {
-    condition     = alltrue([for vm in var.vms : length(vm.ssh_key_ids) > 0])
-    error_message = "Each VM must include at least one ssh_key_id."
-  }
-
-  validation {
     condition = alltrue([
       for vm in var.vms : length(distinct([for volume in vm.volumes : volume.name])) == length(vm.volumes)
     ])
@@ -51,4 +52,15 @@ variable "default_labels" {
   type        = map(string)
   description = "Module-level labels merged into each VM label map"
   default     = {}
+}
+
+variable "default_cloud_init" {
+  type = object({
+    username            = string
+    ssh_authorized_keys = list(string)
+    ssh_port            = optional(number, 22)
+    extra_packages      = optional(list(string), [])
+  })
+  description = "Default generated cloud-init settings applied to VMs unless overridden per VM"
+  default     = null
 }
