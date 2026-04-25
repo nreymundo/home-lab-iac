@@ -1,10 +1,11 @@
 locals {
   vms_by_name = {
     for vm in var.vms : vm.name => merge(vm, {
-      cloud_init   = local.cloud_init_by_vm_name[vm.name]
-      firewall_ids = coalesce(vm.firewall_ids, [])
-      labels       = merge(var.default_labels, coalesce(vm.labels, {}))
-      user_data = local.generated_user_data_by_vm_name[vm.name]
+      cloud_init             = local.cloud_init_by_vm_name[vm.name]
+      explicit_user_data     = local.explicit_user_data_by_vm_name[vm.name]
+      firewall_ids           = coalesce(vm.firewall_ids, [])
+      labels                 = merge(var.default_labels, coalesce(vm.labels, {}))
+      user_data              = local.generated_user_data_by_vm_name[vm.name]
       volumes = [
         for volume in coalesce(vm.volumes, []) : merge(volume, {
           labels = merge(
@@ -51,7 +52,7 @@ resource "hcloud_server" "vms" {
     ignore_changes = [ssh_keys] # Hetzner treats ssh_keys changes as ForceNew after creation.
 
     precondition {
-      condition = each.value.cloud_init == null || (
+      condition = each.value.cloud_init == null || each.value.explicit_user_data || (
         length(trimspace(each.value.cloud_init.username)) > 0 &&
         length(each.value.cloud_init.ssh_authorized_keys) > 0
       )

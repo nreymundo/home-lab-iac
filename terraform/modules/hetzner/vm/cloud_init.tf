@@ -78,4 +78,8 @@ locals {
       ])
     ))
   }
+
+  explicit_user_data_by_vm_name = {
+    for vm in var.vms : vm.name => try(vm.user_data, null) != null
+  }
 }
