@@ -1,0 +1,54 @@
+name: commit-message-policy
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  commit-message-policy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate pushed commit messages
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t commits < <(jq -r '.commits[].id' "$GITHUB_EVENT_PATH")
+
+          for sha in "${commits[@]}"; do
+            tmpfile="$(mktemp)"
+            trap 'rm -f "$tmpfile"' EXIT
+            git show -s --format=%B "$sha" > "$tmpfile"
+            scripts/forbid-commit-attribution-trailers.sh "$tmpfile"
+            rm -f "$tmpfile"
+            trap - EXIT
+          done
+
+      - name: Validate pull request commit messages
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          base_sha="${{ github.event.pull_request.base.sha }}"
+          head_sha="${{ github.event.pull_request.head.sha }}"
+
+          mapfile -t commits < <(git rev-list "$base_sha..$head_sha")
+
+          for sha in "${commits[@]}"; do
+            tmpfile="$(mktemp)"
+            trap 'rm -f "$tmpfile"' EXIT
+            git show -s --format=%B "$sha" > "$tmpfile"
+            scripts/forbid-commit-attribution-trailers.sh "$tmpfile"
+            rm -f "$tmpfile"
+            trap - EXIT
+          done

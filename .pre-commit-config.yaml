@@ -1,4 +1,6 @@
 ---
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -65,3 +67,9 @@ repos:
         files: \.sops\.ya?ml$
         exclude: ^\.sops\.yaml$
         pass_filenames: true
+
+      - id: forbid-commit-attribution
+        name: Forbid commit attribution trailers
+        entry: scripts/forbid-commit-attribution-trailers.sh
+        language: system
+        stages: [commit-msg]
