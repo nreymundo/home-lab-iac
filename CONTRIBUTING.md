@@ -158,6 +158,11 @@ Use conventional commits format:
 [optional body]
 ```
 
+Scope is optional, so `<type>: <description>` is also valid.
+If present, scope should stay lowercase and can represent a single area like `ansible`, a composite area like `ansible+terraform`, or a path-like area like `apps/item`.
+
+Commit message validation is enforced by the repository hook and CI. Git-generated subjects such as `Merge ...`, `Revert "..."`, `fixup! ...`, `squash! ...`, and `amend! ...` are allowed as exceptions.
+
 **Types:**
 - `feat` - New feature
 - `fix` - Bug fix
