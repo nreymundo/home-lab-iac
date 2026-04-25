@@ -308,6 +308,10 @@ main() {
   print_tool_report
 
   if [[ ${#MISSING_TOOLS[@]} -eq 0 ]]; then
+    if [[ "$MODE" == "install" ]]; then
+      initialize_pre_commit_hooks
+    fi
+
     log_info "All required host tools are already installed."
     exit 0
   fi
