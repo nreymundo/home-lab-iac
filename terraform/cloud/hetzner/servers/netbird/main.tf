@@ -18,5 +18,5 @@ module "vm" {
 
   default_labels     = local.default_labels
   default_cloud_init = local.default_cloud_init
-  vms                = [local.netbird_vm]
+  vms                = [local.vm]
 }
