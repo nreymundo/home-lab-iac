@@ -483,14 +483,16 @@ data:
       - model: authentik_core.user
         state: present
         identifiers:
-          username: !Env AK_ALEX_USERNAME
+          username: !Env AK_OPENCLAW_USERNAME
         attrs:
-          name: !Env AK_ALEX_NAME
-          email: !Env AK_ALEX_EMAIL
+          name: !Env AK_OPENCLAW_NAME
+          email: !Env AK_OPENCLAW_EMAIL
           is_active: true
           is_superuser: false
           type: internal
-          password: !Env AK_ALEX_PASSWORD
+          password: !Env AK_OPENCLAW_PASSWORD
+          attributes:
+            avatar: !Env AK_OPENCLAW_AVATAR
           groups:
             - !Find [authentik_core.group, [name, "Nextcloud Users"]]
 
