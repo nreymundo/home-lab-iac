@@ -8,6 +8,8 @@ output "vms" {
       ipv4_address       = hcloud_server.vms[vm_name].ipv4_address
       ipv6_address       = hcloud_server.vms[vm_name].ipv6_address
       status             = hcloud_server.vms[vm_name].status
+      ansible_user       = vm.cloud_init == null ? null : nonsensitive(vm.cloud_init.username)
+      ansible_port       = vm.cloud_init == null ? null : nonsensitive(vm.cloud_init.ssh_port)
       firewall_ids       = vm.firewall_ids
       private_network_id = vm.private_network == null ? null : vm.private_network.network_id
       volumes = {
