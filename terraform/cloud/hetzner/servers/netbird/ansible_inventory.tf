@@ -6,8 +6,8 @@ locals {
       ipv4_address = nonsensitive(module.vm.vms[vm_name].ipv4_address)
       ipv6_address = nonsensitive(module.vm.vms[vm_name].ipv6_address)
       status       = nonsensitive(module.vm.vms[vm_name].status)
-      ansible_user = nonsensitive(module.vm.vms[vm_name].ansible_user)
-      ansible_port = nonsensitive(module.vm.vms[vm_name].ansible_port)
+      ansible_user = local.ansible_inventory_connection_by_vm_name[vm_name].ansible_user
+      ansible_port = local.ansible_inventory_connection_by_vm_name[vm_name].ansible_port
       firewall_ids = nonsensitive(module.vm.vms[vm_name].firewall_ids)
     }
   }
