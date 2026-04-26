@@ -6,3 +6,4 @@
     # Bootstrap SSH/UFW/fail2ban hardening is owned by Terraform cloud-init:
     # terraform/modules/hetzner/vm/cloud_init.tf
     - common
+    - docker

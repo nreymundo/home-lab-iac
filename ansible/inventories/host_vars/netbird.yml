@@ -1,0 +1,3 @@
+---
+# Enable Docker only for the Netbird public VPS.
+docker_install_enabled: true
