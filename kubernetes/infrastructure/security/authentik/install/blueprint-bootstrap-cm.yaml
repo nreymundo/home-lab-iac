@@ -479,6 +479,21 @@ data:
           attributes:
             nextcloud_quota: "15 GB"
 
+      # Alex regular Nextcloud user
+      - model: authentik_core.user
+        state: present
+        identifiers:
+          username: !Env AK_ALEX_USERNAME
+        attrs:
+          name: !Env AK_ALEX_NAME
+          email: !Env AK_ALEX_EMAIL
+          is_active: true
+          is_superuser: false
+          type: internal
+          password: !Env AK_ALEX_PASSWORD
+          groups:
+            - !Find [authentik_core.group, [name, "Nextcloud Users"]]
+
       # Custom scope mapping for Nextcloud claims
       - model: authentik_providers_oauth2.scopemapping
         id: nextcloud-scope
