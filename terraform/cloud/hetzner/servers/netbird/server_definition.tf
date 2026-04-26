@@ -37,7 +37,7 @@ locals {
     username            = local.default_ansible_connection.user
     ssh_authorized_keys = local.ssh_public_keys
     ssh_port            = local.default_ansible_connection.port
-    extra_packages      = []
+    extra_packages      = ["jq"]
   }
 
   vm = {
