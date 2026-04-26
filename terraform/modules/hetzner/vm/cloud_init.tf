@@ -6,6 +6,7 @@ locals {
     ssh_authorized_keys = var.default_cloud_init.ssh_authorized_keys
     ssh_port            = coalesce(try(var.default_cloud_init.ssh_port, null), 22)
     extra_packages      = coalesce(try(var.default_cloud_init.extra_packages, null), [])
+    ufw_rules           = coalesce(try(var.default_cloud_init.ufw_rules, null), [])
   }
 
   cloud_init_by_vm_name = {
@@ -29,6 +30,10 @@ locals {
         try(local.normalized_default_cloud_init.extra_packages, []),
         coalesce(try(vm.cloud_init.extra_packages, null), [])
       ))
+      ufw_rules = concat(
+        try(local.normalized_default_cloud_init.ufw_rules, []),
+        coalesce(try(vm.cloud_init.ufw_rules, null), [])
+      )
     })
   }
 
@@ -67,13 +72,20 @@ locals {
               "",
             ])
           }]
-          runcmd = [
-            format("printf '[sshd]\\nenabled = true\\nport = ssh, %d\\nbanaction = iptables-multiport' > /etc/fail2ban/jail.local", local.cloud_init_by_vm_name[vm.name].ssh_port),
-            "systemctl enable fail2ban",
-            format("ufw allow %d", local.cloud_init_by_vm_name[vm.name].ssh_port),
-            "ufw --force enable",
-            "systemctl restart ssh",
-          ]
+          runcmd = concat(
+            [
+              format("printf '[sshd]\\nenabled = true\\nport = ssh, %d\\nbanaction = iptables-multiport' > /etc/fail2ban/jail.local", local.cloud_init_by_vm_name[vm.name].ssh_port),
+              "systemctl enable fail2ban",
+              format("ufw allow %d", local.cloud_init_by_vm_name[vm.name].ssh_port),
+            ],
+            [
+              for rule in local.cloud_init_by_vm_name[vm.name].ufw_rules : format("ufw allow %s/%s", rule.port, rule.protocol)
+            ],
+            [
+              "ufw --force enable",
+              "systemctl restart ssh",
+            ]
+          )
         })
       ])
     ))

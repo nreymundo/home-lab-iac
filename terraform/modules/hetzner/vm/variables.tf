@@ -1,15 +1,19 @@
 variable "vms" {
   type = list(object({
-    name               = string
-    server_type        = string
-    image              = string
-    location           = string
-    ssh_key_ids        = optional(list(number), [])
+    name        = string
+    server_type = string
+    image       = string
+    location    = string
+    ssh_key_ids = optional(list(number), [])
     cloud_init = optional(object({
       username            = optional(string)
       ssh_authorized_keys = optional(list(string))
       ssh_port            = optional(number)
       extra_packages      = optional(list(string), [])
+      ufw_rules = optional(list(object({
+        port     = string
+        protocol = optional(string, "tcp")
+      })), [])
     }), null)
     firewall_ids       = optional(list(number), [])
     placement_group_id = optional(number, null)
@@ -46,6 +50,24 @@ variable "vms" {
     ])
     error_message = "Volume names must be unique within each VM definition."
   }
+
+  validation {
+    condition = alltrue(flatten([
+      for vm in var.vms : [
+        for rule in coalesce(try(vm.cloud_init.ufw_rules, null), []) : contains(["tcp", "udp"], rule.protocol)
+      ]
+    ]))
+    error_message = "Each cloud_init.ufw_rules protocol must be either 'tcp' or 'udp'."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for vm in var.vms : [
+        for rule in coalesce(try(vm.cloud_init.ufw_rules, null), []) : length(trimspace(rule.port)) > 0 && trimspace(rule.port) != "any"
+      ]
+    ]))
+    error_message = "Each cloud_init.ufw_rules port must be a non-empty explicit port value, not 'any'."
+  }
 }
 
 variable "default_labels" {
@@ -60,7 +82,25 @@ variable "default_cloud_init" {
     ssh_authorized_keys = list(string)
     ssh_port            = optional(number, 22)
     extra_packages      = optional(list(string), [])
+    ufw_rules = optional(list(object({
+      port     = string
+      protocol = optional(string, "tcp")
+    })), [])
   })
   description = "Default generated cloud-init settings applied to VMs unless overridden per VM"
   default     = null
+
+  validation {
+    condition = var.default_cloud_init == null ? true : alltrue([
+      for rule in var.default_cloud_init.ufw_rules : contains(["tcp", "udp"], rule.protocol)
+    ])
+    error_message = "Each default_cloud_init.ufw_rules protocol must be either 'tcp' or 'udp'."
+  }
+
+  validation {
+    condition = var.default_cloud_init == null ? true : alltrue([
+      for rule in var.default_cloud_init.ufw_rules : length(trimspace(rule.port)) > 0 && trimspace(rule.port) != "any"
+    ])
+    error_message = "Each default_cloud_init.ufw_rules port must be a non-empty explicit port value, not 'any'."
+  }
 }
