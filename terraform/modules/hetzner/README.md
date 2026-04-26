@@ -86,6 +86,13 @@ module "vm" {
     environment = "production"
   }
 
+  default_cloud_init = {
+    username            = "ubuntu"
+    ssh_authorized_keys = [file("~/.ssh/id_ed25519.pub")]
+    ssh_port            = 22
+    extra_packages      = ["jq"]
+  }
+
   vms = [
     {
       name        = "public-vps-01"
@@ -98,6 +105,15 @@ module "vm" {
 
       labels = {
         role = "edge"
+      }
+
+      cloud_init = {
+        ufw_rules = [
+          {
+            port     = "443"
+            protocol = "tcp"
+          }
+        ]
       }
 
       private_network = {
@@ -146,9 +162,16 @@ Outputs:
 Inputs:
 - `vms` — list of VM definitions
 - `default_labels`
+- `default_cloud_init` — optional module-wide baseline for generated cloud-init
 
 Outputs:
 - `vms` — map keyed by VM name, including server metadata and attached volume metadata
+
+Cloud-init merge behavior:
+- If `user_data` is set on a VM, the module uses it directly and does not generate cloud-init for that VM.
+- `username`, `ssh_authorized_keys`, and `ssh_port` use the per-VM `cloud_init` value when present; otherwise they fall back to `default_cloud_init`.
+- `extra_packages` combines the default and per-VM lists, then de-duplicates them.
+- `ufw_rules` combines the default and per-VM lists in order.
 
 ## Notes
 
