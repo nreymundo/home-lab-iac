@@ -20,6 +20,51 @@ locals {
             description = "Allow SSH from trusted admin networks"
           },
         ]
+      },
+      http = {
+        name = "http"
+        labels = {
+          role = "ingress"
+        }
+        rules = [
+          {
+            direction   = "in"
+            protocol    = "tcp"
+            port        = "80"
+            source_ips  = ["0.0.0.0/0", "::/0"]
+            description = "Allow HTTP"
+          },
+        ]
+      },
+      https = {
+        name = "https"
+        labels = {
+          role = "ingress"
+        }
+        rules = [
+          {
+            direction   = "in"
+            protocol    = "tcp"
+            port        = "443"
+            source_ips  = ["0.0.0.0/0", "::/0"]
+            description = "Allow HTTPS"
+          },
+        ]
+      },
+      netbird-udp = {
+        name = "netbird-udp"
+        labels = {
+          role = "netbird"
+        }
+        rules = [
+          {
+            direction   = "in"
+            protocol    = "udp"
+            port        = "3478"
+            source_ips  = ["0.0.0.0/0", "::/0"]
+            description = "Allow UDP port for Netbird"
+          },
+        ]
       }
     }
   }

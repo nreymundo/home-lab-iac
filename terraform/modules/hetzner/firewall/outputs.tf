@@ -10,6 +10,7 @@ output "firewalls" {
       id     = firewall.id
       name   = firewall.name
       labels = firewall.labels
+      rules  = var.firewalls[key].rules
     }
   }
 }
