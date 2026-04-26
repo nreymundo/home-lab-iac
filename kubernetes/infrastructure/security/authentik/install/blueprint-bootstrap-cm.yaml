@@ -479,6 +479,23 @@ data:
           attributes:
             nextcloud_quota: "15 GB"
 
+      # OpenClaw regular Nextcloud user
+      - model: authentik_core.user
+        state: present
+        identifiers:
+          username: !Env AK_OPENCLAW_USERNAME
+        attrs:
+          name: !Env AK_OPENCLAW_NAME
+          email: !Env AK_OPENCLAW_EMAIL
+          is_active: true
+          is_superuser: false
+          type: internal
+          password: !Env AK_OPENCLAW_PASSWORD
+          attributes:
+            avatar: !Env AK_OPENCLAW_AVATAR
+          groups:
+            - !Find [authentik_core.group, [name, "Nextcloud Users"]]
+
       # Custom scope mapping for Nextcloud claims
       - model: authentik_providers_oauth2.scopemapping
         id: nextcloud-scope
