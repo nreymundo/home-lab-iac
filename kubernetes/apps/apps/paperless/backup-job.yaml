@@ -63,8 +63,7 @@ spec:
                     echo "ERROR: No paperless pod found with selector: $SELECTOR" >&2
                     exit 1
                   fi
-                  echo "Found pod: $POD, waiting for it to be ready..."
-                  kubectl -n "$NS" wait --for=condition=Ready "pod/$POD" --timeout=120s
+                  echo "Found pod: $POD, starting backup..."
                   echo "Running paperless document export and backup..."
                   kubectl -n "$NS" exec "$POD" -c main -- /bin/sh -c '
                     set -euo pipefail
