@@ -479,7 +479,7 @@ data:
           attributes:
             nextcloud_quota: "15 GB"
 
-      # Alex regular Nextcloud user
+      # OpenClaw regular Nextcloud user
       - model: authentik_core.user
         state: present
         identifiers:
