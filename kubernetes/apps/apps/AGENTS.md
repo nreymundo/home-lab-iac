@@ -1,33 +1,26 @@
-# APPLICATION DEPLOYMENTS KNOWLEDGE BASE
+# Kubernetes Workload Apps Agent Notes
 
-## OVERVIEW
-`kubernetes/apps/apps/` contains deployable workloads, mostly category-grouped folders plus a few standalone app roots such as `immich/`, `nextcloud/`, and `paperless/`.
+Read the repo root `AGENTS.md`, `kubernetes/AGENTS.md`, and `kubernetes/apps/AGENTS.md` first. This file only covers deployable workload rules.
 
-## WHERE TO LOOK
-| Task | Location | Notes |
-|------|----------|-------|
-| Standard app deployment | `<category>/<app>/helmrelease.yaml` | Main workload definition |
-| App composition | `<category>/<app>/kustomization.yaml` | Pulls in components and local resources |
-| DB-backed apps | `*/cnpg-cluster.yaml` | Per-app CloudNativePG clusters |
-| Special high-variance subtree | `external-proxy/` | Many small service YAMLs under one umbrella |
+## What This Subtree Owns
+- `kubernetes/apps/apps/` owns deployable workloads and their workload-local resources.
+- The common workload shape is `helmrelease.yaml` + `kustomization.yaml` plus optional secrets and extra resources such as DB clusters, backup jobs, or sidecar HelmReleases.
 
-## CONVENTIONS
-- Common shape: `helmrelease.yaml` + `kustomization.yaml` + optional `*.sops.yaml` and extra resources.
-- Standard components often include `../../../components/bjw-s-defaults` and `.../ingress/traefik-base`.
-- Hostnames and ingress rules usually follow `*.lan.${CLUSTER_DOMAIN}`.
-- Some apps bundle related satellites in the same folder, e.g. Paperless variants or Discord Presence main/alternate trees.
+## Source Of Truth Boundaries
+- Workload-local resources that directly travel with an app stay here.
+- PVC catalogs and persistent storage ownership stay in `kubernetes/apps/storage/` unless a nearer child file explicitly documents an exception.
+- Shared defaults and shared ingress behavior often come from `kubernetes/components/`, so local app edits may have shared-component dependencies.
 
-## ANTI-PATTERNS
-- Do not invent a different app scaffold when the existing category already shows a stable pattern.
-- Do not put PVC definitions here when the persistent storage belongs in `kubernetes/apps/storage/`.
-- Do not overlook sibling resources like `cnpg-cluster.yaml`, backup jobs, or extra HelmReleases in multi-part apps.
+## Local Anti-Patterns
+- Do not invent a new app scaffold when the existing category already shows a stable pattern.
+- Do not put PVC definitions here when the persistence belongs in `kubernetes/apps/storage/`.
+- Do not overlook sibling resources such as `cnpg-cluster.yaml`, backup jobs, extra HelmReleases, or app variants in the same folder.
+- Do not assume `external-proxy/` follows the normal HelmRelease-heavy pattern; it is intentionally higher-variance and more direct-YAML-oriented.
 
-## COMMANDS
+## Validation
 ```bash
 kubectl apply --dry-run=client -f kubernetes/apps/apps/<category>/<app>
 flux get helmreleases -A
 ```
 
-## NOTES
-- `external-proxy/` is intentionally different: many direct service YAMLs, minimal HelmRelease pattern.
-- Check parent production kustomizations whenever adding or removing apps.
+- Check parent production kustomizations whenever adding or removing apps, and check storage wiring whenever persistence is part of the change.

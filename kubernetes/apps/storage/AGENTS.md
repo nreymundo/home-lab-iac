@@ -1,31 +1,26 @@
-# APP STORAGE KNOWLEDGE BASE
+# Kubernetes App Storage Agent Notes
 
-## OVERVIEW
-`kubernetes/apps/storage/` holds workload storage state, mostly PVC catalogs grouped by workload domain, plus storage-scoped overlays like `production/`.
+Read the repo root `AGENTS.md`, `kubernetes/AGENTS.md`, and `kubernetes/apps/AGENTS.md` first. This file only covers workload-persistence rules.
 
-## WHERE TO LOOK
-| Task | Location | Notes |
-|------|----------|-------|
-| PVC groups | `pvcs/` | Domain folders like `media/`, `ai/`, `security/`, `utils/` |
-| Storage overlay | `production/kustomization.yaml` | Inclusion point for storage resources |
-| Per-domain grouping | `pvcs/<domain>/kustomization.yaml` | Parent include for each PVC set |
+## What This Subtree Owns
+- `kubernetes/apps/storage/` owns workload PVC catalogs and storage overlays.
+- PVCs are grouped by workload domain rather than copied into every app directory.
 
-## CONVENTIONS
-- PVC manifests are grouped by workload domain rather than colocated with every app.
-- File naming is explicit and workload-specific: `<app>-pvc.yaml`.
-- Shared multi-instance apps may have multiple PVCs in the same domain folder, e.g. Discord Presence main/alternate.
+## Source Of Truth Boundaries
+- File naming should stay explicit and workload-tied, typically `<app>-pvc.yaml`.
+- Persistence ownership stays here even when the consuming workload manifest lives under `kubernetes/apps/apps/`.
+- `kustomize.toolkit.fluxcd.io/ssa: IfNotPresent` is a special create-only or migration-oriented contract, not a normal default for new PVCs.
 
-## ANTI-PATTERNS
-- Do not create opaque PVC names; keep them tied to the consuming workload.
+## Local Anti-Patterns
+- Do not create opaque PVC names that hide the consuming workload.
 - Do not scatter storage manifests across app folders when an existing PVC domain already owns them.
+- Do not assume Flux will reconcile field changes on a PVC that already uses `ssa: IfNotPresent`.
+- Do not add `ssa: IfNotPresent` to new PVCs unless you intentionally want create-only behavior for an existing-data or migration scenario.
 
-## COMMANDS
+## Validation
 ```bash
 kubectl apply --dry-run=client -f kubernetes/apps/storage
 ```
 
-## NOTES
-- When changing app persistence, inspect both this subtree and the app deployment subtree; they are intentionally split.
-- `kustomize.toolkit.fluxcd.io/ssa: IfNotPresent` is mainly for migrated, pre-existing, or retained PVCs that Flux should create when absent but not keep mutating after they already exist.
-- New PVCs usually should not need `kustomize.toolkit.fluxcd.io/ssa: IfNotPresent`; only add it when you intentionally want create-only behavior for an existing-data or migration scenario.
-- When changing a PVC that already has `kustomize.toolkit.fluxcd.io/ssa: IfNotPresent`, do not assume Flux will apply the update. Call this out to the user and prompt for the required manual live change instead (for example, PVC size expansion).
+- When changing app persistence, inspect both this subtree and the workload subtree; they are intentionally split.
+- When changing a PVC that already has `ssa: IfNotPresent`, call out any required manual live step explicitly instead of presenting the Git change as self-sufficient.

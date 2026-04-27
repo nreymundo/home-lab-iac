@@ -1,30 +1,29 @@
-# PACKER KNOWLEDGE BASE
+# Packer Agent Notes
 
-## OVERVIEW
-`packer/` builds Proxmox VM templates that Terraform later clones for K3s nodes and other hosts.
+Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers Packer-local editing rules.
 
-## WHERE TO LOOK
-| Task | Location | Notes |
-|------|----------|-------|
-| Ubuntu base template | `ubuntu-24.04-base/` | Current K3s node template default |
-| Fedora template | `fedora-43-server/` | Separate template root |
-| Main build config | `<template>/*.pkr.hcl` | Source blocks, build steps, variables |
-| Helper scripts | `<template>/build.sh`, `scripts/` | Build wrapper and SSH/autoinstall generation |
+## What This Subtree Owns
+- Each template directory is a self-contained build root with its own Packer config, variables, and helper entrypoints.
+- `packer/scripts/` owns shared helper logic used by one or more templates.
+- The output of this subtree is reusable VM templates that Terraform later clones.
 
-## CONVENTIONS
-- Validate inside the template directory before running the wrapper build script.
-- Templates use Bitwarden-backed SSH key injection and generated autoinstall data.
-- Template roots are self-contained: variables, main config, scripts, and build entrypoint live together.
+## Source Of Truth Boundaries
+- Hand-authored template definitions live in each template root; generated autoinstall or helper-produced inputs are workflow artifacts, not ad hoc edit targets.
+- If a template-local `build.sh` prepares generated inputs first, treat that wrapper as part of the intended source-of-truth workflow rather than an optional convenience script.
+- Secrets and SSH material belong in environment variables, Bitwarden-backed flows, or helper scripts, not inline Packer config.
 
-## ANTI-PATTERNS
-- Do not skip template-local `build.sh` when comments say it prepares generated inputs first.
-- Do not hardcode secrets into Packer files; this repo expects environment variables and helper scripts.
+## Local Anti-Patterns
+- Do not hardcode secrets, tokens, or private keys into template files.
+- Do not skip template-local wrapper scripts when they prepare generated inputs required for a correct build.
+- Do not document or depend on a brittle list of current template names when the subtree is meant to support additional template roots over time.
+- Do not change a base template casually without checking the downstream Terraform consumers that clone it.
 
-## COMMANDS
+## Validation
 ```bash
 packer validate packer/ubuntu-24.04-base
+packer validate packer/ubuntu-26.04-base
 packer validate packer/fedora-43-server
 ```
 
-## NOTES
-- The default Terraform template name is `ubuntu-24.04-base`, so changes there have downstream impact on node provisioning.
+- Treat those commands as representative examples of validating template roots; keep this file aligned when new template directories are added.
+- After changing a base template used by Terraform, call out the downstream impact on cloned node builds and any image compatibility assumptions.
