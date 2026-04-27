@@ -19,9 +19,13 @@ readonly REQUIRED_TOOLS=(
   yq
 )
 
-readonly SUPPORTED_DISTRO_TOKENS=(
+readonly ARCH_DISTRO_TOKENS=(
   arch
   archlinux
+)
+
+readonly UBUNTU_DISTRO_TOKENS=(
+  ubuntu
 )
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -34,10 +38,15 @@ MODE="check"
 AUR_HELPER=""
 DETECTED_DISTRO_ID=""
 DETECTED_DISTRO_LIKE=""
+DISTRO_FAMILY=""
 PRESENT_TOOLS=()
 MISSING_TOOLS=()
 PACMAN_PACKAGES_TO_INSTALL=()
 AUR_PACKAGES_TO_INSTALL=()
+APT_PACKAGES_TO_INSTALL=()
+BREW_PACKAGES_TO_INSTALL=()
+SNAP_CLASSIC_PACKAGES_TO_INSTALL=()
+MANUAL_TOOLS_TO_INSTALL=()
 
 usage() {
   cat <<'EOF'
@@ -47,13 +56,13 @@ Checks whether required host tools are available for this repository.
 
 Modes:
   --check    Check tools and print placeholders for missing installs (default)
-  --install  Install only missing tools via pacman and paru/yay
+  --install  Install only missing tools via the distro package manager
 
 Notes:
-  - Only Arch-based distributions are supported right now.
+  - Supported distributions: Arch-based and Ubuntu.
   - git and bash are assumed to already be installed.
-  - Missing pacman packages are installed in one command.
-  - Missing AUR packages are installed in one command.
+  - Missing package-manager-backed packages are installed in one command when possible.
+  - Ubuntu may use apt, Homebrew, and snap before falling back to manual steps.
 EOF
 }
 
@@ -114,17 +123,31 @@ ensure_supported_distro() {
 
   detect_distro
 
-  for token in "${SUPPORTED_DISTRO_TOKENS[@]}"; do
+  for token in "${ARCH_DISTRO_TOKENS[@]}"; do
     if [[ "$DETECTED_DISTRO_ID" == "$token" ]]; then
+      DISTRO_FAMILY="arch"
       return
     fi
 
     if [[ " $DETECTED_DISTRO_LIKE " == *" $token "* ]]; then
+      DISTRO_FAMILY="arch"
       return
     fi
   done
 
-  die "Unsupported distro '$DETECTED_DISTRO_ID'. Only Arch-based distributions are supported right now."
+  for token in "${UBUNTU_DISTRO_TOKENS[@]}"; do
+    if [[ "$DETECTED_DISTRO_ID" == "$token" ]]; then
+      DISTRO_FAMILY="ubuntu"
+      return
+    fi
+
+    if [[ " $DETECTED_DISTRO_LIKE " == *" $token "* ]]; then
+      DISTRO_FAMILY="ubuntu"
+      return
+    fi
+  done
+
+  die "Unsupported distro '$DETECTED_DISTRO_ID'. Supported distros are Arch-based and Ubuntu."
 }
 
 detect_aur_helper() {
@@ -171,7 +194,7 @@ append_unique() {
   target_array+=("$value")
 }
 
-prepare_package_plan() {
+prepare_arch_package_plan() {
   local tool="$1"
 
   case "$tool" in
@@ -221,15 +244,97 @@ prepare_package_plan() {
   esac
 }
 
+prepare_ubuntu_package_plan() {
+  local tool="$1"
+
+  case "$tool" in
+    pre-commit)
+      append_unique APT_PACKAGES_TO_INSTALL pre-commit
+      ;;
+    python3)
+      append_unique APT_PACKAGES_TO_INSTALL python3
+      ;;
+    rg)
+      append_unique APT_PACKAGES_TO_INSTALL ripgrep
+      ;;
+    ansible-playbook)
+      append_unique APT_PACKAGES_TO_INSTALL ansible
+      ;;
+    ansible-lint)
+      append_unique APT_PACKAGES_TO_INSTALL ansible-lint
+      ;;
+    jq)
+      append_unique APT_PACKAGES_TO_INSTALL jq
+      ;;
+    yq)
+      append_unique APT_PACKAGES_TO_INSTALL yq
+      ;;
+    sops)
+      append_unique BREW_PACKAGES_TO_INSTALL sops
+      ;;
+    kubectl)
+      append_unique BREW_PACKAGES_TO_INSTALL kubernetes-cli
+      ;;
+    flux)
+      append_unique BREW_PACKAGES_TO_INSTALL fluxcd/tap/flux
+      ;;
+    terraform)
+      append_unique SNAP_CLASSIC_PACKAGES_TO_INSTALL terraform
+      ;;
+    packer|bws)
+      append_unique MANUAL_TOOLS_TO_INSTALL "$tool"
+      ;;
+    *)
+      die "No Ubuntu package mapping defined for tool: $tool"
+      ;;
+  esac
+}
+
+prepare_package_plan() {
+  local tool="$1"
+
+  case "$DISTRO_FAMILY" in
+    arch)
+      prepare_arch_package_plan "$tool"
+      ;;
+    ubuntu)
+      prepare_ubuntu_package_plan "$tool"
+      ;;
+    *)
+      die "Unsupported distro family '$DISTRO_FAMILY'"
+      ;;
+  esac
+}
+
 build_install_plan() {
   local tool
 
   PACMAN_PACKAGES_TO_INSTALL=()
   AUR_PACKAGES_TO_INSTALL=()
+  APT_PACKAGES_TO_INSTALL=()
+  BREW_PACKAGES_TO_INSTALL=()
+  SNAP_CLASSIC_PACKAGES_TO_INSTALL=()
+  MANUAL_TOOLS_TO_INSTALL=()
 
   for tool in "${MISSING_TOOLS[@]}"; do
     prepare_package_plan "$tool"
   done
+}
+
+print_manual_install_hint() {
+  local tool="$1"
+
+  case "$tool" in
+    packer)
+      printf '    - packer: install manually from the HashiCorp package repository or release artifact.\n' >&2
+      ;;
+    bws)
+      printf '    - bws: install the Bitwarden Secrets Manager CLI from the vendor-provided binary or package.\n' >&2
+      ;;
+    *)
+      printf '    - %s: install manually for Ubuntu.\n' "$tool" >&2
+      ;;
+  esac
 }
 
 print_tool_report() {
@@ -251,46 +356,120 @@ print_tool_report() {
 }
 
 print_install_plan() {
+  local tool
+
   cat >&2 <<EOF
 Detected distro: $DETECTED_DISTRO_ID
 Install plan for missing tools:
 EOF
 
-  if [[ ${#PACMAN_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
-    printf '  sudo pacman -S --needed' >&2
-    printf ' %q' "${PACMAN_PACKAGES_TO_INSTALL[@]}" >&2
-    printf '\n' >&2
-  else
-    printf '  No pacman packages need installation.\n' >&2
-  fi
+  case "$DISTRO_FAMILY" in
+    arch)
+      if [[ ${#PACMAN_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        printf '  sudo pacman -S --needed' >&2
+        printf ' %q' "${PACMAN_PACKAGES_TO_INSTALL[@]}" >&2
+        printf '\n' >&2
+      else
+        printf '  No pacman packages need installation.\n' >&2
+      fi
 
-  if [[ ${#AUR_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
-    if [[ -n "$AUR_HELPER" ]]; then
-      printf '  %s -S --needed' "$AUR_HELPER" >&2
-    else
-      printf '  <paru-or-yay> -S --needed' >&2
-    fi
-    printf ' %q' "${AUR_PACKAGES_TO_INSTALL[@]}" >&2
-    printf '\n' >&2
-  else
-    printf '  No AUR packages need installation.\n' >&2
-  fi
+      if [[ ${#AUR_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        if [[ -n "$AUR_HELPER" ]]; then
+          printf '  %s -S --needed' "$AUR_HELPER" >&2
+        else
+          printf '  <paru-or-yay> -S --needed' >&2
+        fi
+        printf ' %q' "${AUR_PACKAGES_TO_INSTALL[@]}" >&2
+        printf '\n' >&2
+      else
+        printf '  No AUR packages need installation.\n' >&2
+      fi
+      ;;
+    ubuntu)
+      if [[ ${#APT_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        printf '  sudo apt-get update && sudo apt-get install -y' >&2
+        printf ' %q' "${APT_PACKAGES_TO_INSTALL[@]}" >&2
+        printf '\n' >&2
+      else
+        printf '  No apt packages need installation.\n' >&2
+      fi
+
+      if [[ ${#BREW_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        printf '  brew install' >&2
+        printf ' %q' "${BREW_PACKAGES_TO_INSTALL[@]}" >&2
+        printf '\n' >&2
+      else
+        printf '  No Homebrew packages need installation.\n' >&2
+      fi
+
+      if [[ ${#SNAP_CLASSIC_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        printf '  sudo snap install --classic' >&2
+        printf ' %q' "${SNAP_CLASSIC_PACKAGES_TO_INSTALL[@]}" >&2
+        printf '\n' >&2
+      else
+        printf '  No snap packages need installation.\n' >&2
+      fi
+
+      if [[ ${#MANUAL_TOOLS_TO_INSTALL[@]} -gt 0 ]]; then
+        printf '  Manual installation still required for:\n' >&2
+        for tool in "${MANUAL_TOOLS_TO_INSTALL[@]}"; do
+          print_manual_install_hint "$tool"
+        done
+      else
+        printf '  No manual Ubuntu installs are required.\n' >&2
+      fi
+      ;;
+    *)
+      die "Unsupported distro family '$DISTRO_FAMILY'"
+      ;;
+  esac
 }
 
 install_missing_tools() {
-  if [[ ${#AUR_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
-    detect_aur_helper
-  fi
+  case "$DISTRO_FAMILY" in
+    arch)
+      if [[ ${#AUR_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        detect_aur_helper
+      fi
 
-  if [[ ${#PACMAN_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
-    log_info "Installing missing pacman packages"
-    sudo pacman -S --needed "${PACMAN_PACKAGES_TO_INSTALL[@]}"
-  fi
+      if [[ ${#PACMAN_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        log_info "Installing missing pacman packages"
+        sudo pacman -S --needed "${PACMAN_PACKAGES_TO_INSTALL[@]}"
+      fi
 
-  if [[ ${#AUR_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
-    log_info "Installing missing AUR packages with $AUR_HELPER"
-    "$AUR_HELPER" -S --needed "${AUR_PACKAGES_TO_INSTALL[@]}"
-  fi
+      if [[ ${#AUR_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        log_info "Installing missing AUR packages with $AUR_HELPER"
+        "$AUR_HELPER" -S --needed "${AUR_PACKAGES_TO_INSTALL[@]}"
+      fi
+      ;;
+    ubuntu)
+      if [[ ${#APT_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        log_info "Installing missing apt packages"
+        sudo apt-get update
+        sudo apt-get install -y "${APT_PACKAGES_TO_INSTALL[@]}"
+      fi
+
+      if [[ ${#BREW_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        command_exists brew || die "Homebrew is required to install some Ubuntu tools. Install brew and rerun the script."
+        log_info "Installing missing Homebrew packages"
+        brew install "${BREW_PACKAGES_TO_INSTALL[@]}"
+      fi
+
+      if [[ ${#SNAP_CLASSIC_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
+        command_exists snap || die "snap is required to install some Ubuntu tools. Install snapd and rerun the script."
+        log_info "Installing missing snap packages"
+        sudo snap install --classic "${SNAP_CLASSIC_PACKAGES_TO_INSTALL[@]}"
+      fi
+
+      if [[ ${#MANUAL_TOOLS_TO_INSTALL[@]} -gt 0 ]]; then
+        print_install_plan
+        die "Some required tools still need manual installation on Ubuntu. Install them and rerun the script."
+      fi
+      ;;
+    *)
+      die "Unsupported distro family '$DISTRO_FAMILY'"
+      ;;
+  esac
 }
 
 initialize_pre_commit_hooks() {
@@ -332,7 +511,7 @@ main() {
     die "Some required tools are still missing after installation."
   fi
 
-  if [[ ${#AUR_PACKAGES_TO_INSTALL[@]} -gt 0 ]] && { command_exists paru || command_exists yay; }; then
+  if [[ "$DISTRO_FAMILY" == "arch" ]] && [[ ${#AUR_PACKAGES_TO_INSTALL[@]} -gt 0 ]] && { command_exists paru || command_exists yay; }; then
     detect_aur_helper
   fi
 
