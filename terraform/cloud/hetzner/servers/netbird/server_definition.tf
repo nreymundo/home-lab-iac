@@ -11,12 +11,12 @@ locals {
   }
 
   firewall_ids = [
-    for firewall_key in ["ssh", "http", "https", "netbird-udp"] : data.terraform_remote_state.firewall.outputs.firewall_ids[firewall_key]
+    for firewall_key in ["ssh", "http", "https", "netbird-udp", "wireguard"] : data.terraform_remote_state.firewall.outputs.firewall_ids[firewall_key]
   ]
 
   additional_ufw_rules = [
     for rule in flatten([
-      for firewall_key in ["http", "https", "netbird-udp"] : data.terraform_remote_state.firewall.outputs.firewalls[firewall_key].rules
+      for firewall_key in ["http", "https", "netbird-udp", "wireguard"] : data.terraform_remote_state.firewall.outputs.firewalls[firewall_key].rules
       ]) : {
       port     = rule.port
       protocol = rule.protocol
