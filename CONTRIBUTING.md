@@ -11,10 +11,11 @@ Guidelines for contributing to the home-lab-iac repository.
 git clone https://github.com/<user>/home-lab-iac.git
 cd home-lab-iac
 
+# Check required host tools
+scripts/bootstrap-host-tools.sh --check
+
 # Install pre-commit hooks
 pre-commit install
-
-# Set up environment variables (see docs/GETTING_STARTED.md)
 ```
 
 ### 2. Make Changes
@@ -32,6 +33,12 @@ git commit -m "feat: descriptive commit message"
 git push origin feature/my-change
 ```
 
+### 4. Pull Request Review
+
+- Review requests are automatically handled through `CODEOWNERS`.
+- All PRs request review from `@nreymundo` by default.
+- If a PR is opened from a bot or machine account, this ensures the main account is still pulled in for review.
+
 ---
 
 ## Pre-commit Hooks
@@ -42,11 +49,17 @@ The repository uses pre-commit to enforce code quality:
 |------|---------|
 | `trailing-whitespace` | Remove trailing whitespace |
 | `end-of-file-fixer` | Ensure files end with newline |
+| `mixed-line-ending` | Normalize mixed line endings |
+| `check-added-large-files` | Block accidentally committed large files |
 | `check-yaml` | Validate YAML syntax |
 | `yamllint` | Lint YAML files |
 | `ansible-lint` | Lint Ansible playbooks and roles |
 | `packer-fmt` | Format Packer HCL files |
 | `terraform-fmt` | Format Terraform files |
+| `forbid-sensitive-files` | Block committing private key material |
+| `prevent-plaintext-k8s-secrets` | Block unencrypted Kubernetes Secret manifests |
+| `sops-auto-encrypt` | Auto-encrypt `*.sops.yaml` files when needed |
+| `forbid-commit-attribution` | Enforce commit subject policy and block forbidden attribution trailers |
 
 ### Running Hooks
 
@@ -61,6 +74,8 @@ pre-commit run terraform-fmt --all-files
 # Update hooks to latest versions
 pre-commit autoupdate
 ```
+
+The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` hook rather than through the normal file-based pre-commit scan.
 
 ---
 
@@ -115,25 +130,24 @@ pre-commit autoupdate
 ### Packer
 
 ```bash
-cd packer/<template>
-packer validate .
-./build.sh  # Full build
+packer validate packer/ubuntu-24.04-base
+packer validate packer/fedora-43-server
 ```
 
 ### Terraform
 
 ```bash
-cd terraform/instances/k3s_nodes
-terraform validate
-terraform plan
+terraform -chdir=terraform/instances/k3s_nodes validate
+terraform -chdir=terraform/instances/k3s_nodes plan
+terraform -chdir=terraform/instances/openclaw validate
+terraform -chdir=terraform/instances/openclaw plan
 ```
 
 ### Ansible
 
 ```bash
-cd ansible
-ansible-lint playbooks/ roles/
-ansible-playbook playbooks/<playbook>.yml --check
+ansible-lint ansible/playbooks/ ansible/roles/
+ansible-playbook ansible/playbooks/<playbook>.yml --check
 ```
 
 ### Kubernetes
@@ -174,7 +188,7 @@ Commit message validation is enforced by the repository hook and CI. Git-generat
 ```
 feat(kubernetes): add audiobookshelf deployment
 fix(ansible): correct network interface detection
-docs: update getting started guide
+docs(project): update getting started guide
 chore(deps): update helm chart versions
 ```
 
