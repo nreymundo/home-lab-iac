@@ -1,33 +1,27 @@
-# PRODUCTION CLUSTER KNOWLEDGE BASE
+# Production Cluster Agent Notes
 
-## OVERVIEW
-`clusters/production/` defines Flux bootstrap wiring and the ordered cluster bring-up manifests for the production cluster.
+Read the repo root `AGENTS.md` and `kubernetes/AGENTS.md` first. This file only covers the production cluster ordering and bootstrap layer.
 
-## WHERE TO LOOK
-| Task | Location | Notes |
-|------|----------|-------|
-| Overall cluster entry | `kustomization.yaml` | Includes `flux-system` then `ks` |
-| Ordered cluster resources | `ks/kustomization.yaml` | Numbered sequence is intentional |
-| Generated Flux bootstrap | `flux-system/` | Bootstrap output, not routine edit surface |
+## What This Subtree Owns
+- `kubernetes/clusters/production/` owns the top-level cluster aggregation, Flux bootstrap wiring, and ordered reconciliation entrypoints.
+- `ks/` is the hand-maintained ordering layer.
+- `flux-system/` is generated bootstrap output and is not the routine edit surface.
 
-## CONVENTIONS
-- `kustomization.yaml` at this level is the top-level aggregator for the cluster subtree.
-- `ks/` is hand-maintained and authoritative for cluster resource ordering.
-- Number prefixes in `ks/*.yaml` communicate dependency order; keep the order meaningful.
-- Install and config pairs often come as adjacent numbers: e.g. `20-*-install`, `21-*-config`.
+## Source Of Truth Boundaries
+- `ks/kustomization.yaml` and the numbered `ks/*.yaml` files communicate dependency order and are part of the production bring-up contract.
+- Install/config pairs often appear as adjacent numbers; preserve that ordering intent unless the dependency model itself is changing.
+- Service-specific implementation details should stay in `kubernetes/infrastructure/` or `kubernetes/apps/`; this subtree should mostly wire ordering and inclusion.
 
-## ANTI-PATTERNS
-- Never hand-edit `flux-system/gotk-components.yaml` or `flux-system/gotk-sync.yaml`.
-- Do not reorder `ks/kustomization.yaml` casually; bootstrapping dependencies depend on the sequence.
-- Do not put service-specific detail here when the real source belongs in `kubernetes/infrastructure/` or `kubernetes/apps/`.
+## Local Anti-Patterns
+- Never hand-edit `flux-system/gotk-components.yaml` or `flux-system/gotk-sync.yaml` during routine changes.
+- Do not reorder `ks/kustomization.yaml` casually; bootstrap and reconciliation dependencies rely on that sequence.
+- Do not solve local service problems by stuffing service-specific config into the cluster ordering layer.
 
-## COMMANDS
+## Validation
 ```bash
 kubectl apply --dry-run=client -f kubernetes/clusters/production/ks
 flux get kustomizations
 flux reconcile kustomization flux-system --with-source
 ```
 
-## NOTES
-- Contributor-relevant files are almost always `ks/*.yaml` and `ks/kustomization.yaml`.
-- Treat `flux-system/` as generated bootstrap state unless you are intentionally re-bootstrapping Flux.
+- Most routine edits here should answer one of three questions: are you changing ordering, changing inclusion, or intentionally re-bootstrapping Flux?
