@@ -38,6 +38,7 @@ git push origin feature/my-change
 - Review requests are automatically handled through `CODEOWNERS`.
 - All PRs request review from `@nreymundo` by default.
 - If a PR is opened from a bot or machine account, this ensures the main account is still pulled in for review.
+- Pull request titles should follow the same conventional format as commit subjects.
 
 ---
 
