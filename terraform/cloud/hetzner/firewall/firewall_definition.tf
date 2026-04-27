@@ -65,6 +65,21 @@ locals {
             description = "Allow UDP port for Netbird"
           },
         ]
+      },
+      wireguard = {
+        name = "wireguard"
+        labels = {
+          role = "vpn"
+        }
+        rules = [
+          {
+            direction   = "in"
+            protocol    = "udp"
+            port        = "51820"
+            source_ips  = ["0.0.0.0/0", "::/0"]
+            description = "Allow WireGuard VPN"
+          },
+        ]
       }
     }
   }
