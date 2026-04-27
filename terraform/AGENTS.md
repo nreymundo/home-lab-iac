@@ -1,27 +1,24 @@
-# TERRAFORM KNOWLEDGE BASE
+# Terraform Agent Notes
 
-## OVERVIEW
-`terraform/` is split between reusable modules in `modules/` and concrete instance roots in `instances/`.
+Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers Terraform-local editing rules.
 
-## WHERE TO LOOK
-| Task | Location | Notes |
-|------|----------|-------|
-| Shared VM module | `modules/proxmox_vms/` | Reusable Proxmox VM provisioning logic |
-| K3s instance root | `instances/k3s_nodes/` | K3s VM definitions, providers, and Ansible inventory generation |
-| OpenClaw instance root | `instances/openclaw/` | Single-VM instance root using the shared module |
+## What This Subtree Owns
+- `terraform/modules/` holds reusable infrastructure building blocks.
+- Concrete root modules live under both `terraform/instances/` and `terraform/cloud/`; those roots are allowed to produce downstream artifacts such as Ansible inventory or cloud-specific infrastructure state.
+- Secrets belong in Bitwarden-backed flows, not inline Terraform values or plaintext files.
 
-## CONVENTIONS
-- `instances/k3s_nodes/vm_definition.tf` is the scaling/config surface for K3s nodes.
-- Secrets come from Bitwarden, not inline Terraform values.
-- Instance roots write generated inventories into `ansible/inventories/`; those artifacts are part of the intended workflow.
-- Terraform Cloud workspace metadata lives in each instance root's `providers.tf` and is part of the root-module contract.
+## Source Of Truth Boundaries
+- Treat instance roots as the source of truth for generated inventory under `ansible/inventories/`.
+- Treat Terraform Cloud workspace settings in each root module's `providers.tf` as part of the root-module contract.
+- For the K3s node fleet, prefer the current `local.k3s.nodes`-driven topology instead of reintroducing older count-based patterns.
 
-## ANTI-PATTERNS
-- Do not hand-edit the generated Ansible inventory.
-- Do not reintroduce `node_count`-driven logic when `length(local.k3s.nodes)` is the current source of truth.
-- Do not move secrets into tfvars or plaintext files when the module already uses Bitwarden.
+## Local Anti-Patterns
+- Do not hand-edit Terraform-generated Ansible inventory.
+- Do not move secrets into `tfvars`, plaintext files, or ad hoc environment handling when the existing module already uses Bitwarden.
+- Do not treat module internals as a safe place for per-instance overrides when the root module already owns that concern.
+- Do not change root-module outputs or inventory shape without checking downstream Ansible impact.
 
-## COMMANDS
+## Validation
 ```bash
 terraform -chdir=terraform/instances/k3s_nodes fmt
 terraform -chdir=terraform/instances/k3s_nodes validate
@@ -31,5 +28,5 @@ terraform -chdir=terraform/instances/openclaw validate
 terraform -chdir=terraform/instances/openclaw plan
 ```
 
-## NOTES
-- Changes here often require checking the downstream Ansible impact, especially inventory shape, host labels, and users.
+- Treat those commands as representative root-module examples, not an exhaustive list of every Terraform root in the repo.
+- After changing Terraform that feeds Ansible, inspect the generated inventory diff and any host labels, users, or topology assumptions consumed downstream.
