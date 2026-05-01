@@ -33,6 +33,12 @@
   when:
     - common_cloud_cfg_dir.stat.isdir | default(false)
 
+- name: Ensure root account password is locked
+  ansible.builtin.user:
+    name: root
+    password_lock: true
+  when: common_lock_root_password | bool
+
 - name: Ensure timezone is set
   ansible.builtin.command: timedatectl set-timezone {{ common_timezone }}
   when:

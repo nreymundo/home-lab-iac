@@ -2,6 +2,7 @@
 # Baseline hardening for internet-facing Ubuntu VPS.
 
 common_user: "{{ ansible_user | default('ubuntu') }}"
+common_lock_root_password: true
 
 ssh_hardening_sshd_settings:
   PermitRootLogin: "no"
