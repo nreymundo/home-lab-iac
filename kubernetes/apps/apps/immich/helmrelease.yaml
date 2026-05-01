@@ -45,11 +45,9 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  exec:
-                    command:
-                      - /bin/sh
-                      - -c
-                      - immich-healthcheck && ls /data >/dev/null
+                  httpGet:
+                    path: /api/server/ping
+                    port: 2283
                   initialDelaySeconds: 30
                   periodSeconds: 10
                   timeoutSeconds: 5
