@@ -4,6 +4,7 @@ common_enable_unattended_upgrades: true
 common_unattended_upgrades_auto_reboot: false
 common_unattended_upgrades_reboot_time: "06:00"
 common_run_upgrade: true
+common_lock_root_password: false
 
 # Scheduled fstrim for Linux guests (ignored if discard unsupported).
 common_enable_fstrim: true
