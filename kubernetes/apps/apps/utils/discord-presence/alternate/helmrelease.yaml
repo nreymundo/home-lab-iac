@@ -18,7 +18,7 @@ spec:
           kasmcord:
             image:
               repository: kasmweb/discord
-              tag: 1.14.0
+              tag: 1.18.0
             env:
               TZ: Europe/Berlin
               VNC_PW:
