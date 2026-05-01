@@ -55,6 +55,7 @@ locals {
           ))
           package_update  = true
           package_upgrade = true
+          ssh_pwauth      = false
           write_files = [{
             path = "/etc/ssh/sshd_config.d/ssh-hardening.conf"
             content = join("\n", [
