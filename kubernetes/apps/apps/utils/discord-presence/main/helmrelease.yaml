@@ -37,6 +37,32 @@ spec:
                 mkdir -p /run/user/1000
                 chown -R 1000:1000 /run/user/1000
                 chmod 700 /run/user/1000
+                python3 - <<'PY'
+                import json
+                import os
+
+                path = "/home/kasm-user/.config/discord/settings.json"
+                dirpath = os.path.dirname(path)
+                os.makedirs(dirpath, exist_ok=True)
+                os.chown(dirpath, 1000, 1000)
+
+                data = {}
+                if os.path.exists(path):
+                    try:
+                        with open(path) as f:
+                            data = json.load(f)
+                    except Exception:
+                        data = {}
+
+                data["SKIP_HOST_UPDATE"] = True
+
+                with open(path, "w") as f:
+                    json.dump(data, f, indent=2)
+                    f.write("\n")
+
+                os.chown(path, 1000, 1000)
+                os.chmod(path, 0o644)
+                PY
                 export XDG_RUNTIME_DIR=/run/user/1000
                 exec /usr/bin/setpriv --reuid=1000 --regid=1000 --clear-groups \
                   /dockerstartup/kasm_default_profile.sh \
