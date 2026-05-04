@@ -20,7 +20,7 @@ spec:
     spec:
       chart: loki
       # renovate: datasource=helm depName=loki registryUrl=https://grafana-community.github.io/helm-charts
-      version: "13.3.3"
+      version: "13.5.0"
       sourceRef:
         kind: HelmRepository
         name: grafana-community
