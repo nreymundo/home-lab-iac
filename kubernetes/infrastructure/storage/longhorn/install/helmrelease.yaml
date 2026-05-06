@@ -51,6 +51,7 @@ spec:
 
     defaultSettings:
       allowRecurringJobWhileVolumeDetached: true
+      guaranteedInstanceManagerCPU: '{"v1":"8","v2":"8"}'
     persistence:
       defaultClass: false # we will create our own StorageClass + mark it default
     # S3 Backup Target (Garage)
