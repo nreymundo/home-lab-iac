@@ -120,7 +120,7 @@ spec:
             image:
               # renovate: datasource=docker depName=gotenberg/gotenberg registryUrl=https://docker.io
               repository: docker.io/gotenberg/gotenberg
-              tag: "8.31"
+              tag: "8.32"
             command:
               - gotenberg
               - --chromium-disable-javascript=true
