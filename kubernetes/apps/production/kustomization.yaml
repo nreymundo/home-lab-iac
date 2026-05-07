@@ -29,7 +29,7 @@ resources:
   - ../apps/ai/llama-swap
   - ../apps/ai/whisper
   - ../apps/ai/kokoro
-  - ../apps/ai/perplexica
+  - ../apps/ai/vane
   - ../apps/security/vaultwarden
   - ../apps/security/frigate
   - ../apps/immich
