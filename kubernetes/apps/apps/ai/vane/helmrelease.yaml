@@ -1,7 +1,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: perplexica
+  name: vane
   namespace: ai
 spec:
   chart:
@@ -17,15 +17,21 @@ spec:
         containers:
           main:
             image:
-              # renovate: datasource=docker depName=itzcrazykns1337/perplexica registryUrl=https://docker.io
-              repository: docker.io/itzcrazykns1337/perplexica
-              tag: slim-latest
+              # renovate: datasource=docker depName=itzcrazykns1337/vane registryUrl=https://docker.io
+              repository: docker.io/itzcrazykns1337/vane
+              tag: v1.12.2
             env:
               TZ: Europe/Berlin
-              SEARXNG_API_URL: http://searxng-main.utils.svc.cluster.local:8080
             ports:
               - name: http
                 containerPort: 3000
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 2
+                memory: 2Gi
     service:
       main:
         controller: main
@@ -35,14 +41,13 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: perplexica.lan.${CLUSTER_DOMAIN}
+          external-dns.alpha.kubernetes.io/hostname: vane.lan.${CLUSTER_DOMAIN}
           gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: Perplexica
+          gethomepage.dev/name: Vane
           gethomepage.dev/description: AI search assistant
           gethomepage.dev/group: "Apps/Services"
-          gethomepage.dev/icon: "https://i.imgur.com/9E2W5BY.png"
         hosts:
-          - host: perplexica.lan.${CLUSTER_DOMAIN}
+          - host: vane.lan.${CLUSTER_DOMAIN}
             paths:
               - path: /
                 service:
@@ -54,6 +59,6 @@ spec:
         type: custom
         volumeSpec:
           persistentVolumeClaim:
-            claimName: perplexica
+            claimName: vane
         globalMounts:
-          - path: /home/perplexica/data
+          - path: /home/vane/data
