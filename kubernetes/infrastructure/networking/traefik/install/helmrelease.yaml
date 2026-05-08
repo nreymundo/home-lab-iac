@@ -7,9 +7,10 @@ spec:
   interval: 30m
   targetNamespace: traefik
   install:
-    createNamespace: true
+    crds: Create
   upgrade:
     cleanupOnFail: true
+    crds: CreateReplace
   chart:
     spec:
       chart: traefik
@@ -30,9 +31,9 @@ spec:
         memory: 512Mi
     service:
       enabled: true
-      type: LoadBalancer
-      loadBalancerIP: ${TRAEFIK_LB_IP}
       spec:
+        type: LoadBalancer
+        loadBalancerIP: ${TRAEFIK_LB_IP}
         externalTrafficPolicy: Local
     ingressClass:
       enabled: true
