@@ -40,7 +40,7 @@ spec:
             image:
               # renovate: datasource=docker depName=fscorrupt/posterizarr registryUrl=https://ghcr.io
               repository: ghcr.io/fscorrupt/posterizarr
-              tag: 2.2.32
+              tag: 2.2.43
             env:
               TZ: Europe/Berlin
             command:
