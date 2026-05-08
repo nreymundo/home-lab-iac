@@ -7,14 +7,15 @@ spec:
   interval: 30m
   targetNamespace: traefik
   install:
-    createNamespace: true
+    crds: Create
   upgrade:
     cleanupOnFail: true
+    crds: CreateReplace
   chart:
     spec:
       chart: traefik
       # renovate: datasource=helm depName=traefik registryUrl=https://traefik.github.io/charts
-      version: "39.0.8"
+      version: "40.0.0"
       sourceRef:
         kind: HelmRepository
         name: traefik
@@ -30,9 +31,9 @@ spec:
         memory: 512Mi
     service:
       enabled: true
-      type: LoadBalancer
-      loadBalancerIP: ${TRAEFIK_LB_IP}
       spec:
+        type: LoadBalancer
+        loadBalancerIP: ${TRAEFIK_LB_IP}
         externalTrafficPolicy: Local
     ingressClass:
       enabled: true
