@@ -204,6 +204,16 @@ data:
       labels:
         blueprints.goauthentik.io/instantiate: "true"
     entries:
+      - model: authentik_providers_oauth2.scopemapping
+        id: komga-email-scope
+        identifiers:
+          name: "Komga Email Scope"
+        attrs:
+          scope_name: email
+          description: "Komga email scope mapping"
+          expression: |
+            return {"email": request.user.email, "email_verified": True}
+
       - model: authentik_providers_oauth2.oauth2provider
         id: komga-provider
         identifiers:
@@ -223,7 +233,7 @@ data:
               matching_mode: strict
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
-            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
+            - !KeyOf komga-email-scope
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
 
       - model: authentik_core.application
