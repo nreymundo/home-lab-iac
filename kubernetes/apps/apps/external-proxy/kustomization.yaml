@@ -15,5 +15,4 @@ resources:
   - omada.yaml
   - kopia.yaml
   - syncthing.yaml
-  - opencode.yaml
   - openclaw.yaml
