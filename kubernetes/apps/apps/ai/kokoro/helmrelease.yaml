@@ -10,6 +10,7 @@ spec:
   values:
     controllers:
       main:
+        replicas: 0
         pod:
           nodeSelector:
             topology.kubernetes.io/zone: "framework"
