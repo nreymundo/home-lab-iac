@@ -242,10 +242,6 @@ spec:
                 icon: sh-openclaw.png
                 description: "OpenClaw dashboard"
                 href: https://openclaw.lan.${CLUSTER_DOMAIN}
-            - OpenCode:
-                icon: opencode.png
-                description: "OpenCode web instance"
-                href: https://code.lan.${CLUSTER_DOMAIN}
       widgets:
         # - resources:
         #     # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.
