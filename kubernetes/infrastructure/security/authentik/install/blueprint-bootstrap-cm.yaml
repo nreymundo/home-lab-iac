@@ -140,6 +140,39 @@ data:
           provider: !KeyOf grafana-provider
           group: "Observability"
 
+  210-vaultwarden-cleanup.yaml: |
+    version: 1
+    metadata:
+      name: vaultwarden-sso-cleanup
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      - model: authentik_policies.policybinding
+        state: absent
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "vaultwarden"]]
+          order: 0
+
+      - model: authentik_core.application
+        state: absent
+        identifiers:
+          slug: "vaultwarden"
+
+      - model: authentik_providers_oauth2.oauth2provider
+        state: absent
+        identifiers:
+          name: "Vaultwarden"
+
+      - model: authentik_providers_oauth2.scopemapping
+        state: absent
+        identifiers:
+          name: "Vaultwarden Email Scope"
+
+      - model: authentik_core.group
+        state: absent
+        identifiers:
+          name: "Vaultwarden Users"
+
   220-audiobookshelf.yaml: |
     version: 1
     metadata:
