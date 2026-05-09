@@ -29,7 +29,6 @@ resources:
   - ../apps/ai/whisper
   - ../apps/ai/kokoro
   - ../apps/ai/vane
-  - ../apps/security/vaultwarden
   - ../apps/security/frigate
   - ../apps/immich
   - ../apps/media/jellyplex-watched
