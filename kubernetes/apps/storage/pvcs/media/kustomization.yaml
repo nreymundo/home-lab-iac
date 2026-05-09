@@ -7,7 +7,6 @@ resources:
   - jellyfin-pvc.yaml
   - lidarr-pvc.yaml
   - lidatube-pvc.yaml
-  - navidrome-pvc.yaml
   - plex-pvc.yaml
   - plex-media-enrichment-pvc.yaml
   - plextraktsync-pvc.yaml
