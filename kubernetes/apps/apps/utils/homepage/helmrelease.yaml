@@ -310,6 +310,9 @@ spec:
           Local Services:
             style: row
             columns: 5
+          Kubernetes:
+            style: row
+            columns: 5
 
     # -- Main environment variables. Template enabled.
     # Syntax options:
