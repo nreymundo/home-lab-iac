@@ -162,7 +162,7 @@ spec:
                   href: https://www.linkedin.com/
 
       services:
-        - Apps/Services:
+        - Local Services:
             - Proxmox:
                 icon: proxmox.png
                 description: "Proxmox Virtual Environment"
@@ -307,7 +307,7 @@ spec:
             url: http://longhorn-frontend.longhorn-system.svc.cluster.local
 
         layout:
-          Apps/Services:
+          Local Services:
             style: row
             columns: 5
 
