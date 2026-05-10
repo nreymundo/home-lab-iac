@@ -11,7 +11,7 @@ spec:
       recurring-job.longhorn.io/source: enabled
       recurring-job.longhorn.io/backup-daily: enabled
       recurring-job.longhorn.io/backup-weekly: enabled
-  instances: 2
+  instances: 1
   monitoring:
     enablePodMonitor: true
   storage:
