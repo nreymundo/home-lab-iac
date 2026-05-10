@@ -210,7 +210,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: Immich
           gethomepage.dev/description: Photo management and backup
-          gethomepage.dev/group: "Apps/Services"
+          gethomepage.dev/group: "Kubernetes"
           gethomepage.dev/icon: immich.png
         hosts:
           - host: photos.${CLUSTER_DOMAIN}
