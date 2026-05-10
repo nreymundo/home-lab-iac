@@ -46,7 +46,7 @@ spec:
           gethomepage.dev/name: Vane
           gethomepage.dev/description: AI search assistant
           gethomepage.dev/icon: "https://i.imgur.com/9E2W5BY.png"
-          gethomepage.dev/group: "Apps/Services"
+          gethomepage.dev/group: "Kubernetes"
         hosts:
           - host: vane.lan.${CLUSTER_DOMAIN}
             paths:
