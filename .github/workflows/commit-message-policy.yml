@@ -3,6 +3,8 @@ name: commit-message-policy
 on:
   pull_request:
   push:
+    branches-ignore:
+      - 'renovate/**'
 
 jobs:
   commit-message-policy:
