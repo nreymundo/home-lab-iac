@@ -16,6 +16,10 @@ spec:
               # renovate: datasource=docker depName=clusterzx/paperless-ai registryUrl=https://docker.io
               repository: docker.io/clusterzx/paperless-ai
               tag: 3.0.9
+            resources:
+              requests:
+                cpu: 100m
+                memory: 1Gi
             ports:
               - name: http
                 containerPort: 3000
