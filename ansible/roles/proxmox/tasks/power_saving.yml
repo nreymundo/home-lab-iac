@@ -43,7 +43,7 @@
     - name: Power tuning | Remove legacy root crontab entries
       ansible.builtin.shell: |
         set -o pipefail
-        crontab -l | grep -v -Fx {{ item | quote }} | crontab -
+        (crontab -l | grep -v -Fx {{ item | quote }} || true) | crontab -
       args:
         executable: /bin/bash
       loop: "{{ proxmox_power_tuning_cron_entries_to_remove }}"
