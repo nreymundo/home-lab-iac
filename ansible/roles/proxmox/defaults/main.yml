@@ -60,3 +60,24 @@ proxmox_power_tuning_cron_entries_to_remove: []
 
 # --- GPU passthrough ---
 proxmox_gpu_passthrough_cleanup: true
+
+# --- AMD AI/GPU host support ---
+proxmox_install_ai_amd_packages: false
+proxmox_ai_amd_kernel_modules:
+  - amdgpu
+proxmox_ai_amd_required_devices:
+  - /dev/kfd
+  - /dev/dri/renderD128
+proxmox_ai_amd_packages:
+  - amd64-microcode
+  - pve-firmware
+  - mesa-vulkan-drivers
+  - vulkan-tools
+  - mesa-utils
+  - vainfo
+  - radeontop
+  - libdrm-tests
+  - rocminfo
+  - rocm-smi
+  - amd-smi
+  - rocm-opencl-icd

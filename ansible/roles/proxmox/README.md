@@ -25,6 +25,11 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 - `proxmox_zfs_thin_enforce`: set `refreservation=none` for discovered datasets. Enabled for the
   `proxmox` inventory group.
 - `proxmox_zfs_arc_min_bytes` / `proxmox_zfs_arc_max_bytes`: ARC module limits.
+- `proxmox_install_ai_amd_packages`: install AMD GPU/ROCm/Vulkan host support packages and validate `/dev/kfd`,
+  `/dev/dri/renderD128`, and the `amdgpu` kernel module.
+- `proxmox_ai_amd_kernel_modules`: kernel modules loaded immediately and at boot when AMD AI/GPU support is enabled.
+- `proxmox_ai_amd_required_devices`: device nodes asserted after AMD AI/GPU support is enabled.
+- `proxmox_ai_amd_packages`: package list installed when `proxmox_install_ai_amd_packages` is enabled.
 - `proxmox_power_tuning_enabled`: install and enable the power tuning service.
 - `proxmox_power_cpu_governor`, `proxmox_power_cpu_epp`: CPU power policy written at boot.
 - `proxmox_power_cpu_boost`: enable or disable CPU boost/turbo at boot.

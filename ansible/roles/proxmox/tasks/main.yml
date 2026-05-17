@@ -18,6 +18,20 @@
   tags:
     - gpu_passthrough
 
+- name: Install AMD AI/GPU host packages
+  ansible.builtin.include_tasks:
+    file: ai_amd_packages.yml
+    apply:
+      tags:
+        - ai
+        - amd
+        - gpu
+  when: proxmox_install_ai_amd_packages | default(install_ai_amd_packages | default(false)) | bool
+  tags:
+    - ai
+    - amd
+    - gpu
+
 - name: Configure swap
   ansible.builtin.include_tasks:
     file: swap.yml

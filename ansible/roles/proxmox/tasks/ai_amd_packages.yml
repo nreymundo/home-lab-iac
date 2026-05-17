@@ -1,0 +1,55 @@
+---
+- name: Install AMD AI/GPU host packages
+  ansible.builtin.apt:
+    name: "{{ proxmox_ai_amd_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: proxmox_ai_amd_packages | length > 0
+
+- name: Ensure AMD GPU kernel modules load at boot
+  ansible.builtin.copy:
+    content: "{{ proxmox_ai_amd_kernel_modules | join('\n') }}\n"
+    dest: /etc/modules-load.d/amd-ai-gpu.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: proxmox_ai_amd_kernel_modules | length > 0
+
+- name: Load AMD GPU kernel modules
+  ansible.builtin.command:
+    cmd: "modprobe {{ item }}"
+  loop: "{{ proxmox_ai_amd_kernel_modules }}"
+  changed_when: false
+  when:
+    - proxmox_ai_amd_kernel_modules | length > 0
+    - not ansible_check_mode
+
+- name: Check AMD GPU kernel devices
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ proxmox_ai_amd_required_devices }}"
+  register: proxmox_ai_amd_device_checks
+  changed_when: false
+
+- name: Assert AMD GPU kernel devices are present
+  ansible.builtin.assert:
+    that:
+      - proxmox_ai_amd_device_checks.results | map(attribute='stat.exists') | min
+    fail_msg: >-
+      AMD AI/GPU packages are enabled, but required ROCm device nodes are not present.
+      Expected {{ proxmox_ai_amd_required_devices | join(', ') }}.
+    quiet: true
+
+- name: Check amdgpu kernel module
+  ansible.builtin.command: lsmod
+  register: proxmox_ai_amd_lsmod
+  changed_when: false
+  check_mode: false
+
+- name: Assert amdgpu kernel module is loaded
+  ansible.builtin.assert:
+    that:
+      - proxmox_ai_amd_lsmod.stdout_lines | select('match', '^amdgpu\\s') | list | length > 0
+    fail_msg: "AMD AI/GPU packages are enabled, but the amdgpu kernel module is not loaded."
+    quiet: true
