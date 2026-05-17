@@ -8,5 +8,3 @@ all:
         k3s_server:
           children:
             k3s_nodes: {}
-          hosts:
-            framework: {}
