@@ -1,0 +1,32 @@
+---
+llama_swap_enabled: true
+
+llama_swap_version: "214"
+llama_swap_tag: "v{{ llama_swap_version }}"
+llama_swap_archive_name: "llama-swap_{{ llama_swap_version }}_linux_amd64.tar.gz"
+llama_swap_archive_url: >-
+  https://github.com/mostlygeek/llama-swap/releases/download/{{ llama_swap_tag }}/{{ llama_swap_archive_name }}
+llama_swap_archive_checksum: "sha256:7cd132f1e232f203db7d90e8bf62f341213587d38b6dab47d875ec68220c127c"
+
+llama_swap_install_dir: /opt/llama-swap
+llama_swap_release_dir: "{{ llama_swap_install_dir }}/releases/{{ llama_swap_tag }}"
+llama_swap_archive_path: "{{ llama_swap_install_dir }}/{{ llama_swap_archive_name }}"
+llama_swap_bin_path: /usr/local/bin/llama-swap
+llama_swap_config_dir: /etc/llama-swap
+llama_swap_config_path: "{{ llama_swap_config_dir }}/config.yaml"
+llama_swap_state_dir: /var/lib/llama-swap
+llama_swap_service_name: llama-swap
+
+llama_swap_listen: "0.0.0.0:8080"
+llama_swap_health_check_timeout: 500
+llama_swap_log_level: info
+llama_swap_log_to_stdout: proxy
+llama_swap_start_port: 10001
+llama_swap_global_ttl: 0
+
+llama_swap_models_dir: /opt/ai/models
+llama_swap_default_context_size: 8192
+llama_swap_default_gpu_layers: 999
+llama_swap_default_flash_attention: true
+llama_swap_default_no_mmap: true
+llama_swap_default_extra_args: []

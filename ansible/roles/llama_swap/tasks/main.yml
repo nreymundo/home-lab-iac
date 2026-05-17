@@ -1,0 +1,119 @@
+---
+- name: Ensure llama-swap supports this OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_system == 'Linux'
+    fail_msg: "llama_swap currently supports Linux containers only"
+
+- name: Ensure llama-swap directories exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - path: "{{ llama_swap_install_dir }}"
+      mode: "0755"
+    - path: "{{ llama_swap_release_dir }}"
+      mode: "0755"
+    - path: "{{ llama_swap_config_dir }}"
+      mode: "0755"
+    - path: "{{ llama_swap_state_dir }}"
+      mode: "0755"
+
+- name: Download llama-swap release archive
+  ansible.builtin.get_url:
+    url: "{{ llama_swap_archive_url }}"
+    dest: "{{ llama_swap_archive_path }}"
+    checksum: "{{ llama_swap_archive_checksum }}"
+    owner: root
+    group: root
+    mode: "0644"
+  register: llama_swap_archive
+
+- name: Extract llama-swap release archive
+  ansible.builtin.unarchive:
+    src: "{{ llama_swap_archive_path }}"
+    dest: "{{ llama_swap_release_dir }}"
+    remote_src: true
+    owner: root
+    group: root
+    creates: "{{ llama_swap_release_dir }}/llama-swap"
+
+- name: Install llama-swap binary
+  ansible.builtin.copy:
+    src: "{{ llama_swap_release_dir }}/llama-swap"
+    dest: "{{ llama_swap_bin_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: true
+  notify: Restart llama-swap
+
+- name: Check llama-swap config
+  ansible.builtin.stat:
+    path: "{{ llama_swap_config_path }}"
+  register: llama_swap_config_stat
+
+- name: Find GGUF models for initial llama-swap config
+  ansible.builtin.find:
+    paths: "{{ llama_swap_models_dir }}"
+    patterns: "*.gguf"
+    recurse: true
+    file_type: file
+  register: llama_swap_discovered_models
+  when: not llama_swap_config_stat.stat.exists
+
+- name: Assert initial llama-swap config has models
+  ansible.builtin.assert:
+    that:
+      - llama_swap_discovered_models.files | length > 0
+    fail_msg: "No GGUF models found under {{ llama_swap_models_dir }} for initial llama-swap config"
+  when: not llama_swap_config_stat.stat.exists
+
+- name: Create initial llama-swap config
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ llama_swap_config_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+    force: false
+  notify: Restart llama-swap
+  when: not llama_swap_config_stat.stat.exists
+
+- name: Install llama-swap systemd unit
+  ansible.builtin.template:
+    src: llama-swap.service.j2
+    dest: "/etc/systemd/system/{{ llama_swap_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart llama-swap
+
+- name: Flush llama-swap handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Manage llama-swap service
+  ansible.builtin.service:
+    name: "{{ llama_swap_service_name }}"
+    enabled: "{{ llama_swap_enabled | bool }}"
+    state: "{{ 'started' if llama_swap_enabled | bool else 'stopped' }}"
+
+- name: Validate llama-swap health endpoint
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ llama_swap_listen.split(':')[-1] }}/health"
+    return_content: true
+    status_code: 200
+  register: llama_swap_health
+  when: llama_swap_enabled | bool
+
+- name: Assert llama-swap health response
+  ansible.builtin.assert:
+    that:
+      - llama_swap_health.content == 'OK'
+    fail_msg: "llama-swap health endpoint did not return OK"
+  when: llama_swap_enabled | bool
