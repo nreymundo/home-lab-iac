@@ -1,0 +1,13 @@
+---
+lxc_hardening_user: "{{ ansible_user | default('root') }}"
+lxc_hardening_authorized_keys:
+
+lxc_hardening_sshd_settings:
+  PermitRootLogin: "prohibit-password"
+  PasswordAuthentication: "no"
+  KbdInteractiveAuthentication: "no"
+  ChallengeResponseAuthentication: "no"
+  X11Forwarding: "no"
+
+lxc_hardening_lock_root_password: true
+lxc_hardening_enable_root_hushlogin: true

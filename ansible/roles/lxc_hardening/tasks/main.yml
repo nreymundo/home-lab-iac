@@ -1,0 +1,63 @@
+---
+- name: Ensure LXC hardening supports this OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family in ['Debian', 'RedHat']
+    fail_msg: "lxc_hardening supports Debian/Ubuntu and Fedora/RedHat containers"
+
+- name: Resolve LXC hardening inputs
+  ansible.builtin.set_fact:
+    lxc_hardening_authorized_keys_effective: >-
+      {{
+        lxc_hardening_authorized_keys
+        if lxc_hardening_authorized_keys is not none
+        else (ssh_hardening_authorized_keys | default([]))
+      }}
+
+- name: Apply LXC SSH hardening
+  ansible.builtin.include_role:
+    name: ssh_hardening
+  vars:
+    ssh_hardening_user: "{{ lxc_hardening_user }}"
+    ssh_hardening_authorized_keys: "{{ lxc_hardening_authorized_keys_effective }}"
+    ssh_hardening_enable_hushlogin: false
+    ssh_hardening_sshd_settings: "{{ lxc_hardening_sshd_settings }}"
+
+- name: Find sshd config snippets
+  ansible.builtin.find:
+    paths: /etc/ssh/sshd_config.d
+    patterns: "*.conf"
+    file_type: file
+  register: lxc_hardening_sshd_config_snippets
+  failed_when: false
+
+- name: Normalize active sshd hardening settings in config snippets
+  ansible.builtin.replace:
+    path: "{{ item.0.path }}"
+    regexp: "^\\s*{{ item.1.key }}\\s+.*$"
+    replace: "{{ item.1.key }} {{ item.1.value }}"
+    validate: "/usr/sbin/sshd -t -f %s"
+  loop: "{{ lxc_hardening_sshd_config_snippets.files | default([]) | product(lxc_hardening_sshd_settings | dict2items) | list }}"
+  loop_control:
+    label: "{{ item.0.path }} {{ item.1.key }}"
+  notify: Restart sshd
+
+- name: Refresh sshd after snippet normalization
+  ansible.builtin.meta: flush_handlers
+
+- name: Lock root password
+  ansible.builtin.user:
+    name: root
+    password_lock: true
+  when: lxc_hardening_lock_root_password | bool
+
+- name: Ensure root hushlogin exists
+  ansible.builtin.file:
+    path: /root/.hushlogin
+    state: touch
+    owner: root
+    group: root
+    mode: "0644"
+    access_time: preserve
+    modification_time: preserve
+  when: lxc_hardening_enable_root_hushlogin | bool

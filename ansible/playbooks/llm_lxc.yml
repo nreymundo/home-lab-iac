@@ -1,0 +1,6 @@
+---
+- name: Provision LLM LXC containers
+  hosts: llm_lxc
+  become: true
+  roles:
+    - lxc_hardening
