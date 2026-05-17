@@ -57,6 +57,7 @@
   loop: "{{ proxmox_zfs_thin_pools }}"
   register: proxmox_zfs_postcheck
   changed_when: false
+  check_mode: false
   when: proxmox_datasets_to_fix_exist
 
 - name: Post-check report

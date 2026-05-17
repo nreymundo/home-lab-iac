@@ -1,9 +1,4 @@
 ---
-# Override ZFS pools managed by thin provisioning for this Proxmox host.
-# By default, proxmox role audits and fixes ['ssd-zfs'].
-proxmox_zfs_thin_pools:
-  - ssd-zfs
-
 proxmox_kernel_params_add:
   - "intel_iommu=on"
   - "iommu=pt"
@@ -14,6 +9,16 @@ proxmox_kernel_params_add:
 proxmox_kernel_params_remove:
   - "i915.enable_gvt=1"
   - "intel_iommu=on,igfx_off"
+
+proxmox_power_tuning_enabled: true
+proxmox_power_tuning_start_now: true
+proxmox_power_cpu_governor: powersave
+proxmox_power_cpu_epp: balance_power
+proxmox_power_cpu_boost: false
+proxmox_power_powertop_auto_tune: false
+proxmox_power_tuning_units_to_remove:
+  - disable-turbo.service
+  - powertop.service
 
 # GPU Passthrough - Intel UHD Graphics 630 (Comet Lake)
 proxmox_gpu_passthrough:

@@ -1,14 +1,44 @@
 ---
 
 - name: Manage Proxmox kernel parameters
-  ansible.builtin.include_tasks: bootloader_kernel_params.yml
+  ansible.builtin.include_tasks:
+    file: bootloader_kernel_params.yml
+    apply:
+      tags:
+        - kernel
+  tags:
+    - kernel
 
 - name: Manage GPU passthrough
-  ansible.builtin.include_tasks: gpu_passthrough.yml
+  ansible.builtin.include_tasks:
+    file: gpu_passthrough.yml
+    apply:
+      tags:
+        - gpu_passthrough
+  tags:
+    - gpu_passthrough
 
 - name: Configure swap
-  ansible.builtin.include_tasks: swap.yml
+  ansible.builtin.include_tasks:
+    file: swap.yml
+    apply:
+      tags:
+        - storage
+        - swap
+  tags:
+    - storage
+    - swap
 
+- name: Manage power tuning
+  ansible.builtin.include_tasks:
+    file: power_saving.yml
+    apply:
+      tags:
+        - power
+        - power_tuning
+  tags:
+    - power
+    - power_tuning
 
 - name: Manage Proxmox module blacklist
   ansible.builtin.template:
@@ -19,6 +49,8 @@
     mode: "0644"
   when: proxmox_modprobe_blacklist | default([]) | length > 0
   notify: Update initramfs
+  tags:
+    - kernel
 
 - name: Remove Proxmox module blacklist file when empty
   ansible.builtin.file:
@@ -26,6 +58,8 @@
     state: absent
   when: proxmox_modprobe_blacklist | default([]) | length == 0
   notify: Update initramfs
+  tags:
+    - kernel
 
 - name: Manage Proxmox module options
   ansible.builtin.template:
@@ -36,6 +70,8 @@
     mode: "0644"
   when: proxmox_modprobe_options | default([]) | length > 0
   notify: Update initramfs
+  tags:
+    - kernel
 
 - name: Remove Proxmox module options file when empty
   ansible.builtin.file:
@@ -43,20 +79,52 @@
     state: absent
   when: proxmox_modprobe_options | default([]) | length == 0
   notify: Update initramfs
+  tags:
+    - kernel
 
 - name: Include Proxmox ZFS thin provisioning audit
-  ansible.builtin.include_tasks: zfs_thin_audit.yml
+  ansible.builtin.include_tasks:
+    file: zfs_thin_audit.yml
+    apply:
+      tags:
+        - storage
+        - zfs
   when: proxmox_zfs_thin_enforce | default(false) | bool or proxmox_zfs_thin_audit | default(true) | bool
+  tags:
+    - storage
+    - zfs
 
 - name: Include Proxmox ZFS thin provisioning fix
-  ansible.builtin.include_tasks: zfs_thin_fix.yml
+  ansible.builtin.include_tasks:
+    file: zfs_thin_fix.yml
+    apply:
+      tags:
+        - storage
+        - zfs
   when: proxmox_zfs_thin_enforce | default(false) | bool
+  tags:
+    - storage
+    - zfs
 
 - name: Configure ZFS ARC cache limits
-  ansible.builtin.include_tasks: zfs_arc.yml
+  ansible.builtin.include_tasks:
+    file: zfs_arc.yml
+    apply:
+      tags:
+        - storage
+        - zfs
+  tags:
+    - storage
+    - zfs
 
 - name: CoreFreq (DKMS)
-  ansible.builtin.include_tasks: corefreq.yml
+  ansible.builtin.include_tasks:
+    file: corefreq.yml
+    apply:
+      tags:
+        - corefreq
+  tags:
+    - corefreq
 
 - name: Set root .profile
   ansible.builtin.template:
@@ -65,6 +133,8 @@
     owner: root
     group: root
     mode: "0644"
+  tags:
+    - shell
 
 - name: Set root .bashrc
   ansible.builtin.template:
@@ -73,6 +143,8 @@
     owner: root
     group: root
     mode: "0644"
+  tags:
+    - shell
 
 - name: Ensure root .hushlogin exists
   ansible.builtin.file:
@@ -83,3 +155,5 @@
     mode: "0644"
     access_time: preserve
     modification_time: preserve
+  tags:
+    - shell

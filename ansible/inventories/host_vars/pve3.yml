@@ -4,11 +4,14 @@ common_extra_packages:
   - mesa-vulkan-drivers
   - mesa-utils
 
-# Override ZFS pools managed by thin provisioning for this Proxmox host.
-# By default, proxmox role audits and fixes ['ssd-zfs'].
-proxmox_zfs_thin_pools:
-  - ssd-zfs
-
 proxmox_kernel_params_add:
   - "ttm.pages_limit=28311552"
   - "ttm.page_pool_size=28311552"
+
+proxmox_power_tuning_enabled: true
+proxmox_power_cpu_governor: powersave
+proxmox_power_cpu_epp: balance_power
+proxmox_power_powertop_auto_tune: true
+proxmox_power_tuning_cron_entries_to_remove:
+  - "@reboot /usr/bin/cpupower frequency-set -g powersave"
+  - "@reboot /usr/sbin/powertop --auto-tune"

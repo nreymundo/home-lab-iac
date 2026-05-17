@@ -29,9 +29,7 @@
       ansible.builtin.file:
         path: "/usr/src/corefreqk-{{ item }}"
         state: absent
-      loop:
-        - "2.00"
-        - "2.01"
+      loop: "{{ proxmox_corefreq_cleanup_versions }}"
       failed_when: false
 
     - name: CoreFreq | Remove module load config
@@ -142,25 +140,13 @@
         state: present
       when: (proxmox_corefreqk_module_files.matched | default(0)) > 0
 
-    # Ensure systemd unit exists (pve1 may not have it even if binaries are installed)
     - name: CoreFreq | Install systemd unit
-      ansible.builtin.copy:
+      ansible.builtin.template:
+        src: corefreqd.service.j2
         dest: /usr/lib/systemd/system/corefreqd.service
+        owner: root
+        group: root
         mode: "0644"
-        content: |
-          [Unit]
-          Description=CoreFreq Daemon
-
-          [Service]
-          Type=simple
-          ExecStart=/usr/bin/corefreqd -q
-          ExecStop=/bin/kill -QUIT $MAINPID
-          RemainAfterExit=no
-          SuccessExitStatus=SIGQUIT SIGUSR1 SIGTERM
-          Slice=-.slice
-
-          [Install]
-          WantedBy=multi-user.target
       notify: Reload systemd daemon
 
     - name: CoreFreq | Check systemd unit presence
