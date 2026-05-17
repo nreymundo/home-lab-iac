@@ -12,3 +12,11 @@ proxmox_zfs_thin_pools:
 proxmox_kernel_params_add:
   - "ttm.pages_limit=28311552"
   - "ttm.page_pool_size=28311552"
+
+proxmox_power_tuning_enabled: true
+proxmox_power_cpu_governor: powersave
+proxmox_power_cpu_epp: balance_power
+proxmox_power_powertop_auto_tune: true
+proxmox_power_tuning_legacy_cron_jobs:
+  - "@reboot /usr/bin/cpupower frequency-set -g powersave"
+  - "@reboot /usr/sbin/powertop --auto-tune"

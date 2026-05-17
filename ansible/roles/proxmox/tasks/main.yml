@@ -9,6 +9,14 @@
 - name: Configure swap
   ansible.builtin.include_tasks: swap.yml
 
+- name: Manage power tuning
+  ansible.builtin.include_tasks:
+    file: power_saving.yml
+    apply:
+      tags: power_tuning
+  tags:
+    - power_tuning
+
 
 - name: Manage Proxmox module blacklist
   ansible.builtin.template:

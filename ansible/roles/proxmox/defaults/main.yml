@@ -36,3 +36,13 @@ proxmox_corefreq_modprobe_options: >-
   Register_Governor=1
   Register_CPU_Idle=1
   Override_SubCstate="1,1,1,1,1,1,0,0"
+
+# --- Power tuning ---
+proxmox_power_tuning_enabled: false
+proxmox_power_tuning_start_now: false
+proxmox_power_cpu_governor: ""
+proxmox_power_cpu_epp: ""
+proxmox_power_powertop_auto_tune: false
+proxmox_power_tuning_extra_commands: []
+proxmox_power_tuning_remove_legacy_cron: true
+proxmox_power_tuning_legacy_cron_jobs: []

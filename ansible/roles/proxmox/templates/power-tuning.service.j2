@@ -1,0 +1,22 @@
+[Unit]
+Description=Proxmox power tuning
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+{% if proxmox_power_cpu_governor | length > 0 %}
+ExecStart=/bin/sh -c 'for p in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do [ -w "$p" ] && echo "{{ proxmox_power_cpu_governor }}" > "$p"; done'
+{% endif %}
+{% if proxmox_power_cpu_epp | length > 0 %}
+ExecStart=/bin/sh -c 'for p in /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference; do [ -w "$p" ] && echo "{{ proxmox_power_cpu_epp }}" > "$p"; done'
+{% endif %}
+{% if proxmox_power_powertop_auto_tune | bool %}
+ExecStart=/usr/sbin/powertop --auto-tune
+{% endif %}
+{% for command in proxmox_power_tuning_extra_commands %}
+ExecStart={{ command }}
+{% endfor %}
+
+[Install]
+WantedBy=multi-user.target
