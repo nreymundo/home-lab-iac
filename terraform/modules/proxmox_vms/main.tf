@@ -64,7 +64,6 @@ resource "proxmox_vm_qemu" "this" {
         disk {
           storage    = local.normalized_vms[count.index].storage_pool
           size       = local.normalized_vms[count.index].vm_disk_size_gb
-          cache      = "writeback"
           iothread   = true
           discard    = true
           emulatessd = true
@@ -77,7 +76,6 @@ resource "proxmox_vm_qemu" "this" {
           disk {
             storage    = local.normalized_vms[count.index].secondary_disk_storage_pool
             size       = "${local.normalized_vms[count.index].secondary_disk_size_gb}G"
-            cache      = "writeback"
             iothread   = true
             discard    = true
             emulatessd = true
