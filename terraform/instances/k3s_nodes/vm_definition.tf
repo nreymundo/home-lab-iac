@@ -35,6 +35,9 @@ locals {
       {
         ci_user     = "ubuntu"
         target_node = "pve3"
+        labels = {
+          "homelab.lan/cpu-vendor" = "amd"
+        }
       }
     ]
   }
