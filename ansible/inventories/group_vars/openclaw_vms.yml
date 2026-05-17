@@ -18,3 +18,7 @@ ufw_inbound_rules:
     proto: tcp
     from_ip: 192.168.10.51
     comment: Allow OpenClaw dashboard from k3s-node-02 Traefik source
+  - port: 18789
+    proto: tcp
+    from_ip: 192.168.10.52
+    comment: Allow OpenClaw dashboard from k3s-node-03 Traefik source
