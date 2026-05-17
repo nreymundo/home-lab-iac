@@ -38,7 +38,7 @@
       failed_when: proxmox_power_tuning_root_crontab.rc not in [0, 1]
       when:
         - proxmox_power_tuning_remove_legacy_cron | bool
-        - proxmox_power_tuning_legacy_cron_jobs | length > 0
+        - proxmox_power_tuning_cron_entries_to_remove | length > 0
 
     - name: Power tuning | Remove legacy root crontab entries
       ansible.builtin.shell: |
@@ -46,7 +46,7 @@
         crontab -l | grep -v -Fx {{ item | quote }} | crontab -
       args:
         executable: /bin/bash
-      loop: "{{ proxmox_power_tuning_legacy_cron_jobs }}"
+      loop: "{{ proxmox_power_tuning_cron_entries_to_remove }}"
       changed_when: true
       when:
         - proxmox_power_tuning_remove_legacy_cron | bool

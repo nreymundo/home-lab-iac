@@ -1,28 +1,27 @@
 ---
 - name: Verify required ZFS CLI tools exist
   ansible.builtin.command: "{{ item }}"
-  args:
-    executable: /bin/bash
   loop:
     - zfs
     - zpool
   register: proxmox_zfs_cli_check
   changed_when: false
+  check_mode: false
   failed_when: "'command not found' in proxmox_zfs_cli_check.stderr"
 
 - name: Verify all configured pools exist
   ansible.builtin.command: zpool list -H -o name "{{ item }}"
-  args:
-    executable: /bin/bash
   loop: "{{ proxmox_zfs_thin_pools }}"
   register: proxmox_zfs_pool_exists
   changed_when: false
+  check_mode: false
   failed_when: "'No such pool' in proxmox_zfs_pool_exists.stderr"
 
 - name: Show ZFS version for troubleshooting
   ansible.builtin.command: zfs version
   register: proxmox_zfs_version
   changed_when: false
+  check_mode: false
 
 - name: Show ZFS version output
   ansible.builtin.debug:
@@ -30,19 +29,17 @@
 
 - name: Collect pool health for all managed pools
   ansible.builtin.command: zpool list -H -o name,health "{{ item }}"
-  args:
-    executable: /bin/bash
   loop: "{{ proxmox_zfs_thin_pools }}"
   register: proxmox_zfs_pool_health
   changed_when: false
+  check_mode: false
 
 - name: Collect pool capacity for all managed pools (informational)
   ansible.builtin.command: zpool list -H -o name,cap "{{ item }}"
-  args:
-    executable: /bin/bash
   loop: "{{ proxmox_zfs_thin_pools }}"
   register: proxmox_zfs_pool_capacity
   changed_when: false
+  check_mode: false
 
 - name: Report pool status summary
   ansible.builtin.debug:
@@ -66,6 +63,7 @@
   loop: "{{ proxmox_zfs_thin_pools }}"
   register: proxmox_zfs_refreservation_findings
   changed_when: false
+  check_mode: false
 
 - name: Build consolidated findings list
   ansible.builtin.set_fact:

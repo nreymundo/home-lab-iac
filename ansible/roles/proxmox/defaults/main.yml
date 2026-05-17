@@ -18,6 +18,12 @@ proxmox_zfs_thin_pools:
 proxmox_zfs_thin_enforce: false
 proxmox_zfs_thin_audit: true
 
+# --- Swap ---
+proxmox_swapfile_path: /swapfile
+proxmox_swapfile_size: 16G
+proxmox_swapfile_size_bytes: 17179869184
+proxmox_swappiness: 10
+
 # --- ZFS ARC ---
 proxmox_zfs_arc_min_bytes: 1073741824  # 1 GiB
 proxmox_zfs_arc_max_bytes: 4294967296  # 4 GiB
@@ -26,6 +32,9 @@ proxmox_zfs_arc_max_bytes: 4294967296  # 4 GiB
 proxmox_corefreq_enabled: false
 
 proxmox_corefreq_version: "2.00"
+proxmox_corefreq_cleanup_versions:
+  - "2.00"
+  - "2.01"
 proxmox_corefreq_git_repo: "https://github.com/cyring/CoreFreq.git"
 proxmox_corefreq_git_ref: "master"
 
@@ -42,7 +51,11 @@ proxmox_power_tuning_enabled: false
 proxmox_power_tuning_start_now: false
 proxmox_power_cpu_governor: ""
 proxmox_power_cpu_epp: ""
+proxmox_power_cpu_boost: true
 proxmox_power_powertop_auto_tune: false
 proxmox_power_tuning_extra_commands: []
 proxmox_power_tuning_remove_legacy_cron: true
-proxmox_power_tuning_legacy_cron_jobs: []
+proxmox_power_tuning_cron_entries_to_remove: []
+
+# --- GPU passthrough ---
+proxmox_gpu_passthrough_cleanup: true

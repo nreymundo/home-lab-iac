@@ -9,6 +9,8 @@ common_run_upgrade: true
 # Disable fstrim timer on Proxmox hosts (storage-specific).
 common_enable_fstrim: false
 
+proxmox_zfs_thin_enforce: true
+
 common_packages:
   - htop
   - iftop
@@ -18,7 +20,6 @@ common_packages:
   - starship
   - vim
   - git
-  - linux-cpupower
   - powertop
 
 # Allow root login with keys for Proxmox, but disable passwords.
