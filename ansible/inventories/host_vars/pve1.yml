@@ -1,9 +1,4 @@
 ---
-# Override ZFS pools managed by thin provisioning for this Proxmox host.
-# By default, proxmox role audits and fixes ['ssd-zfs'].
-proxmox_zfs_thin_pools:
-  - ssd-zfs
-
 proxmox_kernel_params_add:
   - "intel_idle.max_cstate=10"
   - "processor.max_cstate=10"
@@ -13,6 +8,15 @@ proxmox_kernel_params_add:
   - "video=vesafb:off"
 proxmox_kernel_params_remove:
   - "i915.enable_gvt=1"
+
+proxmox_power_tuning_enabled: true
+proxmox_power_cpu_governor: powersave
+proxmox_power_cpu_epp: balance_power
+proxmox_power_cpu_boost: false
+proxmox_power_powertop_auto_tune: true
+proxmox_power_tuning_cron_entries_to_remove:
+  - "@reboot /usr/bin/cpupower frequency-set -g powersave"
+  - "@reboot /usr/sbin/powertop --auto-tune"
 
 # GPU Passthrough - Intel Iris Xe (Tiger Lake)
 proxmox_gpu_passthrough:

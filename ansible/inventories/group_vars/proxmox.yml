@@ -9,6 +9,8 @@ common_run_upgrade: true
 # Disable fstrim timer on Proxmox hosts (storage-specific).
 common_enable_fstrim: false
 
+proxmox_zfs_thin_enforce: true
+
 common_packages:
   - htop
   - iftop

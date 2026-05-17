@@ -1,0 +1,73 @@
+---
+- name: Power tuning | Manage service
+  when: proxmox_power_tuning_enabled | bool
+  block:
+    - name: Power tuning | Validate requested CPU governor
+      ansible.builtin.assert:
+        that:
+          - proxmox_power_cpu_governor in ["", "conservative", "ondemand", "userspace", "powersave", "performance", "schedutil"]
+        fail_msg: "Unsupported CPU governor '{{ proxmox_power_cpu_governor }}'."
+
+    - name: Power tuning | Validate requested CPU EPP
+      ansible.builtin.assert:
+        that:
+          - proxmox_power_cpu_epp in ["", "default", "performance", "balance_performance", "balance_power", "power"]
+        fail_msg: "Unsupported CPU EPP '{{ proxmox_power_cpu_epp }}'."
+
+    - name: Power tuning | Stop and disable legacy units
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: false
+        state: stopped
+      loop: "{{ proxmox_power_tuning_units_to_remove }}"
+      failed_when: false
+      when:
+        - not ansible_check_mode
+        - proxmox_power_tuning_units_to_remove | length > 0
+
+    - name: Power tuning | Remove legacy unit files
+      ansible.builtin.file:
+        path: "/etc/systemd/system/{{ item }}"
+        state: absent
+      loop: "{{ proxmox_power_tuning_units_to_remove }}"
+      notify: Reload systemd daemon
+      when: proxmox_power_tuning_units_to_remove | length > 0
+
+    - name: Power tuning | Install systemd unit
+      ansible.builtin.template:
+        src: power-tuning.service.j2
+        dest: /etc/systemd/system/proxmox-power-tuning.service
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload systemd daemon
+
+    - name: Power tuning | Enable systemd unit
+      ansible.builtin.systemd:
+        name: proxmox-power-tuning.service
+        enabled: true
+        state: "{{ 'started' if proxmox_power_tuning_start_now | bool else omit }}"
+        daemon_reload: true
+      when: not ansible_check_mode
+
+    - name: Power tuning | Read root crontab
+      ansible.builtin.command: crontab -l
+      register: proxmox_power_tuning_root_crontab
+      changed_when: false
+      failed_when: proxmox_power_tuning_root_crontab.rc not in [0, 1]
+      when:
+        - proxmox_power_tuning_remove_legacy_cron | bool
+        - proxmox_power_tuning_cron_entries_to_remove | length > 0
+
+    - name: Power tuning | Remove legacy root crontab entries
+      ansible.builtin.shell: |
+        set -o pipefail
+        (crontab -l | grep -v -Fx {{ item | quote }} || true) | crontab -
+      args:
+        executable: /bin/bash
+      loop: "{{ proxmox_power_tuning_cron_entries_to_remove }}"
+      changed_when: true
+      when:
+        - proxmox_power_tuning_remove_legacy_cron | bool
+        - proxmox_power_tuning_root_crontab.rc == 0
+        - item in proxmox_power_tuning_root_crontab.stdout_lines

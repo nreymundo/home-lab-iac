@@ -1,13 +1,14 @@
 ---
 - name: Check if swapfile exists
   ansible.builtin.stat:
-    path: /swapfile
+    path: "{{ proxmox_swapfile_path }}"
   register: proxmox_swapfile_stat
 
 - name: Check swapfile attributes
-  ansible.builtin.command: lsattr /swapfile
+  ansible.builtin.command: "lsattr {{ proxmox_swapfile_path }}"
   register: proxmox_swapfile_attributes
   changed_when: false
+  check_mode: false
   when: proxmox_swapfile_stat.stat.exists
 
 - name: Determine if swapfile needs recreation
@@ -15,21 +16,25 @@
     proxmox_recreate_swapfile: >-
       {{
         not proxmox_swapfile_stat.stat.exists or
-        proxmox_swapfile_stat.stat.size | int != 17179869184 or
-        'C' not in proxmox_swapfile_attributes.stdout.split(' ')[1]
+        proxmox_swapfile_stat.stat.size | int != proxmox_swapfile_size_bytes | int or
+        'C' not in proxmox_swapfile_attr_flags
       }}
+  vars:
+    proxmox_swapfile_attr_flags: >-
+      {{ proxmox_swapfile_attributes.stdout.split()[0]
+         if proxmox_swapfile_attributes.stdout is defined else '' }}
 
 - name: Remove invalid swapfile
   when: proxmox_recreate_swapfile
   block:
     - name: Disable swap
-      ansible.builtin.command: swapoff /swapfile
+      ansible.builtin.command: "swapoff {{ proxmox_swapfile_path }}"
       failed_when: false
       changed_when: false
 
     - name: Remove swapfile
       ansible.builtin.file:
-        path: /swapfile
+        path: "{{ proxmox_swapfile_path }}"
         state: absent
 
 - name: Create BTRFS-compatible swapfile
@@ -37,26 +42,26 @@
   block:
     - name: Create empty swapfile
       ansible.builtin.file:
-        path: /swapfile
+        path: "{{ proxmox_swapfile_path }}"
         state: touch
         mode: '0600'
         owner: root
         group: root
 
     - name: Set NoCOW attribute
-      ansible.builtin.command: chattr +C /swapfile
+      ansible.builtin.command: "chattr +C {{ proxmox_swapfile_path }}"
       changed_when: false
 
-    - name: Allocate 16G to swapfile
-      ansible.builtin.command: fallocate -l 16G /swapfile
+    - name: Allocate swapfile
+      ansible.builtin.command: "fallocate -l {{ proxmox_swapfile_size }} {{ proxmox_swapfile_path }}"
       changed_when: false
 
     - name: Format swapfile
-      ansible.builtin.command: mkswap /swapfile
+      ansible.builtin.command: "mkswap {{ proxmox_swapfile_path }}"
       changed_when: false
 
 - name: Enable swap
-  ansible.builtin.command: swapon /swapfile
+  ansible.builtin.command: "swapon {{ proxmox_swapfile_path }}"
   changed_when: false
   failed_when: false
   when: proxmox_recreate_swapfile
@@ -64,14 +69,14 @@
 - name: Ensure swap is enabled and persists
   ansible.posix.mount:
     path: none
-    src: /swapfile
+    src: "{{ proxmox_swapfile_path }}"
     fstype: swap
     opts: sw
     state: present
 
 - name: Configure vm.swappiness
   ansible.builtin.copy:
-    content: "vm.swappiness=10\n"
+    content: "vm.swappiness={{ proxmox_swappiness }}\n"
     dest: /etc/sysctl.d/99-swappiness.conf
     owner: root
     group: root
