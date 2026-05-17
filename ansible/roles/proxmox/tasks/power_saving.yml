@@ -14,6 +14,25 @@
           - proxmox_power_cpu_epp in ["", "default", "performance", "balance_performance", "balance_power", "power"]
         fail_msg: "Unsupported CPU EPP '{{ proxmox_power_cpu_epp }}'."
 
+    - name: Power tuning | Stop and disable legacy units
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: false
+        state: stopped
+      loop: "{{ proxmox_power_tuning_units_to_remove }}"
+      failed_when: false
+      when:
+        - not ansible_check_mode
+        - proxmox_power_tuning_units_to_remove | length > 0
+
+    - name: Power tuning | Remove legacy unit files
+      ansible.builtin.file:
+        path: "/etc/systemd/system/{{ item }}"
+        state: absent
+      loop: "{{ proxmox_power_tuning_units_to_remove }}"
+      notify: Reload systemd daemon
+      when: proxmox_power_tuning_units_to_remove | length > 0
+
     - name: Power tuning | Install systemd unit
       ansible.builtin.template:
         src: power-tuning.service.j2

@@ -54,6 +54,7 @@ proxmox_power_cpu_epp: ""
 proxmox_power_cpu_boost: true
 proxmox_power_powertop_auto_tune: false
 proxmox_power_tuning_extra_commands: []
+proxmox_power_tuning_units_to_remove: []
 proxmox_power_tuning_remove_legacy_cron: true
 proxmox_power_tuning_cron_entries_to_remove: []
 
