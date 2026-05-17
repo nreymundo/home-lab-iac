@@ -1,4 +1,9 @@
 ---
+common_extra_packages:
+  - vulkan-tools
+  - mesa-vulkan-drivers
+  - mesa-utils
+
 # Override ZFS pools managed by thin provisioning for this Proxmox host.
 # By default, proxmox role audits and fixes ['ssd-zfs'].
 proxmox_zfs_thin_pools:
