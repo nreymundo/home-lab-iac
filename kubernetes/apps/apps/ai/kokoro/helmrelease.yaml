@@ -19,7 +19,7 @@ spec:
             image:
               # renovate: datasource=docker depName=remsky/kokoro-fastapi-cpu registryUrl=https://ghcr.io
               repository: ghcr.io/remsky/kokoro-fastapi-cpu
-              tag: v0.2.4
+              tag: v0.3.0
             env:
               TZ: Europe/Berlin
               MODEL_DIR: /data/models
