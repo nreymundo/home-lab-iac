@@ -73,6 +73,8 @@
       - unattended-upgrades
       - apt-listchanges
     state: present
+    update_cache: true
+    cache_valid_time: 3600
   when: common_enable_unattended_upgrades | bool
 
 - name: Configure unattended-upgrades origins and blacklist
