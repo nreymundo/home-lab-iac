@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=athennamind/opnsense-exporter registryUrl=https://ghcr.io
               repository: ghcr.io/athennamind/opnsense-exporter
-              tag: 0.0.14
+              tag: 0.0.15
             args:
               - --opnsense.protocol=http
               - --opnsense.address=192.168.10.1
