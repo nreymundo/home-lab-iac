@@ -119,7 +119,8 @@ The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` 
 | Directory | Purpose | Notes |
 |-----------|---------|-------|
 | `packer/<distro>-<version>-base/` | VM template definitions | One folder per template |
-| `terraform/instances/<instance>/` | Terraform instance roots | Concrete deployments using shared modules |
+| `terraform/instances/vm/<instance>/` | Terraform VM instance roots | Concrete VM deployments using shared modules |
+| `terraform/instances/lxc/<instance>/` | Terraform LXC instance roots | Concrete container deployments using shared modules |
 | `ansible/roles/<role>/` | Reusable Ansible roles | Standard role structure |
 | `kubernetes/apps/apps/<category>/<app>/` | Application deployments | HelmRelease + kustomization |
 | `kubernetes/infrastructure/<category>/` | Cluster infrastructure | Core services |
@@ -138,10 +139,10 @@ packer validate packer/fedora-43-server
 ### Terraform
 
 ```bash
-terraform -chdir=terraform/instances/k3s_nodes validate
-terraform -chdir=terraform/instances/k3s_nodes plan
-terraform -chdir=terraform/instances/openclaw validate
-terraform -chdir=terraform/instances/openclaw plan
+terraform -chdir=terraform/instances/vm/k3s_nodes validate
+terraform -chdir=terraform/instances/vm/k3s_nodes plan
+terraform -chdir=terraform/instances/vm/openclaw validate
+terraform -chdir=terraform/instances/vm/openclaw plan
 ```
 
 ### Ansible

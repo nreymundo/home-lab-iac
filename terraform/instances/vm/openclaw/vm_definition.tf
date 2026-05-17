@@ -1,7 +1,7 @@
 locals {
   openclaw = {
     vm_name         = "vm-openclaw"
-    target_node     = "pve1"
+    target_node     = "pve2"
     vmid            = 104
     ip_address      = "192.168.10.12"
     ci_user         = "openclaw"

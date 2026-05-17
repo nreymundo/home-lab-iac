@@ -20,12 +20,12 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 
 ## Validation
 ```bash
-terraform -chdir=terraform/instances/k3s_nodes fmt
-terraform -chdir=terraform/instances/k3s_nodes validate
-terraform -chdir=terraform/instances/k3s_nodes plan
-terraform -chdir=terraform/instances/openclaw fmt
-terraform -chdir=terraform/instances/openclaw validate
-terraform -chdir=terraform/instances/openclaw plan
+terraform -chdir=terraform/instances/vm/k3s_nodes fmt
+terraform -chdir=terraform/instances/vm/k3s_nodes validate
+terraform -chdir=terraform/instances/vm/k3s_nodes plan
+terraform -chdir=terraform/instances/vm/openclaw fmt
+terraform -chdir=terraform/instances/vm/openclaw validate
+terraform -chdir=terraform/instances/vm/openclaw plan
 ```
 
 - Treat those commands as representative root-module examples, not an exhaustive list of every Terraform root in the repo.

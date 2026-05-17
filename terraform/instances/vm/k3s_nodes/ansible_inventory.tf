@@ -1,5 +1,5 @@
 resource "local_file" "ansible_inventory" {
-  filename = abspath("${path.module}/../../../ansible/inventories/k3s-nodes.yml")
+  filename = abspath("${path.module}/../../../../ansible/inventories/k3s-nodes.yml")
 
   lifecycle {
     precondition {

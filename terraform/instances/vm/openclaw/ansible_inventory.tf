@@ -1,5 +1,5 @@
 resource "local_file" "ansible_inventory" {
-  filename = abspath("${path.module}/../../../ansible/inventories/openclaw.yml")
+  filename = abspath("${path.module}/../../../../ansible/inventories/openclaw.yml")
 
   content = templatefile("${path.module}/templates/inventory.yaml.tpl", {
     name         = module.proxmox_vms.vms[0].name
