@@ -1,0 +1,11 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source = "bpg/proxmox"
+    }
+    bitwarden-secrets = {
+      source  = "bitwarden/bitwarden-secrets"
+      version = "0.5.4-pre"
+    }
+  }
+}
