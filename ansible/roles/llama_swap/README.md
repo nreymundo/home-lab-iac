@@ -11,6 +11,7 @@ Important parameters:
 - `llama_swap_version`
 - `llama_swap_archive_url`
 - `llama_swap_archive_checksum`
+- `llama_swap_environment`
 - `llama_swap_listen`
 - `llama_swap_start_port`
 - `llama_swap_global_ttl`

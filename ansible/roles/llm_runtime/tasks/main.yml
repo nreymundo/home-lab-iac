@@ -190,8 +190,6 @@
     -DAMDGPU_TARGETS={{ llm_runtime_amdgpu_targets | quote }}
     -DCMAKE_BUILD_TYPE={{ llm_runtime_build_type | quote }}
     -DGGML_RPC={{ 'ON' if llm_runtime_enable_rpc | bool else 'OFF' }}
-    -DLLAMA_HIP_UMA={{ 'ON' if llm_runtime_hip_uma | bool else 'OFF' }}
-    -DGGML_CUDA_ENABLE_UNIFIED_MEMORY={{ 'ON' if llm_runtime_cuda_unified_memory | bool else 'OFF' }}
     -DROCM_PATH={{ llm_runtime_rocm_path | quote }}
     -DHIP_PATH={{ llm_runtime_rocm_path | quote }}
     -DHIP_PLATFORM=amd

@@ -59,8 +59,7 @@ llm_runtime_build_jobs: "{{ ansible_processor_vcpus | default(ansible_processor_
 llm_runtime_force_rebuild: false
 
 llm_runtime_enable_rpc: true
-llm_runtime_hip_uma: true
-llm_runtime_cuda_unified_memory: true
+llm_runtime_enable_unified_memory: true
 llm_runtime_cmake_hip_flags: "--rocm-path={{ llm_runtime_rocm_path }} -mllvm --amdgpu-unroll-threshold-local=600"
 
 llm_runtime_install_vram_estimator: true

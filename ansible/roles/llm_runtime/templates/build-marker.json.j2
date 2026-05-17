@@ -8,7 +8,5 @@
   "amdgpu_targets": {{ llm_runtime_amdgpu_targets | to_json }},
   "build_type": {{ llm_runtime_build_type | to_json }},
   "enable_rpc": {{ llm_runtime_enable_rpc | bool | to_json }},
-  "hip_uma": {{ llm_runtime_hip_uma | bool | to_json }},
-  "cuda_unified_memory": {{ llm_runtime_cuda_unified_memory | bool | to_json }},
   "cmake_hip_flags": {{ llm_runtime_cmake_hip_flags | to_json }}
 }

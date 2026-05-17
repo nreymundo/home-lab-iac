@@ -22,7 +22,7 @@ Important parameters:
 - `llm_runtime_amdgpu_targets`
 - `llm_runtime_cmake_hip_flags`
 - `llm_runtime_enable_rpc`
-- `llm_runtime_hip_uma`
+- `llm_runtime_enable_unified_memory`
 - `llm_runtime_force_rebuild`
 - `llm_runtime_extra_packages`
 - `llm_runtime_vram_estimator_url`

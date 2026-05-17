@@ -3,3 +3,6 @@ export HIP_PATH={{ llm_runtime_rocm_path }}
 export HIP_CLANG_PATH={{ llm_runtime_rocm_path }}/llvm/bin
 export HIP_DEVICE_LIB_PATH={{ llm_runtime_rocm_path }}/amdgcn/bitcode
 export PATH={{ llm_runtime_rocm_path }}/bin:{{ llm_runtime_rocm_path }}/llvm/bin:$PATH
+{% if llm_runtime_enable_unified_memory | bool %}
+export GGML_CUDA_ENABLE_UNIFIED_MEMORY=1
+{% endif %}

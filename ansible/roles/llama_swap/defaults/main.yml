@@ -16,6 +16,8 @@ llama_swap_config_dir: /etc/llama-swap
 llama_swap_config_path: "{{ llama_swap_config_dir }}/config.yaml"
 llama_swap_state_dir: /var/lib/llama-swap
 llama_swap_service_name: llama-swap
+llama_swap_environment:
+  - "GGML_CUDA_ENABLE_UNIFIED_MEMORY=1"
 
 llama_swap_listen: "0.0.0.0:8080"
 llama_swap_health_check_timeout: 500
