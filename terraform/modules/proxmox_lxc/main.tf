@@ -20,7 +20,7 @@ locals {
   normalized_containers = [
     for container in var.containers : merge(container, {
       hostname        = coalesce(try(container.hostname, null), container.name)
-      tags            = distinct(concat(["terraform", "lxc"], try(container.tags, [])))
+      tags            = distinct(concat(["terraform"], try(container.tags, [])))
       template_key    = try(container.image.url, null) == null ? null : container.name
       ssh_public_keys = distinct(concat(local.base_ssh_public_keys, try(container.ssh_public_keys, [])))
     })
@@ -33,6 +33,11 @@ locals {
   image_downloads = {
     for container in local.normalized_containers : container.name => container.image
     if container.template_key != null
+  }
+
+  ssh_bootstrap_containers = {
+    for container in local.normalized_containers : container.name => container
+    if try(container.ssh_bootstrap.enabled, false)
   }
 }
 
@@ -193,4 +198,72 @@ resource "proxmox_virtual_environment_container" "this" {
   }
 
   environment_variables = each.value.environment_variables
+}
+
+resource "terraform_data" "ssh_bootstrap" {
+  for_each = local.ssh_bootstrap_containers
+
+  input = {
+    target_node      = each.value.target_node
+    vmid             = each.value.vmid
+    ip_address       = try(each.value.ip_address, null)
+    template_file_id = each.value.template_key == null ? each.value.template_file_id : proxmox_download_file.lxc_image[each.key].id
+    packages         = each.value.ssh_bootstrap.packages
+    services         = each.value.ssh_bootstrap.services
+  }
+
+  triggers_replace = [
+    each.value.target_node,
+    each.value.vmid,
+    try(each.value.ip_address, ""),
+    each.value.template_key == null ? each.value.template_file_id : proxmox_download_file.lxc_image[each.key].id,
+    join(",", each.value.ssh_bootstrap.packages),
+    join(",", each.value.ssh_bootstrap.services),
+  ]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -euo pipefail
+
+      cluster_status="$(ssh -F /dev/null ${var.ssh_bootstrap_cluster_ssh_host} 'pvesh get /cluster/status --output-format json')"
+      node_ip="$(printf '%s\n' "$cluster_status" | jq -r --arg node '${each.value.target_node}' '.[] | select(.type == "node" and .name == $node and .online == 1) | .ip' | head -n 1)"
+
+      if [ -z "$node_ip" ] || [ "$node_ip" = "null" ]; then
+        echo "Could not resolve online Proxmox node '${each.value.target_node}' from cluster status" >&2
+        exit 1
+      fi
+
+      ssh -F /dev/null ${var.ssh_bootstrap_node_ssh_user}@"$node_ip" 'pct exec ${each.value.vmid} -- ${each.value.ssh_bootstrap.package_manager} install -y ${join(" ", each.value.ssh_bootstrap.packages)}'
+      ssh -F /dev/null ${var.ssh_bootstrap_node_ssh_user}@"$node_ip" 'pct exec ${each.value.vmid} -- systemctl enable --now ${join(" ", each.value.ssh_bootstrap.services)}'
+
+      if [ "${each.value.ssh_bootstrap.wait_for_ssh}" = "true" ]; then
+        for attempt in $(seq 1 ${each.value.ssh_bootstrap.timeout_attempts}); do
+          if ssh -F /dev/null -o BatchMode=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=${each.value.ssh_bootstrap.connect_timeout} ${each.value.ssh_bootstrap.ssh_user}@${each.value.ip_address} true; then
+            exit 0
+          fi
+          sleep ${each.value.ssh_bootstrap.retry_delay}
+        done
+
+        echo "SSH did not become reachable on ${each.value.ip_address}" >&2
+        exit 1
+      fi
+    EOT
+
+    interpreter = ["/usr/bin/env", "bash", "-c"]
+  }
+
+  depends_on = [
+    proxmox_virtual_environment_container.this,
+  ]
+
+  lifecycle {
+    replace_triggered_by = [
+      proxmox_virtual_environment_container.this[each.key],
+    ]
+
+    precondition {
+      condition     = var.ssh_bootstrap_cluster_ssh_host != null
+      error_message = "ssh_bootstrap_cluster_ssh_host is required when any container enables ssh_bootstrap."
+    }
+  }
 }

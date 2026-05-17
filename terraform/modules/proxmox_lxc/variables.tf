@@ -11,6 +11,19 @@ variable "ssh_public_keys" {
   default     = []
 }
 
+variable "ssh_bootstrap_cluster_ssh_host" {
+  type        = string
+  description = "SSH target for any Proxmox cluster node used to resolve target_node IPs and bootstrap SSH inside LXCs. Required when any container enables ssh_bootstrap."
+  default     = null
+  nullable    = true
+}
+
+variable "ssh_bootstrap_node_ssh_user" {
+  type        = string
+  description = "SSH user used when connecting to the resolved target_node IP for pct exec."
+  default     = "root"
+}
+
 variable "containers" {
   type = list(object({
     name        = string
@@ -112,6 +125,18 @@ variable "containers" {
     environment_variables = optional(map(string), {})
     ssh_public_keys       = optional(list(string), [])
 
+    ssh_bootstrap = optional(object({
+      enabled          = optional(bool, false)
+      package_manager  = optional(string, "dnf")
+      packages         = optional(list(string), ["openssh-server"])
+      services         = optional(list(string), ["sshd"])
+      wait_for_ssh     = optional(bool, true)
+      ssh_user         = optional(string, "root")
+      connect_timeout  = optional(number, 5)
+      timeout_attempts = optional(number, 30)
+      retry_delay      = optional(number, 2)
+    }), {})
+
     startup = optional(object({
       order      = string
       up_delay   = optional(string)
@@ -174,5 +199,13 @@ variable "containers" {
   validation {
     condition     = alltrue([for container in var.containers : container.rootfs_size_gb >= 1])
     error_message = "Each LXC rootfs_size_gb value must be at least 1 GB."
+  }
+
+  validation {
+    condition = alltrue([
+      for container in var.containers :
+      !(try(container.ssh_bootstrap.enabled, false) && try(container.ssh_bootstrap.wait_for_ssh, true)) || try(container.ip_address, null) != null
+    ])
+    error_message = "Each LXC with ssh_bootstrap.wait_for_ssh enabled must set ip_address."
   }
 }
