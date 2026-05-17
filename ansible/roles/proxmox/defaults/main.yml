@@ -18,6 +18,18 @@ proxmox_zfs_thin_pools:
 proxmox_zfs_thin_enforce: false
 proxmox_zfs_thin_audit: true
 
+# --- Host directories ---
+proxmox_host_directories:
+  - path: /mnt/unraid/proxmox
+    owner: root
+    group: root
+    mode: "0755"
+  - path: /mnt/unraid/backup
+    owner: root
+    group: root
+    mode: "0755"
+proxmox_extra_host_directories: []
+
 # --- Swap ---
 proxmox_swapfile_path: /swapfile
 proxmox_swapfile_size: 16G

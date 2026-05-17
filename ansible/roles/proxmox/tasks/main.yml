@@ -32,6 +32,17 @@
     - amd
     - gpu
 
+- name: Manage Proxmox host directories
+  ansible.builtin.include_tasks:
+    file: host_directories.yml
+    apply:
+      tags:
+        - filesystem
+        - storage
+  tags:
+    - filesystem
+    - storage
+
 - name: Configure swap
   ansible.builtin.include_tasks:
     file: swap.yml

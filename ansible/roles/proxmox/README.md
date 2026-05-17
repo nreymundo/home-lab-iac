@@ -20,6 +20,8 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 - `proxmox_kernel_params_add` / `proxmox_kernel_params_remove`: host-specific kernel parameters.
 - `proxmox_gpu_passthrough`: GPU passthrough config. Leave empty to disable.
 - `proxmox_gpu_passthrough_cleanup`: remove passthrough files when passthrough is disabled.
+- `proxmox_host_directories`: common directories created on every Proxmox host.
+- `proxmox_extra_host_directories`: host-specific directories appended to `proxmox_host_directories`.
 - `proxmox_swapfile_path`, `proxmox_swapfile_size`, `proxmox_swapfile_size_bytes`: swapfile settings.
 - `proxmox_zfs_thin_pools`: ZFS pools audited for non-thin refreservations.
 - `proxmox_zfs_thin_enforce`: set `refreservation=none` for discovered datasets. Enabled for the
