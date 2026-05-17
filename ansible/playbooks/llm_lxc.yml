@@ -4,3 +4,4 @@
   become: true
   roles:
     - lxc_hardening
+    - lxc_bootstrap

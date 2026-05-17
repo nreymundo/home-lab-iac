@@ -1,0 +1,49 @@
+---
+- name: Ensure LXC bootstrap supports this OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family in ['Debian', 'RedHat']
+    fail_msg: "lxc_bootstrap supports Debian/Ubuntu and Fedora/RedHat containers"
+
+- name: Build LXC bootstrap package list
+  ansible.builtin.set_fact:
+    lxc_bootstrap_packages_effective: >-
+      {{
+        lxc_bootstrap_packages_common
+        + (lxc_bootstrap_packages_debian if ansible_os_family == 'Debian' else [])
+        + (lxc_bootstrap_packages_redhat if ansible_os_family == 'RedHat' else [])
+        + lxc_bootstrap_extra_packages
+      }}
+
+- name: Update Debian/Ubuntu package cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == 'Debian'
+
+- name: Upgrade Debian/Ubuntu packages
+  ansible.builtin.apt:
+    upgrade: dist
+  when:
+    - ansible_os_family == 'Debian'
+    - lxc_bootstrap_run_upgrade | bool
+
+- name: Install Debian/Ubuntu bootstrap packages
+  ansible.builtin.apt:
+    name: "{{ lxc_bootstrap_packages_effective }}"
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Upgrade Fedora/RedHat packages # noqa package-latest
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+  when:
+    - ansible_os_family == 'RedHat'
+    - lxc_bootstrap_run_upgrade | bool
+
+- name: Install Fedora/RedHat bootstrap packages
+  ansible.builtin.dnf:
+    name: "{{ lxc_bootstrap_packages_effective }}"
+    state: present
+  when: ansible_os_family == 'RedHat'
