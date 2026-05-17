@@ -1,0 +1,5 @@
+export ROCM_PATH={{ llm_runtime_rocm_path }}
+export HIP_PATH={{ llm_runtime_rocm_path }}
+export HIP_CLANG_PATH={{ llm_runtime_rocm_path }}/llvm/bin
+export HIP_DEVICE_LIB_PATH={{ llm_runtime_rocm_path }}/amdgcn/bitcode
+export PATH={{ llm_runtime_rocm_path }}/bin:{{ llm_runtime_rocm_path }}/llvm/bin:$PATH

@@ -5,3 +5,4 @@
   roles:
     - lxc_hardening
     - lxc_bootstrap
+    - llm_runtime
