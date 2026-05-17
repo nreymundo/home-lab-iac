@@ -10,7 +10,7 @@ locals {
     vm_disk_size_gb        = 128
     secondary_disk_enabled = true
     secondary_disk_size_gb = 600
-    proxmox_nodes          = ["pve1", "pve2"]
+    proxmox_nodes          = ["pve1", "pve2", "pve3"]
     nodes = [
       {
         ci_user     = "ubuntu"
@@ -31,6 +31,10 @@ locals {
             id = "intel-igpu"
           }
         ]
+      },
+      {
+        ci_user     = "ubuntu"
+        target_node = "pve3"
       }
     ]
   }
