@@ -34,11 +34,11 @@ spec:
                   secretKeyRef:
                     name: paperless-gpt-secrets
                     key: OPENAI_API_KEY
-              OPENAI_BASE_URL: http://llama-swap.ai.svc.cluster.local:8080/v1
+              OPENAI_BASE_URL: http://192.168.10.70:8080/v1
               OCR_PROVIDER: llm
               VISION_LLM_PROVIDER: openai
               VISION_LLM_MODEL: qwen3_5_35b
-              OLLAMA_HOST: http://llama-swap.ai.svc.cluster.local:8080/v1
+              OLLAMA_HOST: http://192.168.10.70:8080/v1
               OCR_PROCESS_MODE: image
               PDF_SKIP_EXISTING_OCR: "false"
               CREATE_LOCAL_HOCR: "false"
