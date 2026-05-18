@@ -13,7 +13,7 @@ terraform {
       version = "0.5.4-pre"
     }
   }
-  required_version = ">= 1.3"
+  required_version = ">= 1.4"
 
   cloud {
     organization = "home-lab-iac"
