@@ -5,19 +5,38 @@
       - ansible_os_family == 'RedHat'
     fail_msg: "llm_runtime currently supports Fedora/RedHat containers only"
 
-- name: Ensure ROCm device nodes are present
+- name: Resolve LLM runtime package list
+  ansible.builtin.set_fact:
+    llm_runtime_packages_effective: >-
+      {{
+        (llm_runtime_rocm_runtime_packages + llm_runtime_rocm_build_packages if llm_runtime_enable_rocm | bool else [])
+        + (llm_runtime_vulkan_runtime_packages + llm_runtime_vulkan_build_packages if llm_runtime_enable_vulkan | bool else [])
+        + llm_runtime_extra_packages
+      }}
+    llm_runtime_required_device_nodes: >-
+      {{
+        (['/dev/kfd'] if llm_runtime_enable_rocm | bool else [])
+        + (['/dev/dri/renderD128'] if (llm_runtime_enable_rocm | bool or llm_runtime_enable_vulkan | bool) else [])
+      }}
+
+- name: Ensure llama.cpp ROCm build has ROCm enabled
+  ansible.builtin.assert:
+    that:
+      - llm_runtime_enable_rocm | bool
+    fail_msg: "llm_runtime_enable_llama requires llm_runtime_enable_rocm because llama.cpp is built with HIP/ROCm."
+  when: llm_runtime_enable_llama | bool
+
+- name: Ensure GPU device nodes are present
   ansible.builtin.stat:
     path: "{{ item }}"
-  loop:
-    - /dev/kfd
-    - /dev/dri/renderD128
+  loop: "{{ llm_runtime_required_device_nodes }}"
   register: llm_runtime_device_nodes
 
-- name: Assert ROCm device nodes are present
+- name: Assert GPU device nodes are present
   ansible.builtin.assert:
     that:
       - item.stat.exists
-    fail_msg: "Required ROCm device node {{ item.item }} is missing"
+    fail_msg: "Required GPU device node {{ item.item }} is missing"
   loop: "{{ llm_runtime_device_nodes.results }}"
   loop_control:
     label: "{{ item.item }}"
@@ -29,15 +48,11 @@
     owner: root
     group: root
     mode: "0644"
+  when: llm_runtime_enable_rocm | bool
 
-- name: Install ROCm runtime and llama.cpp build packages
+- name: Install LLM runtime backend packages
   ansible.builtin.dnf:
-    name: >-
-      {{
-        llm_runtime_rocm_runtime_packages
-        + llm_runtime_rocm_build_packages
-        + llm_runtime_extra_packages
-      }}
+    name: "{{ llm_runtime_packages_effective }}"
     state: present
     install_weak_deps: false
     exclude:
@@ -45,6 +60,7 @@
       - "*samples*"
       - "*-doc*"
       - "*-docs*"
+  when: llm_runtime_packages_effective | length > 0
 
 - name: Configure ROCm shell environment
   ansible.builtin.template:
@@ -53,6 +69,7 @@
     owner: root
     group: root
     mode: "0755"
+  when: llm_runtime_enable_rocm | bool
 
 - name: Ensure llama.cpp parent directory exists
   ansible.builtin.file:
@@ -61,23 +78,28 @@
     owner: root
     group: root
     mode: "0755"
+  when: llm_runtime_enable_llama | bool
 
 - name: Check llama.cpp source directory
   ansible.builtin.stat:
     path: "{{ llm_runtime_llama_dir }}"
   register: llm_runtime_llama_dir_stat
+  when: llm_runtime_enable_llama | bool
 
 - name: Check llama.cpp git metadata
   ansible.builtin.stat:
     path: "{{ llm_runtime_llama_dir }}/.git"
   register: llm_runtime_llama_git_dir_stat
-  when: llm_runtime_llama_dir_stat.stat.exists
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_dir_stat.stat.exists
 
 - name: Remove unmanaged llama.cpp source directory
   ansible.builtin.file:
     path: "{{ llm_runtime_llama_dir }}"
     state: absent
   when:
+    - llm_runtime_enable_llama | bool
     - llm_runtime_llama_dir_stat.stat.exists
     - not (llm_runtime_llama_git_dir_stat.stat.isdir | default(false))
 
@@ -92,6 +114,7 @@
     single_branch: "{{ llm_runtime_llama_single_branch }}"
     depth: "{{ llm_runtime_llama_depth }}"
   register: llm_runtime_llama_git
+  when: llm_runtime_enable_llama | bool
 
 - name: Ensure llama.cpp support directory exists
   ansible.builtin.file:
@@ -100,6 +123,7 @@
     owner: root
     group: root
     mode: "0755"
+  when: llm_runtime_enable_llama | bool
 
 - name: Update llama.cpp submodules # noqa command-instead-of-module
   ansible.builtin.command: git submodule update --recursive
@@ -107,6 +131,7 @@
     chdir: "{{ llm_runtime_llama_dir }}"
   register: llm_runtime_submodules
   changed_when: llm_runtime_submodules.stdout | length > 0
+  when: llm_runtime_enable_llama | bool
 
 - name: Install llama grammar patch
   ansible.builtin.copy:
@@ -116,7 +141,9 @@
     group: root
     mode: "0644"
   register: llm_runtime_grammar_patch_file
-  when: llm_runtime_llama_apply_grammar_patch | bool
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
 
 - name: Check whether llama grammar patch is already applied # noqa command-instead-of-module
   ansible.builtin.command: git apply --reverse --check {{ llm_runtime_llama_patch_path | quote }}
@@ -125,7 +152,9 @@
   register: llm_runtime_grammar_patch_reverse_check
   changed_when: false
   failed_when: false
-  when: llm_runtime_llama_apply_grammar_patch | bool
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
 
 - name: Check whether llama grammar patch can be applied # noqa command-instead-of-module
   ansible.builtin.command: git apply --check {{ llm_runtime_llama_patch_path | quote }}
@@ -135,6 +164,7 @@
   changed_when: false
   failed_when: false
   when:
+    - llm_runtime_enable_llama | bool
     - llm_runtime_llama_apply_grammar_patch | bool
     - llm_runtime_grammar_patch_reverse_check.rc != 0
 
@@ -145,6 +175,7 @@
   register: llm_runtime_grammar_patch_apply
   changed_when: true
   when:
+    - llm_runtime_enable_llama | bool
     - llm_runtime_llama_apply_grammar_patch | bool
     - llm_runtime_grammar_patch_reverse_check.rc != 0
     - llm_runtime_grammar_patch_forward_check.rc == 0
@@ -153,6 +184,7 @@
   ansible.builtin.fail:
     msg: "llama grammar patch is neither applied nor cleanly applicable"
   when:
+    - llm_runtime_enable_llama | bool
     - llm_runtime_llama_apply_grammar_patch | bool
     - llm_runtime_grammar_patch_reverse_check.rc != 0
     - llm_runtime_grammar_patch_forward_check.rc != 0
@@ -164,12 +196,14 @@
     owner: root
     group: root
     mode: "0644"
+  when: llm_runtime_enable_llama | bool
 
 - name: Check current llama.cpp build marker
   ansible.builtin.command: cmp -s /tmp/llm-runtime-build-marker.json {{ llm_runtime_llama_marker_path | quote }}
   register: llm_runtime_marker_cmp
   changed_when: false
   failed_when: false
+  when: llm_runtime_enable_llama | bool
 
 - name: Determine whether llama.cpp rebuild is required
   ansible.builtin.set_fact:
@@ -181,6 +215,7 @@
         or (llm_runtime_grammar_patch_apply.changed | default(false))
         or llm_runtime_marker_cmp.rc != 0
       }}
+  when: llm_runtime_enable_llama | bool
 
 - name: Configure llama.cpp ROCm build
   ansible.builtin.command: >-
@@ -196,7 +231,9 @@
   args:
     chdir: "{{ llm_runtime_llama_dir }}"
   changed_when: true
-  when: llm_runtime_rebuild_required | bool
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
 
 - name: Build llama.cpp
   ansible.builtin.command: >-
@@ -206,7 +243,9 @@
   args:
     chdir: "{{ llm_runtime_llama_dir }}"
   changed_when: true
-  when: llm_runtime_rebuild_required | bool
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
 
 - name: Install llama.cpp
   ansible.builtin.command: >-
@@ -215,7 +254,9 @@
   args:
     chdir: "{{ llm_runtime_llama_dir }}"
   changed_when: true
-  when: llm_runtime_rebuild_required | bool
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
 
 - name: Configure local library path
   ansible.builtin.copy:
@@ -227,6 +268,7 @@
     group: root
     mode: "0644"
   register: llm_runtime_ld_config_file
+  when: llm_runtime_enable_llama | bool
 
 - name: Copy llama.cpp shared libraries to lib64
   ansible.builtin.shell: |
@@ -235,11 +277,14 @@
   args:
     executable: /bin/bash
   changed_when: true
-  when: llm_runtime_rebuild_required | bool
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
 
 - name: Refresh dynamic linker cache
   ansible.builtin.command: ldconfig
   changed_when: llm_runtime_rebuild_required | bool or llm_runtime_ld_config_file.changed
+  when: llm_runtime_enable_llama | bool
 
 - name: Save llama.cpp build marker
   ansible.builtin.copy:
@@ -249,7 +294,9 @@
     group: root
     mode: "0644"
     remote_src: true
-  when: llm_runtime_rebuild_required | bool
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
 
 - name: Install GGUF VRAM estimator helper
   ansible.builtin.get_url:
@@ -263,7 +310,14 @@
 - name: Validate ROCm can inspect devices
   ansible.builtin.command: rocminfo
   changed_when: false
+  when: llm_runtime_enable_rocm | bool
 
 - name: Validate llama.cpp binary is installed
   ansible.builtin.command: llama-cli --help
   changed_when: false
+  when: llm_runtime_enable_llama | bool
+
+- name: Validate Vulkan can inspect devices
+  ansible.builtin.command: vulkaninfo --summary
+  changed_when: false
+  when: llm_runtime_enable_vulkan | bool

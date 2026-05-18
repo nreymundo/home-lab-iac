@@ -13,6 +13,9 @@ The role mirrors the important parts of the
 
 Important parameters:
 
+- `llm_runtime_enable_rocm`
+- `llm_runtime_enable_vulkan`
+- `llm_runtime_enable_llama`
 - `llm_runtime_rocm_version`
 - `llm_runtime_llama_repo`
 - `llm_runtime_llama_ref`
@@ -26,6 +29,15 @@ Important parameters:
 - `llm_runtime_force_rebuild`
 - `llm_runtime_extra_packages`
 - `llm_runtime_vram_estimator_url`
+
+ROCm packages are installed only when `llm_runtime_enable_rocm` is true. Vulkan
+runtime/build packages are installed only when `llm_runtime_enable_vulkan` is
+true, so the same LXC can host ROCm `llama.cpp` and Vulkan workloads such as
+`whisper.cpp`.
+
+`llm_runtime_enable_llama` controls whether this role builds `llama.cpp`.
+The current `llama.cpp` build is HIP/ROCm-based, so enabling it requires
+`llm_runtime_enable_rocm`.
 
 The role writes `{{ llm_runtime_llama_marker_path }}` after a successful build.
 Changing the ROCm version, llama.cpp ref, build flags, or patch settings causes

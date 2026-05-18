@@ -6,4 +6,5 @@
     - lxc_hardening
     - lxc_bootstrap
     - llm_runtime
+    - whisper_runtime
     - llama_swap

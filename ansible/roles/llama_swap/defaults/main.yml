@@ -32,3 +32,11 @@ llama_swap_default_gpu_layers: 999
 llama_swap_default_flash_attention: true
 llama_swap_default_no_mmap: true
 llama_swap_default_extra_args: []
+
+llama_swap_whisper_models_dir: /opt/ai/models/whisper
+llama_swap_whisper_model_patterns:
+  - "ggml*.bin"
+  - "*.bin"
+llama_swap_whisper_default_extra_args:
+  - "--inference-path /v1/audio/transcriptions"
+  - "--convert"
