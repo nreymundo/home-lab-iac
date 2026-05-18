@@ -1,0 +1,14 @@
+---
+- name: Build Proxmox host directory list
+  ansible.builtin.set_fact:
+    proxmox_host_directories_merged: "{{ proxmox_host_directories + proxmox_extra_host_directories }}"
+
+- name: Ensure Proxmox host directories exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop: "{{ proxmox_host_directories_merged }}"
+  when: proxmox_host_directories_merged | length > 0

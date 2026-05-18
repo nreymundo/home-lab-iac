@@ -1,0 +1,66 @@
+---
+llm_runtime_rocm_version: "7.2.3"
+llm_runtime_rocm_repo_name: "ROCm-{{ llm_runtime_rocm_version }}"
+llm_runtime_rocm_repo_description: "ROCm{{ llm_runtime_rocm_version }}"
+llm_runtime_rocm_repo_baseurl: "https://repo.radeon.com/rocm/rhel10/{{ llm_runtime_rocm_version }}/main"
+llm_runtime_rocm_repo_gpgkey: "https://repo.radeon.com/rocm/rocm.gpg.key"
+
+llm_runtime_rocm_runtime_packages:
+  - hip-runtime-amd
+  - rocblas
+  - hipblas
+  - rocminfo
+  - radeontop
+  - procps-ng
+  - libatomic
+  - libstdc++
+  - libgcc
+  - libgomp
+
+llm_runtime_rocm_build_packages:
+  - make
+  - gcc
+  - cmake
+  - lld
+  - clang
+  - clang-devel
+  - compiler-rt
+  - libcurl-devel
+  - ninja-build
+  - rocm-llvm
+  - rocm-device-libs
+  - hip-devel
+  - rocblas-devel
+  - hipblas-devel
+  - rocm-cmake
+  - libomp
+  - libomp-devel
+  - patch
+
+llm_runtime_extra_packages: []
+
+llm_runtime_rocm_env_file: /etc/profile.d/rocm.sh
+llm_runtime_rocm_path: /opt/rocm
+
+llm_runtime_llama_repo: "https://github.com/ggerganov/llama.cpp.git"
+llm_runtime_llama_ref: "master"
+llm_runtime_llama_update: false
+llm_runtime_llama_single_branch: true
+llm_runtime_llama_depth: 1
+llm_runtime_llama_dir: /opt/llama.cpp
+llm_runtime_llama_build_dir: "{{ llm_runtime_llama_dir }}/build"
+llm_runtime_llama_apply_grammar_patch: true
+llm_runtime_llama_patch_path: "{{ llm_runtime_llama_dir }}/.ansible/llama-grammar.patch"
+llm_runtime_llama_marker_path: "{{ llm_runtime_llama_dir }}/.ansible-build.json"
+
+llm_runtime_amdgpu_targets: "gfx1151"
+llm_runtime_build_type: Release
+llm_runtime_build_jobs: "{{ ansible_processor_vcpus | default(ansible_processor_nproc | default(4)) }}"
+llm_runtime_force_rebuild: false
+
+llm_runtime_enable_rpc: true
+llm_runtime_enable_unified_memory: true
+llm_runtime_cmake_hip_flags: "--rocm-path={{ llm_runtime_rocm_path }} -mllvm --amdgpu-unroll-threshold-local=600"
+
+llm_runtime_install_vram_estimator: true
+llm_runtime_vram_estimator_url: "https://raw.githubusercontent.com/kyuz0/amd-strix-halo-toolboxes/main/toolboxes/gguf-vram-estimator.py"

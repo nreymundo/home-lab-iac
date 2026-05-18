@@ -19,3 +19,12 @@ All the other `.md` files in this repository are either fully written by LLMs or
 
 
 I'm following a lot of good practices but this will _definitely_ be more of a bazaar than a cathedral.
+
+
+## Credits / Attribution
+
+Here's a list of other projects, tools and code I'm using as inspiration or implementing here. In no particular order, and please let me know if I forget anything.
+
+1. [bjw-s-labs' helm-charts](https://github.com/bjw-s-labs/helm-charts).
+1. [kyuz0's strix halo toolboxes](https://github.com/kyuz0/amd-strix-halo-toolboxes).
+1. [mostlygeek's llama-swap](https://github.com/mostlygeek/llama-swap).

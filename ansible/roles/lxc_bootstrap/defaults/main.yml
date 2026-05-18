@@ -1,0 +1,38 @@
+---
+lxc_bootstrap_run_upgrade: true
+
+lxc_bootstrap_packages_common:
+  - bash-completion
+  - ca-certificates
+  - curl
+  - git
+  - htop
+  - jq
+  - less
+  - lsof
+  - rsync
+  - tar
+  - tmux
+  - tree
+  - unzip
+  - vim
+  - wget
+  - zip
+
+lxc_bootstrap_packages_debian:
+  - dnsutils
+  - iproute2
+  - iputils-ping
+  - ncurses-bin
+  - procps
+
+lxc_bootstrap_packages_redhat:
+  - bind-utils
+  - findutils
+  - iproute
+  - iputils
+  - ncurses
+  - procps-ng
+  - which
+
+lxc_bootstrap_extra_packages: []

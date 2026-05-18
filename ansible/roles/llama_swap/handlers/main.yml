@@ -1,0 +1,10 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart llama-swap
+  ansible.builtin.service:
+    name: "{{ llama_swap_service_name }}"
+    state: restarted
+  when: llama_swap_enabled | bool

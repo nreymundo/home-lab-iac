@@ -1,0 +1,12 @@
+{
+  "rocm_version": {{ llm_runtime_rocm_version | to_json }},
+  "llama_repo": {{ llm_runtime_llama_repo | to_json }},
+  "llama_ref": {{ llm_runtime_llama_ref | to_json }},
+  "llama_single_branch": {{ llm_runtime_llama_single_branch | bool | to_json }},
+  "llama_depth": {{ llm_runtime_llama_depth | to_json }},
+  "apply_grammar_patch": {{ llm_runtime_llama_apply_grammar_patch | bool | to_json }},
+  "amdgpu_targets": {{ llm_runtime_amdgpu_targets | to_json }},
+  "build_type": {{ llm_runtime_build_type | to_json }},
+  "enable_rpc": {{ llm_runtime_enable_rpc | bool | to_json }},
+  "cmake_hip_flags": {{ llm_runtime_cmake_hip_flags | to_json }}
+}

@@ -1,0 +1,30 @@
+---
+healthCheckTimeout: {{ llama_swap_health_check_timeout }}
+logLevel: {{ llama_swap_log_level | to_json }}
+logToStdout: {{ llama_swap_log_to_stdout | to_json }}
+startPort: {{ llama_swap_start_port }}
+globalTTL: {{ llama_swap_global_ttl }}
+
+models:
+{% for model in llama_swap_discovered_models.files | sort(attribute='path') %}
+{% set model_relative_path = model.path | replace(llama_swap_models_dir ~ '/', '') %}
+{% set model_id = model_relative_path | regex_replace('\\.gguf$', '') %}
+  {{ model_id | to_json }}:
+    cmd: >-
+      llama-server
+      --host 127.0.0.1
+      --port ${PORT}
+      -m {{ model.path | quote }}
+      -c {{ llama_swap_default_context_size }}
+      -ngl {{ llama_swap_default_gpu_layers }}
+{% if llama_swap_default_flash_attention | bool %}
+      -fa 1
+{% endif %}
+{% if llama_swap_default_no_mmap | bool %}
+      --no-mmap
+{% endif %}
+{% for arg in llama_swap_default_extra_args %}
+      {{ arg }}
+{% endfor %}
+    name: {{ (model.path | basename | regex_replace('\\.gguf$', '')) | to_json }}
+{% endfor %}

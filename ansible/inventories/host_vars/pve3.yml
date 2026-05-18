@@ -1,8 +1,11 @@
 ---
-common_extra_packages:
-  - vulkan-tools
-  - mesa-vulkan-drivers
-  - mesa-utils
+proxmox_install_ai_amd_packages: true
+
+proxmox_extra_host_directories:
+  - path: /mnt/ai-files
+    owner: "100000"
+    group: "100000"
+    mode: "0755"
 
 proxmox_kernel_params_add:
   - "ttm.pages_limit=28311552"

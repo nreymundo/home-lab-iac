@@ -1,0 +1,19 @@
+[Unit]
+Description=llama-swap model router
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={{ llama_swap_state_dir }}
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+{% for environment_variable in llama_swap_environment %}
+Environment={{ environment_variable }}
+{% endfor %}
+ExecStart={{ llama_swap_bin_path }} --config {{ llama_swap_config_path }} --listen {{ llama_swap_listen }}
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target

@@ -18,6 +18,18 @@ proxmox_zfs_thin_pools:
 proxmox_zfs_thin_enforce: false
 proxmox_zfs_thin_audit: true
 
+# --- Host directories ---
+proxmox_host_directories:
+  - path: /mnt/unraid/proxmox
+    owner: root
+    group: root
+    mode: "0755"
+  - path: /mnt/unraid/backup
+    owner: root
+    group: root
+    mode: "0755"
+proxmox_extra_host_directories: []
+
 # --- Swap ---
 proxmox_swapfile_path: /swapfile
 proxmox_swapfile_size: 16G
@@ -60,3 +72,24 @@ proxmox_power_tuning_cron_entries_to_remove: []
 
 # --- GPU passthrough ---
 proxmox_gpu_passthrough_cleanup: true
+
+# --- AMD AI/GPU host support ---
+proxmox_install_ai_amd_packages: false
+proxmox_ai_amd_kernel_modules:
+  - amdgpu
+proxmox_ai_amd_required_devices:
+  - /dev/kfd
+  - /dev/dri/renderD128
+proxmox_ai_amd_packages:
+  - amd64-microcode
+  - pve-firmware
+  - mesa-vulkan-drivers
+  - vulkan-tools
+  - mesa-utils
+  - vainfo
+  - radeontop
+  - libdrm-tests
+  - rocminfo
+  - rocm-smi
+  - amd-smi
+  - rocm-opencl-icd
