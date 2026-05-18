@@ -24,7 +24,6 @@ resources:
   - ../apps/media/prowlarr
   - ../apps/development/gitea
   - ../apps/ai/sillytavern
-  - ../apps/ai/llama-swap
   - ../apps/ai/whisper
   - ../apps/ai/kokoro
   - ../apps/ai/vane
