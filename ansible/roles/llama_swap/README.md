@@ -19,10 +19,14 @@ Important parameters:
 - `llama_swap_default_context_size`
 - `llama_swap_default_gpu_layers`
 - `llama_swap_default_extra_args`
+- `llama_swap_whisper_models_dir`
+- `llama_swap_whisper_default_extra_args`
 
 On first run only, the role scans `llama_swap_models_dir` for `*.gguf` files and
-creates `{{ llama_swap_config_path }}` with one `llama-server` backend per model.
-Model IDs are based on each GGUF path relative to `llama_swap_models_dir`.
+`llama_swap_whisper_models_dir` for Whisper `*.bin` files, then creates
+`{{ llama_swap_config_path }}` with one backend per model. LLM model IDs are
+based on each GGUF path relative to `llama_swap_models_dir`; STT model IDs are
+prefixed with `whisper/`.
 
 After the config file exists, the role does not modify it. Delete the file and
 rerun the playbook to regenerate the bootstrap config, or edit it manually for

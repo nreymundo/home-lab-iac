@@ -1,0 +1,159 @@
+---
+- name: Ensure whisper runtime supports this OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == 'RedHat'
+    fail_msg: "whisper_runtime currently supports Fedora/RedHat containers only"
+  when: whisper_runtime_enabled | bool
+
+- name: Ensure Vulkan render node is present
+  ansible.builtin.stat:
+    path: /dev/dri/renderD128
+  register: whisper_runtime_render_node
+  when:
+    - whisper_runtime_enabled | bool
+    - whisper_runtime_enable_vulkan | bool
+
+- name: Assert Vulkan render node is present
+  ansible.builtin.assert:
+    that:
+      - whisper_runtime_render_node.stat.exists
+    fail_msg: "Required Vulkan render node /dev/dri/renderD128 is missing"
+  when:
+    - whisper_runtime_enabled | bool
+    - whisper_runtime_enable_vulkan | bool
+
+- name: Install whisper.cpp runtime and build packages
+  ansible.builtin.dnf:
+    name: "{{ whisper_runtime_packages }}"
+    state: present
+    install_weak_deps: false
+  when:
+    - whisper_runtime_enabled | bool
+    - whisper_runtime_packages | length > 0
+
+- name: Ensure whisper.cpp parent directory exists
+  ansible.builtin.file:
+    path: "{{ whisper_runtime_dir | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: whisper_runtime_enabled | bool
+
+- name: Check whisper.cpp source directory
+  ansible.builtin.stat:
+    path: "{{ whisper_runtime_dir }}"
+  register: whisper_runtime_dir_stat
+  when: whisper_runtime_enabled | bool
+
+- name: Check whisper.cpp git metadata
+  ansible.builtin.stat:
+    path: "{{ whisper_runtime_dir }}/.git"
+  register: whisper_runtime_git_dir_stat
+  when:
+    - whisper_runtime_enabled | bool
+    - whisper_runtime_dir_stat.stat.exists
+
+- name: Remove unmanaged whisper.cpp source directory
+  ansible.builtin.file:
+    path: "{{ whisper_runtime_dir }}"
+    state: absent
+  when:
+    - whisper_runtime_enabled | bool
+    - whisper_runtime_dir_stat.stat.exists
+    - not (whisper_runtime_git_dir_stat.stat.isdir | default(false))
+
+- name: Clone or update whisper.cpp source
+  ansible.builtin.git:
+    repo: "{{ whisper_runtime_repo }}"
+    dest: "{{ whisper_runtime_dir }}"
+    version: "{{ whisper_runtime_ref }}"
+    recursive: true
+    update: "{{ whisper_runtime_update | bool }}"
+    force: false
+    single_branch: "{{ whisper_runtime_single_branch }}"
+    depth: "{{ whisper_runtime_depth }}"
+  register: whisper_runtime_git
+  when: whisper_runtime_enabled | bool
+
+- name: Render desired whisper.cpp build marker
+  ansible.builtin.template:
+    src: build-marker.json.j2
+    dest: /tmp/whisper-runtime-build-marker.json
+    owner: root
+    group: root
+    mode: "0644"
+  when: whisper_runtime_enabled | bool
+
+- name: Check current whisper.cpp build marker
+  ansible.builtin.command: cmp -s /tmp/whisper-runtime-build-marker.json {{ whisper_runtime_marker_path | quote }}
+  register: whisper_runtime_marker_cmp
+  changed_when: false
+  failed_when: false
+  when: whisper_runtime_enabled | bool
+
+- name: Determine whether whisper.cpp rebuild is required
+  ansible.builtin.set_fact:
+    whisper_runtime_rebuild_required: >-
+      {{
+        whisper_runtime_force_rebuild | bool
+        or whisper_runtime_git.changed
+        or whisper_runtime_marker_cmp.rc != 0
+      }}
+  when: whisper_runtime_enabled | bool
+
+- name: Configure whisper.cpp Vulkan build
+  ansible.builtin.command: >-
+    cmake -S . -B {{ whisper_runtime_build_dir | quote }}
+    -DCMAKE_BUILD_TYPE={{ whisper_runtime_build_type | quote }}
+    -DGGML_VULKAN={{ 'ON' if whisper_runtime_enable_vulkan | bool else 'OFF' }}
+    -DBUILD_SHARED_LIBS={{ 'ON' if whisper_runtime_build_shared_libs | bool else 'OFF' }}
+    -DWHISPER_BUILD_EXAMPLES={{ 'ON' if whisper_runtime_build_examples | bool else 'OFF' }}
+    {{ whisper_runtime_extra_cmake_args | join(' ') }}
+  args:
+    chdir: "{{ whisper_runtime_dir }}"
+  changed_when: true
+  when:
+    - whisper_runtime_enabled | bool
+    - whisper_runtime_rebuild_required | bool
+
+- name: Build whisper.cpp
+  ansible.builtin.command: >-
+    cmake --build {{ whisper_runtime_build_dir | quote }}
+    --config {{ whisper_runtime_build_type | quote }}
+    -- -j{{ whisper_runtime_build_jobs }}
+  args:
+    chdir: "{{ whisper_runtime_dir }}"
+  changed_when: true
+  when:
+    - whisper_runtime_enabled | bool
+    - whisper_runtime_rebuild_required | bool
+
+- name: Install whisper.cpp
+  ansible.builtin.command: >-
+    cmake --install {{ whisper_runtime_build_dir | quote }}
+    --config {{ whisper_runtime_build_type | quote }}
+  args:
+    chdir: "{{ whisper_runtime_dir }}"
+  changed_when: true
+  when:
+    - whisper_runtime_enabled | bool
+    - whisper_runtime_rebuild_required | bool
+
+- name: Save whisper.cpp build marker
+  ansible.builtin.copy:
+    src: /tmp/whisper-runtime-build-marker.json
+    dest: "{{ whisper_runtime_marker_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+    remote_src: true
+  when:
+    - whisper_runtime_enabled | bool
+    - whisper_runtime_rebuild_required | bool
+
+- name: Validate whisper-server binary is installed
+  ansible.builtin.command: whisper-server --help
+  changed_when: false
+  when: whisper_runtime_enabled | bool

@@ -28,3 +28,17 @@ models:
 {% endfor %}
     name: {{ (model.path | basename | regex_replace('\\.gguf$', '')) | to_json }}
 {% endfor %}
+{% for model in llama_swap_discovered_whisper_models.files | default([]) | sort(attribute='path') %}
+{% set model_relative_path = model.path | replace(llama_swap_whisper_models_dir ~ '/', '') %}
+{% set model_id = 'whisper/' ~ (model_relative_path | regex_replace('\\.bin$', '')) %}
+  {{ model_id | to_json }}:
+    cmd: >-
+      whisper-server
+      --host 127.0.0.1
+      --port ${PORT}
+      -m {{ model.path | quote }}
+{% for arg in llama_swap_whisper_default_extra_args %}
+      {{ arg }}
+{% endfor %}
+    name: {{ (model.path | basename | regex_replace('\\.bin$', '')) | to_json }}
+{% endfor %}

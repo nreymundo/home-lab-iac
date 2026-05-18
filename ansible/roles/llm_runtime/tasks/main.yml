@@ -5,19 +5,31 @@
       - ansible_os_family == 'RedHat'
     fail_msg: "llm_runtime currently supports Fedora/RedHat containers only"
 
-- name: Ensure ROCm device nodes are present
+- name: Resolve LLM runtime package list
+  ansible.builtin.set_fact:
+    llm_runtime_packages_effective: >-
+      {{
+        (llm_runtime_rocm_runtime_packages + llm_runtime_rocm_build_packages if llm_runtime_enable_rocm | bool else [])
+        + (llm_runtime_vulkan_runtime_packages + llm_runtime_vulkan_build_packages if llm_runtime_enable_vulkan | bool else [])
+        + llm_runtime_extra_packages
+      }}
+    llm_runtime_required_device_nodes: >-
+      {{
+        (['/dev/kfd'] if llm_runtime_enable_rocm | bool else [])
+        + (['/dev/dri/renderD128'] if (llm_runtime_enable_rocm | bool or llm_runtime_enable_vulkan | bool) else [])
+      }}
+
+- name: Ensure GPU device nodes are present
   ansible.builtin.stat:
     path: "{{ item }}"
-  loop:
-    - /dev/kfd
-    - /dev/dri/renderD128
+  loop: "{{ llm_runtime_required_device_nodes }}"
   register: llm_runtime_device_nodes
 
-- name: Assert ROCm device nodes are present
+- name: Assert GPU device nodes are present
   ansible.builtin.assert:
     that:
       - item.stat.exists
-    fail_msg: "Required ROCm device node {{ item.item }} is missing"
+    fail_msg: "Required GPU device node {{ item.item }} is missing"
   loop: "{{ llm_runtime_device_nodes.results }}"
   loop_control:
     label: "{{ item.item }}"
@@ -29,15 +41,11 @@
     owner: root
     group: root
     mode: "0644"
+  when: llm_runtime_enable_rocm | bool
 
-- name: Install ROCm runtime and llama.cpp build packages
+- name: Install LLM runtime backend packages
   ansible.builtin.dnf:
-    name: >-
-      {{
-        llm_runtime_rocm_runtime_packages
-        + llm_runtime_rocm_build_packages
-        + llm_runtime_extra_packages
-      }}
+    name: "{{ llm_runtime_packages_effective }}"
     state: present
     install_weak_deps: false
     exclude:
@@ -45,6 +53,7 @@
       - "*samples*"
       - "*-doc*"
       - "*-docs*"
+  when: llm_runtime_packages_effective | length > 0
 
 - name: Configure ROCm shell environment
   ansible.builtin.template:
@@ -263,7 +272,13 @@
 - name: Validate ROCm can inspect devices
   ansible.builtin.command: rocminfo
   changed_when: false
+  when: llm_runtime_enable_rocm | bool
 
 - name: Validate llama.cpp binary is installed
   ansible.builtin.command: llama-cli --help
   changed_when: false
+
+- name: Validate Vulkan can inspect devices
+  ansible.builtin.command: vulkaninfo --summary
+  changed_when: false
+  when: llm_runtime_enable_vulkan | bool

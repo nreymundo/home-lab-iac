@@ -65,11 +65,32 @@
   register: llama_swap_discovered_models
   when: not llama_swap_config_stat.stat.exists
 
+- name: Check whisper model directory for initial llama-swap config
+  ansible.builtin.stat:
+    path: "{{ llama_swap_whisper_models_dir }}"
+  register: llama_swap_whisper_models_dir_stat
+  when: not llama_swap_config_stat.stat.exists
+
+- name: Find Whisper models for initial llama-swap config
+  ansible.builtin.find:
+    paths: "{{ llama_swap_whisper_models_dir }}"
+    patterns: "{{ llama_swap_whisper_model_patterns }}"
+    recurse: true
+    file_type: file
+  register: llama_swap_discovered_whisper_models
+  when:
+    - not llama_swap_config_stat.stat.exists
+    - llama_swap_whisper_models_dir_stat.stat.isdir | default(false)
+
 - name: Assert initial llama-swap config has models
   ansible.builtin.assert:
     that:
-      - llama_swap_discovered_models.files | length > 0
-    fail_msg: "No GGUF models found under {{ llama_swap_models_dir }} for initial llama-swap config"
+      - >-
+        (llama_swap_discovered_models.files | default([]) | length > 0)
+        or (llama_swap_discovered_whisper_models.files | default([]) | length > 0)
+    fail_msg: >-
+      No GGUF models found under {{ llama_swap_models_dir }} and no Whisper models found under
+      {{ llama_swap_whisper_models_dir }} for initial llama-swap config
   when: not llama_swap_config_stat.stat.exists
 
 - name: Create initial llama-swap config

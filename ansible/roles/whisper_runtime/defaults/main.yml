@@ -1,0 +1,37 @@
+---
+whisper_runtime_enabled: true
+
+whisper_runtime_repo: "https://github.com/ggml-org/whisper.cpp.git"
+whisper_runtime_ref: "master"
+whisper_runtime_update: false
+whisper_runtime_single_branch: true
+whisper_runtime_depth: 1
+whisper_runtime_dir: /opt/whisper.cpp
+whisper_runtime_build_dir: "{{ whisper_runtime_dir }}/build"
+whisper_runtime_marker_path: "{{ whisper_runtime_dir }}/.ansible-build.json"
+
+whisper_runtime_build_type: Release
+whisper_runtime_build_jobs: "{{ ansible_processor_vcpus | default(ansible_processor_nproc | default(4)) }}"
+whisper_runtime_force_rebuild: false
+
+whisper_runtime_enable_vulkan: true
+whisper_runtime_build_shared_libs: false
+whisper_runtime_build_examples: true
+whisper_runtime_extra_cmake_args: []
+
+whisper_runtime_packages:
+  - cmake
+  - gcc
+  - gcc-c++
+  - git
+  - make
+  - ffmpeg-free
+  - libgomp
+  - mesa-vulkan-drivers
+  - vulkan-loader
+  - vulkan-headers
+  - vulkan-loader-devel
+  - glslc
+  - glslang
+  - spirv-tools
+  - spirv-headers-devel

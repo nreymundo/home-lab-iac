@@ -5,6 +5,9 @@ llm_runtime_rocm_repo_description: "ROCm{{ llm_runtime_rocm_version }}"
 llm_runtime_rocm_repo_baseurl: "https://repo.radeon.com/rocm/rhel10/{{ llm_runtime_rocm_version }}/main"
 llm_runtime_rocm_repo_gpgkey: "https://repo.radeon.com/rocm/rocm.gpg.key"
 
+llm_runtime_enable_rocm: true
+llm_runtime_enable_vulkan: true
+
 llm_runtime_rocm_runtime_packages:
   - hip-runtime-amd
   - rocblas
@@ -36,6 +39,20 @@ llm_runtime_rocm_build_packages:
   - libomp
   - libomp-devel
   - patch
+
+llm_runtime_vulkan_runtime_packages:
+  - mesa-vulkan-drivers
+  - vulkan-loader
+  - vulkan-tools
+
+llm_runtime_vulkan_build_packages:
+  - vulkan-headers
+  - vulkan-loader-devel
+  - glslc
+  - glslang
+  - spirv-tools
+  - spirv-headers-devel
+  - vulkan-utility-libraries-devel
 
 llm_runtime_extra_packages: []
 

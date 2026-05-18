@@ -1,0 +1,11 @@
+{
+  "repo": {{ whisper_runtime_repo | to_json }},
+  "ref": {{ whisper_runtime_ref | to_json }},
+  "single_branch": {{ whisper_runtime_single_branch | bool | to_json }},
+  "depth": {{ whisper_runtime_depth | to_json }},
+  "build_type": {{ whisper_runtime_build_type | to_json }},
+  "enable_vulkan": {{ whisper_runtime_enable_vulkan | bool | to_json }},
+  "build_shared_libs": {{ whisper_runtime_build_shared_libs | bool | to_json }},
+  "build_examples": {{ whisper_runtime_build_examples | bool | to_json }},
+  "extra_cmake_args": {{ whisper_runtime_extra_cmake_args | to_json }}
+}
