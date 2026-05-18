@@ -156,4 +156,6 @@
 - name: Validate whisper-server binary is installed
   ansible.builtin.command: whisper-server --help
   changed_when: false
-  when: whisper_runtime_enabled | bool
+  when:
+    - whisper_runtime_enabled | bool
+    - whisper_runtime_build_examples | bool
