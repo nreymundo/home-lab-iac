@@ -16,7 +16,6 @@ locals {
       "ai",
       "amd",
       "gpu",
-      "llm",
     ]
   }
 
