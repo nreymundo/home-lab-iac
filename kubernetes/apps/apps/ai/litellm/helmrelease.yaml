@@ -149,7 +149,7 @@ spec:
           gethomepage.dev/name: LiteLLM
           gethomepage.dev/description: LLM gateway
           gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: litellm.png
+          gethomepage.dev/icon: litlellm.png
         hosts:
           - host: litellm.lan.${CLUSTER_DOMAIN}
             paths:
