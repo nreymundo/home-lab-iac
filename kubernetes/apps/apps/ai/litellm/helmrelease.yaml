@@ -36,6 +36,22 @@ spec:
                   secretKeyRef:
                     name: litellm-secrets
                     key: LITELLM_SALT_KEY
+              GENERIC_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm-sso-secret
+                    key: CLIENT_ID
+              GENERIC_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm-sso-secret
+                    key: CLIENT_SECRET
+              GENERIC_AUTHORIZATION_ENDPOINT: https://sso.${CLUSTER_DOMAIN}/application/o/authorize/
+              GENERIC_TOKEN_ENDPOINT: https://sso.${CLUSTER_DOMAIN}/application/o/token/
+              GENERIC_USERINFO_ENDPOINT: https://sso.${CLUSTER_DOMAIN}/application/o/userinfo/
+              GENERIC_SCOPE: "openid profile email litellm"
+              GENERIC_USER_ROLE_ATTRIBUTE: litellm_role
+              PROXY_BASE_URL: https://litellm.lan.${CLUSTER_DOMAIN}
               REDIS_HOST: litellm-valkey
               REDIS_PORT: "6379"
             ports:

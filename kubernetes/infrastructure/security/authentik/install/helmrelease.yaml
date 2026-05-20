@@ -116,6 +116,16 @@ spec:
             secretKeyRef:
               name: nextcloud-sso-secret
               key: CLIENT_SECRET
+        - name: LITELLM_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: litellm-sso-secret
+              key: CLIENT_ID
+        - name: LITELLM_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: litellm-sso-secret
+              key: CLIENT_SECRET
         - name: DISCORD_BASIC_AUTH
           valueFrom:
             secretKeyRef:
