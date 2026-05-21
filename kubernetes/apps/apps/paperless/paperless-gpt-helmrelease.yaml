@@ -10,7 +10,7 @@ spec:
   values:
     controllers:
       main:
-        replicas: 0
+        replicas: 1
         containers:
           main:
             image:
@@ -28,16 +28,16 @@ spec:
               MANUAL_TAG: paperless-gpt
               AUTO_TAG: paperless-gpt-auto
               LLM_PROVIDER: openai
-              LLM_MODEL: qwen3_5_35b
+              LLM_MODEL: local/document-analysis
               OPENAI_API_KEY:
                 valueFrom:
                   secretKeyRef:
                     name: paperless-gpt-secrets
                     key: OPENAI_API_KEY
-              OPENAI_BASE_URL: http://192.168.10.70:8080/v1
+              OPENAI_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
               OCR_PROVIDER: llm
               VISION_LLM_PROVIDER: openai
-              VISION_LLM_MODEL: qwen3_5_35b
+              VISION_LLM_MODEL: local/document-analysis
               OLLAMA_HOST: http://192.168.10.70:8080/v1
               OCR_PROCESS_MODE: image
               PDF_SKIP_EXISTING_OCR: "false"
