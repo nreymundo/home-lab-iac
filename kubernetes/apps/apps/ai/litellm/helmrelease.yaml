@@ -53,8 +53,7 @@ spec:
               GENERIC_USER_ROLE_ATTRIBUTE: litellm_role
               PROXY_BASE_URL: https://litellm.lan.${CLUSTER_DOMAIN}
               AUTO_REDIRECT_UI_LOGIN_TO_SSO: "true"
-              REDIS_HOST: litellm-valkey
-              REDIS_PORT: "6379"
+              REDIS_URL: redis://litellm-valkey:6379
             ports:
               - name: http
                 containerPort: 4000
