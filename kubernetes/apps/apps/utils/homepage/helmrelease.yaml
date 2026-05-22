@@ -172,10 +172,6 @@ spec:
                 #   url: https://pve1.lan.${CLUSTER_DOMAIN}
                 #   username: "api-ro@pam!homepage"
                 #   password: "{{HOMEPAGE_VAR_PROXMOX_API_KEY}}"
-            - Framework Desktop:
-                icon: cockpit.png
-                description: "Framework Desktop management interface"
-                href: https://framework.lan.${CLUSTER_DOMAIN}
             - JetKVM:
                 icon: jetkvm.png
                 description: "IP KVM"
