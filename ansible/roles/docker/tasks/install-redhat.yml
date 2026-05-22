@@ -1,0 +1,28 @@
+---
+- name: Update dnf cache
+  ansible.builtin.dnf:
+    update_cache: true
+
+- name: Install Docker prerequisites
+  ansible.builtin.dnf:
+    name: "{{ docker_redhat_prerequisite_packages }}"
+    state: present
+
+- name: Add Docker DNF repository
+  ansible.builtin.yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable - $basearch
+    baseurl: "{{ docker_redhat_repo_baseurl }}"
+    enabled: true
+    gpgcheck: true
+    gpgkey: "{{ docker_redhat_repo_gpgkey }}"
+  notify: Update dnf cache
+
+- name: Update dnf cache after adding repo
+  ansible.builtin.dnf:
+    update_cache: true
+
+- name: Install Docker packages
+  ansible.builtin.dnf:
+    name: "{{ docker_packages }}"
+    state: "{{ docker_package_state }}"

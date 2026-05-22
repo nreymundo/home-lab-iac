@@ -6,6 +6,30 @@ docker_install_enabled: false
 # Docker package state (present = latest, "x.y.z" to pin version)
 docker_package_state: present
 
+# OS families supported by this role
+docker_supported_os_families:
+  - Debian
+  - RedHat
+
+# Docker packages
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+# Debian/Ubuntu prerequisites
+docker_debian_prerequisite_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+
+# Fedora/RHEL prerequisites
+docker_redhat_prerequisite_packages:
+  - dnf-plugins-core
+
 # Users to add to docker group
 docker_users:
   - "{{ common_user }}"
@@ -22,5 +46,7 @@ docker_daemon_config:
 docker_log_max_size: "100m"
 docker_log_max_files: "3"
 
-# Docker APT repository base URL (auto-detected per OS)
+# Docker repository settings
 docker_repo_base_url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"
+docker_redhat_repo_baseurl: "{{ docker_repo_base_url }}/$releasever/$basearch/stable"
+docker_redhat_repo_gpgkey: "{{ docker_repo_base_url }}/gpg"
