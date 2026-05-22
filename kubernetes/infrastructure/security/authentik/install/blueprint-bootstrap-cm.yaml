@@ -1362,4 +1362,12 @@ data:
             kubernetes_ingress_secret_name: wildcard-cluster-domain-tls
             kubernetes_disabled_components:
               - traefik middleware
+            kubernetes_json_patches:
+              deployment:
+                # Force a managed outpost rollout when the shared forward-domain
+                # cookie scope changes; authentik only applies provider
+                # cookie_domain to the proxy session store at process start.
+                - op: add
+                  path: /spec/template/metadata/labels/authentik-cookie-domain
+                  value: "${CLUSTER_DOMAIN}"
             cookie_token_duration: 86400
