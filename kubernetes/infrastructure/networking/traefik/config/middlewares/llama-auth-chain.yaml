@@ -1,0 +1,13 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: llama-auth-chain
+  namespace: traefik
+spec:
+  chain:
+    middlewares:
+      - name: default-headers
+      - name: crowdsec-bouncer
+        namespace: crowdsec
+      - name: authentik-auth-llama
+        namespace: authentik
