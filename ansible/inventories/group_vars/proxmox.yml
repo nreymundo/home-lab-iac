@@ -22,6 +22,7 @@ common_packages:
   - git
   - linux-cpupower
   - powertop
+  - mokutil
 
 # Allow root login with keys for Proxmox, but disable passwords.
 ssh_hardening_sshd_settings:
