@@ -6,6 +6,7 @@ resources:
   - middleware-frigate.yaml
   - middleware-discord.yaml
   - middleware-kopia.yaml
+  - middleware-llama.yaml
   - middleware-openclaw.yaml
   - ingress.yaml
   - outpost-callback-ingress.yaml

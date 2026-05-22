@@ -29,7 +29,7 @@ metadata:
   name: llama-swap
   namespace: external-proxy
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-llama-auth-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     external-dns.alpha.kubernetes.io/hostname: llama.lan.${CLUSTER_DOMAIN}
 spec:

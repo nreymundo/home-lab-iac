@@ -136,6 +136,11 @@ spec:
             secretKeyRef:
               name: kopia-auth-secret
               key: BASIC_AUTH
+        - name: LLAMA_BASIC_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: llama-auth-secret
+              key: BASIC_AUTH
         - name: FRIGATE_PROXY_SECRET
           valueFrom:
             secretKeyRef:
