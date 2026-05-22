@@ -7,3 +7,6 @@ lxc_hardening_sshd_settings:
   KbdInteractiveAuthentication: "no"
   ChallengeResponseAuthentication: "no"
   X11Forwarding: "no"
+
+docker_install_enabled: true
+docker_users: []

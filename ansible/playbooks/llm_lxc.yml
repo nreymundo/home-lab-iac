@@ -5,6 +5,7 @@
   roles:
     - lxc_hardening
     - lxc_bootstrap
+    - docker
     - llm_runtime
     - whisper_runtime
     - llama_swap
