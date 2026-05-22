@@ -18,8 +18,10 @@
 - name: Verify Docker role supports this OS family
   ansible.builtin.assert:
     that:
-      - ansible_os_family in docker_supported_os_families
-    fail_msg: "Docker installation is not supported for OS family {{ ansible_os_family }}"
+      - ansible_os_family in docker_supported_os_families or ansible_distribution in docker_supported_distributions
+    fail_msg: >-
+      Docker installation is not supported for {{ ansible_distribution }}
+      (OS family {{ ansible_os_family }})
   when: docker_install_enabled | bool
 
 # ========================================
@@ -31,11 +33,11 @@
     - docker_install_enabled | bool
     - ansible_os_family == 'Debian'
 
-- name: Run RedHat Docker installation tasks
-  ansible.builtin.include_tasks: install-redhat.yml
+- name: Run Fedora Docker installation tasks
+  ansible.builtin.include_tasks: install-fedora.yml
   when:
     - docker_install_enabled | bool
-    - ansible_os_family == 'RedHat'
+    - ansible_distribution == 'Fedora'
 
 # ========================================
 # BLOCK 3: Configure and start service

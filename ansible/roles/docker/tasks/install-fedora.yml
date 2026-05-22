@@ -5,17 +5,17 @@
 
 - name: Install Docker prerequisites
   ansible.builtin.dnf:
-    name: "{{ docker_redhat_prerequisite_packages }}"
+    name: "{{ docker_fedora_prerequisite_packages }}"
     state: present
 
 - name: Add Docker DNF repository
   ansible.builtin.yum_repository:
     name: docker-ce-stable
     description: Docker CE Stable - $basearch
-    baseurl: "{{ docker_redhat_repo_baseurl }}"
+    baseurl: "{{ docker_fedora_repo_baseurl }}"
     enabled: true
     gpgcheck: true
-    gpgkey: "{{ docker_redhat_repo_gpgkey }}"
+    gpgkey: "{{ docker_fedora_repo_gpgkey }}"
   notify: Update dnf cache
 
 - name: Update dnf cache after adding repo
