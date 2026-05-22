@@ -17,7 +17,7 @@ metadata:
   namespace: external-proxy
 subsets:
   - addresses:
-      - ip: 192.168.20.3
+      - ip: ${EMQX_IP}
     ports:
       - name: http
         port: 18083

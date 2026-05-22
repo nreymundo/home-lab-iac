@@ -20,7 +20,7 @@ metadata:
   namespace: external-proxy
 subsets:
   - addresses:
-      - ip: 192.168.1.2
+      - ip: ${OMADA_IP}
     ports:
       - name: https
         port: 8043
