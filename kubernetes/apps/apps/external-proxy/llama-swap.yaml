@@ -17,7 +17,7 @@ metadata:
   namespace: external-proxy
 subsets:
   - addresses:
-      - ip: 192.168.10.70
+      - ip: ${LLAMA_SWAP_IP}
     ports:
       - name: http
         port: 8080

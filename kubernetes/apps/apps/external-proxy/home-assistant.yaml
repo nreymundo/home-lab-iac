@@ -17,7 +17,7 @@ metadata:
   namespace: external-proxy
 subsets:
   - addresses:
-      - ip: 192.168.20.10
+      - ip: ${HOME_ASSISTANT_IP}
     ports:
       - name: http
         port: 8123
