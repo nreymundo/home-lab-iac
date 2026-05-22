@@ -15,98 +15,32 @@
     quiet: true
   when: docker_install_enabled | bool
 
+- name: Verify Docker role supports this OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family in docker_supported_os_families or ansible_distribution in docker_supported_distributions
+    fail_msg: >-
+      Docker installation is not supported for {{ ansible_distribution }}
+      (OS family {{ ansible_os_family }})
+  when: docker_install_enabled | bool
+
 # ========================================
 # BLOCK 2: Prerequisites and repo setup
 # ========================================
-- name: Update apt cache
-  ansible.builtin.apt:
-    update_cache: true
-    cache_valid_time: 3600
+- name: Run Debian Docker installation tasks
+  ansible.builtin.include_tasks: install-debian.yml
   when:
     - docker_install_enabled | bool
     - ansible_os_family == 'Debian'
 
-- name: Install Docker prerequisites
-  ansible.builtin.apt:
-    name:
-      - ca-certificates
-      - curl
-      - gnupg
-      - lsb-release
-    state: present
+- name: Run Fedora Docker installation tasks
+  ansible.builtin.include_tasks: install-fedora.yml
   when:
     - docker_install_enabled | bool
-    - ansible_os_family == 'Debian'
-
-- name: Create keyrings directory for GPG keys
-  ansible.builtin.file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: "0755"
-  when:
-    - docker_install_enabled | bool
-    - ansible_os_family == 'Debian'
-
-- name: Download Docker official GPG key
-  ansible.builtin.get_url:
-    url: "{{ docker_repo_base_url }}/gpg"
-    dest: /tmp/docker.gpg.asc
-    mode: "0644"
-    force: true
-  when:
-    - docker_install_enabled | bool
-    - ansible_os_family == 'Debian'
-
-- name: Convert GPG key to dearmor format
-  ansible.builtin.command:
-    cmd: gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg /tmp/docker.gpg.asc
-    creates: /usr/share/keyrings/docker-archive-keyring.gpg
-  when:
-    - docker_install_enabled | bool
-    - ansible_os_family == 'Debian'
-
-- name: Determine architecture for repo
-  ansible.builtin.set_fact:
-    docker_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
-  when:
-    - docker_install_enabled | bool
-    - ansible_os_family == 'Debian'
-
-- name: Add Docker APT repository
-  ansible.builtin.copy:
-    content: |
-      deb [arch={{ docker_arch }} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] {{ docker_repo_base_url }} {{ ansible_distribution_release }} stable
-    dest: /etc/apt/sources.list.d/docker.list
-    mode: "0644"
-  when:
-    - docker_install_enabled | bool
-    - ansible_os_family == 'Debian'
-  notify: Update apt cache
+    - ansible_distribution == 'Fedora'
 
 # ========================================
-# BLOCK 3: Install Docker packages
-# ========================================
-- name: Update apt cache after adding repo
-  ansible.builtin.apt:
-    update_cache: true
-  when:
-    - docker_install_enabled | bool
-    - ansible_os_family == 'Debian'
-
-- name: Install Docker packages (latest stable)
-  ansible.builtin.apt:
-    name:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
-      - docker-compose-plugin
-    state: "{{ docker_package_state }}"
-  when:
-    - docker_install_enabled | bool
-    - ansible_os_family == 'Debian'
-
-# ========================================
-# BLOCK 4: Configure and start service
+# BLOCK 3: Configure and start service
 # ========================================
 - name: Create /etc/docker directory
   ansible.builtin.file:
@@ -138,7 +72,7 @@
     - not ansible_check_mode
 
 # ========================================
-# BLOCK 5: User management
+# BLOCK 4: User management
 # ========================================
 - name: Add users to docker group
   ansible.builtin.user:
@@ -160,7 +94,7 @@
     - not ansible_check_mode
 
 # ========================================
-# BLOCK 6: Verification (non-check mode only)
+# BLOCK 5: Verification (non-check mode only)
 # ========================================
 - name: Run Docker hello-world test
   ansible.builtin.command: docker run --rm hello-world
