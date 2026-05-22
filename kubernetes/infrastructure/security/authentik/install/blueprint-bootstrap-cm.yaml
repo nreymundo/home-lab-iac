@@ -42,7 +42,7 @@ data:
           mode: forward_domain
           external_host: "https://sso.${CLUSTER_DOMAIN}"
           domain: "${CLUSTER_DOMAIN}"
-          cookie_domain: "${CLUSTER_DOMAIN}"
+          cookie_domain: ".${CLUSTER_DOMAIN}"
           internal_host: ""
           internal_host_ssl_validation: true
           skip_path_regex: ""
