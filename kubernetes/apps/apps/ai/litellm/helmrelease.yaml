@@ -21,6 +21,8 @@ spec:
             env:
               TZ: Europe/Berlin
               STORE_MODEL_IN_DB: "True"
+              CHATGPT_TOKEN_DIR: /var/lib/litellm/chatgpt
+              CHATGPT_AUTH_FILE: auth.json
               DATABASE_URL:
                 valueFrom:
                   secretKeyRef:
@@ -176,6 +178,16 @@ spec:
                   port: http
 
     persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: litellm
+        advancedMounts:
+          main:
+            main:
+              - path: /var/lib/litellm
       valkey-data:
         enabled: true
         type: emptyDir

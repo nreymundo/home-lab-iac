@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - vane-pvc.yaml
   - sillytavern-pvc.yaml
+  - litellm-pvc.yaml
