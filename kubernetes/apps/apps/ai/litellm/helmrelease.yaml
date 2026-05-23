@@ -21,6 +21,7 @@ spec:
             env:
               TZ: Europe/Berlin
               STORE_MODEL_IN_DB: "True"
+              CONFIG_FILE_PATH: /etc/litellm/config.yaml
               CHATGPT_TOKEN_DIR: /var/lib/litellm/chatgpt
               CHATGPT_AUTH_FILE: auth.json
               DATABASE_URL:
@@ -195,3 +196,13 @@ spec:
           valkey:
             valkey:
               - path: /data
+      config:
+        enabled: true
+        type: configMap
+        name: litellm-config
+        advancedMounts:
+          main:
+            main:
+              - path: /etc/litellm/config.yaml
+                subPath: config.yaml
+                readOnly: true

@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litellm-config
+  namespace: ai
+data:
+  config.yaml: |
+    model_list:
+      - model_name: openai/gpt-5.5
+        model_info:
+          mode: responses
+          max_input_tokens: 272000
+        litellm_params:
+          model: chatgpt/gpt-5.5
+
+      - model_name: openai/gpt-5.4
+        model_info:
+          mode: responses
+          max_input_tokens: 272000
+        litellm_params:
+          model: chatgpt/gpt-5.4
+
+      - model_name: openai/gpt-5.4-mini
+        model_info:
+          mode: responses
+          max_input_tokens: 272000
+        litellm_params:
+          model: chatgpt/gpt-5.4-mini
+
+      - model_name: openai/gpt-5.3-codex
+        model_info:
+          mode: responses
+          max_input_tokens: 272000
+        litellm_params:
+          model: chatgpt/gpt-5.3-codex
+
+      - model_name: openai/gpt-5.3-codex-spark
+        model_info:
+          mode: responses
+          max_input_tokens: 272000
+        litellm_params:
+          model: chatgpt/gpt-5.3-codex-spark
+
+    litellm_settings:
+      cache: true
+      cache_params:
+        type: redis
+        host: litellm-valkey
+        port: "6379"
+        ssl: false
+        ssl_check_hostname: false
+
+    general_settings:
+      store_model_in_db: true
+
+    router_settings:
+      routing_strategy: simple-shuffle
+      num_retries: 2
+      timeout: 6000
+      max_fallbacks: 5
+      allowed_fails: 3
+      cooldown_time: 5
+      retry_after: 0
+      enable_pre_call_checks: false
+      model_group_alias:
+        local/tts: openai/chatterbox
+        local/rerank: hosted_vllm/qwen3-reranker-0.6b
+        local/stt-fast: hosted_vllm/whisper/large-v3-turbo-q5_0
+        local/embedding: hosted_vllm/qwen3-embedding-0.6b
+        local/stt-large: hosted_vllm/whisper/large-v3-q5_0
+        local/automation-lite: hosted_vllm/unsloth/qwen3-4b-instruct-2507
+        local/document-analysis: hosted_vllm/unsloth/qwen3-vl-30b-a3b-instruct
+        chatgpt/latest: openai/gpt-5.5
