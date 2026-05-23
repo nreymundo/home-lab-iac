@@ -5,6 +5,7 @@ components:
   - ../../../../components/ingress/traefik-base
 
 resources:
+  - configmap.yaml
   - litellm-db-secrets.sops.yaml
   - litellm-secrets.sops.yaml
   - cnpg-cluster.yaml
