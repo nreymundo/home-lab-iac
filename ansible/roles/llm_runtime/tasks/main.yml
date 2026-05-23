@@ -103,6 +103,57 @@
     - llm_runtime_llama_dir_stat.stat.exists
     - not (llm_runtime_llama_git_dir_stat.stat.isdir | default(false))
 
+- name: Ensure llama.cpp support directory exists before source update
+  ansible.builtin.file:
+    path: "{{ llm_runtime_llama_dir }}/.ansible"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_update | bool
+    - llm_runtime_llama_git_dir_stat.stat.isdir | default(false)
+
+- name: Install llama grammar patch before source update
+  ansible.builtin.copy:
+    src: llama-grammar.patch
+    dest: "{{ llm_runtime_llama_patch_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_update | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+    - llm_runtime_llama_git_dir_stat.stat.isdir | default(false)
+
+- name: Check whether llama grammar patch should be reverted before source update # noqa command-instead-of-module
+  ansible.builtin.command: git apply --reverse --check {{ llm_runtime_llama_patch_path | quote }}
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  register: llm_runtime_grammar_patch_pre_update_reverse_check
+  changed_when: false
+  failed_when: false
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_update | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+    - llm_runtime_llama_git_dir_stat.stat.isdir | default(false)
+
+- name: Revert llama grammar patch before source update # noqa command-instead-of-module
+  ansible.builtin.command: git apply --reverse {{ llm_runtime_llama_patch_path | quote }}
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  register: llm_runtime_grammar_patch_pre_update_revert
+  changed_when: true
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_update | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+    - llm_runtime_llama_git_dir_stat.stat.isdir | default(false)
+    - llm_runtime_grammar_patch_pre_update_reverse_check.rc == 0
+
 - name: Clone or update llama.cpp source
   ansible.builtin.git:
     repo: "{{ llm_runtime_llama_repo }}"
@@ -211,16 +262,18 @@
       {{
         llm_runtime_force_rebuild | bool
         or llm_runtime_llama_git.changed
+        or (llm_runtime_grammar_patch_pre_update_revert.changed | default(false))
         or (llm_runtime_grammar_patch_file.changed | default(false))
         or (llm_runtime_grammar_patch_apply.changed | default(false))
         or llm_runtime_marker_cmp.rc != 0
       }}
   when: llm_runtime_enable_llama | bool
 
-- name: Configure llama.cpp ROCm build
+- name: Configure llama.cpp ROCm/Vulkan build
   ansible.builtin.command: >-
     cmake -S . -B {{ llm_runtime_llama_build_dir | quote }}
     -DGGML_HIP=ON
+    -DGGML_VULKAN={{ 'ON' if llm_runtime_enable_vulkan | bool else 'OFF' }}
     -DCMAKE_HIP_FLAGS={{ llm_runtime_cmake_hip_flags | quote }}
     -DAMDGPU_TARGETS={{ llm_runtime_amdgpu_targets | quote }}
     -DCMAKE_BUILD_TYPE={{ llm_runtime_build_type | quote }}

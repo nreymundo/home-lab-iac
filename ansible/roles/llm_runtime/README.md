@@ -7,7 +7,7 @@ The role mirrors the important parts of the
 
 - ROCm repository and runtime/build packages;
 - ROCm shell environment;
-- `llama.cpp` clone, grammar patch, ROCm/HIP build, and install;
+- `llama.cpp` clone, grammar patch, ROCm/HIP plus optional Vulkan build, and install;
 - `gguf-vram-estimator.py` helper;
 - validation with `rocminfo` and `llama-cli`.
 
@@ -32,14 +32,16 @@ Important parameters:
 
 ROCm packages are installed only when `llm_runtime_enable_rocm` is true. Vulkan
 runtime/build packages are installed only when `llm_runtime_enable_vulkan` is
-true, so the same LXC can host ROCm `llama.cpp` and Vulkan workloads such as
-`whisper.cpp`.
+true. When both are enabled, `llama.cpp` is configured with both `GGML_HIP` and
+`GGML_VULKAN`, so the installed llama binaries can see both backends.
 
 `llm_runtime_enable_llama` controls whether this role builds `llama.cpp`.
-The current `llama.cpp` build is HIP/ROCm-based, so enabling it requires
-`llm_runtime_enable_rocm`.
+The current `llama.cpp` build always includes HIP/ROCm, so enabling it requires
+`llm_runtime_enable_rocm`; Vulkan support is added when
+`llm_runtime_enable_vulkan` is true.
 
 The role writes `{{ llm_runtime_llama_marker_path }}` after a successful build.
 Changing the ROCm version, llama.cpp ref, build flags, or patch settings causes
-the next playbook run to rebuild. Source updates are opt-in with
-`llm_runtime_llama_update` so normal runs do not reset the patched source tree.
+the next playbook run to rebuild. Source updates are controlled with
+`llm_runtime_llama_update`; when enabled, the role temporarily reverts its
+managed grammar patch before updating the checkout, then reapplies it.
