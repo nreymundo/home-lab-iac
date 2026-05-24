@@ -11,6 +11,7 @@ data:
       - model_name: openai/chatterbox
         model_info:
           mode: audio_speech
+          health_check_voice: Abigail.wav
         litellm_params:
           model: openai/chatterbox
           custom_llm_provider: openai
