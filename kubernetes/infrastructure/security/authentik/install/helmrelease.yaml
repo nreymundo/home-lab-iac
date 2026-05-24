@@ -126,6 +126,16 @@ spec:
             secretKeyRef:
               name: litellm-sso-secret
               key: CLIENT_SECRET
+        - name: HARBOR_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: harbor-sso-secret
+              key: CLIENT_ID
+        - name: HARBOR_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: harbor-sso-secret
+              key: CLIENT_SECRET
         - name: DISCORD_BASIC_AUTH
           valueFrom:
             secretKeyRef:
