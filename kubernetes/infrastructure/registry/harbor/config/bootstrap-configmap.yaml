@@ -89,8 +89,12 @@ data:
     def ensure_registry(spec):
         for registry in list_registries():
             if registry.get("name") == spec["name"]:
-                if registry.get("type") != spec["type"] or registry.get("url") != spec["url"]:
-                    raise RuntimeError(f"registry endpoint {spec['name']} exists with unexpected type/url")
+                if registry.get("url") != spec["url"]:
+                    raise RuntimeError(f"registry endpoint {spec['name']} exists with unexpected url")
+                if registry.get("type") != spec["type"]:
+                    request("DELETE", f"/registries/{registry['id']}", ok=(200,))
+                    print(f"deleted registry endpoint {spec['name']} with unsupported type", flush=True)
+                    break
                 access_key = spec.get("access_key", "")
                 access_secret = spec.get("access_secret", "")
                 if access_key and access_secret and access_key != "REPLACE_ME" and access_secret != "REPLACE_ME":
@@ -194,7 +198,7 @@ data:
         {
             "name": "quay",
             "description": "Quay proxy cache upstream",
-            "type": "quay",
+            "type": "docker-registry",
             "url": "https://quay.io",
         },
     ]
