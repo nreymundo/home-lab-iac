@@ -172,6 +172,7 @@ data:
             return [model["id"] for model in response.json().get("data", [])]
 
         VLLMModelInfo.get_models = get_models
+        litellm.models_by_provider.setdefault("hosted_vllm", [])
 
 
     def worker_startup_hook():
