@@ -14,5 +14,6 @@ resources:
   - omada.yaml
   - kopia.yaml
   - llama-swap.yaml
+  - chatterbox.yaml
   - syncthing.yaml
   - openclaw.yaml

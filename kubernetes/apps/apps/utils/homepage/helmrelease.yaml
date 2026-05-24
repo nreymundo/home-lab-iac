@@ -242,6 +242,10 @@ spec:
                 icon: ollama.png
                 description: "LLM model hot-swapping proxy"
                 href: https://llama.lan.${CLUSTER_DOMAIN}
+            - Chatterbox:
+                icon: https://i.imgur.com/w9QDXK0.png
+                description: "Text-to-speech API"
+                href: https://chatterbox.lan.${CLUSTER_DOMAIN}
       widgets:
         # - resources:
         #     # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.

@@ -25,7 +25,6 @@ resources:
   - ../apps/development/gitea
   - ../apps/ai/sillytavern
   - ../apps/ai/whisper
-  - ../apps/ai/kokoro
   - ../apps/ai/vane
   - ../apps/ai/litellm
   - ../apps/security/frigate
