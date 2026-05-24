@@ -63,6 +63,7 @@ data:
     litellm_settings:
       callbacks:
         - cache_bypass.proxy_handler_instance
+      check_provider_endpoint: true
       cache: true
       cache_params:
         type: redis
