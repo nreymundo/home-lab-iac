@@ -15,6 +15,7 @@ spec:
     secretRef:
       name: sops-age
   dependsOn:
+    - name: cluster-identity
     - name: infrastructure
   postBuild:
     substituteFrom:

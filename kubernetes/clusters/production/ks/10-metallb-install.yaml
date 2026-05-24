@@ -10,6 +10,8 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  dependsOn:
+    - name: cluster-identity
   wait: true
   healthChecks:
     - apiVersion: helm.toolkit.fluxcd.io/v2
