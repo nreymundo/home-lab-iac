@@ -55,8 +55,8 @@ locals {
       vm_balloon_mb          = coalesce(try(node.vm_balloon_mb, null), local.k3s.vm_balloon_mb)
       vm_disk_size_gb        = coalesce(try(node.vm_disk_size_gb, null), local.k3s.vm_disk_size_gb)
       secondary_disk_size_gb = coalesce(try(node.secondary_disk_size_gb, null), local.k3s.secondary_disk_size_gb)
-      pci_devices            = try(node.pci_devices, [])
-      proxmox_tags           = try(node.proxmox_tags, [])
+      pci_devices            = coalesce(try(node.pci_devices, null), [])
+      proxmox_tags           = coalesce(try(node.proxmox_tags, null), [])
     })
   ]
 
