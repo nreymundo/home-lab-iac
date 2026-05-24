@@ -62,7 +62,6 @@ data:
 
     litellm_settings:
       callbacks:
-        - vllm_model_discovery.proxy_handler_instance
         - cache_bypass.proxy_handler_instance
       check_provider_endpoint: true
       cache: true
@@ -143,7 +142,6 @@ data:
     import os
 
     import litellm
-    from litellm.integrations.custom_logger import CustomLogger
     from litellm.llms.vllm.common_utils import VLLMModelInfo
     from litellm.utils import _add_path_to_api_base
 
@@ -176,9 +174,5 @@ data:
         VLLMModelInfo.get_models = get_models
 
 
-    class VLLMModelDiscoveryPatch(CustomLogger):
-        pass
-
-
-    patch_vllm_model_discovery()
-    proxy_handler_instance = VLLMModelDiscoveryPatch()
+    def worker_startup_hook():
+        patch_vllm_model_discovery()

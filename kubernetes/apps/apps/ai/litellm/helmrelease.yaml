@@ -21,6 +21,7 @@ spec:
             env:
               TZ: Europe/Berlin
               PYTHONPATH: /etc/litellm
+              LITELLM_WORKER_STARTUP_HOOKS: vllm_model_discovery:worker_startup_hook
               STORE_MODEL_IN_DB: "True"
               CONFIG_FILE_PATH: /etc/litellm/config.yaml
               CHATGPT_TOKEN_DIR: /var/lib/litellm/chatgpt
