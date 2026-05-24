@@ -11,6 +11,7 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
+    - name: cluster-identity
     - name: infrastructure
     - name: observability-kube-prometheus-stack-install
   wait: true
