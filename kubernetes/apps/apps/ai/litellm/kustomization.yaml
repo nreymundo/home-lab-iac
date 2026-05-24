@@ -6,6 +6,7 @@ components:
 
 resources:
   - configmap.yaml
+  - litellm-credentials.sops.yaml
   - litellm-db-secrets.sops.yaml
   - litellm-secrets.sops.yaml
   - cnpg-cluster.yaml

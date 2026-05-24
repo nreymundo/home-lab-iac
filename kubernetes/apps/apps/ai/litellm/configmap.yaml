@@ -5,41 +5,71 @@ metadata:
   namespace: ai
 data:
   config.yaml: |
+    # ChatGPT subscription models are disabled until LiteLLM fixes empty
+    # responses output for chatgpt/* models. Track upstream issue #25429.
     model_list:
-      - model_name: openai/gpt-5.5
+      - model_name: openai/chatterbox
         model_info:
-          mode: responses
-          max_input_tokens: 272000
+          mode: audio_speech
         litellm_params:
-          model: chatgpt/gpt-5.5
+          model: openai/chatterbox
+          custom_llm_provider: openai
+          litellm_credential_name: Llama-Swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
 
-      - model_name: openai/gpt-5.4
+      - model_name: local/tts
         model_info:
-          mode: responses
-          max_input_tokens: 272000
+          mode: audio_speech
         litellm_params:
-          model: chatgpt/gpt-5.4
+          model: openai/chatterbox
+          custom_llm_provider: openai
+          litellm_credential_name: Llama-Swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
 
-      - model_name: openai/gpt-5.4-mini
+      - model_name: hosted_vllm/*
         model_info:
-          mode: responses
-          max_input_tokens: 272000
+          mode: chat
+          health_check_model: unsloth/qwen3-4b-instruct-2507
         litellm_params:
-          model: chatgpt/gpt-5.4-mini
+          model: hosted_vllm/*
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: Llama-Swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
 
-      - model_name: openai/gpt-5.3-codex
+      - model_name: openrouter/free
         model_info:
-          mode: responses
-          max_input_tokens: 272000
+          mode: chat
         litellm_params:
-          model: chatgpt/gpt-5.3-codex
+          model: openrouter/openrouter/free
+          custom_llm_provider: openrouter
+          litellm_credential_name: Openrouter
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
 
-      - model_name: openai/gpt-5.3-codex-spark
-        model_info:
-          mode: responses
-          max_input_tokens: 272000
-        litellm_params:
-          model: chatgpt/gpt-5.3-codex-spark
+    credential_list:
+      - credential_name: Llama-Swap
+        credential_values:
+          api_base: os.environ/LITELLM_CREDENTIAL_LLAMA_SWAP_API_BASE
+          api_key: os.environ/LITELLM_CREDENTIAL_LLAMA_SWAP_API_KEY
+        credential_info:
+          custom_llm_provider: openai
+
+      - credential_name: Openrouter
+        credential_values:
+          api_key: os.environ/LITELLM_CREDENTIAL_OPENROUTER_API_KEY
+        credential_info:
+          custom_llm_provider: openrouter
 
     litellm_settings:
       cache: true
@@ -70,4 +100,3 @@ data:
         local/stt-large: hosted_vllm/whisper/large-v3-q5_0
         local/automation-lite: hosted_vllm/unsloth/qwen3-4b-instruct-2507
         local/document-analysis: hosted_vllm/unsloth/qwen3-vl-30b-a3b-instruct
-        chatgpt/latest: openai/gpt-5.5
