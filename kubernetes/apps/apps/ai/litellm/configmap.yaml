@@ -62,6 +62,7 @@ data:
 
     litellm_settings:
       callbacks:
+        - vllm_model_discovery.proxy_handler_instance
         - cache_bypass.proxy_handler_instance
       check_provider_endpoint: true
       cache: true
@@ -137,3 +138,47 @@ data:
 
 
     proxy_handler_instance = CacheBypassHandler()
+
+  vllm_model_discovery.py: |
+    import os
+
+    import litellm
+    from litellm.integrations.custom_logger import CustomLogger
+    from litellm.llms.vllm.common_utils import VLLMModelInfo
+    from litellm.utils import _add_path_to_api_base
+
+
+    def patch_vllm_model_discovery():
+        def get_models(self, api_key=None, api_base=None):
+            api_base = api_base or os.environ.get("VLLM_API_BASE") or os.environ.get(
+                "LITELLM_CREDENTIAL_LLAMA_SWAP_API_BASE"
+            )
+            api_key = api_key or os.environ.get("VLLM_API_KEY") or os.environ.get(
+                "LITELLM_CREDENTIAL_LLAMA_SWAP_API_KEY"
+            )
+
+            if api_base is None:
+                raise ValueError("VLLM_API_BASE is not set")
+
+            headers = {}
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+                headers["x-api-key"] = api_key
+
+            response = litellm.module_level_client.get(
+                url=_add_path_to_api_base(api_base, "/v1/models"),
+                headers=headers,
+            )
+            response.raise_for_status()
+
+            return [model["id"] for model in response.json().get("data", [])]
+
+        VLLMModelInfo.get_models = get_models
+
+
+    class VLLMModelDiscoveryPatch(CustomLogger):
+        pass
+
+
+    patch_vllm_model_discovery()
+    proxy_handler_instance = VLLMModelDiscoveryPatch()

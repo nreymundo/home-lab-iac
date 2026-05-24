@@ -213,3 +213,6 @@ spec:
               - path: /etc/litellm/cache_bypass.py
                 subPath: cache_bypass.py
                 readOnly: true
+              - path: /etc/litellm/vllm_model_discovery.py
+                subPath: vllm_model_discovery.py
+                readOnly: true
