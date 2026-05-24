@@ -98,6 +98,25 @@
     mode: "0755"
   become: true
 
+- name: Create K3s configuration directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: Configure K3s registry mirrors
+  ansible.builtin.template:
+    src: registries.yaml.j2
+    dest: /etc/rancher/k3s/registries.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  notify: Restart k3s
+
 - name: Download K3s binary
   ansible.builtin.get_url:
     url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/{{ item.name }}"
@@ -135,6 +154,7 @@
           --flannel-iface {{ k3s_iface }}
           --write-kubeconfig-mode 644
           --tls-san {{ k3s_api_vip }}
+          {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
           --disable traefik
           --disable metrics-server
           --disable servicelb
@@ -179,6 +199,12 @@
         - not ansible_check_mode
         - k3s_token_b64.content is defined
         - k3s_token_b64 is succeeded
+      no_log: true
+
+    - name: Set K3s token placeholder for check mode
+      ansible.builtin.set_fact:
+        k3s_cluster_token: check-mode-token
+      when: ansible_check_mode
       no_log: true
 
     - name: Fetch Kubeconfig to ansible directory
@@ -237,10 +263,12 @@
           --node-ip {{ k3s_node_ip }}
           --flannel-iface {{ k3s_iface }}
           --tls-san {{ k3s_api_vip }}
+          {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
           --disable traefik
           --disable metrics-server
           --disable servicelb
           {{ k3s_node_label_args | trim }}
+      notify: Restart k3s
 
     - name: Enable and start K3s service (Secondary)
 
