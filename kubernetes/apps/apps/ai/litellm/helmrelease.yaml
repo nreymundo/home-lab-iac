@@ -12,9 +12,6 @@ spec:
       main:
         annotations:
           reloader.stakater.com/auto: "true"
-        pod:
-          annotations:
-            litellm.lainternetdelpantano.xyz/config-revision: "chatterbox-health-voice"
         containers:
           main:
             image:
