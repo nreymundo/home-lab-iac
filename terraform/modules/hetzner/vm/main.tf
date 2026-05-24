@@ -1,11 +1,11 @@
 locals {
   vms_by_name = {
     for vm in var.vms : vm.name => merge(vm, {
-      cloud_init             = local.cloud_init_by_vm_name[vm.name]
-      explicit_user_data     = local.explicit_user_data_by_vm_name[vm.name]
-      firewall_ids           = coalesce(vm.firewall_ids, [])
-      labels                 = merge(var.default_labels, coalesce(vm.labels, {}))
-      user_data              = local.generated_user_data_by_vm_name[vm.name]
+      cloud_init         = local.cloud_init_by_vm_name[vm.name]
+      explicit_user_data = local.explicit_user_data_by_vm_name[vm.name]
+      firewall_ids       = coalesce(vm.firewall_ids, [])
+      labels             = merge(var.default_labels, coalesce(vm.labels, {}))
+      user_data          = local.generated_user_data_by_vm_name[vm.name]
       volumes = [
         for volume in coalesce(vm.volumes, []) : merge(volume, {
           labels = merge(
