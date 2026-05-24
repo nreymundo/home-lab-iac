@@ -45,8 +45,21 @@ swapoff -a
 sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
 echo "==> 5. VM Template Preparation"
-# Reset machine-id so each VM clone gets unique ID and DHCP IP
 passwd -l root
+
+# Do not bake the template's SSH host identity into clones. The clone will
+# generate host keys once, then preserve them across later cloud-init reruns.
+rm -f /etc/ssh/ssh_host_*
+install -d -m 0755 /etc/cloud/cloud.cfg.d
+cat >/etc/cloud/cloud.cfg.d/99-preserve-ssh-host-keys.cfg <<'EOF'
+ssh_deletekeys: false
+ssh_genkeytypes:
+  - rsa
+  - ecdsa
+  - ed25519
+EOF
+
+# Reset machine-id so each VM clone gets unique ID and DHCP IP
 truncate -s 0 /etc/machine-id
 rm -f /var/lib/dbus/machine-id
 ln -s /etc/machine-id /var/lib/dbus/machine-id
