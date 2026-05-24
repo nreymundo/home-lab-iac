@@ -42,9 +42,11 @@ locals {
       local.cloud_init_by_vm_name[vm.name] == null ? null : join("", [
         "#cloud-config\n",
         yamlencode({
+          disable_root = true
           users = [{
             name                = local.cloud_init_by_vm_name[vm.name].username
             groups              = "users, admin"
+            lock_passwd         = true
             sudo                = "ALL=(ALL) NOPASSWD:ALL"
             shell               = "/bin/bash"
             ssh_authorized_keys = local.cloud_init_by_vm_name[vm.name].ssh_authorized_keys
@@ -77,14 +79,14 @@ locals {
             [
               format("printf '[sshd]\\nenabled = true\\nport = ssh, %d\\nbanaction = iptables-multiport' > /etc/fail2ban/jail.local", local.cloud_init_by_vm_name[vm.name].ssh_port),
               "systemctl enable fail2ban",
-              format("ufw allow %d", local.cloud_init_by_vm_name[vm.name].ssh_port),
+              format("ufw allow %d/tcp", local.cloud_init_by_vm_name[vm.name].ssh_port),
             ],
             [
               for rule in local.cloud_init_by_vm_name[vm.name].ufw_rules : format("ufw allow %s/%s", rule.port, rule.protocol)
             ],
             [
               "ufw --force enable",
-              "systemctl restart ssh",
+              "systemctl restart ssh || systemctl restart sshd",
             ]
           )
         })
