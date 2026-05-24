@@ -1,3 +1,26 @@
+variable "ssh_public_keys_secret_id" {
+  type        = string
+  description = "Bitwarden Secrets Manager secret ID containing newline-delimited SSH public keys. Set to null to disable."
+  default     = "9b5f1231-f792-4e85-96f1-b3c60002f839"
+  nullable    = true
+}
+
+variable "ssh_public_keys" {
+  type        = list(string)
+  description = "Additional SSH public keys to add to all VMs."
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for public_key in var.ssh_public_keys :
+      startswith(trimspace(public_key), "ssh-ed25519 ") ||
+      startswith(trimspace(public_key), "ssh-rsa ") ||
+      startswith(trimspace(public_key), "ecdsa-sha2-")
+    ])
+    error_message = "Each ssh_public_keys entry must look like an OpenSSH public key."
+  }
+}
+
 variable "vms" {
   type = list(object({
     name                        = string

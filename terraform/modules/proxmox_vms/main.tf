@@ -1,14 +1,21 @@
 data "bitwarden-secrets_secret" "ssh_public_keys" {
-  id = "9b5f1231-f792-4e85-96f1-b3c60002f839"
+  count = var.ssh_public_keys_secret_id == null ? 0 : 1
+
+  id = var.ssh_public_keys_secret_id
 }
 
 locals {
-  ssh_public_keys_list = compact(
+  bitwarden_ssh_public_keys = var.ssh_public_keys_secret_id == null ? [] : compact(
     split(
       "\n",
-      replace(trimspace(data.bitwarden-secrets_secret.ssh_public_keys.value), "\r\n", "\n")
+      replace(trimspace(data.bitwarden-secrets_secret.ssh_public_keys[0].value), "\r\n", "\n")
     )
   )
+
+  ssh_public_keys_list = distinct(concat(
+    local.bitwarden_ssh_public_keys,
+    var.ssh_public_keys
+  ))
 
   normalized_vms = [
     for vm in var.vms : merge(vm, {
