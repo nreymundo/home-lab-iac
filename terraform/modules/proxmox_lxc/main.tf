@@ -196,38 +196,24 @@ resource "proxmox_virtual_environment_container" "this" {
   environment_variables = each.value.environment_variables
 
   provisioner "local-exec" {
-    command = <<-EOT
-      set -euo pipefail
+    command = "/usr/bin/env bash \"${path.module}/scripts/bootstrap-ssh.sh\""
 
-      if [ "${try(each.value.ssh_bootstrap.enabled, false)}" != "true" ]; then
-        exit 0
-      fi
-
-      cluster_status="$(ssh -F /dev/null ${coalesce(var.ssh_bootstrap_cluster_ssh_host, "")} 'pvesh get /cluster/status --output-format json')"
-      node_ip="$(printf '%s\n' "$cluster_status" | jq -r --arg node '${each.value.target_node}' '.[] | select(.type == "node" and .name == $node and .online == 1) | .ip' | head -n 1)"
-
-      if [ -z "$node_ip" ] || [ "$node_ip" = "null" ]; then
-        echo "Could not resolve online Proxmox node '${each.value.target_node}' from cluster status" >&2
-        exit 1
-      fi
-
-      ssh -F /dev/null ${var.ssh_bootstrap_node_ssh_user}@"$node_ip" 'pct exec ${each.value.vmid} -- ${try(each.value.ssh_bootstrap.package_manager, "dnf")} install -y ${join(" ", try(each.value.ssh_bootstrap.packages, []))}'
-      ssh -F /dev/null ${var.ssh_bootstrap_node_ssh_user}@"$node_ip" 'pct exec ${each.value.vmid} -- systemctl enable --now ${join(" ", try(each.value.ssh_bootstrap.services, []))}'
-
-      if [ "${try(each.value.ssh_bootstrap.wait_for_ssh, true)}" = "true" ]; then
-        for attempt in $(seq 1 ${try(each.value.ssh_bootstrap.timeout_attempts, 30)}); do
-          if ssh -F /dev/null -o BatchMode=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=${try(each.value.ssh_bootstrap.connect_timeout, 5)} ${try(each.value.ssh_bootstrap.ssh_user, "root")}@${coalesce(try(each.value.ip_address, null), "")} true; then
-            exit 0
-          fi
-          sleep ${try(each.value.ssh_bootstrap.retry_delay, 2)}
-        done
-
-        echo "SSH did not become reachable on ${coalesce(try(each.value.ip_address, null), "")}" >&2
-        exit 1
-      fi
-    EOT
-
-    interpreter = ["/usr/bin/env", "bash", "-c"]
+    environment = {
+      BOOTSTRAP_ENABLED = tostring(try(each.value.ssh_bootstrap.enabled, false))
+      CLUSTER_SSH_HOST  = coalesce(var.ssh_bootstrap_cluster_ssh_host, "")
+      CONNECT_TIMEOUT   = tostring(try(each.value.ssh_bootstrap.connect_timeout, 5))
+      IP_ADDRESS        = coalesce(try(each.value.ip_address, null), "")
+      NODE_SSH_USER     = var.ssh_bootstrap_node_ssh_user
+      PACKAGE_MANAGER   = try(each.value.ssh_bootstrap.package_manager, "dnf")
+      PACKAGES          = join(" ", try(each.value.ssh_bootstrap.packages, []))
+      RETRY_DELAY       = tostring(try(each.value.ssh_bootstrap.retry_delay, 2))
+      SERVICES          = join(" ", try(each.value.ssh_bootstrap.services, []))
+      SSH_USER          = try(each.value.ssh_bootstrap.ssh_user, "root")
+      TARGET_NODE       = each.value.target_node
+      TIMEOUT_ATTEMPTS  = tostring(try(each.value.ssh_bootstrap.timeout_attempts, 30))
+      VMID              = tostring(each.value.vmid)
+      WAIT_FOR_SSH      = tostring(try(each.value.ssh_bootstrap.wait_for_ssh, true))
+    }
   }
 
   lifecycle {
