@@ -20,6 +20,7 @@ spec:
               tag: v1.85.1
             env:
               TZ: Europe/Berlin
+              PYTHONPATH: /etc/litellm
               STORE_MODEL_IN_DB: "True"
               CONFIG_FILE_PATH: /etc/litellm/config.yaml
               CHATGPT_TOKEN_DIR: /var/lib/litellm/chatgpt
@@ -208,4 +209,7 @@ spec:
             main:
               - path: /etc/litellm/config.yaml
                 subPath: config.yaml
+                readOnly: true
+              - path: /etc/litellm/cache_bypass.py
+                subPath: cache_bypass.py
                 readOnly: true
