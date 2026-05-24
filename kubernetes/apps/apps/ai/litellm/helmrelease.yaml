@@ -12,6 +12,9 @@ spec:
       main:
         annotations:
           reloader.stakater.com/auto: "true"
+        pod:
+          annotations:
+            litellm.lainternetdelpantano.xyz/config-revision: "e6b49e2"
         containers:
           main:
             image:
