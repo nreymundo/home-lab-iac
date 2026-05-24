@@ -2,6 +2,7 @@
 name: terraform-docs
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - terraform/modules/**
@@ -12,6 +13,7 @@ on:
       - terraform/modules/**
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
 
@@ -26,23 +28,35 @@ jobs:
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.TERRAFORM_DOCS_TOKEN || github.token }}
 
-      - name: Checkout pushed branch
-        if: github.event_name == 'push'
+      - name: Checkout repository
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v6
 
       - name: Generate Terraform module docs
+        id: docs
         uses: terraform-docs/gh-actions@v1.4.1
         with:
           find-dir: terraform/modules
           output-file: README.md
           output-method: inject
           git-push: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && 'true' || 'false' }}
-          fail-on-diff: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'true' || 'false' }}
+          fail-on-diff: ${{ github.event_name == 'workflow_dispatch' && 'true' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'true' || 'false' }}
           git-commit-message: "docs(terraform): update module documentation"
 
+      - name: Run checks after pull request docs commit
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.docs.outputs.num_changed != '' && steps.docs.outputs.num_changed != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh workflow run commit-message-policy.yml --ref "${{ github.event.pull_request.head.ref }}"
+          gh workflow run terraform-docs.yml --ref "${{ github.event.pull_request.head.ref }}"
+
       - name: Create Terraform docs pull request
+        id: docs-pr
         if: github.event_name == 'push'
         uses: peter-evans/create-pull-request@v7
         with:
@@ -52,3 +66,14 @@ jobs:
           commit-message: "docs(terraform): update module documentation"
           body: |
             Updates generated Terraform module documentation after module changes were pushed to master.
+
+      - name: Run checks for Terraform docs pull request
+        if: github.event_name == 'push' && steps.docs-pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh workflow run commit-message-policy.yml --ref automation/terraform-docs
+          gh workflow run terraform-docs.yml --ref automation/terraform-docs
