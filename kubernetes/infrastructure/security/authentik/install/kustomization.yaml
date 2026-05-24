@@ -17,6 +17,7 @@ resources:
   - paperless-sso-secret.sops.yaml
   - nextcloud-sso-secret.sops.yaml
   - litellm-sso-secret.sops.yaml
+  - harbor-sso-secret.sops.yaml
   - discord-auth-secret.sops.yaml
   - kopia-auth-secret.sops.yaml
   - llama-auth-secret.sops.yaml
