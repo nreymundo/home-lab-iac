@@ -1,0 +1,53 @@
+---
+name: terraform-docs
+
+on:
+  pull_request:
+    paths:
+      - terraform/modules/**
+  push:
+    branches:
+      - master
+    paths:
+      - terraform/modules/**
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  terraform-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout pull request branch
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Checkout pushed branch
+        if: github.event_name == 'push'
+        uses: actions/checkout@v6
+
+      - name: Generate Terraform module docs
+        uses: terraform-docs/gh-actions@v1.4.1
+        with:
+          find-dir: terraform/modules
+          output-file: README.md
+          output-method: inject
+          git-push: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && 'true' || 'false' }}
+          fail-on-diff: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'true' || 'false' }}
+          git-commit-message: "docs(terraform): update module documentation"
+
+      - name: Create Terraform docs pull request
+        if: github.event_name == 'push'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/terraform-docs
+          delete-branch: true
+          title: "docs(terraform): update module documentation"
+          commit-message: "docs(terraform): update module documentation"
+          body: |
+            Updates generated Terraform module documentation after module changes were pushed to master.
