@@ -14,19 +14,7 @@ data:
         litellm_params:
           model: openai/chatterbox
           custom_llm_provider: openai
-          litellm_credential_name: Llama-Swap
-          input_cost_per_token: 0.0
-          output_cost_per_token: 0.0
-          tags:
-            - llama-swap
-
-      - model_name: local/tts
-        model_info:
-          mode: audio_speech
-        litellm_params:
-          model: openai/chatterbox
-          custom_llm_provider: openai
-          litellm_credential_name: Llama-Swap
+          litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
           output_cost_per_token: 0.0
           tags:
@@ -39,7 +27,7 @@ data:
         litellm_params:
           model: hosted_vllm/*
           custom_llm_provider: hosted_vllm
-          litellm_credential_name: Llama-Swap
+          litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
           output_cost_per_token: 0.0
           tags:
@@ -47,25 +35,25 @@ data:
             - pve3
           guardrails: []
 
-      - model_name: openrouter/free
+      - model_name: openrouter/*
         model_info:
           mode: chat
         litellm_params:
-          model: openrouter/openrouter/free
+          model: openrouter/*
           custom_llm_provider: openrouter
-          litellm_credential_name: Openrouter
+          litellm_credential_name: openrouter
           input_cost_per_token: 0.0
           output_cost_per_token: 0.0
 
     credential_list:
-      - credential_name: Llama-Swap
+      - credential_name: llama-swap
         credential_values:
           api_base: os.environ/LITELLM_CREDENTIAL_LLAMA_SWAP_API_BASE
           api_key: os.environ/LITELLM_CREDENTIAL_LLAMA_SWAP_API_KEY
         credential_info:
           custom_llm_provider: openai
 
-      - credential_name: Openrouter
+      - credential_name: openrouter
         credential_values:
           api_key: os.environ/LITELLM_CREDENTIAL_OPENROUTER_API_KEY
         credential_info:
@@ -93,6 +81,7 @@ data:
       retry_after: 0
       enable_pre_call_checks: false
       model_group_alias:
+        openrouter/free: openrouter/openrouter/free
         local/tts: openai/chatterbox
         local/rerank: hosted_vllm/qwen3-reranker-0.6b
         local/stt-fast: hosted_vllm/whisper/large-v3-turbo-q5_0
