@@ -24,7 +24,7 @@ spec:
                 - /scripts/bootstrap.py
               env:
                 - name: HARBOR_API
-                  value: http://harbor-core/api/v2.0
+                  value: http://harbor-harbor-core/api/v2.0
                 - name: HARBOR_USERNAME
                   value: admin
                 - name: HARBOR_PASSWORD

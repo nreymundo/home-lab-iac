@@ -14,7 +14,7 @@ data:
     import urllib.parse
     import urllib.request
 
-    api = os.environ.get("HARBOR_API", "http://harbor-core/api/v2.0").rstrip("/")
+    api = os.environ.get("HARBOR_API", "http://harbor-harbor-core/api/v2.0").rstrip("/")
     username = os.environ.get("HARBOR_USERNAME", "admin")
     password = os.environ["HARBOR_PASSWORD"]
 
