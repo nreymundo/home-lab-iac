@@ -7,6 +7,7 @@ resources:
   - metallb.yaml
   - traefik.yaml
   - kube-replicator.yaml
+  - stakater.yaml
   - cert-manager.yaml
   - external-dns.yaml
   - longhorn.yaml
