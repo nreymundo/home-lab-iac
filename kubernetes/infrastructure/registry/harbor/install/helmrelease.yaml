@@ -1,0 +1,180 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: harbor
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 20m
+  targetNamespace: harbor
+  install:
+    createNamespace: false
+  upgrade:
+    cleanupOnFail: true
+  chart:
+    spec:
+      chart: harbor
+      # renovate: datasource=helm depName=harbor registryUrl=https://helm.goharbor.io
+      version: "1.19.0"
+      sourceRef:
+        kind: HelmRepository
+        name: harbor
+        namespace: flux-system
+      interval: 1h
+  values:
+    externalURL: https://harbor.lan.${CLUSTER_DOMAIN}
+
+    expose:
+      type: ingress
+      tls:
+        enabled: true
+        certSource: none
+      ingress:
+        className: traefik
+        hosts:
+          core: harbor.lan.${CLUSTER_DOMAIN}
+        annotations:
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          external-dns.alpha.kubernetes.io/hostname: harbor.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: Harbor
+          gethomepage.dev/description: Container registry and proxy cache
+          gethomepage.dev/group: "Kubernetes"
+          gethomepage.dev/icon: harbor.png
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/pod-selector: app=harbor,component=core
+
+    existingSecretAdminPassword: harbor-secrets
+    existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD
+    existingSecretSecretKey: harbor-secrets
+
+    updateStrategy:
+      type: Recreate
+
+    persistence:
+      enabled: true
+      resourcePolicy: keep
+      persistentVolumeClaim:
+        registry:
+          storageClass: longhorn-r2
+          accessMode: ReadWriteOnce
+          size: 100Gi
+        jobservice:
+          jobLog:
+            storageClass: longhorn-r2
+            accessMode: ReadWriteOnce
+            size: 5Gi
+        database:
+          storageClass: longhorn-r2
+          accessMode: ReadWriteOnce
+          size: 10Gi
+        redis:
+          storageClass: longhorn-r2
+          accessMode: ReadWriteOnce
+          size: 2Gi
+        trivy:
+          storageClass: longhorn-r2
+          accessMode: ReadWriteOnce
+          size: 10Gi
+
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        additionalLabels:
+          release: observability-kube-prometheus-stack
+
+    cache:
+      enabled: true
+
+    portal:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 300m
+          memory: 512Mi
+
+    core:
+      existingSecret: harbor-secrets
+      existingXsrfSecret: harbor-secrets
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 1536Mi
+
+    jobservice:
+      existingSecret: harbor-secrets
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 1000m
+          memory: 1024Mi
+
+    registry:
+      existingSecret: harbor-secrets
+      credentials:
+        username: harbor_registry_user
+        existingSecret: harbor-secrets
+      registry:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1024Mi
+      controller:
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+    trivy:
+      enabled: true
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 1536Mi
+
+    database:
+      type: internal
+      internal:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1024Mi
+
+    redis:
+      type: internal
+      internal:
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+    exporter:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi

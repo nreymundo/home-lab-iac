@@ -1,0 +1,206 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: harbor-bootstrap
+  namespace: harbor
+data:
+  bootstrap.py: |
+    import base64
+    import json
+    import os
+    import sys
+    import time
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+    api = os.environ.get("HARBOR_API", "http://harbor-core/api/v2.0").rstrip("/")
+    username = os.environ.get("HARBOR_USERNAME", "admin")
+    password = os.environ["HARBOR_PASSWORD"]
+
+    def env(name, default=""):
+        return os.environ.get(name, default).strip()
+
+    def auth_header():
+        token = base64.b64encode(f"{username}:{password}".encode()).decode()
+        return {"Authorization": f"Basic {token}"}
+
+    def request(method, path, body=None, ok=(200, 201, 202, 204, 409, 404)):
+        data = None
+        headers = {"Accept": "application/json", **auth_header()}
+        if body is not None:
+            data = json.dumps(body).encode()
+            headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(api + path, data=data, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                content = resp.read().decode()
+                parsed = json.loads(content) if content else None
+                return resp.status, parsed, dict(resp.headers)
+        except urllib.error.HTTPError as exc:
+            content = exc.read().decode()
+            if exc.code in ok:
+                parsed = json.loads(content) if content else None
+                return exc.code, parsed, dict(exc.headers)
+            raise RuntimeError(f"{method} {path} failed with {exc.code}: {content}") from exc
+
+    def wait_for_harbor():
+        for _ in range(90):
+            try:
+                status, _, _ = request("GET", "/health", ok=(200, 503))
+                if status == 200:
+                    return
+            except Exception as exc:
+                print(f"waiting for Harbor: {exc}", flush=True)
+            time.sleep(10)
+        raise TimeoutError("Harbor did not become healthy")
+
+    def configure_oidc():
+        client_id = env("HARBOR_OIDC_CLIENT_ID")
+        client_secret = env("HARBOR_OIDC_CLIENT_SECRET")
+        if not client_id or not client_secret:
+            raise RuntimeError("Harbor OIDC client secret is unavailable")
+
+        oidc_endpoint = env("HARBOR_OIDC_ENDPOINT")
+        payload = {
+            "auth_mode": "oidc_auth",
+            "primary_auth_mode": True,
+            "oidc_name": "Authentik",
+            "oidc_endpoint": oidc_endpoint,
+            "oidc_client_id": client_id,
+            "oidc_client_secret": client_secret,
+            "oidc_groups_claim": "groups",
+            "oidc_admin_group": "Harbor Admin",
+            "oidc_group_filter": "^Harbor (Admin|Users)$",
+            "oidc_scope": "openid,email,profile,offline_access,groups",
+            "oidc_user_claim": "preferred_username",
+            "oidc_verify_cert": True,
+            "oidc_auto_onboard": True,
+            "oidc_logout": True,
+        }
+        request("POST", "/system/oidc/ping", {"url": oidc_endpoint, "verify_cert": True}, ok=(200,))
+        request("PUT", "/configurations", payload, ok=(200,))
+        print("configured Harbor OIDC authentication", flush=True)
+
+    def list_registries():
+        status, body, _ = request("GET", "/registries?page_size=100", ok=(200,))
+        return body or []
+
+    def ensure_registry(spec):
+        for registry in list_registries():
+            if registry.get("name") == spec["name"]:
+                if registry.get("type") != spec["type"] or registry.get("url") != spec["url"]:
+                    raise RuntimeError(f"registry endpoint {spec['name']} exists with unexpected type/url")
+                access_key = spec.get("access_key", "")
+                access_secret = spec.get("access_secret", "")
+                if access_key and access_secret and access_key != "REPLACE_ME" and access_secret != "REPLACE_ME":
+                    request(
+                        "PUT",
+                        f"/registries/{registry['id']}",
+                        {
+                            "name": spec["name"],
+                            "description": spec["description"],
+                            "url": spec["url"],
+                            "credential_type": "basic",
+                            "access_key": access_key,
+                            "access_secret": access_secret,
+                            "insecure": False,
+                        },
+                        ok=(200,),
+                    )
+                print(f"registry endpoint {spec['name']} exists", flush=True)
+                return registry["id"]
+
+        payload = {
+            "name": spec["name"],
+            "description": spec["description"],
+            "type": spec["type"],
+            "url": spec["url"],
+            "insecure": False,
+        }
+        access_key = spec.get("access_key", "")
+        access_secret = spec.get("access_secret", "")
+        if access_key and access_secret and access_key != "REPLACE_ME" and access_secret != "REPLACE_ME":
+            payload["credential"] = {
+                "type": "basic",
+                "access_key": access_key,
+                "access_secret": access_secret,
+            }
+
+        request("POST", "/registries", payload, ok=(201,))
+        for registry in list_registries():
+            if registry.get("name") == spec["name"]:
+                print(f"created registry endpoint {spec['name']}", flush=True)
+                return registry["id"]
+        raise RuntimeError(f"registry endpoint {spec['name']} was not returned after creation")
+
+    def get_project(name):
+        encoded = urllib.parse.quote(name, safe="")
+        status, body, _ = request("GET", f"/projects/{encoded}?is_resource_name=true", ok=(200, 404))
+        return body if status == 200 else None
+
+    def ensure_proxy_project(name, registry_id):
+        project = get_project(name)
+        if project:
+            if project.get("registry_id") != registry_id:
+                raise RuntimeError(f"project {name} exists but is not linked to registry {registry_id}")
+            metadata = project.get("metadata") or {}
+            if metadata.get("public") != "true":
+                encoded = urllib.parse.quote(name, safe="")
+                request("PUT", f"/projects/{encoded}?is_resource_name=true", {"metadata": {"public": "true"}}, ok=(200,))
+            print(f"proxy project {name} exists", flush=True)
+            return
+
+        payload = {
+            "project_name": name,
+            "registry_id": registry_id,
+            "public": True,
+            "metadata": {
+                "public": "true",
+                "auto_scan": "false",
+                "enable_content_trust": "false",
+                "prevent_vul": "false",
+                "reuse_sys_cve_allowlist": "true",
+            },
+            "storage_limit": -1,
+        }
+        request("POST", "/projects", payload, ok=(201,))
+        print(f"created proxy project {name}", flush=True)
+
+    wait_for_harbor()
+    configure_oidc()
+
+    registries = [
+        {
+            "name": "dockerhub",
+            "description": "Docker Hub proxy cache upstream",
+            "type": "docker-hub",
+            "url": "https://hub.docker.com",
+            "access_key": env("DOCKERHUB_USERNAME"),
+            "access_secret": env("DOCKERHUB_TOKEN"),
+        },
+        {
+            "name": "ghcr",
+            "description": "GitHub Container Registry proxy cache upstream",
+            "type": "github-ghcr",
+            "url": "https://ghcr.io",
+        },
+        {
+            "name": "lscr",
+            "description": "LinuxServer registry proxy cache upstream",
+            "type": "docker-registry",
+            "url": "https://lscr.io",
+        },
+        {
+            "name": "quay",
+            "description": "Quay proxy cache upstream",
+            "type": "quay",
+            "url": "https://quay.io",
+        },
+    ]
+
+    for spec in registries:
+        registry_id = ensure_registry(spec)
+        ensure_proxy_project(spec["name"], registry_id)
+
+    print("Harbor bootstrap complete", flush=True)

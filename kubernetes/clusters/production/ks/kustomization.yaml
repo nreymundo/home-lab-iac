@@ -21,6 +21,8 @@ resources:
   - 60-longhorn-install.yaml
   - 61-longhorn-config.yaml
   - 62-cnpg-install.yaml
+  - 63-harbor-install.yaml
+  - 64-harbor-config.yaml
   - 70-observability-kube-prometheus-stack-install.yaml
   - 71-observability-metrics-server-install.yaml
   - 72-observability-loki-install.yaml
