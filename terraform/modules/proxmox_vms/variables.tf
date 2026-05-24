@@ -37,6 +37,21 @@ variable "vms" {
   }
 
   validation {
+    condition     = length(distinct([for vm in var.vms : vm.name])) == length(var.vms)
+    error_message = "Each VM name must be unique."
+  }
+
+  validation {
+    condition     = alltrue([for vm in var.vms : can(regex("^[A-Za-z0-9][A-Za-z0-9_.-]*$", vm.name))])
+    error_message = "Each VM name must start with an alphanumeric character and contain only letters, numbers, underscores, dots, or hyphens."
+  }
+
+  validation {
+    condition     = length(distinct([for vm in var.vms : vm.vmid])) == length(var.vms)
+    error_message = "Each VM vmid must be unique."
+  }
+
+  validation {
     condition     = alltrue([for vm in var.vms : vm.vmid >= 100])
     error_message = "Each VM vmid must be 100 or greater."
   }
@@ -44,6 +59,26 @@ variable "vms" {
   validation {
     condition     = alltrue([for vm in var.vms : vm.ip_prefix_len >= 8 && vm.ip_prefix_len <= 30])
     error_message = "Each VM ip_prefix_len must be between /8 and /30."
+  }
+
+  validation {
+    condition     = alltrue([for vm in var.vms : can(cidrnetmask("${vm.ip_address}/${vm.ip_prefix_len}"))])
+    error_message = "Each VM ip_address must be a valid IPv4 address for its ip_prefix_len."
+  }
+
+  validation {
+    condition     = length(distinct([for vm in var.vms : vm.ip_address])) == length(var.vms)
+    error_message = "Each VM ip_address must be unique."
+  }
+
+  validation {
+    condition     = alltrue([for vm in var.vms : can(cidrnetmask("${vm.gateway_ip}/32"))])
+    error_message = "Each VM gateway_ip must be a valid IPv4 address."
+  }
+
+  validation {
+    condition     = alltrue([for vm in var.vms : can(cidrnetmask("${vm.dns_server}/32"))])
+    error_message = "Each VM dns_server must be a valid IPv4 address."
   }
 
   validation {
@@ -69,5 +104,19 @@ variable "vms" {
   validation {
     condition     = alltrue([for vm in var.vms : vm.secondary_disk_size_gb >= 0])
     error_message = "Each VM secondary_disk_size_gb value must be 0 or greater."
+  }
+
+  validation {
+    condition     = alltrue([for vm in var.vms : !vm.secondary_disk_enabled || vm.secondary_disk_size_gb > 0])
+    error_message = "Each VM with secondary_disk_enabled must set secondary_disk_size_gb greater than 0."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for vm in var.vms : [
+        for tag in vm.proxmox_tags : can(regex("^[A-Za-z0-9][A-Za-z0-9_.:-]*$", tag))
+      ]
+    ]))
+    error_message = "Each VM proxmox_tags entry must start with an alphanumeric character and contain only letters, numbers, underscores, dots, colons, or hyphens."
   }
 }

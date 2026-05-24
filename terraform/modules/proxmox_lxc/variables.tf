@@ -9,6 +9,16 @@ variable "ssh_public_keys" {
   type        = list(string)
   description = "Additional SSH public keys to add to all containers."
   default     = []
+
+  validation {
+    condition = alltrue([
+      for public_key in var.ssh_public_keys :
+      startswith(trimspace(public_key), "ssh-ed25519 ") ||
+      startswith(trimspace(public_key), "ssh-rsa ") ||
+      startswith(trimspace(public_key), "ecdsa-sha2-")
+    ])
+    error_message = "Each ssh_public_keys entry must look like an OpenSSH public key."
+  }
 }
 
 variable "ssh_bootstrap_cluster_ssh_host" {
@@ -16,12 +26,22 @@ variable "ssh_bootstrap_cluster_ssh_host" {
   description = "SSH target for any Proxmox cluster node used to resolve target_node IPs and bootstrap SSH inside LXCs. Required when any container enables ssh_bootstrap."
   default     = null
   nullable    = true
+
+  validation {
+    condition     = var.ssh_bootstrap_cluster_ssh_host == null || can(regex("^[^\\s]+$", var.ssh_bootstrap_cluster_ssh_host))
+    error_message = "ssh_bootstrap_cluster_ssh_host must not contain whitespace."
+  }
 }
 
 variable "ssh_bootstrap_node_ssh_user" {
   type        = string
   description = "SSH user used when connecting to the resolved target_node IP for pct exec."
   default     = "root"
+
+  validation {
+    condition     = can(regex("^[A-Za-z_][A-Za-z0-9_.-]*[$]?$", var.ssh_bootstrap_node_ssh_user))
+    error_message = "ssh_bootstrap_node_ssh_user must be a valid local username."
+  }
 }
 
 variable "containers" {
@@ -156,6 +176,21 @@ variable "containers" {
   }
 
   validation {
+    condition     = length(distinct([for container in var.containers : container.name])) == length(var.containers)
+    error_message = "Each LXC name must be unique."
+  }
+
+  validation {
+    condition     = alltrue([for container in var.containers : can(regex("^[A-Za-z0-9][A-Za-z0-9_.-]*$", container.name))])
+    error_message = "Each LXC name must start with an alphanumeric character and contain only letters, numbers, underscores, dots, or hyphens."
+  }
+
+  validation {
+    condition     = length(distinct([for container in var.containers : container.vmid])) == length(var.containers)
+    error_message = "Each LXC vmid must be unique."
+  }
+
+  validation {
     condition     = alltrue([for container in var.containers : container.vmid >= 100])
     error_message = "Each LXC vmid must be 100 or greater."
   }
@@ -179,6 +214,37 @@ variable "containers" {
   validation {
     condition     = alltrue([for container in var.containers : container.ip_prefix_len >= 8 && container.ip_prefix_len <= 30])
     error_message = "Each LXC ip_prefix_len must be between /8 and /30."
+  }
+
+  validation {
+    condition = alltrue([
+      for container in var.containers :
+      try(container.ip_address, null) == null || can(cidrnetmask("${container.ip_address}/${container.ip_prefix_len}"))
+    ])
+    error_message = "Each LXC ip_address must be a valid IPv4 address for its ip_prefix_len."
+  }
+
+  validation {
+    condition = length(distinct(compact([
+      for container in var.containers : try(container.ip_address, null)
+      ]))) == length(compact([
+      for container in var.containers : try(container.ip_address, null)
+    ]))
+    error_message = "Each static LXC ip_address must be unique."
+  }
+
+  validation {
+    condition     = alltrue([for container in var.containers : can(cidrnetmask("${container.gateway_ip}/32"))])
+    error_message = "Each LXC gateway_ip must be a valid IPv4 address."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for container in var.containers : [
+        for dns_server in container.dns_servers : can(cidrnetmask("${dns_server}/32"))
+      ]
+    ]))
+    error_message = "Each LXC dns_servers entry must be a valid IPv4 address."
   }
 
   validation {
@@ -207,5 +273,64 @@ variable "containers" {
       !(try(container.ssh_bootstrap.enabled, false) && try(container.ssh_bootstrap.wait_for_ssh, true)) || try(container.ip_address, null) != null
     ])
     error_message = "Each LXC with ssh_bootstrap.wait_for_ssh enabled must set ip_address."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for container in var.containers : [
+        for tag in container.tags : can(regex("^[A-Za-z0-9][A-Za-z0-9_.:-]*$", tag))
+      ]
+    ]))
+    error_message = "Each LXC tags entry must start with an alphanumeric character and contain only letters, numbers, underscores, dots, colons, or hyphens."
+  }
+
+  validation {
+    condition = alltrue([
+      for container in var.containers : contains(["apk", "apt", "apt-get", "dnf", "yum", "zypper"], try(container.ssh_bootstrap.package_manager, "dnf"))
+    ])
+    error_message = "Each LXC ssh_bootstrap.package_manager must be one of apk, apt, apt-get, dnf, yum, or zypper."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for container in var.containers : [
+        for package in try(container.ssh_bootstrap.packages, []) : can(regex("^[A-Za-z0-9][A-Za-z0-9_.+:-]*$", package))
+      ]
+    ]))
+    error_message = "Each LXC ssh_bootstrap.packages entry must contain only package-safe characters."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for container in var.containers : [
+        for service in try(container.ssh_bootstrap.services, []) : can(regex("^[A-Za-z0-9][A-Za-z0-9_.@:-]*$", service))
+      ]
+    ]))
+    error_message = "Each LXC ssh_bootstrap.services entry must contain only systemd-service-safe characters."
+  }
+
+  validation {
+    condition = alltrue([
+      for container in var.containers : can(regex("^[A-Za-z_][A-Za-z0-9_.-]*[$]?$", try(container.ssh_bootstrap.ssh_user, "root")))
+    ])
+    error_message = "Each LXC ssh_bootstrap.ssh_user must be a valid local username."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for container in var.containers : [
+        for mount_point in container.mount_points : startswith(mount_point.path, "/") && startswith(mount_point.volume, "/")
+      ]
+    ]))
+    error_message = "Each LXC mount point path and volume must be absolute paths."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for container in var.containers : [
+        for device in container.device_passthrough : startswith(device.path, "/")
+      ]
+    ]))
+    error_message = "Each LXC device_passthrough path must be an absolute path."
   }
 }
