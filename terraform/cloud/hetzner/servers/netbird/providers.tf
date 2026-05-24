@@ -5,7 +5,8 @@ terraform {
       version = "~> 2.5"
     }
     hcloud = {
-      source = "hetznercloud/hcloud"
+      source  = "hetznercloud/hcloud"
+      version = "~> 1.61"
     }
     bitwarden-secrets = {
       source  = "bitwarden/bitwarden-secrets"
