@@ -150,16 +150,32 @@ data:
             raise RuntimeError(f"project {project.get('name')} has no id")
         return int(identifier)
 
+    def proxy_project_metadata():
+        return {
+            "public": "true",
+            "auto_scan": "true",
+            "enable_content_trust": "false",
+            "prevent_vul": "false",
+            "reuse_sys_cve_allowlist": "true",
+        }
+
     def ensure_proxy_project(name, registry_id, storage_limit):
         project = get_project(name)
         if project:
             if project.get("registry_id") != registry_id:
                 raise RuntimeError(f"project {name} exists but is not linked to registry {registry_id}")
             metadata = project.get("metadata") or {}
-            if metadata.get("public") != "true":
+            desired_metadata = proxy_project_metadata()
+            if any(metadata.get(key) != value for key, value in desired_metadata.items()):
                 encoded = urllib.parse.quote(name, safe="")
-                request("PUT", f"/projects/{encoded}?is_resource_name=true", {"metadata": {"public": "true"}}, ok=(200,))
+                request(
+                    "PUT",
+                    f"/projects/{encoded}?is_resource_name=true",
+                    {"metadata": {**metadata, **desired_metadata}},
+                    ok=(200,),
+                )
                 project = get_project(name)
+                print(f"configured proxy project metadata for {name}", flush=True)
             print(f"proxy project {name} exists", flush=True)
             return project
 
@@ -167,13 +183,7 @@ data:
             "project_name": name,
             "registry_id": registry_id,
             "public": True,
-            "metadata": {
-                "public": "true",
-                "auto_scan": "false",
-                "enable_content_trust": "false",
-                "prevent_vul": "false",
-                "reuse_sys_cve_allowlist": "true",
-            },
+            "metadata": proxy_project_metadata(),
             "storage_limit": storage_limit,
         }
         request("POST", "/projects", payload, ok=(201,))
