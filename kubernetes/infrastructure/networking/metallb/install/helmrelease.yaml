@@ -19,6 +19,17 @@ spec:
         namespace: flux-system
       interval: 1h
   values:
+    prometheus:
+      serviceAccount: observability-kube-prometh-prometheus
+      namespace: observability
+      serviceMonitor:
+        enabled: true
+        controller:
+          additionalLabels:
+            release: observability-kube-prometheus-stack
+        speaker:
+          additionalLabels:
+            release: observability-kube-prometheus-stack
     controller:
       resources:
         requests:
