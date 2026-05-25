@@ -17,6 +17,7 @@ data:
     api = os.environ.get("HARBOR_API", "http://harbor-harbor-core/api/v2.0").rstrip("/")
     username = os.environ.get("HARBOR_USERNAME", "admin")
     password = os.environ["HARBOR_PASSWORD"]
+    gib = 1024 ** 3
 
     def env(name, default=""):
         return os.environ.get(name, default).strip()
@@ -143,7 +144,13 @@ data:
         status, body, _ = request("GET", f"/projects/{encoded}?is_resource_name=true", ok=(200, 404))
         return body if status == 200 else None
 
-    def ensure_proxy_project(name, registry_id):
+    def project_id(project):
+        identifier = project.get("project_id") or project.get("id")
+        if identifier is None:
+            raise RuntimeError(f"project {project.get('name')} has no id")
+        return int(identifier)
+
+    def ensure_proxy_project(name, registry_id, storage_limit):
         project = get_project(name)
         if project:
             if project.get("registry_id") != registry_id:
@@ -152,8 +159,9 @@ data:
             if metadata.get("public") != "true":
                 encoded = urllib.parse.quote(name, safe="")
                 request("PUT", f"/projects/{encoded}?is_resource_name=true", {"metadata": {"public": "true"}}, ok=(200,))
+                project = get_project(name)
             print(f"proxy project {name} exists", flush=True)
-            return
+            return project
 
         payload = {
             "project_name": name,
@@ -166,10 +174,73 @@ data:
                 "prevent_vul": "false",
                 "reuse_sys_cve_allowlist": "true",
             },
-            "storage_limit": -1,
+            "storage_limit": storage_limit,
         }
         request("POST", "/projects", payload, ok=(201,))
         print(f"created proxy project {name}", flush=True)
+        return get_project(name)
+
+    def ensure_project_quota(project, storage_limit):
+        pid = project_id(project)
+        query = urllib.parse.urlencode({"reference": "project", "reference_id": str(pid)})
+        _, body, _ = request("GET", f"/quotas?{query}", ok=(200,))
+        quotas = body or []
+        if not quotas:
+            raise RuntimeError(f"project {project.get('name')} has no quota record")
+
+        quota = quotas[0]
+        hard = quota.get("hard") or {}
+        if hard.get("storage") == storage_limit:
+            print(f"quota for project {project.get('name')} is current", flush=True)
+            return
+
+        updated_hard = dict(hard)
+        updated_hard["storage"] = storage_limit
+        request("PUT", f"/quotas/{quota['id']}", {"hard": updated_hard}, ok=(200,))
+        print(f"configured quota for project {project.get('name')}", flush=True)
+
+    def retention_policy(project, retention_id=None):
+        policy = {
+            "algorithm": "or",
+            "rules": [
+                {
+                    "id": 1,
+                    "priority": 1,
+                    "disabled": False,
+                    "action": "retain",
+                    "template": "nDaysSinceLastPull",
+                    "params": {"nDaysSinceLastPull": 30},
+                    "tag_selectors": [
+                        {"kind": "doublestar", "decoration": "matches", "pattern": "**"}
+                    ],
+                    "scope_selectors": {
+                        "repository": [
+                            {"kind": "doublestar", "decoration": "repoMatches", "pattern": "**"}
+                        ]
+                    },
+                }
+            ],
+            "trigger": {
+                "kind": "Schedule",
+                "settings": {"cron": "0 0 0 * * *"},
+            },
+            "scope": {"level": "project", "ref": project_id(project)},
+        }
+        if retention_id is not None:
+            policy["id"] = int(retention_id)
+        return policy
+
+    def ensure_retention_policy(project):
+        name = project.get("name")
+        metadata = project.get("metadata") or {}
+        retention_id = metadata.get("retention_id")
+        if retention_id:
+            request("PUT", f"/retentions/{retention_id}", retention_policy(project, retention_id), ok=(200,))
+            print(f"configured 30-day retention for project {name}", flush=True)
+            return
+
+        request("POST", "/retentions", retention_policy(project), ok=(201,))
+        print(f"created 30-day retention for project {name}", flush=True)
 
     wait_for_harbor()
     configure_oidc()
@@ -182,29 +253,35 @@ data:
             "url": "https://hub.docker.com",
             "access_key": env("DOCKERHUB_USERNAME"),
             "access_secret": env("DOCKERHUB_TOKEN"),
+            "storage_limit": 40 * gib,
         },
         {
             "name": "ghcr",
             "description": "GitHub Container Registry proxy cache upstream",
             "type": "github-ghcr",
             "url": "https://ghcr.io",
+            "storage_limit": 20 * gib,
         },
         {
             "name": "lscr",
             "description": "LinuxServer registry proxy cache upstream",
             "type": "docker-registry",
             "url": "https://lscr.io",
+            "storage_limit": 10 * gib,
         },
         {
             "name": "quay",
             "description": "Quay proxy cache upstream",
             "type": "docker-registry",
             "url": "https://quay.io",
+            "storage_limit": 10 * gib,
         },
     ]
 
     for spec in registries:
         registry_id = ensure_registry(spec)
-        ensure_proxy_project(spec["name"], registry_id)
+        project = ensure_proxy_project(spec["name"], registry_id, spec["storage_limit"])
+        ensure_project_quota(project, spec["storage_limit"])
+        ensure_retention_policy(project)
 
     print("Harbor bootstrap complete", flush=True)
