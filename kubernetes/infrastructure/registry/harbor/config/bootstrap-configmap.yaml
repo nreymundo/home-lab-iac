@@ -320,6 +320,13 @@ data:
             "url": "https://quay.io",
             "storage_limit": 10 * gib,
         },
+        {
+            "name": "gitea",
+            "description": "Gitea registry proxy cache upstream",
+            "type": "docker-registry",
+            "url": "https://docker.gitea.com",
+            "storage_limit": 10 * gib,
+        },
     ]
 
     for spec in registries:

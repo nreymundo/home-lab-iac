@@ -11,5 +11,8 @@ spec:
       app.kubernetes.io/name: metallb
       app.kubernetes.io/component: controller
   endpoints:
-    - port: monitoring
+    - port: metricshttps
       path: /metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true

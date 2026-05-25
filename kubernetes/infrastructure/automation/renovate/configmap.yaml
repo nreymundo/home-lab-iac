@@ -7,5 +7,53 @@ data:
   config.json: |
     {
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-      "repositories": ["nreymundo/home-lab-iac"]
+      "repositories": ["nreymundo/home-lab-iac"],
+      "registryAliases": {
+        "docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
+        "index.docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
+        "registry-1.docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
+        "ghcr.io": "harbor.lan.${CLUSTER_DOMAIN}/ghcr",
+        "lscr.io": "harbor.lan.${CLUSTER_DOMAIN}/lscr",
+        "quay.io": "harbor.lan.${CLUSTER_DOMAIN}/quay",
+        "docker.n8n.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
+        "docker.gitea.com": "harbor.lan.${CLUSTER_DOMAIN}/gitea"
+      },
+      "packageRules": [
+        {
+          "description": "Use Harbor proxy cache for Docker Hub lookups",
+          "matchDatasources": ["docker"],
+          "matchJsonata": ["$not($exists(registryUrls)) or $exists(registryUrls[$ = 'https://docker.io' or $ = 'https://docker.io/' or $ = 'https://hub.docker.com' or $ = 'https://hub.docker.com/' or $ = 'https://index.docker.io' or $ = 'https://index.docker.io/' or $ = 'https://registry-1.docker.io' or $ = 'https://registry-1.docker.io/'])"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"]
+        },
+        {
+          "description": "Use Harbor proxy cache for GHCR lookups",
+          "matchDatasources": ["docker"],
+          "matchJsonata": ["$exists(registryUrls[$ = 'https://ghcr.io' or $ = 'https://ghcr.io/'])"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/ghcr"]
+        },
+        {
+          "description": "Use Harbor proxy cache for LSCR lookups",
+          "matchDatasources": ["docker"],
+          "matchJsonata": ["$exists(registryUrls[$ = 'https://lscr.io' or $ = 'https://lscr.io/'])"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/lscr"]
+        },
+        {
+          "description": "Use Harbor proxy cache for Quay lookups",
+          "matchDatasources": ["docker"],
+          "matchJsonata": ["$exists(registryUrls[$ = 'https://quay.io' or $ = 'https://quay.io/'])"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/quay"]
+        },
+        {
+          "description": "Use Harbor proxy cache for n8n lookups",
+          "matchDatasources": ["docker"],
+          "matchJsonata": ["$exists(registryUrls[$ = 'https://docker.n8n.io' or $ = 'https://docker.n8n.io/'])"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"]
+        },
+        {
+          "description": "Use Harbor proxy cache for Gitea lookups",
+          "matchDatasources": ["docker"],
+          "matchJsonata": ["$exists(registryUrls[$ = 'https://docker.gitea.com' or $ = 'https://docker.gitea.com/'])"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/gitea"]
+        }
+      ]
     }

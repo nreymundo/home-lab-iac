@@ -11,5 +11,8 @@ spec:
       app.kubernetes.io/name: metallb
       app.kubernetes.io/component: speaker
   podMetricsEndpoints:
-    - port: monitoring
+    - port: metricshttps
       path: /metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
