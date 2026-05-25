@@ -16,7 +16,7 @@ data:
         "ghcr.io": "harbor.lan.${CLUSTER_DOMAIN}/ghcr",
         "lscr.io": "harbor.lan.${CLUSTER_DOMAIN}/lscr",
         "quay.io": "harbor.lan.${CLUSTER_DOMAIN}/quay",
-        "docker.n8n.io": "harbor.lan.${CLUSTER_DOMAIN}/n8n",
+        "docker.n8n.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
         "docker.gitea.com": "harbor.lan.${CLUSTER_DOMAIN}/gitea"
       },
       "packageRules": [
@@ -48,7 +48,7 @@ data:
           "description": "Use Harbor proxy cache for n8n lookups",
           "matchDatasources": ["docker"],
           "matchJsonata": ["$exists(registryUrls[$ = 'https://docker.n8n.io' or $ = 'https://docker.n8n.io/'])"],
-          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/n8n"]
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"]
         },
         {
           "description": "Use Harbor proxy cache for Gitea lookups",

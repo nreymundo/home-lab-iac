@@ -321,13 +321,6 @@ data:
             "storage_limit": 10 * gib,
         },
         {
-            "name": "n8n",
-            "description": "n8n registry proxy cache upstream",
-            "type": "docker-registry",
-            "url": "https://docker.n8n.io",
-            "storage_limit": 10 * gib,
-        },
-        {
             "name": "gitea",
             "description": "Gitea registry proxy cache upstream",
             "type": "docker-registry",
