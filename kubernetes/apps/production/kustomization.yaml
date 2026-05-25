@@ -24,7 +24,6 @@ resources:
   - ../apps/media/prowlarr
   - ../apps/development/gitea
   - ../apps/ai/sillytavern
-  - ../apps/ai/whisper
   - ../apps/ai/vane
   - ../apps/ai/litellm
   - ../apps/security/frigate
