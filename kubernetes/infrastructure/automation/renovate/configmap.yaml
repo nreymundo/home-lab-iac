@@ -10,9 +10,9 @@ data:
       "repositories": ["nreymundo/home-lab-iac"],
       "packageRules": [
         {
-          "description": "Use Harbor proxy cache for Docker Hub default lookups",
+          "description": "Use Harbor proxy cache for default Docker Hub lookups",
           "matchDatasources": ["docker"],
-          "defaultRegistryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"]
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"]
         },
         {
           "description": "Use Harbor proxy cache for Docker Hub lookups",
