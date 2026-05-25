@@ -31,6 +31,16 @@ k3s_registry_mirrors:
       - "{{ k3s_harbor_registry_endpoint }}"
     rewrite:
       "^(.*)$": "quay/$1"
+  docker.n8n.io:
+    endpoint:
+      - "{{ k3s_harbor_registry_endpoint }}"
+    rewrite:
+      "^(.*)$": "n8n/$1"
+  docker.gitea.com:
+    endpoint:
+      - "{{ k3s_harbor_registry_endpoint }}"
+    rewrite:
+      "^(.*)$": "gitea/$1"
 
 # Virtual IP set up in OPNSense for K3s API load balancing
 k3s_api_vip: 192.168.10.10

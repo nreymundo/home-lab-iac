@@ -7,5 +7,53 @@ data:
   config.json: |
     {
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-      "repositories": ["nreymundo/home-lab-iac"]
+      "repositories": ["nreymundo/home-lab-iac"],
+      "packageRules": [
+        {
+          "description": "Use Harbor proxy cache for Docker Hub default lookups",
+          "matchDatasources": ["docker"],
+          "defaultRegistryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"]
+        },
+        {
+          "description": "Use Harbor proxy cache for Docker Hub lookups",
+          "matchDatasources": ["docker"],
+          "matchRegistryUrls": [
+            "https://docker.io",
+            "https://hub.docker.com",
+            "https://index.docker.io",
+            "https://registry-1.docker.io"
+          ],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"]
+        },
+        {
+          "description": "Use Harbor proxy cache for GitHub Container Registry lookups",
+          "matchDatasources": ["docker"],
+          "matchRegistryUrls": ["https://ghcr.io"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/ghcr"]
+        },
+        {
+          "description": "Use Harbor proxy cache for LinuxServer registry lookups",
+          "matchDatasources": ["docker"],
+          "matchRegistryUrls": ["https://lscr.io"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/lscr"]
+        },
+        {
+          "description": "Use Harbor proxy cache for Quay lookups",
+          "matchDatasources": ["docker"],
+          "matchRegistryUrls": ["https://quay.io"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/quay"]
+        },
+        {
+          "description": "Use Harbor proxy cache for n8n registry lookups",
+          "matchDatasources": ["docker"],
+          "matchRegistryUrls": ["https://docker.n8n.io"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/n8n"]
+        },
+        {
+          "description": "Use Harbor proxy cache for Gitea registry lookups",
+          "matchDatasources": ["docker"],
+          "matchRegistryUrls": ["https://docker.gitea.com"],
+          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/gitea"]
+        }
+      ]
     }

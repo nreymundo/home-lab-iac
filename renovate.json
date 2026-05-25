@@ -2,8 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    ":disableDependencyDashboard",
-    ":disableRateLimiting"
+    ":disableDependencyDashboard"
   ],
   "enabledManagers": ["flux", "helm-values", "dockerfile", "kubernetes", "custom.regex"],
   "timezone": "UTC",
