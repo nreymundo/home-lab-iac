@@ -12,7 +12,7 @@ spec:
     app.kubernetes.io/name: metallb
     app.kubernetes.io/component: controller
   ports:
-    - name: monitoring
-      port: 7472
-      targetPort: monitoring
+    - name: metricshttps
+      port: 9120
+      targetPort: metricshttps
       protocol: TCP
