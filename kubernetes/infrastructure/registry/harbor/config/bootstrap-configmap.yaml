@@ -248,7 +248,6 @@ data:
                 "delete_untagged": True,
                 "delete_tag": True,
                 "workers": 1,
-                "dry_run": False,
             },
             "schedule": {
                 "type": "Custom",
