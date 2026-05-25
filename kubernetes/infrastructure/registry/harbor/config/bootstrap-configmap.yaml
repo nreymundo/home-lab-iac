@@ -242,6 +242,51 @@ data:
         request("POST", "/retentions", retention_policy(project), ok=(201,))
         print(f"created 30-day retention for project {name}", flush=True)
 
+    def gc_schedule():
+        return {
+            "parameters": {
+                "delete_untagged": True,
+                "delete_tag": True,
+                "workers": 1,
+                "dry_run": False,
+            },
+            "schedule": {
+                "type": "Custom",
+                "cron": "0 0 1 * * *",
+            },
+        }
+
+    def gc_schedule_current(body, desired):
+        if not body:
+            return False
+        schedule = body.get("schedule") or {}
+        if schedule.get("type") != desired["schedule"]["type"]:
+            return False
+        if schedule.get("cron") != desired["schedule"]["cron"]:
+            return False
+
+        parameters = {}
+        if body.get("job_parameters"):
+            parameters = json.loads(body["job_parameters"])
+        for key, value in desired["parameters"].items():
+            if parameters.get(key) != value:
+                return False
+        return True
+
+    def ensure_gc_schedule():
+        desired = gc_schedule()
+        _, body, _ = request("GET", "/system/gc/schedule", ok=(200,))
+        if gc_schedule_current(body, desired):
+            print("garbage collection schedule is current", flush=True)
+            return
+        if body:
+            request("PUT", "/system/gc/schedule", desired, ok=(200,))
+            print("configured garbage collection schedule", flush=True)
+            return
+
+        request("POST", "/system/gc/schedule", desired, ok=(201,))
+        print("created garbage collection schedule", flush=True)
+
     wait_for_harbor()
     configure_oidc()
 
@@ -283,5 +328,7 @@ data:
         project = ensure_proxy_project(spec["name"], registry_id, spec["storage_limit"])
         ensure_project_quota(project, spec["storage_limit"])
         ensure_retention_policy(project)
+
+    ensure_gc_schedule()
 
     print("Harbor bootstrap complete", flush=True)
