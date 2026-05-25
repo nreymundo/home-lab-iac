@@ -35,3 +35,7 @@ spec:
         limits:
           cpu: 200m
           memory: 256Mi
+    frr-k8s:
+      prometheus:
+        serviceMonitor:
+          enabled: false
