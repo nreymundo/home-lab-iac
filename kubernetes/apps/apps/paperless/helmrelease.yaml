@@ -58,7 +58,7 @@ spec:
                   secretKeyRef:
                     name: paperless-oidc-secrets
                     key: PAPERLESS_SOCIALACCOUNT_PROVIDERS
-              PAPERLESS_LOGOUT_REDIRECT_URL: "https://sso.lainternetdelpantano.xyz/application/o/paperless/end-session/"
+              PAPERLESS_LOGOUT_REDIRECT_URL: "https://sso.${CLUSTER_DOMAIN}/application/o/paperless/end-session/"
               PAPERLESS_SOCIAL_AUTO_SIGNUP: "false"
               PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
               PAPERLESS_DISABLE_REGULAR_LOGIN: "true"

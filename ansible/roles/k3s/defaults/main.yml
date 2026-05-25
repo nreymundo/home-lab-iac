@@ -5,8 +5,32 @@ k3s_cluster_init: false
 k3s_server_args: ""
 k3s_agent_args: ""
 k3s_embedded_registry_enabled: true
+k3s_cluster_domain: "{{ lookup('ansible.builtin.env', 'CLUSTER_DOMAIN') | default('', true) }}"
+k3s_harbor_registry_endpoint: "https://harbor.lan.{{ k3s_cluster_domain }}"
+# Keep K3s/containerd's default endpoint fallback enabled. On first cluster
+# bootstrap Harbor will not exist yet, so nodes must still pull from upstream.
 k3s_registry_mirrors:
   "*": {}
+  docker.io:
+    endpoint:
+      - "{{ k3s_harbor_registry_endpoint }}"
+    rewrite:
+      "^(.*)$": "dockerhub/$1"
+  ghcr.io:
+    endpoint:
+      - "{{ k3s_harbor_registry_endpoint }}"
+    rewrite:
+      "^(.*)$": "ghcr/$1"
+  lscr.io:
+    endpoint:
+      - "{{ k3s_harbor_registry_endpoint }}"
+    rewrite:
+      "^(.*)$": "lscr/$1"
+  quay.io:
+    endpoint:
+      - "{{ k3s_harbor_registry_endpoint }}"
+    rewrite:
+      "^(.*)$": "quay/$1"
 
 # Virtual IP set up in OPNSense for K3s API load balancing
 k3s_api_vip: 192.168.10.10
