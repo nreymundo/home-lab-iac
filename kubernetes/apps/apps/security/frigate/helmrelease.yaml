@@ -54,6 +54,7 @@ spec:
               # renovate: datasource=docker depName=blakeblackshear/frigate registryUrl=https://ghcr.io
               repository: ghcr.io/blakeblackshear/frigate
               tag: stable
+              pullPolicy: Always
             env:
               TZ: Europe/Berlin
               LIBVA_DRIVER_NAME: iHD

@@ -16,6 +16,7 @@ spec:
               # renovate: datasource=docker depName=jsclayton/prometheus-plex-exporter registryUrl=https://ghcr.io
               repository: ghcr.io/jsclayton/prometheus-plex-exporter
               tag: main
+              pullPolicy: Always
             envFrom:
               - secretRef:
                   name: plex-exporter-secret
