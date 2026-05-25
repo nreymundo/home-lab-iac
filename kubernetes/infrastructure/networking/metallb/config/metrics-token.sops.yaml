@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: metallb-prometheus-token
+    namespace: metallb-system
+    annotations:
+        kubernetes.io/service-account.name: metallb-prometheus
+type: kubernetes.io/service-account-token
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBvLzdTTzg3aHF2ZW9QN0VF
+            OEVLdUR5R2hycFF2c3ppZEVtMEFESjJOS0g0CkhPMGJMQVoyeEpMakZzS0RaMmJP
+            K09YLzRvM21QNXF1eW82b0NNR1VJMjgKLS0tIGMxY0dMYTkvMW1Wck5ORWR1M3pW
+            azh5anJJcFhMSGVMQVM3aVVBc1pDYzQKa5EZVEJConpKQMm/X+D85e8UIFfUWlGR
+            +zqk3mi0q8VBWegswVaD/mKkaMLXra+1DKyZ5m7p4S6Yum816hqf/w==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-05-25T20:44:16Z"
+    mac: ENC[AES256_GCM,data:okBmYUgFGZ9ULeL8hliUdTClfFnNsBj917Q8XbCz9G5yLHOOL6AIztuketfjHTy/HWNz2PJQNLAYzRL2I8eoF+FUsC+4N3359rrQhnGRdhIOwll1Dr/moCMZYlqh2oSXSWbQTGdfiXu96k4firrC5ZVmDK+Z+AQxA09qeBAaaco=,iv:ugUciwQAwB1TUsSg1C5+3MsGRq0ijEi2IGFECV5XQxU=,tag:vcJY8KTWD/wzf+JP3M0OMw==,type:str]
+    version: 3.13.1

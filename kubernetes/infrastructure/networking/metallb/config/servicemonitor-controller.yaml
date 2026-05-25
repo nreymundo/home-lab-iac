@@ -13,7 +13,10 @@ spec:
   endpoints:
     - port: metricshttps
       path: /metrics
-      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      authorization:
+        credentials:
+          name: metallb-prometheus-token
+          key: token
       scheme: https
       tlsConfig:
         insecureSkipVerify: true

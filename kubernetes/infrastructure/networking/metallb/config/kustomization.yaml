@@ -4,5 +4,7 @@ resources:
   - ipaddresspool.yaml
   - l2advertisement.yaml
   - metrics-service-controller.yaml
+  - metrics-rbac.yaml
+  - metrics-token.sops.yaml
   - podmonitor-speaker.yaml
   - servicemonitor-controller.yaml
