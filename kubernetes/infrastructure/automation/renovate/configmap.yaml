@@ -8,51 +8,52 @@ data:
     {
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
       "repositories": ["nreymundo/home-lab-iac"],
+      "defaultRegistryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"],
+      "registryAliases": {
+        "docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
+        "index.docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
+        "registry-1.docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
+        "ghcr.io": "harbor.lan.${CLUSTER_DOMAIN}/ghcr",
+        "lscr.io": "harbor.lan.${CLUSTER_DOMAIN}/lscr",
+        "quay.io": "harbor.lan.${CLUSTER_DOMAIN}/quay",
+        "docker.n8n.io": "harbor.lan.${CLUSTER_DOMAIN}/n8n",
+        "docker.gitea.com": "harbor.lan.${CLUSTER_DOMAIN}/gitea"
+      },
       "packageRules": [
-        {
-          "description": "Use Harbor proxy cache for default Docker Hub lookups",
-          "matchDatasources": ["docker"],
-          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"]
-        },
         {
           "description": "Use Harbor proxy cache for Docker Hub lookups",
           "matchDatasources": ["docker"],
-          "matchRegistryUrls": [
-            "https://docker.io",
-            "https://hub.docker.com",
-            "https://index.docker.io",
-            "https://registry-1.docker.io"
-          ],
+          "matchJsonata": ["$not($exists(registryUrls)) or $exists(registryUrls[$ = 'https://docker.io' or $ = 'https://docker.io/' or $ = 'https://hub.docker.com' or $ = 'https://hub.docker.com/' or $ = 'https://index.docker.io' or $ = 'https://index.docker.io/' or $ = 'https://registry-1.docker.io' or $ = 'https://registry-1.docker.io/'])"],
           "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"]
         },
         {
-          "description": "Use Harbor proxy cache for GitHub Container Registry lookups",
+          "description": "Use Harbor proxy cache for GHCR lookups",
           "matchDatasources": ["docker"],
-          "matchRegistryUrls": ["https://ghcr.io"],
+          "matchJsonata": ["$exists(registryUrls[$ = 'https://ghcr.io' or $ = 'https://ghcr.io/'])"],
           "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/ghcr"]
         },
         {
-          "description": "Use Harbor proxy cache for LinuxServer registry lookups",
+          "description": "Use Harbor proxy cache for LSCR lookups",
           "matchDatasources": ["docker"],
-          "matchRegistryUrls": ["https://lscr.io"],
+          "matchJsonata": ["$exists(registryUrls[$ = 'https://lscr.io' or $ = 'https://lscr.io/'])"],
           "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/lscr"]
         },
         {
           "description": "Use Harbor proxy cache for Quay lookups",
           "matchDatasources": ["docker"],
-          "matchRegistryUrls": ["https://quay.io"],
+          "matchJsonata": ["$exists(registryUrls[$ = 'https://quay.io' or $ = 'https://quay.io/'])"],
           "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/quay"]
         },
         {
-          "description": "Use Harbor proxy cache for n8n registry lookups",
+          "description": "Use Harbor proxy cache for n8n lookups",
           "matchDatasources": ["docker"],
-          "matchRegistryUrls": ["https://docker.n8n.io"],
+          "matchJsonata": ["$exists(registryUrls[$ = 'https://docker.n8n.io' or $ = 'https://docker.n8n.io/'])"],
           "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/n8n"]
         },
         {
-          "description": "Use Harbor proxy cache for Gitea registry lookups",
+          "description": "Use Harbor proxy cache for Gitea lookups",
           "matchDatasources": ["docker"],
-          "matchRegistryUrls": ["https://docker.gitea.com"],
+          "matchJsonata": ["$exists(registryUrls[$ = 'https://docker.gitea.com' or $ = 'https://docker.gitea.com/'])"],
           "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/gitea"]
         }
       ]
