@@ -13,6 +13,7 @@ spec:
   podMetricsEndpoints:
     - port: metricshttps
       path: /metrics
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
       scheme: https
       tlsConfig:
         insecureSkipVerify: true
