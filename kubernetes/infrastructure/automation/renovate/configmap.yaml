@@ -8,7 +8,6 @@ data:
     {
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
       "repositories": ["nreymundo/home-lab-iac"],
-      "defaultRegistryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/dockerhub"],
       "registryAliases": {
         "docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
         "index.docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
