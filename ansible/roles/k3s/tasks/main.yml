@@ -91,6 +91,12 @@
       - (k3s_iface | default('')) | length > 0
     fail_msg: "k3s_iface is empty; set it to the interface carrying k3s_node_ip"
 
+- name: Ensure Harbor registry mirror domain is set
+  ansible.builtin.assert:
+    that:
+      - (k3s_cluster_domain | default('')) | length > 0
+    fail_msg: "Set CLUSTER_DOMAIN in the shell environment before rendering Harbor registry mirrors"
+
 - name: Create K3s installation directory
   ansible.builtin.file:
     path: /usr/local/bin

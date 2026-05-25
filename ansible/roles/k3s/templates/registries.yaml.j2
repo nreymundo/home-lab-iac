@@ -1,5 +1,9 @@
 mirrors:
 {% for registry, config in k3s_registry_mirrors.items() %}
-  "{{ registry }}":{% if config %}
-{{ config | to_nice_yaml(indent=2) | indent(4, true) }}{% endif %}
+  "{{ registry }}":
+{% if config %}
+{{ config | to_nice_yaml(indent=2) | indent(4, true) }}
+{% else %}
+    {}
+{% endif %}
 {% endfor %}
