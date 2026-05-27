@@ -15,5 +15,6 @@ ssh_hardening_sshd_settings:
   UsePAM: "yes"
 
 headless_laptop_power_profile: power-saver
+headless_laptop_battery_charge_limit: 60
 headless_laptop_gpu_users:
   - "{{ ansible_user }}"

@@ -17,6 +17,7 @@ headless_laptop_sleep_targets:
   - suspend-then-hibernate.target
 
 headless_laptop_power_profile: power-saver
+headless_laptop_battery_charge_limit: 80
 
 headless_laptop_packages:
   - alsa-utils

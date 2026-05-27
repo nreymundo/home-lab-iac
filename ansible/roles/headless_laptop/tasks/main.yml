@@ -18,5 +18,8 @@
 - name: Configure power profile
   ansible.builtin.include_tasks: power_profile.yml
 
+- name: Configure battery charge limit
+  ansible.builtin.include_tasks: battery_charge_limit.yml
+
 - name: Configure AMD GPU userspace
   ansible.builtin.include_tasks: amd_gpu.yml
