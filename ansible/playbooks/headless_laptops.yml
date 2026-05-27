@@ -1,0 +1,7 @@
+---
+- name: Provision headless laptop hosts
+  hosts: headless_laptops
+  become: true
+  roles:
+    - common
+    - ssh_hardening

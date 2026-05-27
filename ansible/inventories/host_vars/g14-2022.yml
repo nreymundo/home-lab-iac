@@ -1,0 +1,12 @@
+---
+common_user: "{{ ansible_user }}"
+
+# Keep the first bare-metal baseline conservative; enable upgrades deliberately later.
+common_run_upgrade: false
+common_enable_unattended_upgrades: false
+
+ssh_hardening_sshd_settings:
+  PermitRootLogin: "no"
+  PasswordAuthentication: "no"
+  ChallengeResponseAuthentication: "no"
+  UsePAM: "yes"
