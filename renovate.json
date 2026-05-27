@@ -8,7 +8,6 @@
   "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
   "commitMessagePrefix": "chore(deps):",
-  "rebaseWhen": "conflicted",
   "ignorePaths": ["kubernetes/clusters/production/flux-system/**"],
 
   "separateMajorMinor": true,
