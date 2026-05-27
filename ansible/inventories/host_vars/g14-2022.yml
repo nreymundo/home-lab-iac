@@ -8,6 +8,8 @@ common_unattended_upgrades_auto_reboot: true
 common_unattended_upgrades_reboot_time: "06:00"
 common_enable_fstrim: true
 
+docker_install_enabled: true
+
 ssh_hardening_sshd_settings:
   PermitRootLogin: "no"
   PasswordAuthentication: "no"
