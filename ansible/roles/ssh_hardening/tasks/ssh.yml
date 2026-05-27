@@ -43,12 +43,12 @@
     mode: "0755"
   when: ssh_hardening_user_effective | lower != 'root'
 
-- name: Ensure authorized SSH keys are present
+- name: Ensure authorized SSH keys are authoritative
   ansible.posix.authorized_key:
     user: "{{ ssh_hardening_user_effective }}"
     state: present
-    key: "{{ item }}"
-  loop: "{{ ssh_hardening_authorized_keys_effective }}"
+    key: "{{ ssh_hardening_authorized_keys_effective | join('\n') }}"
+    exclusive: true
   when: ssh_hardening_authorized_keys_effective | length > 0
 
 - name: Ensure hush login file exists
