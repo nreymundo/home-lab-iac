@@ -8,6 +8,17 @@ data:
     {
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
       "repositories": ["nreymundo/home-lab-iac"],
+      "hostRules": [
+        {
+          "description": "Throttle Harbor proxy-cache lookups to avoid upstream registry rate limits",
+          "matchHost": "harbor.lan.${CLUSTER_DOMAIN}",
+          "concurrentRequestLimit": 1,
+          "maxRequestsPerSecond": 1,
+          "maxRetryAfter": 180,
+          "timeout": 180000,
+          "abortOnError": false
+        }
+      ],
       "registryAliases": {
         "docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
         "index.docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
