@@ -24,7 +24,6 @@ data:
         "index.docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
         "registry-1.docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
         "ghcr.io": "harbor.lan.${CLUSTER_DOMAIN}/ghcr",
-        "lscr.io": "harbor.lan.${CLUSTER_DOMAIN}/lscr",
         "quay.io": "harbor.lan.${CLUSTER_DOMAIN}/quay",
         "docker.n8n.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
         "docker.gitea.com": "harbor.lan.${CLUSTER_DOMAIN}/gitea"
@@ -43,10 +42,10 @@ data:
           "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/ghcr"]
         },
         {
-          "description": "Use Harbor proxy cache for LSCR lookups",
+          "description": "Use direct LSCR lookups to avoid Harbor proxy-cache tag latency",
           "matchDatasources": ["docker"],
           "matchJsonata": ["$exists(registryUrls[$ = 'https://lscr.io' or $ = 'https://lscr.io/'])"],
-          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/lscr"]
+          "registryUrls": ["https://lscr.io"]
         },
         {
           "description": "Use Harbor proxy cache for Quay lookups",
