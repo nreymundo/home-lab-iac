@@ -12,8 +12,8 @@ data:
         {
           "description": "Limit Harbor proxy-cache lookups without fully serializing them",
           "matchHost": "harbor.lan.${CLUSTER_DOMAIN}",
-          "concurrentRequestLimit": 3,
-          "maxRequestsPerSecond": 2,
+          "concurrentRequestLimit": 4,
+          "maxRequestsPerSecond": 3,
           "maxRetryAfter": 180,
           "timeout": 180000,
           "abortOnError": false
