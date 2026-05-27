@@ -1,0 +1,22 @@
+---
+- name: Ensure headless laptop supports this OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == 'Debian'
+    fail_msg: "headless_laptop currently supports Debian/Ubuntu hosts only"
+    quiet: true
+
+- name: Configure lid and idle behavior
+  ansible.builtin.include_tasks: logind.yml
+
+- name: Disable sleep states
+  ansible.builtin.include_tasks: sleep.yml
+
+- name: Install headless laptop packages
+  ansible.builtin.include_tasks: packages.yml
+
+- name: Configure power profile
+  ansible.builtin.include_tasks: power_profile.yml
+
+- name: Configure AMD GPU userspace
+  ansible.builtin.include_tasks: amd_gpu.yml

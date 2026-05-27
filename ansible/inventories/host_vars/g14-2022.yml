@@ -1,12 +1,19 @@
 ---
 common_user: "{{ ansible_user }}"
 
-# Keep the first bare-metal baseline conservative; enable upgrades deliberately later.
+# Keep interactive playbook runs from doing a full dist-upgrade.
 common_run_upgrade: false
-common_enable_unattended_upgrades: false
+common_enable_unattended_upgrades: true
+common_unattended_upgrades_auto_reboot: true
+common_unattended_upgrades_reboot_time: "06:00"
+common_enable_fstrim: true
 
 ssh_hardening_sshd_settings:
   PermitRootLogin: "no"
   PasswordAuthentication: "no"
   ChallengeResponseAuthentication: "no"
   UsePAM: "yes"
+
+headless_laptop_power_profile: power-saver
+headless_laptop_gpu_users:
+  - "{{ ansible_user }}"

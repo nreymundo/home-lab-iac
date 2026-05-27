@@ -5,3 +5,4 @@
   roles:
     - common
     - ssh_hardening
+    - headless_laptop

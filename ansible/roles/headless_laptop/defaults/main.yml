@@ -1,0 +1,37 @@
+---
+headless_laptop_logind_conf_path: /etc/systemd/logind.conf.d/ignore-lid.conf
+
+headless_laptop_logind_settings:
+  HandleLidSwitch: ignore
+  HandleLidSwitchExternalPower: ignore
+  HandleLidSwitchDocked: ignore
+  IdleAction: ignore
+  IdleActionSec: "0"
+
+headless_laptop_mask_sleep_targets: true
+headless_laptop_sleep_targets:
+  - sleep.target
+  - suspend.target
+  - hibernate.target
+  - hybrid-sleep.target
+  - suspend-then-hibernate.target
+
+headless_laptop_power_profile: power-saver
+
+headless_laptop_packages:
+  - alsa-utils
+  - mesa-utils
+  - vulkan-tools
+  - mesa-vulkan-drivers
+  - radeontop
+  - clinfo
+  - lm-sensors
+  - power-profiles-daemon
+
+headless_laptop_gpu_users: []
+headless_laptop_gpu_groups:
+  - render
+  - video
+
+headless_laptop_validate_gpu: true
+headless_laptop_validate_dri_prime: true
