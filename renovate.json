@@ -8,7 +8,6 @@
   "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
   "commitMessagePrefix": "chore(deps):",
-  "rebaseWhen": "conflicted",
   "ignorePaths": ["kubernetes/clusters/production/flux-system/**"],
 
   "separateMajorMinor": true,
@@ -16,7 +15,7 @@
     "enabled": true,
     "automerge": true,
     "automergeType": "pr",
-    "automergeSchedule": ["at any time"]
+    "automergeSchedule": ["on Sunday after 9pm"]
   },
 
   "packageRules": [
@@ -48,7 +47,7 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "pr",
-      "automergeSchedule": ["at any time"]
+      "automergeSchedule": ["on Sunday after 9pm"]
     },
     {
       "description": "Kubernetes major updates require manual review",
@@ -69,7 +68,7 @@
       "automergeSchedule": ["at any time"]
     },
     {
-      "description": "Kubernetes 0.x updates auto-merge after stability checks",
+      "description": "Kubernetes 0.x updates follow scheduled auto-merge",
       "matchPaths": ["kubernetes/**"],
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "matchCurrentVersion": "/^0/",
@@ -77,7 +76,7 @@
       "automerge": true,
       "platformAutomerge": false,
       "automergeType": "pr",
-      "automergeSchedule": ["at any time"]
+      "automergeSchedule": ["on Sunday after 9pm"]
     },
     {
       "description": "Group Observability Stack",
