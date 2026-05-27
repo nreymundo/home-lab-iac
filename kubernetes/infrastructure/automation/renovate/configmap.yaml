@@ -10,10 +10,10 @@ data:
       "repositories": ["nreymundo/home-lab-iac"],
       "hostRules": [
         {
-          "description": "Throttle Harbor proxy-cache lookups to avoid upstream registry rate limits",
+          "description": "Limit Harbor proxy-cache lookups without fully serializing them",
           "matchHost": "harbor.lan.${CLUSTER_DOMAIN}",
-          "concurrentRequestLimit": 1,
-          "maxRequestsPerSecond": 1,
+          "concurrentRequestLimit": 3,
+          "maxRequestsPerSecond": 2,
           "maxRetryAfter": 180,
           "timeout": 180000,
           "abortOnError": false
