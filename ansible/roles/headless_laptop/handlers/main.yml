@@ -4,3 +4,8 @@
     name: systemd-logind
     state: restarted
   when: not ansible_check_mode
+
+- name: Update grub
+  ansible.builtin.command: update-grub
+  changed_when: true
+  when: not ansible_check_mode

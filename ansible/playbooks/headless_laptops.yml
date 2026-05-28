@@ -6,4 +6,5 @@
     - common
     - ssh_hardening
     - docker
+    - swapfile
     - headless_laptop

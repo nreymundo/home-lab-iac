@@ -1,0 +1,148 @@
+---
+- name: Check if swapfile exists
+  ansible.builtin.stat:
+    path: "{{ swapfile_path }}"
+  register: swapfile_stat
+  when: swapfile_enabled | bool
+
+- name: Detect swapfile filesystem
+  ansible.builtin.command:
+    argv:
+      - findmnt
+      - --noheadings
+      - --output
+      - FSTYPE
+      - --target
+      - "{{ swapfile_path | dirname }}"
+  register: swapfile_findmnt
+  changed_when: false
+  check_mode: false
+  when: swapfile_enabled | bool
+
+- name: Check swapfile attributes
+  ansible.builtin.command:
+    argv:
+      - lsattr
+      - "{{ swapfile_path }}"
+  register: swapfile_attributes
+  changed_when: false
+  check_mode: false
+  when:
+    - swapfile_enabled | bool
+    - swapfile_stat.stat.exists
+
+- name: Determine if swapfile needs recreation
+  ansible.builtin.set_fact:
+    swapfile_recreate: >-
+      {{
+        not swapfile_stat.stat.exists or
+        swapfile_stat.stat.size | int != swapfile_size_bytes | int or
+        (swapfile_findmnt.stdout | trim == 'btrfs' and 'C' not in swapfile_attr_flags)
+      }}
+    swapfile_fstype: "{{ swapfile_findmnt.stdout | trim }}"
+  vars:
+    swapfile_attr_flags: >-
+      {{ swapfile_attributes.stdout.split()[0]
+         if swapfile_attributes.stdout is defined else '' }}
+  when: swapfile_enabled | bool
+
+- name: Remove invalid swapfile
+  when:
+    - swapfile_enabled | bool
+    - swapfile_recreate
+    - not ansible_check_mode
+  block:
+    - name: Disable swapfile
+      ansible.builtin.command:
+        argv:
+          - swapoff
+          - "{{ swapfile_path }}"
+      failed_when: false
+      changed_when: false
+
+    - name: Remove swapfile
+      ansible.builtin.file:
+        path: "{{ swapfile_path }}"
+        state: absent
+
+- name: Create swapfile
+  when:
+    - swapfile_enabled | bool
+    - swapfile_recreate
+    - not ansible_check_mode
+  block:
+    - name: Create empty swapfile
+      ansible.builtin.file:
+        path: "{{ swapfile_path }}"
+        state: touch
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Set BTRFS NoCOW attribute
+      ansible.builtin.command:
+        argv:
+          - chattr
+          - +C
+          - "{{ swapfile_path }}"
+      changed_when: false
+      when: swapfile_fstype == 'btrfs'
+
+    - name: Allocate swapfile
+      ansible.builtin.command:
+        argv:
+          - fallocate
+          - -l
+          - "{{ swapfile_size }}"
+          - "{{ swapfile_path }}"
+      changed_when: true
+
+    - name: Format swapfile
+      ansible.builtin.command:
+        argv:
+          - mkswap
+          - "{{ swapfile_path }}"
+      changed_when: true
+
+- name: Check active swap devices
+  ansible.builtin.command:
+    argv:
+      - swapon
+      - --show=NAME
+      - --noheadings
+  register: swapfile_active_devices
+  changed_when: false
+  check_mode: false
+  when: swapfile_enabled | bool
+
+- name: Enable swapfile
+  ansible.builtin.command:
+    argv:
+      - swapon
+      - "{{ swapfile_path }}"
+  changed_when: true
+  when:
+    - swapfile_enabled | bool
+    - not ansible_check_mode
+    - swapfile_path not in swapfile_active_devices.stdout_lines
+
+- name: Ensure swapfile persists
+  ansible.posix.mount:
+    path: none
+    src: "{{ swapfile_path }}"
+    fstype: swap
+    opts: sw
+    state: present
+  when: swapfile_enabled | bool
+
+- name: Configure vm.swappiness
+  ansible.posix.sysctl:
+    name: vm.swappiness
+    value: "{{ swapfile_swappiness }}"
+    sysctl_file: /etc/sysctl.d/99-swappiness.conf
+    sysctl_set: true
+    reload: true
+    state: present
+  when:
+    - swapfile_enabled | bool
+    - not ansible_check_mode

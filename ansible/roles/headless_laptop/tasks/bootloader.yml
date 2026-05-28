@@ -1,0 +1,11 @@
+---
+- name: Configure headless laptop GRUB kernel parameters
+  ansible.builtin.copy:
+    dest: "{{ headless_laptop_grub_cmdline_dropin_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT {{ headless_laptop_grub_cmdline_linux_default | join(' ') }}"
+  notify: Update grub
+  when: headless_laptop_grub_cmdline_linux_default | length > 0

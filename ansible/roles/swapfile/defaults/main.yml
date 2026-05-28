@@ -1,0 +1,6 @@
+---
+swapfile_enabled: false
+swapfile_path: /swapfile
+swapfile_size: 16G
+swapfile_size_bytes: 17179869184
+swapfile_swappiness: 10

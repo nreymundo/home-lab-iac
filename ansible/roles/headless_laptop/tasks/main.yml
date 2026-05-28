@@ -12,6 +12,9 @@
 - name: Disable sleep states
   ansible.builtin.include_tasks: sleep.yml
 
+- name: Configure bootloader settings
+  ansible.builtin.include_tasks: bootloader.yml
+
 - name: Install headless laptop packages
   ansible.builtin.include_tasks: packages.yml
 

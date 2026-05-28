@@ -10,6 +10,8 @@ common_enable_fstrim: true
 
 docker_install_enabled: true
 
+swapfile_enabled: true
+
 ssh_hardening_sshd_settings:
   PermitRootLogin: "no"
   PasswordAuthentication: "no"
