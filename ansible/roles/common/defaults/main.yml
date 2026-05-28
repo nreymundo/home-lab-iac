@@ -12,6 +12,15 @@ common_fstrim_timer_schedule: "04:00:00"
 
 common_extra_packages: []
 
+common_manage_journald: false
+common_journald_storage: persistent
+common_journald_compress: true
+common_journald_system_max_use: 1G
+common_journald_system_keep_free: 2G
+common_journald_system_max_file_size: 128M
+common_journald_max_retention_sec: 30day
+common_journald_max_file_sec: 1week
+
 common_packages:
   - curl
   - vim
