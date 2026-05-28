@@ -46,6 +46,14 @@ data:
           input_cost_per_token: 0.0
           output_cost_per_token: 0.0
 
+      - model_name: zai/*
+        model_info:
+          mode: chat
+        litellm_params:
+          model: zai/*
+          custom_llm_provider: zai
+          litellm_credential_name: zai
+
     credential_list:
       - credential_name: llama-swap
         credential_values:
@@ -59,6 +67,12 @@ data:
           api_key: os.environ/LITELLM_CREDENTIAL_OPENROUTER_API_KEY
         credential_info:
           custom_llm_provider: openrouter
+
+      - credential_name: zai
+        credential_values:
+          api_key: os.environ/LITELLM_CREDENTIAL_ZAI_API_KEY
+        credential_info:
+          custom_llm_provider: zai
 
     litellm_settings:
       callbacks:
