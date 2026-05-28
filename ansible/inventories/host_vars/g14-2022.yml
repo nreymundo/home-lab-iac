@@ -1,0 +1,90 @@
+---
+common_user: "{{ ansible_user }}"
+
+# Keep interactive playbook runs from doing a full dist-upgrade.
+common_run_upgrade: false
+common_enable_unattended_upgrades: true
+common_unattended_upgrades_auto_reboot: true
+common_unattended_upgrades_reboot_time: "06:00"
+common_enable_fstrim: true
+common_manage_journald: true
+common_journald_system_max_use: 1G
+common_journald_system_keep_free: 2G
+common_journald_system_max_file_size: 128M
+common_journald_max_retention_sec: 30day
+common_journald_max_file_sec: 1week
+
+docker_install_enabled: true
+
+swapfile_enabled: true
+
+ssh_hardening_sshd_settings:
+  PermitRootLogin: "no"
+  PasswordAuthentication: "no"
+  ChallengeResponseAuthentication: "no"
+  UsePAM: "yes"
+
+headless_laptop_power_profile: power-saver
+headless_laptop_battery_charge_limit: 60
+headless_laptop_asus_quiet_fan_percent: 20
+headless_laptop_extra_packages:
+  # System diagnostics
+  - htop
+  - btop
+  - sysstat
+  - iotop
+  - iftop
+  - nethogs
+  - lsof
+  - strace
+  - pciutils
+  - usbutils
+  - dmidecode
+  - ethtool
+
+  # Storage diagnostics
+  - smartmontools
+  - nvme-cli
+
+  # Network/debug tooling
+  - bind9-dnsutils
+  - iperf3
+  - mtr-tiny
+  - tcpdump
+  - net-tools
+
+  # Developer/build tooling
+  - git
+  - build-essential
+  - pkg-config
+  - cmake
+  - ninja-build
+  - python3-venv
+  - python3-pip
+  - pipx
+  - unzip
+  - jq
+  - yq
+  - ripgrep
+  - fd-find
+  - gh
+
+  # Remote/admin convenience
+  - tmux
+  - tree
+  - rsync
+  - restic
+
+  # Performance profiling
+  - linux-tools-generic
+  - linux-cloud-tools-generic
+  - perf-tools-unstable
+
+  # Host firewall tooling
+  - ufw
+
+  # Laptop telemetry and power tooling
+  - power-profiles-daemon
+  - fastfetch
+headless_laptop_gpu_users:
+  - "{{ ansible_user }}"

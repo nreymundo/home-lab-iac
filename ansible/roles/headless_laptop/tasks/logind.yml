@@ -1,0 +1,22 @@
+---
+- name: Ensure systemd-logind override directory exists
+  ansible.builtin.file:
+    path: "{{ headless_laptop_logind_conf_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure systemd-logind for headless laptop use
+  ansible.builtin.copy:
+    dest: "{{ headless_laptop_logind_conf_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Managed by Ansible. Do not edit manually.
+      [Login]
+      {% for key, value in headless_laptop_logind_settings.items() %}
+      {{ key }}={{ value }}
+      {% endfor %}
+  notify: Restart systemd-logind

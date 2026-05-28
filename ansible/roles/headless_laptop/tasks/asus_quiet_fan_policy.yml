@@ -1,0 +1,80 @@
+---
+- name: Validate ASUS quiet fan percentage
+  ansible.builtin.assert:
+    that:
+      - headless_laptop_asus_quiet_fan_percent | int >= 0
+      - headless_laptop_asus_quiet_fan_percent | int <= 100
+    fail_msg: "headless_laptop_asus_quiet_fan_percent must be between 0 and 100"
+    quiet: true
+
+- name: Check ASUS quiet fan policy sysfs support
+  ansible.builtin.shell: |
+    set -eu
+
+    [ -r /sys/firmware/acpi/platform_profile ] || exit 1
+
+    for hwmon in /sys/class/hwmon/hwmon*; do
+      [ -r "$hwmon/name" ] || continue
+      if [ "$(cat "$hwmon/name")" = "asus_custom_fan_curve" ]; then
+        printf "%s\n" "$hwmon"
+        exit 0
+      fi
+    done
+
+    exit 1
+  args:
+    executable: /bin/sh
+  register: headless_laptop_asus_quiet_fan_sysfs
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Report missing ASUS quiet fan policy support
+  ansible.builtin.debug:
+    msg: >-
+      ASUS quiet fan policy is enabled, but this host does not expose both
+      /sys/firmware/acpi/platform_profile and an asus_custom_fan_curve hwmon
+      device. Skipping fan policy installation.
+  when: headless_laptop_asus_quiet_fan_sysfs.rc != 0
+
+- name: Install ASUS quiet fan policy
+  when: headless_laptop_asus_quiet_fan_sysfs.rc == 0
+  block:
+    - name: Install ASUS quiet fan policy helper
+      ansible.builtin.template:
+        src: asus-quiet-fan-policy.j2
+        dest: /usr/local/sbin/asus-quiet-fan-policy
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Configure ASUS quiet fan policy service
+      ansible.builtin.template:
+        src: asus-quiet-fan-policy.service.j2
+        dest: /etc/systemd/system/asus-quiet-fan-policy.service
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Configure ASUS quiet fan policy timer
+      ansible.builtin.template:
+        src: asus-quiet-fan-policy.timer.j2
+        dest: /etc/systemd/system/asus-quiet-fan-policy.timer
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Enable ASUS quiet fan policy timer
+      ansible.builtin.systemd:
+        name: asus-quiet-fan-policy.timer
+        enabled: true
+        state: started
+        daemon_reload: true
+      when: not ansible_check_mode
+
+    - name: Apply ASUS quiet fan policy
+      ansible.builtin.systemd:
+        name: asus-quiet-fan-policy.service
+        state: started
+      changed_when: false
+      when: not ansible_check_mode

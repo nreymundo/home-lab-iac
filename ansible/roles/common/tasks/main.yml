@@ -7,6 +7,10 @@
 - name: Run common identity tasks
   ansible.builtin.include_tasks: identity.yml
 
+- name: Configure system log retention
+  ansible.builtin.include_tasks: journald.yml
+  when: common_manage_journald | bool
+
 - name: Run Debian/Ubuntu specific tasks
   ansible.builtin.include_tasks: os-debian.yml
   when: ansible_os_family == 'Debian'

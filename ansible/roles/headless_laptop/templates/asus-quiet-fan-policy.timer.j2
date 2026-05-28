@@ -1,0 +1,12 @@
+[Unit]
+Description=Reapply ASUS quiet fan policy after profile changes
+ConditionPathExists=/sys/firmware/acpi/platform_profile
+
+[Timer]
+OnBootSec={{ headless_laptop_asus_quiet_fan_policy_interval }}
+OnUnitActiveSec={{ headless_laptop_asus_quiet_fan_policy_interval }}
+AccuracySec=1s
+Unit=asus-quiet-fan-policy.service
+
+[Install]
+WantedBy=timers.target

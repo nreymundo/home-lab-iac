@@ -1,0 +1,50 @@
+---
+headless_laptop_logind_conf_path: /etc/systemd/logind.conf.d/ignore-lid.conf
+
+headless_laptop_logind_settings:
+  HandleLidSwitch: ignore
+  HandleLidSwitchExternalPower: ignore
+  HandleLidSwitchDocked: ignore
+  IdleAction: ignore
+  IdleActionSec: "0"
+
+headless_laptop_mask_sleep_targets: true
+headless_laptop_sleep_targets:
+  - sleep.target
+  - suspend.target
+  - hibernate.target
+  - hybrid-sleep.target
+  - suspend-then-hibernate.target
+
+headless_laptop_power_profile: power-saver
+headless_laptop_battery_charge_limit: 80
+
+headless_laptop_asus_quiet_fan_policy_enabled: true
+headless_laptop_asus_quiet_fan_percent: 30
+headless_laptop_asus_quiet_fan_platform_profile: quiet
+headless_laptop_asus_quiet_fan_policy_interval: 10s
+
+headless_laptop_grub_cmdline_dropin_path: /etc/default/grub.d/zz-headless-laptop.cfg
+headless_laptop_grub_cmdline_legacy_dropins:
+  - /etc/default/grub.d/99-headless-laptop.cfg
+headless_laptop_grub_cmdline_linux_default:
+  - crashkernel=0
+
+headless_laptop_packages:
+  - alsa-utils
+  - mesa-utils
+  - vulkan-tools
+  - mesa-vulkan-drivers
+  - radeontop
+  - clinfo
+  - lm-sensors
+  - power-profiles-daemon
+headless_laptop_extra_packages: []
+
+headless_laptop_gpu_users: []
+headless_laptop_gpu_groups:
+  - render
+  - video
+
+headless_laptop_validate_gpu: true
+headless_laptop_validate_dri_prime: true
