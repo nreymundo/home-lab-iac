@@ -1,4 +1,11 @@
 ---
+- name: Remove legacy headless laptop GRUB drop-ins
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ headless_laptop_grub_cmdline_legacy_dropins }}"
+  notify: Update grub
+
 - name: Configure headless laptop GRUB kernel parameters
   ansible.builtin.copy:
     dest: "{{ headless_laptop_grub_cmdline_dropin_path }}"
@@ -6,6 +13,14 @@
     group: root
     mode: "0644"
     content: |
-      GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT {{ headless_laptop_grub_cmdline_linux_default | join(' ') }}"
+      headless_laptop_cmdline=""
+      for token in $GRUB_CMDLINE_LINUX_DEFAULT; do
+        case "$token" in
+          crashkernel=*) ;;
+          *) headless_laptop_cmdline="${headless_laptop_cmdline:+$headless_laptop_cmdline }$token" ;;
+        esac
+      done
+      GRUB_CMDLINE_LINUX_DEFAULT="$headless_laptop_cmdline {{ headless_laptop_grub_cmdline_linux_default | join(' ') }}"
+      unset headless_laptop_cmdline token
   notify: Update grub
   when: headless_laptop_grub_cmdline_linux_default | length > 0
