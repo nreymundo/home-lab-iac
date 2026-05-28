@@ -8,12 +8,22 @@ data:
     {
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
       "repositories": ["nreymundo/home-lab-iac"],
+      "hostRules": [
+        {
+          "description": "Limit Harbor proxy-cache lookups without fully serializing them",
+          "matchHost": "harbor.lan.${CLUSTER_DOMAIN}",
+          "concurrentRequestLimit": 4,
+          "maxRequestsPerSecond": 3,
+          "maxRetryAfter": 180,
+          "timeout": 180000,
+          "abortOnError": false
+        }
+      ],
       "registryAliases": {
         "docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
         "index.docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
         "registry-1.docker.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
         "ghcr.io": "harbor.lan.${CLUSTER_DOMAIN}/ghcr",
-        "lscr.io": "harbor.lan.${CLUSTER_DOMAIN}/lscr",
         "quay.io": "harbor.lan.${CLUSTER_DOMAIN}/quay",
         "docker.n8n.io": "harbor.lan.${CLUSTER_DOMAIN}/dockerhub",
         "docker.gitea.com": "harbor.lan.${CLUSTER_DOMAIN}/gitea"
@@ -32,10 +42,10 @@ data:
           "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/ghcr"]
         },
         {
-          "description": "Use Harbor proxy cache for LSCR lookups",
+          "description": "Use direct LSCR lookups to avoid Harbor proxy-cache tag latency",
           "matchDatasources": ["docker"],
           "matchJsonata": ["$exists(registryUrls[$ = 'https://lscr.io' or $ = 'https://lscr.io/'])"],
-          "registryUrls": ["https://harbor.lan.${CLUSTER_DOMAIN}/lscr"]
+          "registryUrls": ["https://lscr.io"]
         },
         {
           "description": "Use Harbor proxy cache for Quay lookups",

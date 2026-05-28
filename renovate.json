@@ -15,7 +15,7 @@
     "enabled": true,
     "automerge": true,
     "automergeType": "pr",
-    "automergeSchedule": ["on Sunday after 9pm"]
+    "automergeSchedule": ["at any time"]
   },
 
   "packageRules": [
@@ -47,7 +47,7 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "pr",
-      "automergeSchedule": ["on Sunday after 9pm"]
+      "automergeSchedule": ["at any time"]
     },
     {
       "description": "Kubernetes major updates require manual review",
@@ -62,21 +62,21 @@
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "platformAutomerge": false,
+      "platformAutomerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash",
       "automergeSchedule": ["at any time"]
     },
     {
-      "description": "Kubernetes 0.x updates follow scheduled auto-merge",
+      "description": "Kubernetes 0.x updates auto-merge after stability checks",
       "matchPaths": ["kubernetes/**"],
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "matchCurrentVersion": "/^0/",
       "minimumReleaseAge": "5 days",
       "automerge": true,
-      "platformAutomerge": false,
+      "platformAutomerge": true,
       "automergeType": "pr",
-      "automergeSchedule": ["on Sunday after 9pm"]
+      "automergeSchedule": ["at any time"]
     },
     {
       "description": "Group Observability Stack",
