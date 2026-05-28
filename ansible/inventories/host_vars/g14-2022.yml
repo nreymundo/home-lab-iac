@@ -26,7 +26,7 @@ ssh_hardening_sshd_settings:
 
 headless_laptop_power_profile: power-saver
 headless_laptop_battery_charge_limit: 60
-headless_laptop_asus_quiet_fan_percent: 25
+headless_laptop_asus_quiet_fan_percent: 20
 headless_laptop_extra_packages:
   # System diagnostics
   - htop
