@@ -20,5 +20,64 @@ ssh_hardening_sshd_settings:
 
 headless_laptop_power_profile: power-saver
 headless_laptop_battery_charge_limit: 60
+headless_laptop_extra_packages:
+  # System diagnostics
+  - htop
+  - btop
+  - sysstat
+  - iotop
+  - iftop
+  - nethogs
+  - lsof
+  - strace
+  - pciutils
+  - usbutils
+  - dmidecode
+  - ethtool
+
+  # Storage diagnostics
+  - smartmontools
+  - nvme-cli
+
+  # Network/debug tooling
+  - bind9-dnsutils
+  - iperf3
+  - mtr-tiny
+  - tcpdump
+  - net-tools
+
+  # Developer/build tooling
+  - git
+  - build-essential
+  - pkg-config
+  - cmake
+  - ninja-build
+  - python3-venv
+  - python3-pip
+  - pipx
+  - unzip
+  - jq
+  - yq
+  - ripgrep
+  - fd-find
+  - gh
+
+  # Remote/admin convenience
+  - tmux
+  - tree
+  - rsync
+  - restic
+
+  # Performance profiling
+  - linux-tools-generic
+  - linux-cloud-tools-generic
+  - perf-tools-unstable
+
+  # Host firewall tooling
+  - ufw
+
+  # Laptop telemetry and power tooling
+  - power-profiles-daemon
+  - fastfetch
 headless_laptop_gpu_users:
   - "{{ ansible_user }}"

@@ -1,8 +1,8 @@
 ---
 - name: Install headless laptop packages
   ansible.builtin.apt:
-    name: "{{ headless_laptop_packages }}"
+    name: "{{ (headless_laptop_packages + headless_laptop_extra_packages) | unique }}"
     state: present
     update_cache: true
     cache_valid_time: 3600
-  when: headless_laptop_packages | length > 0
+  when: (headless_laptop_packages + headless_laptop_extra_packages) | length > 0

@@ -34,6 +34,7 @@ headless_laptop_packages:
   - clinfo
   - lm-sensors
   - power-profiles-daemon
+headless_laptop_extra_packages: []
 
 headless_laptop_gpu_users: []
 headless_laptop_gpu_groups:
