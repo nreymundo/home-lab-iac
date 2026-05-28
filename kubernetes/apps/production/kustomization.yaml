@@ -9,6 +9,7 @@ resources:
   - ../apps/external-observability/omada-exporter
   - ../apps/automation/n8n
   - ../apps/utils/homepage
+  - ../apps/utils/bambuddy
   - ../apps/utils/it-tools
   - ../apps/utils/searxng
   - ../apps/nextcloud
