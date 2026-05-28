@@ -1,0 +1,23 @@
+---
+nodejs_runtime_version: 24
+nodejs_runtime_repo_base_url: "https://deb.nodesource.com/node_{{ nodejs_runtime_version }}.x"
+nodejs_runtime_keyring_path: /etc/apt/keyrings/nodesource.gpg
+nodejs_runtime_source_path: /etc/apt/sources.list.d/nodesource.list
+
+nodejs_runtime_prerequisite_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+
+nodejs_runtime_packages:
+  - nodejs
+nodejs_runtime_package_state: latest
+
+nodejs_runtime_global_npm_packages:
+  - pnpm
+  - bun
+
+nodejs_runtime_configure_user_npm: true
+nodejs_runtime_user: "{{ common_user | default(ansible_user) }}"
+nodejs_runtime_user_npm_prefix_dirname: .npm-global
+nodejs_runtime_enable_user_linger: true
