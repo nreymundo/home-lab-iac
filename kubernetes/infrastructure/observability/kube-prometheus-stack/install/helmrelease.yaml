@@ -19,6 +19,10 @@ spec:
         namespace: flux-system
       interval: 12h
   values:
+    crds:
+      upgradeJob:
+        enabled: true
+
     kubeControllerManager:
       enabled: false
 
