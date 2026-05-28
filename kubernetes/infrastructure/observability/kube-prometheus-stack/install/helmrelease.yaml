@@ -22,6 +22,7 @@ spec:
     crds:
       upgradeJob:
         enabled: true
+        forceConflicts: true
 
     kubeControllerManager:
       enabled: false
