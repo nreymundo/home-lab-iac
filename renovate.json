@@ -15,6 +15,7 @@
     "enabled": true,
     "automerge": true,
     "automergeType": "pr",
+    "rebaseWhen": "conflicted",
     "automergeSchedule": ["at any time"]
   },
 
@@ -47,6 +48,7 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "pr",
+      "rebaseWhen": "conflicted",
       "automergeSchedule": ["at any time"]
     },
     {
@@ -65,6 +67,7 @@
       "platformAutomerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash",
+      "rebaseWhen": "conflicted",
       "automergeSchedule": ["at any time"]
     },
     {
@@ -76,6 +79,7 @@
       "automerge": true,
       "platformAutomerge": true,
       "automergeType": "pr",
+      "rebaseWhen": "conflicted",
       "automergeSchedule": ["at any time"]
     },
     {
