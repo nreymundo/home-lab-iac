@@ -6,5 +6,6 @@
     - common
     - ssh_hardening
     - docker
+    - nodejs_runtime
     - swapfile
     - headless_laptop

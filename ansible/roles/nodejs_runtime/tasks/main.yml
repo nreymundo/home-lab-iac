@@ -1,0 +1,113 @@
+---
+- name: Ensure nodejs_runtime supports this OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == 'Debian'
+    fail_msg: "nodejs_runtime currently supports Debian/Ubuntu hosts only"
+    quiet: true
+
+- name: Install Node.js repository prerequisites
+  ansible.builtin.apt:
+    name: "{{ nodejs_runtime_prerequisite_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create keyrings directory for APT keys
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Download NodeSource GPG key
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /tmp/nodesource.gpg.key
+    mode: "0644"
+    force: true
+
+- name: Convert NodeSource GPG key to dearmor format
+  ansible.builtin.command:
+    cmd: "gpg --dearmor -o {{ nodejs_runtime_keyring_path }} /tmp/nodesource.gpg.key"
+    creates: "{{ nodejs_runtime_keyring_path }}"
+  notify: Update NodeSource apt cache
+
+- name: Add NodeSource APT repository
+  ansible.builtin.copy:
+    content: |
+      deb [signed-by={{ nodejs_runtime_keyring_path }}] {{ nodejs_runtime_repo_base_url }} nodistro main
+    dest: "{{ nodejs_runtime_source_path }}"
+    mode: "0644"
+  notify: Update NodeSource apt cache
+
+- name: Refresh apt cache before Node.js install
+  ansible.builtin.meta: flush_handlers
+
+- name: Install Node.js runtime packages
+  ansible.builtin.apt:
+    name: "{{ nodejs_runtime_packages }}"
+    state: "{{ nodejs_runtime_package_state }}"
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Check for npm binary
+  ansible.builtin.stat:
+    path: /usr/bin/npm
+  register: nodejs_runtime_npm_binary
+  changed_when: false
+
+- name: Install global npm packages
+  community.general.npm:
+    name: "{{ item }}"
+    global: true
+    state: present
+  loop: "{{ nodejs_runtime_global_npm_packages }}"
+  when: not ansible_check_mode or nodejs_runtime_npm_binary.stat.exists
+
+- name: Gather Node.js runtime user account
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ nodejs_runtime_user }}"
+  when: nodejs_runtime_configure_user_npm | bool
+
+- name: Configure Node.js runtime user facts
+  ansible.builtin.set_fact:
+    nodejs_runtime_user_home: "{{ ansible_facts.getent_passwd[nodejs_runtime_user][4] }}"
+    nodejs_runtime_user_group: "{{ ansible_facts.getent_passwd[nodejs_runtime_user][2] }}"
+  when: nodejs_runtime_configure_user_npm | bool
+
+- name: Ensure user npm global prefix directory exists
+  ansible.builtin.file:
+    path: "{{ nodejs_runtime_user_home }}/{{ nodejs_runtime_user_npm_prefix_dirname }}"
+    state: directory
+    owner: "{{ nodejs_runtime_user }}"
+    group: "{{ nodejs_runtime_user_group }}"
+    mode: "0755"
+  when: nodejs_runtime_configure_user_npm | bool
+
+- name: Configure user npm global prefix
+  ansible.builtin.lineinfile:
+    path: "{{ nodejs_runtime_user_home }}/.npmrc"
+    create: true
+    owner: "{{ nodejs_runtime_user }}"
+    group: "{{ nodejs_runtime_user_group }}"
+    mode: "0644"
+    regexp: '^prefix='
+    line: "prefix={{ nodejs_runtime_user_home }}/{{ nodejs_runtime_user_npm_prefix_dirname }}"
+  when: nodejs_runtime_configure_user_npm | bool
+
+- name: Add user npm global binaries to bash PATH
+  ansible.builtin.lineinfile:
+    path: "{{ nodejs_runtime_user_home }}/.bashrc"
+    create: true
+    owner: "{{ nodejs_runtime_user }}"
+    group: "{{ nodejs_runtime_user_group }}"
+    mode: "0644"
+    line: 'export PATH="$HOME/{{ nodejs_runtime_user_npm_prefix_dirname }}/bin:$PATH"'
+  when: nodejs_runtime_configure_user_npm | bool
+
+- name: Enable lingering for Node.js runtime user services
+  ansible.builtin.command:
+    cmd: "loginctl enable-linger {{ nodejs_runtime_user }}"
+    creates: "/var/lib/systemd/linger/{{ nodejs_runtime_user }}"
+  when: nodejs_runtime_enable_user_linger | bool
