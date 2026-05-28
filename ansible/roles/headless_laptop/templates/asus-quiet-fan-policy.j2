@@ -1,0 +1,47 @@
+#!/bin/sh
+set -eu
+
+PROFILE_FILE=/sys/firmware/acpi/platform_profile
+QUIET_PROFILE="{{ headless_laptop_asus_quiet_fan_platform_profile }}"
+PERCENT={{ headless_laptop_asus_quiet_fan_percent | int }}
+PWM_VALUE=$(((PERCENT * 255 + 50) / 100))
+
+find_curve_dir() {
+  for hwmon in /sys/class/hwmon/hwmon*; do
+    [ -r "$hwmon/name" ] || continue
+    if [ "$(cat "$hwmon/name")" = "asus_custom_fan_curve" ]; then
+      printf "%s\n" "$hwmon"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+[ -r "$PROFILE_FILE" ] || exit 0
+read -r profile < "$PROFILE_FILE"
+
+curve_dir=$(find_curve_dir || true)
+[ -n "$curve_dir" ] || exit 0
+
+if [ "$profile" = "$QUIET_PROFILE" ]; then
+  for fan in 1 2; do
+    set -- 20 30 40 50 60 70 80 98
+    point=1
+
+    for temp in "$@"; do
+      printf "%s" "$temp" > "$curve_dir/pwm${fan}_auto_point${point}_temp"
+      point=$((point + 1))
+    done
+
+    for point in 6 7 8 5 4 3 2 1; do
+      printf "%s" "$PWM_VALUE" > "$curve_dir/pwm${fan}_auto_point${point}_pwm"
+    done
+
+    printf "%s" 1 > "$curve_dir/pwm${fan}_enable"
+  done
+else
+  for fan in 1 2; do
+    printf "%s" 2 > "$curve_dir/pwm${fan}_enable"
+  done
+fi

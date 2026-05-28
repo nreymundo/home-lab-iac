@@ -1,0 +1,20 @@
+---
+- name: Enable power-profiles-daemon service
+  ansible.builtin.systemd:
+    name: power-profiles-daemon
+    enabled: true
+    state: started
+  when: not ansible_check_mode
+
+- name: Check current power profile
+  ansible.builtin.command: powerprofilesctl get
+  register: headless_laptop_current_power_profile
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Set active power profile
+  ansible.builtin.command: "powerprofilesctl set {{ headless_laptop_power_profile }}"
+  changed_when: true
+  when:
+    - not ansible_check_mode
+    - headless_laptop_current_power_profile.stdout != headless_laptop_power_profile

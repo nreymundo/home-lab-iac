@@ -1,0 +1,75 @@
+---
+- name: Ensure GPU users are configured when GPU groups are configured
+  ansible.builtin.assert:
+    that:
+      - headless_laptop_gpu_users is sequence
+      - headless_laptop_gpu_users is not string
+      - headless_laptop_gpu_groups is sequence
+      - headless_laptop_gpu_groups is not string
+    fail_msg: "Set headless_laptop_gpu_users and headless_laptop_gpu_groups as lists"
+    quiet: true
+
+- name: Add GPU users to render and video groups
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: "{{ headless_laptop_gpu_groups | join(',') }}"
+    append: true
+  loop: "{{ headless_laptop_gpu_users }}"
+  when:
+    - headless_laptop_gpu_users | length > 0
+    - headless_laptop_gpu_groups | length > 0
+
+- name: Report GPU group membership session requirement
+  ansible.builtin.debug:
+    msg: "User {{ item }} must log out and back in before new GPU group membership is active."
+  loop: "{{ headless_laptop_gpu_users }}"
+  when:
+    - not ansible_check_mode
+    - headless_laptop_gpu_users | length > 0
+    - headless_laptop_gpu_groups | length > 0
+
+- name: Check AMD GPU kernel module
+  ansible.builtin.command: lsmod
+  register: headless_laptop_lsmod
+  changed_when: false
+  check_mode: false
+  when: headless_laptop_validate_gpu | bool
+
+- name: Assert amdgpu kernel module is loaded
+  ansible.builtin.assert:
+    that:
+      - headless_laptop_lsmod.stdout_lines | select('match', '^amdgpu\s') | list | length > 0
+    fail_msg: "AMD GPU validation is enabled, but the amdgpu kernel module is not loaded."
+    quiet: true
+  when: headless_laptop_validate_gpu | bool
+
+- name: Check DRI device directory
+  ansible.builtin.stat:
+    path: /dev/dri
+  register: headless_laptop_dri_dir
+  when: headless_laptop_validate_gpu | bool
+
+- name: Assert DRI device directory exists
+  ansible.builtin.assert:
+    that:
+      - headless_laptop_dri_dir.stat.isdir | default(false)
+    fail_msg: "AMD GPU validation is enabled, but /dev/dri is missing."
+    quiet: true
+  when: headless_laptop_validate_gpu | bool
+
+- name: Validate Vulkan can inspect default GPU
+  ansible.builtin.command: vulkaninfo --summary
+  changed_when: false
+  when:
+    - headless_laptop_validate_gpu | bool
+    - not ansible_check_mode
+
+- name: Validate Vulkan can inspect DRI_PRIME GPU
+  ansible.builtin.command: vulkaninfo --summary
+  changed_when: false
+  environment:
+    DRI_PRIME: "1"
+  when:
+    - headless_laptop_validate_gpu | bool
+    - headless_laptop_validate_dri_prime | bool
+    - not ansible_check_mode

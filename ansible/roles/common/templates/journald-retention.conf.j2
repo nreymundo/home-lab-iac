@@ -1,0 +1,8 @@
+[Journal]
+Storage={{ common_journald_storage }}
+Compress={{ 'yes' if common_journald_compress | bool else 'no' }}
+SystemMaxUse={{ common_journald_system_max_use }}
+SystemKeepFree={{ common_journald_system_keep_free }}
+SystemMaxFileSize={{ common_journald_system_max_file_size }}
+MaxRetentionSec={{ common_journald_max_retention_sec }}
+MaxFileSec={{ common_journald_max_file_sec }}

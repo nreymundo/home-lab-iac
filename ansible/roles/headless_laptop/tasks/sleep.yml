@@ -1,0 +1,14 @@
+---
+- name: Mask sleep-related systemd targets
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    masked: true
+  loop: "{{ headless_laptop_sleep_targets }}"
+  when: headless_laptop_mask_sleep_targets | bool
+
+- name: Unmask sleep-related systemd targets when sleep masking is disabled
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    masked: false
+  loop: "{{ headless_laptop_sleep_targets }}"
+  when: not headless_laptop_mask_sleep_targets | bool

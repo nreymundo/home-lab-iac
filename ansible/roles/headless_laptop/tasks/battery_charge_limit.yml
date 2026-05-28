@@ -1,0 +1,51 @@
+---
+- name: Validate battery charge limit
+  ansible.builtin.assert:
+    that:
+      - headless_laptop_battery_charge_limit | int >= 1
+      - headless_laptop_battery_charge_limit | int <= 100
+    fail_msg: "headless_laptop_battery_charge_limit must be between 1 and 100"
+    quiet: true
+
+- name: Install battery charge limit helper
+  ansible.builtin.copy:
+    dest: /usr/local/sbin/set-battery-charge-limit
+    owner: root
+    group: root
+    mode: "0755"
+    content: |
+      #!/bin/sh
+      set -eu
+
+      limit="$1"
+
+      for threshold in /sys/class/power_supply/BAT*/charge_control_end_threshold; do
+        [ -e "$threshold" ] || continue
+        printf "%s\n" "$limit" > "$threshold"
+      done
+
+- name: Configure battery charge limit service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/battery-charge-limit.service
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Set battery charge limit
+      ConditionPathExistsGlob=/sys/class/power_supply/BAT*/charge_control_end_threshold
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/set-battery-charge-limit {{ headless_laptop_battery_charge_limit | int }}
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and apply battery charge limit
+  ansible.builtin.systemd:
+    name: battery-charge-limit.service
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: not ansible_check_mode

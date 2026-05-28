@@ -1,0 +1,7 @@
+[Unit]
+Description=Apply ASUS quiet fan policy
+ConditionPathExists=/sys/firmware/acpi/platform_profile
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/asus-quiet-fan-policy
