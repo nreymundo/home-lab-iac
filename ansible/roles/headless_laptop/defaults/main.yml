@@ -19,6 +19,11 @@ headless_laptop_sleep_targets:
 headless_laptop_power_profile: power-saver
 headless_laptop_battery_charge_limit: 80
 
+headless_laptop_asus_quiet_fan_policy_enabled: true
+headless_laptop_asus_quiet_fan_percent: 30
+headless_laptop_asus_quiet_fan_platform_profile: quiet
+headless_laptop_asus_quiet_fan_policy_interval: 10s
+
 headless_laptop_grub_cmdline_dropin_path: /etc/default/grub.d/zz-headless-laptop.cfg
 headless_laptop_grub_cmdline_legacy_dropins:
   - /etc/default/grub.d/99-headless-laptop.cfg

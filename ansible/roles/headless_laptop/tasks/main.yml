@@ -21,6 +21,10 @@
 - name: Configure power profile
   ansible.builtin.include_tasks: power_profile.yml
 
+- name: Configure ASUS quiet fan policy
+  ansible.builtin.include_tasks: asus_quiet_fan_policy.yml
+  when: headless_laptop_asus_quiet_fan_policy_enabled | bool
+
 - name: Configure battery charge limit
   ansible.builtin.include_tasks: battery_charge_limit.yml
 
