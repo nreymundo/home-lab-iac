@@ -5,6 +5,7 @@
   roles:
     - common
     - ssh_hardening
+    - homebrew
     - docker
     - nodejs_runtime
     - swapfile

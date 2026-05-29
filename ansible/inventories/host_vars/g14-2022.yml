@@ -16,6 +16,9 @@ common_journald_max_file_sec: 1week
 
 docker_install_enabled: true
 
+# Enable Homebrew installation on this host
+homebrew_install_enabled: true
+
 swapfile_enabled: true
 
 ssh_hardening_sshd_settings:
