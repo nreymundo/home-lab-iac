@@ -5,6 +5,6 @@ metadata:
   namespace: ai
 spec:
   redirectRegex:
-    regex: '^https://chat\.lan\.[^/]+/api/admin/oauth/openid\?code_challenge=([a-f0-9]{64})(?:&.*)?$'
+    regex: '^https://chat\.lan\.[^/]+/api/admin/oauth/openid\?code_challenge=([a-f0-9]{64})&.+$'
     replacement: 'https://chat.lan.${CLUSTER_DOMAIN}/api/admin/oauth/openid?code_challenge=$${1}'
     permanent: false
