@@ -450,7 +450,7 @@ data:
         for item in input_items:
             if (
                 isinstance(item, dict)
-                and item.get("type") == "message"
+                and item.get("type", "message") == "message"
                 and item.get("role") in _SYSTEM_INSTRUCTION_ROLES
             ):
                 extracted_instructions.append(
