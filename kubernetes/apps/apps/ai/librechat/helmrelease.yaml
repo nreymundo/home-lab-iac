@@ -40,7 +40,7 @@ spec:
               DOMAIN_SERVER: https://chat.lan.${CLUSTER_DOMAIN}
               TRUST_PROXY: "1"
               NO_INDEX: "true"
-              ENDPOINTS: custom
+              ENDPOINTS: custom,agents
               MONGO_URI: mongodb://librechat-mongodb:27017/LibreChat
               SEARCH: "true"
               MEILI_HOST: http://librechat-meilisearch:7700
@@ -119,6 +119,37 @@ spec:
               limits:
                 cpu: 2
                 memory: 4Gi
+
+      admin-panel:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          admin-panel:
+            image:
+              # renovate: datasource=docker depName=clickhouse/librechat-admin-panel registryUrl=https://ghcr.io
+              repository: ghcr.io/clickhouse/librechat-admin-panel
+              tag: latest
+            env:
+              TZ: Europe/Berlin
+              PORT: "3000"
+              VITE_API_BASE_URL: https://chat.lan.${CLUSTER_DOMAIN}
+              API_SERVER_URL: http://librechat-main.ai.svc.cluster.local:3080
+              ADMIN_SSO_ONLY: "true"
+              SESSION_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: librechat-secrets
+                    key: ADMIN_PANEL_SESSION_SECRET
+            ports:
+              - name: http
+                containerPort: 3000
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
 
       mongodb:
         containers:
@@ -345,6 +376,11 @@ spec:
         ports:
           http:
             port: 3080
+      admin-panel:
+        controller: admin-panel
+        ports:
+          http:
+            port: 3000
       mongodb:
         controller: mongodb
         ports:
@@ -382,6 +418,22 @@ spec:
               - path: /
                 service:
                   identifier: main
+                  port: http
+      admin-panel:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: chat-admin.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: LibreChat - Admin Panel
+          gethomepage.dev/description: LibreChat administration interface
+          gethomepage.dev/group: "Kubernetes"
+          gethomepage.dev/icon: librechat.png
+          gethomepage.dev/href: https://chat-admin.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: chat-admin.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: admin-panel
                   port: http
 
     persistence:

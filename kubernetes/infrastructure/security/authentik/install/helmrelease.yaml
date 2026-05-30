@@ -173,11 +173,21 @@ spec:
               key: OPENCLAW_GATEWAY_PASSWORD
 
         # Blueprint variables
-        - name: AK_BLUEPRINT_USER
+        - name: AK_BLUEPRINT_USERNAME
           valueFrom:
             secretKeyRef:
               name: authentik-env
-              key: AK_BLUEPRINT_USER
+              key: AK_BLUEPRINT_USERNAME
+        - name: AK_BLUEPRINT_NAME
+          valueFrom:
+            secretKeyRef:
+              name: authentik-env
+              key: AK_BLUEPRINT_NAME
+        - name: AK_BLUEPRINT_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: authentik-env
+              key: AK_BLUEPRINT_EMAIL
         - name: AK_BLUEPRINT_USER_PASSWORD
           valueFrom:
             secretKeyRef:
