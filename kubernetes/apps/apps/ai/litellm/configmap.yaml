@@ -409,6 +409,12 @@ data:
         vllm_model_discovery.worker_startup_hook()
         chatgpt_responses_streaming_patch.worker_startup_hook()
 
+  sitecustomize.py: |
+    import litellm_startup
+
+
+    litellm_startup.worker_startup_hook()
+
   vllm_model_discovery.py: |
     import os
 
