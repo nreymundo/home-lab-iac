@@ -391,11 +391,21 @@ data:
         patch_chatgpt_responses_streaming()
 
   litellm_startup.py: |
+    import litellm
+
     import chatgpt_responses_streaming_patch
     import vllm_model_discovery
 
 
+    def patch_chatgpt_codex_reasoning_metadata():
+        for model in ("gpt-5.3-codex", "gpt-5.3-codex-spark"):
+            litellm.model_cost.setdefault(model, {})[
+                "supports_xhigh_reasoning_effort"
+            ] = True
+
+
     def worker_startup_hook():
+        patch_chatgpt_codex_reasoning_metadata()
         vllm_model_discovery.worker_startup_hook()
         chatgpt_responses_streaming_patch.worker_startup_hook()
 
