@@ -6,6 +6,7 @@ components:
 
 resources:
   - configmap.yaml
+  - middleware-admin-oauth-sanitize.yaml
   - librechat-secrets.sops.yaml
   - librechat-vectordb-secrets.sops.yaml
   - helmrelease.yaml

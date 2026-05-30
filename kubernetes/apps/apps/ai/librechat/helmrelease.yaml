@@ -38,6 +38,7 @@ spec:
               LOG_TO_FILE: "false"
               DOMAIN_CLIENT: https://chat.lan.${CLUSTER_DOMAIN}
               DOMAIN_SERVER: https://chat.lan.${CLUSTER_DOMAIN}
+              ADMIN_PANEL_URL: https://chat-admin.lan.${CLUSTER_DOMAIN}
               TRUST_PROXY: "1"
               NO_INDEX: "true"
               ENDPOINTS: custom,agents
@@ -348,7 +349,7 @@ spec:
                     key: POSTGRES_PASSWORD
               EMBEDDINGS_PROVIDER: openai
               EMBEDDINGS_MODEL: local/embedding
-              RAG_OPENAI_BASEURL: http://litellm.ai.svc.cluster.local:4000/v1
+              RAG_OPENAI_BASEURL: http://litellm-main:4000/v1
               RAG_OPENAI_API_KEY:
                 valueFrom:
                   secretKeyRef:
@@ -406,6 +407,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: chat.lan.${CLUSTER_DOMAIN}
+          traefik.ingress.kubernetes.io/router.middlewares: ai-librechat-admin-oauth-sanitize@kubernetescrd
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: LibreChat
           gethomepage.dev/description: AI chat interface

@@ -1,0 +1,10 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: librechat-admin-oauth-sanitize
+  namespace: ai
+spec:
+  redirectRegex:
+    regex: '^https://chat\.lan\.[^/]+/api/admin/oauth/openid\?code_challenge=([a-f0-9]{64})(?:&.*)?$'
+    replacement: 'https://chat.lan.${CLUSTER_DOMAIN}/api/admin/oauth/openid?code_challenge=$${1}'
+    permanent: false
