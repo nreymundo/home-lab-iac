@@ -243,6 +243,7 @@ spec:
               TZ: Europe/Berlin
               POSTGRES_DB: librechat-vectordb
               POSTGRES_USER: librechat
+              PGDATA: /var/lib/postgresql/data/pgdata
               POSTGRES_PASSWORD:
                 valueFrom:
                   secretKeyRef:
