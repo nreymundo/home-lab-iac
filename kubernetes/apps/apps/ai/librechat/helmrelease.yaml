@@ -1,0 +1,444 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: librechat
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        initContainers:
+          init-permissions:
+            image:
+              repository: docker.io/library/busybox
+              tag: 1.36.1
+            command:
+              - /bin/sh
+              - -c
+              - mkdir -p /app/uploads /app/logs /app/client/public/images && chown -R 1000:1000 /app/uploads /app/logs /app/client/public/images
+            securityContext:
+              runAsUser: 0
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=danny-avila/librechat registryUrl=https://registry.librechat.ai
+              repository: registry.librechat.ai/danny-avila/librechat
+              tag: v0.8.6-rc1
+            env:
+              TZ: Europe/Berlin
+              HOST: 0.0.0.0
+              PORT: "3080"
+              NODE_ENV: production
+              CONFIG_PATH: /app/librechat.yaml
+              LOG_TO_FILE: "false"
+              DOMAIN_CLIENT: https://chat.lan.${CLUSTER_DOMAIN}
+              DOMAIN_SERVER: https://chat.lan.${CLUSTER_DOMAIN}
+              TRUST_PROXY: "1"
+              NO_INDEX: "true"
+              ENDPOINTS: custom
+              MONGO_URI: mongodb://librechat-mongodb:27017/LibreChat
+              SEARCH: "true"
+              MEILI_HOST: http://librechat-meilisearch:7700
+              MEILI_NO_ANALYTICS: "true"
+              RAG_API_URL: http://librechat-rag-api:8000
+              ALLOW_EMAIL_LOGIN: "false"
+              ALLOW_REGISTRATION: "false"
+              ALLOW_SOCIAL_LOGIN: "true"
+              ALLOW_SOCIAL_REGISTRATION: "true"
+              ALLOW_PASSWORD_RESET: "false"
+              OPENID_ISSUER: https://sso.${CLUSTER_DOMAIN}/application/o/librechat/
+              OPENID_CALLBACK_URL: /oauth/openid/callback
+              OPENID_SCOPE: openid profile email librechat
+              OPENID_BUTTON_LABEL: Authentik
+              OPENID_REQUIRED_ROLE: librechat-user,librechat-admin
+              OPENID_REQUIRED_ROLE_TOKEN_KIND: id
+              OPENID_REQUIRED_ROLE_PARAMETER_PATH: roles
+              OPENID_ADMIN_ROLE: librechat-admin
+              OPENID_ADMIN_ROLE_TOKEN_KIND: id
+              OPENID_ADMIN_ROLE_PARAMETER_PATH: roles
+              OPENID_USE_END_SESSION_ENDPOINT: "true"
+              OPENID_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: librechat-sso-secret
+                    key: CLIENT_ID
+              OPENID_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: librechat-sso-secret
+                    key: CLIENT_SECRET
+            envFrom:
+              - secretRef:
+                  name: librechat-secrets
+            ports:
+              - name: http
+                containerPort: 3080
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 3080
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 3080
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 3080
+                  failureThreshold: 60
+                  periodSeconds: 5
+            resources:
+              requests:
+                cpu: 250m
+                memory: 1Gi
+              limits:
+                cpu: 2
+                memory: 4Gi
+
+      mongodb:
+        containers:
+          mongodb:
+            image:
+              # renovate: datasource=docker depName=mongo registryUrl=https://docker.io
+              repository: docker.io/library/mongo
+              tag: 8.0.20
+            args:
+              - --noauth
+              - --bind_ip_all
+            env:
+              TZ: Europe/Berlin
+              MONGO_INITDB_DATABASE: LibreChat
+            ports:
+              - name: mongodb
+                containerPort: 27017
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - mongosh
+                      - --quiet
+                      - --eval
+                      - db.adminCommand('ping')
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - mongosh
+                      - --quiet
+                      - --eval
+                      - db.adminCommand('ping')
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                cpu: 1
+                memory: 2Gi
+
+      meilisearch:
+        initContainers:
+          init-permissions:
+            image:
+              repository: docker.io/library/busybox
+              tag: 1.36.1
+            command:
+              - /bin/sh
+              - -c
+              - mkdir -p /meili_data && chown -R 1000:1000 /meili_data
+            securityContext:
+              runAsUser: 0
+        containers:
+          meilisearch:
+            image:
+              # renovate: datasource=docker depName=getmeili/meilisearch registryUrl=https://docker.io
+              repository: docker.io/getmeili/meilisearch
+              tag: v1.35.1
+            env:
+              TZ: Europe/Berlin
+              MEILI_ENV: production
+              MEILI_NO_ANALYTICS: "true"
+              MEILI_MASTER_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: librechat-secrets
+                    key: MEILI_MASTER_KEY
+            ports:
+              - name: http
+                containerPort: 7700
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 7700
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 7700
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                cpu: 1
+                memory: 2Gi
+
+      vectordb:
+        containers:
+          vectordb:
+            image:
+              # renovate: datasource=docker depName=pgvector/pgvector registryUrl=https://docker.io
+              repository: docker.io/pgvector/pgvector
+              tag: 0.8.0-pg15-trixie
+            env:
+              TZ: Europe/Berlin
+              POSTGRES_DB: librechat-vectordb
+              POSTGRES_USER: librechat
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: librechat-vectordb-secrets
+                    key: POSTGRES_PASSWORD
+            ports:
+              - name: postgresql
+                containerPort: 5432
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - pg_isready
+                      - -U
+                      - librechat
+                      - -d
+                      - librechat-vectordb
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - pg_isready
+                      - -U
+                      - librechat
+                      - -d
+                      - librechat-vectordb
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                cpu: 1
+                memory: 2Gi
+
+      rag-api:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          rag-api:
+            image:
+              # renovate: datasource=docker depName=danny-avila/librechat-rag-api-dev-lite registryUrl=https://registry.librechat.ai
+              repository: registry.librechat.ai/danny-avila/librechat-rag-api-dev-lite
+              tag: latest
+            env:
+              TZ: Europe/Berlin
+              RAG_HOST: 0.0.0.0
+              RAG_PORT: "8000"
+              DB_HOST: librechat-vectordb
+              DB_PORT: "5432"
+              POSTGRES_DB: librechat-vectordb
+              POSTGRES_USER: librechat
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: librechat-vectordb-secrets
+                    key: POSTGRES_PASSWORD
+              EMBEDDINGS_PROVIDER: openai
+              EMBEDDINGS_MODEL: local/embedding
+              RAG_OPENAI_BASEURL: http://litellm.ai.svc.cluster.local:4000/v1
+              RAG_OPENAI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: librechat-secrets
+                    key: LITELLM_API_KEY
+              OPENAI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: librechat-secrets
+                    key: LITELLM_API_KEY
+            ports:
+              - name: http
+                containerPort: 8000
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                cpu: 1
+                memory: 2Gi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 3080
+      mongodb:
+        controller: mongodb
+        ports:
+          mongodb:
+            port: 27017
+      meilisearch:
+        controller: meilisearch
+        ports:
+          http:
+            port: 7700
+      vectordb:
+        controller: vectordb
+        ports:
+          postgresql:
+            port: 5432
+      rag-api:
+        controller: rag-api
+        ports:
+          http:
+            port: 8000
+
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: chat.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: LibreChat
+          gethomepage.dev/description: AI chat interface
+          gethomepage.dev/group: "Kubernetes"
+          gethomepage.dev/icon: librechat.png
+          gethomepage.dev/href: https://chat.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: chat.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: librechat-data
+        advancedMounts:
+          main:
+            init-permissions:
+              - path: /app/uploads
+                subPath: uploads
+              - path: /app/client/public/images
+                subPath: images
+            main:
+              - path: /app/uploads
+                subPath: uploads
+              - path: /app/client/public/images
+                subPath: images
+      config:
+        enabled: true
+        type: configMap
+        name: librechat-config
+        advancedMounts:
+          main:
+            main:
+              - path: /app/librechat.yaml
+                subPath: librechat.yaml
+                readOnly: true
+      mongodb-data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: librechat-mongodb
+        advancedMounts:
+          mongodb:
+            mongodb:
+              - path: /data/db
+      meilisearch-data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: librechat-meilisearch
+        advancedMounts:
+          meilisearch:
+            init-permissions:
+              - path: /meili_data
+            meilisearch:
+              - path: /meili_data
+      vectordb-data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: librechat-vectordb
+        advancedMounts:
+          vectordb:
+            vectordb:
+              - path: /var/lib/postgresql/data
