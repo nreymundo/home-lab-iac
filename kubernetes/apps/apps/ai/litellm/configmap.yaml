@@ -392,6 +392,7 @@ data:
 
   litellm_startup.py: |
     import litellm
+    from litellm.llms.openai.chat.gpt_5_transformation import OpenAIGPT5Config
 
     import chatgpt_responses_streaming_patch
     import vllm_model_discovery
@@ -404,8 +405,33 @@ data:
             ] = True
 
 
+    def patch_chatgpt_codex_reasoning_validator():
+        if getattr(
+            OpenAIGPT5Config._supports_reasoning_effort_level,
+            "_chatgpt_codex_reasoning_patch",
+            False,
+        ):
+            return
+
+        original_supports = OpenAIGPT5Config._supports_reasoning_effort_level
+
+        def supports_reasoning_effort_level(cls, model, level):
+            if level == "xhigh" and model in (
+                "gpt-5.3-codex",
+                "gpt-5.3-codex-spark",
+            ):
+                return True
+            return original_supports(model, level)
+
+        supports_reasoning_effort_level._chatgpt_codex_reasoning_patch = True
+        OpenAIGPT5Config._supports_reasoning_effort_level = classmethod(
+            supports_reasoning_effort_level
+        )
+
+
     def worker_startup_hook():
         patch_chatgpt_codex_reasoning_metadata()
+        patch_chatgpt_codex_reasoning_validator()
         vllm_model_discovery.worker_startup_hook()
         chatgpt_responses_streaming_patch.worker_startup_hook()
 
