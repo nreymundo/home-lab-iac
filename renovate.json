@@ -106,6 +106,15 @@
       "matchPaths": ["kubernetes/apps/apps/ai/litellm/helmrelease.yaml"],
       "automerge": false,
       "platformAutomerge": false
+    },
+    {
+      "description": "Meilisearch image updates require manual review because database files are version-specific",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["getmeili/meilisearch"],
+      "matchPackageNames": ["getmeili/meilisearch", "docker.io/getmeili/meilisearch"],
+      "matchPaths": ["kubernetes/apps/apps/ai/librechat/helmrelease.yaml"],
+      "automerge": false,
+      "platformAutomerge": false
     }
   ],
 
