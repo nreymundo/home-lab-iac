@@ -1057,6 +1057,11 @@ data:
           redirect_uris:
             - url: "https://chat.lan.${CLUSTER_DOMAIN}/oauth/openid/callback"
               matching_mode: strict
+            - url: "https://chat.lan.${CLUSTER_DOMAIN}/api/admin/oauth/openid/callback"
+              matching_mode: strict
+            - url: "https://chat.lan.${CLUSTER_DOMAIN}/login"
+              matching_mode: strict
+              redirect_uri_type: logout
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
