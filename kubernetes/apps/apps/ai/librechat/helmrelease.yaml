@@ -55,6 +55,8 @@ spec:
               OPENID_CALLBACK_URL: /oauth/openid/callback
               OPENID_SCOPE: openid profile email librechat
               OPENID_BUTTON_LABEL: Authentik
+              OPENID_NAME_CLAIM: name
+              OPENID_USERNAME_CLAIM: name
               OPENID_REQUIRED_ROLE: librechat-user,librechat-admin
               OPENID_REQUIRED_ROLE_TOKEN_KIND: id
               OPENID_REQUIRED_ROLE_PARAMETER_PATH: roles
