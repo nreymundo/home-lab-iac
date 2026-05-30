@@ -19,6 +19,9 @@ data:
           apiKey: "${LITELLM_API_KEY}"
           baseURL: "http://litellm.ai.svc.cluster.local:4000/v1"
           models:
-            default: []
+            default:
+              - openai/gpt-5.5
+              - openai/gpt-5.4
+              - openai/gpt-5.4-mini
             fetch: true
           modelDisplayLabel: LiteLLM
