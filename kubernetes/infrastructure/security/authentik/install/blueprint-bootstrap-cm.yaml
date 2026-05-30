@@ -15,10 +15,10 @@ data:
       - model: authentik_core.user
         state: present
         identifiers:
-          username: !Env AK_BLUEPRINT_USER
+          username: !Env AK_BLUEPRINT_USERNAME
         attrs:
-          name: !Env AK_BLUEPRINT_USER
-          email: "${ACME_EMAIL}"
+          name: !Env AK_BLUEPRINT_NAME
+          email: !Env AK_BLUEPRINT_EMAIL
           is_active: true
           is_superuser: true  # This ensures the Admin Console is visible
           password: !Env AK_BLUEPRINT_USER_PASSWORD
@@ -29,7 +29,7 @@ data:
           name: "authentik Admins"
         attrs:
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # 3. Define the Proxy Provider
       - model: authentik_providers_proxy.proxyprovider
@@ -102,7 +102,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # Create Grafana Editors (currently empty)
       - model: authentik_core.group
@@ -188,7 +188,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       - model: authentik_providers_oauth2.oauth2provider
         id: audiobookshelf-provider
@@ -309,7 +309,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # Create custom scope mapping for Gitea role claims
       - model: authentik_providers_oauth2.scopemapping
@@ -390,7 +390,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       - model: authentik_core.group
         state: present
@@ -471,7 +471,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # OAuth2 Provider for Paperless
       - model: authentik_providers_oauth2.oauth2provider
@@ -527,7 +527,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # Nextcloud Users group (regular users, 15 GB quota)
       - model: authentik_core.group
@@ -649,7 +649,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # Frigate Viewers group
       - model: authentik_core.group
@@ -747,7 +747,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # Custom scope mapping that injects Authorization header
       - model: authentik_providers_oauth2.scopemapping
@@ -854,7 +854,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # Custom scope mapping that injects Basic auth header
       - model: authentik_providers_oauth2.scopemapping
@@ -927,7 +927,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       - model: authentik_core.group
         state: present
@@ -1012,7 +1012,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       - model: authentik_core.group
         state: present
@@ -1102,7 +1102,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # Custom scope mapping that injects Authorization header
       - model: authentik_providers_oauth2.scopemapping
@@ -1175,7 +1175,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       - model: authentik_providers_oauth2.scopemapping
         state: present
@@ -1245,7 +1245,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # Immich Users group (regular users)
       - model: authentik_core.group
@@ -1339,7 +1339,7 @@ data:
           is_superuser: false
           parent: null
           users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USER]]
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
       # Jellyfin Users group
       - model: authentik_core.group
