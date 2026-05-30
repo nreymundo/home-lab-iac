@@ -27,6 +27,7 @@ resources:
   - ../apps/ai/sillytavern
   - ../apps/ai/vane
   - ../apps/ai/litellm
+  - ../apps/ai/librechat
   - ../apps/security/frigate
   - ../apps/immich
   - ../apps/media/jellyplex-watched
