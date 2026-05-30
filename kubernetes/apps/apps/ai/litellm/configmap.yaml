@@ -6,7 +6,7 @@ metadata:
 data:
   config.yaml: |
     model_list:
-      - model_name: openai/gpt-5.5
+      - model_name: chatgpt/gpt-5.5
         model_info:
           mode: responses
           max_input_tokens: 272000
@@ -16,7 +16,7 @@ data:
           input_cost_per_token: 0.000005
           output_cost_per_token: 0.00003
 
-      - model_name: openai/gpt-5.4
+      - model_name: chatgpt/gpt-5.4
         model_info:
           mode: responses
           max_input_tokens: 272000
@@ -26,7 +26,7 @@ data:
           input_cost_per_token: 0.0000025
           output_cost_per_token: 0.000015
 
-      - model_name: openai/gpt-5.4-mini
+      - model_name: chatgpt/gpt-5.4-mini
         model_info:
           mode: responses
           max_input_tokens: 272000
@@ -36,7 +36,7 @@ data:
           input_cost_per_token: 0.00000075
           output_cost_per_token: 0.0000045
 
-      - model_name: openai/gpt-5.3-codex
+      - model_name: chatgpt/gpt-5.3-codex
         model_info:
           mode: responses
           max_input_tokens: 272000
@@ -47,7 +47,7 @@ data:
           input_cost_per_token: 0.00000175
           output_cost_per_token: 0.000014
 
-      - model_name: openai/gpt-5.3-codex-spark
+      - model_name: chatgpt/gpt-5.3-codex-spark
         model_info:
           mode: responses
           max_input_tokens: 272000
@@ -143,7 +143,6 @@ data:
         local/stt-large: hosted_vllm/whisper/large-v3-q5_0
         local/automation-lite: hosted_vllm/unsloth/qwen3-4b-instruct-2507
         local/document-analysis: hosted_vllm/unsloth/qwen3-vl-30b-a3b-instruct
-        chatgpt/latest: openai/gpt-5.5
 
   cache_bypass.py: |
     import json
@@ -362,6 +361,12 @@ data:
             response = await async_httpx_client.client.send(req, stream=True)
             response.raise_for_status()
         except Exception as exc:
+            error_response = getattr(exc, "response", None)
+            if error_response is not None:
+                try:
+                    await error_response.aread()
+                except Exception:
+                    pass
             raise self._handle_error(
                 e=exc,
                 provider_config=responses_api_provider_config,
@@ -391,11 +396,156 @@ data:
         patch_chatgpt_responses_streaming()
 
   litellm_startup.py: |
+    import os
+
     import litellm
+    from litellm.llms.chatgpt.responses.transformation import ChatGPTResponsesAPIConfig
     from litellm.llms.openai.chat.gpt_5_transformation import OpenAIGPT5Config
+    from litellm.router import Router
 
     import chatgpt_responses_streaming_patch
     import vllm_model_discovery
+
+
+    _SYSTEM_INSTRUCTION_ROLES = {"system", "developer"}
+
+
+    def _content_to_instruction_text(content):
+        if content is None:
+            return ""
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            text_parts = []
+            for item in content:
+                if isinstance(item, str):
+                    text_parts.append(item)
+                elif isinstance(item, dict) and isinstance(item.get("text"), str):
+                    text_parts.append(item["text"])
+            return "\n".join(part for part in text_parts if part)
+        if isinstance(content, dict) and isinstance(content.get("text"), str):
+            return content["text"]
+        return str(content)
+
+
+    def _merge_instructions(existing_instructions, extracted_instructions):
+        extracted_instructions = [item for item in extracted_instructions if item]
+        if not extracted_instructions:
+            return existing_instructions
+
+        parts = []
+        if existing_instructions:
+            parts.append(str(existing_instructions))
+        parts.extend(extracted_instructions)
+        return "\n\n".join(parts)
+
+
+    def _move_system_input_items_to_instructions(request):
+        input_items = request.get("input")
+        if not isinstance(input_items, list):
+            return
+
+        sanitized_input = []
+        extracted_instructions = []
+        for item in input_items:
+            if (
+                isinstance(item, dict)
+                and item.get("type") == "message"
+                and item.get("role") in _SYSTEM_INSTRUCTION_ROLES
+            ):
+                extracted_instructions.append(
+                    _content_to_instruction_text(item.get("content"))
+                )
+                continue
+            sanitized_input.append(item)
+
+        if len(sanitized_input) == len(input_items):
+            return
+
+        request["input"] = sanitized_input
+        request["instructions"] = _merge_instructions(
+            request.get("instructions"), extracted_instructions
+        )
+
+
+    def _summary_default_disabled(summary_default):
+        return summary_default.lower() in {"", "0", "false", "none", "off", "disabled"}
+
+
+    def _apply_chatgpt_reasoning_summary_default(request):
+        summary_default = os.getenv("CHATGPT_REASONING_SUMMARY_DEFAULT", "detailed").strip()
+        if _summary_default_disabled(summary_default):
+            return
+
+        reasoning = request.get("reasoning")
+        if hasattr(reasoning, "model_dump"):
+            reasoning = reasoning.model_dump(exclude_none=True)
+        elif isinstance(reasoning, dict):
+            reasoning = dict(reasoning)
+        else:
+            return
+
+        effort = reasoning.get("effort")
+        if not effort or effort == "none" or reasoning.get("summary"):
+            return
+
+        reasoning["summary"] = summary_default
+        request["reasoning"] = reasoning
+
+
+    def patch_chatgpt_responses_request_transform():
+        if getattr(
+            ChatGPTResponsesAPIConfig.transform_responses_api_request,
+            "_chatgpt_responses_request_patch",
+            False,
+        ):
+            return
+
+        original_transform = ChatGPTResponsesAPIConfig.transform_responses_api_request
+
+        def transform_responses_api_request(
+            self,
+            model,
+            input,
+            response_api_optional_request_params,
+            litellm_params,
+            headers,
+        ):
+            request = original_transform(
+                self,
+                model=model,
+                input=input,
+                response_api_optional_request_params=response_api_optional_request_params,
+                litellm_params=litellm_params,
+                headers=headers,
+            )
+            _move_system_input_items_to_instructions(request)
+            _apply_chatgpt_reasoning_summary_default(request)
+            return request
+
+        transform_responses_api_request._chatgpt_responses_request_patch = True
+        ChatGPTResponsesAPIConfig.transform_responses_api_request = (
+            transform_responses_api_request
+        )
+
+
+    def patch_router_response_retries():
+        if getattr(
+            Router.async_function_with_retries,
+            "_num_retries_default_patch",
+            False,
+        ):
+            return
+
+        original_async_function_with_retries = Router.async_function_with_retries
+
+        async def async_function_with_retries(self, *args, **kwargs):
+            if kwargs.get("num_retries") is None:
+                kwargs["num_retries"] = getattr(self, "num_retries", None) or 0
+            return await original_async_function_with_retries(self, *args, **kwargs)
+
+        async_function_with_retries._num_retries_default_patch = True
+        Router.async_function_with_retries = async_function_with_retries
 
 
     def patch_chatgpt_codex_reasoning_metadata():
@@ -432,6 +582,8 @@ data:
     def worker_startup_hook():
         patch_chatgpt_codex_reasoning_metadata()
         patch_chatgpt_codex_reasoning_validator()
+        patch_chatgpt_responses_request_transform()
+        patch_router_response_retries()
         vllm_model_discovery.worker_startup_hook()
         chatgpt_responses_streaming_patch.worker_startup_hook()
 
