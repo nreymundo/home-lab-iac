@@ -108,6 +108,55 @@
     - Reload ComfyUI systemd
     - Restart ComfyUI container
 
+- name: Install ComfyUI idle restart helper
+  ansible.builtin.template:
+    src: comfyui-idle-restart.sh.j2
+    dest: "{{ comfyui_idle_restart_script }}"
+    owner: root
+    group: root
+    mode: "0755"
+  when: comfyui_idle_restart_enabled | bool
+
+- name: Install ComfyUI idle restart systemd unit
+  ansible.builtin.template:
+    src: comfyui-idle-restart.service.j2
+    dest: /etc/systemd/system/comfyui-idle-restart.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload ComfyUI systemd
+  when: comfyui_idle_restart_enabled | bool
+
+- name: Install ComfyUI idle restart systemd timer
+  ansible.builtin.template:
+    src: comfyui-idle-restart.timer.j2
+    dest: /etc/systemd/system/comfyui-idle-restart.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload ComfyUI systemd
+  when: comfyui_idle_restart_enabled | bool
+
+- name: Remove ComfyUI idle restart systemd timer when disabled
+  ansible.builtin.file:
+    path: /etc/systemd/system/comfyui-idle-restart.timer
+    state: absent
+  notify: Reload ComfyUI systemd
+  when: not comfyui_idle_restart_enabled | bool
+
+- name: Remove ComfyUI idle restart systemd unit when disabled
+  ansible.builtin.file:
+    path: /etc/systemd/system/comfyui-idle-restart.service
+    state: absent
+  notify: Reload ComfyUI systemd
+  when: not comfyui_idle_restart_enabled | bool
+
+- name: Remove ComfyUI idle restart helper when disabled
+  ansible.builtin.file:
+    path: "{{ comfyui_idle_restart_script }}"
+    state: absent
+  when: not comfyui_idle_restart_enabled | bool
+
 - name: Ensure selected ComfyUI model download profiles exist
   ansible.builtin.assert:
     that:
@@ -190,6 +239,14 @@
     name: "{{ comfyui_service_name }}"
     enabled: "{{ comfyui_enabled | bool }}"
     state: "{{ 'started' if comfyui_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Manage ComfyUI idle restart timer
+  ansible.builtin.systemd_service:
+    name: comfyui-idle-restart.timer
+    enabled: "{{ comfyui_enabled | bool and comfyui_idle_restart_enabled | bool }}"
+    state: "{{ 'started' if comfyui_enabled | bool and comfyui_idle_restart_enabled | bool else 'stopped' }}"
     daemon_reload: true
   when: not ansible_check_mode
 

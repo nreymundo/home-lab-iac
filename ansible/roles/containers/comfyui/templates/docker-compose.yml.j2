@@ -32,5 +32,8 @@ services:
       - >-
         source /etc/profile.d/01-rocm-envs.sh &&
         /opt/set_extra_paths.sh &&
+{% for custom_node in comfyui_disabled_custom_nodes %}
+        if [ -d {{ ('/opt/ComfyUI/custom_nodes/' ~ custom_node) | quote }} ]; then rm -rf {{ ('/opt/ComfyUI/custom_nodes/' ~ custom_node ~ '.disabled') | quote }} && mv {{ ('/opt/ComfyUI/custom_nodes/' ~ custom_node) | quote }} {{ ('/opt/ComfyUI/custom_nodes/' ~ custom_node ~ '.disabled') | quote }}; fi &&
+{% endfor %}
         cd /opt/ComfyUI &&
         exec python main.py {{ comfyui_cli_args | map('quote') | join(' ') }}

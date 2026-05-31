@@ -1,0 +1,11 @@
+[Unit]
+Description=Check ComfyUI idle generation restart
+
+[Timer]
+OnBootSec={{ comfyui_idle_restart_check_interval | int }}s
+OnUnitActiveSec={{ comfyui_idle_restart_check_interval | int }}s
+AccuracySec=10s
+Unit=comfyui-idle-restart.service
+
+[Install]
+WantedBy=timers.target

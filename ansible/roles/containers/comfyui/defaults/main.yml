@@ -28,6 +28,8 @@ comfyui_output_dir: "{{ comfyui_base_dir }}/output"
 comfyui_user_dir: "{{ comfyui_base_dir }}/user"
 comfyui_cache_dir: "{{ comfyui_base_dir }}/cache"
 comfyui_workflows_dir: "{{ comfyui_base_dir }}/workflows/api"
+comfyui_idle_restart_script: /usr/local/sbin/comfyui-idle-restart
+comfyui_idle_restart_state_file: /run/comfyui-idle-restart.state
 
 comfyui_bind_address: "0.0.0.0"
 comfyui_host_port: 8188
@@ -61,11 +63,20 @@ comfyui_cli_args:
   - "{{ comfyui_container_port }}"
   - --output-directory
   - /root/comfy-outputs
-  - --disable-mmap
-  - --gpu-only
+  - --lowvram
   - --disable-smart-memory
   - --cache-none
+  - --fp8_e4m3fn-unet
   - --bf16-vae
+  - --disable-pinned-memory
+
+comfyui_disabled_custom_nodes:
+  - ComfyUI-AMDGPUMonitor
+
+comfyui_idle_restart_enabled: true
+comfyui_idle_restart_after_seconds: 300
+comfyui_idle_restart_check_interval: 60
+comfyui_idle_restart_queue_url: "http://127.0.0.1:{{ comfyui_host_port }}/queue"
 
 # Disabled by default. Entries run inside a short-lived toolbox image container.
 # Example:

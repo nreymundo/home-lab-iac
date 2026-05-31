@@ -1,0 +1,8 @@
+[Unit]
+Description=Restart ComfyUI after idle generation
+Wants={{ comfyui_service_name }}.service
+After={{ comfyui_service_name }}.service docker.service
+
+[Service]
+Type=oneshot
+ExecStart={{ comfyui_idle_restart_script }}
