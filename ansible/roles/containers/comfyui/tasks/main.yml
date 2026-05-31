@@ -108,6 +108,90 @@
     - Reload ComfyUI systemd
     - Restart ComfyUI container
 
+- name: Ensure ComfyUI OpenAI API directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ comfyui_openai_api_base_dir }}"
+    - "{{ comfyui_openai_api_config_dir }}"
+    - "{{ comfyui_openai_api_workflows_dir }}"
+  when: comfyui_openai_api_enabled | bool
+
+- name: Clone ComfyUI OpenAI API source
+  ansible.builtin.git:
+    repo: "{{ comfyui_openai_api_repo }}"
+    dest: "{{ comfyui_openai_api_source_dir }}"
+    version: "{{ comfyui_openai_api_version }}"
+    depth: 1
+  register: comfyui_openai_api_source
+  when:
+    - comfyui_openai_api_enabled | bool
+    - not ansible_check_mode
+
+- name: Render ComfyUI OpenAI API config
+  ansible.builtin.template:
+    src: openai-api-config.yaml.j2
+    dest: "{{ comfyui_openai_api_config_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart ComfyUI OpenAI API
+  when: comfyui_openai_api_enabled | bool
+
+- name: Install ComfyUI OpenAI API workflows
+  ansible.builtin.copy:
+    src: "{{ comfyui_workflows_dir }}/{{ item }}"
+    dest: "{{ comfyui_openai_api_workflows_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+    remote_src: true
+  loop: "{{ comfyui_openai_api_workflows }}"
+  notify: Restart ComfyUI OpenAI API
+  when: comfyui_openai_api_enabled | bool
+
+- name: Build ComfyUI OpenAI API image
+  ansible.builtin.command:
+    argv:
+      - docker
+      - build
+      - -f
+      - apps/rust/comfyui-openai-api/Dockerfile
+      - -t
+      - "{{ comfyui_openai_api_image }}"
+      - .
+    chdir: "{{ comfyui_openai_api_source_dir }}"
+  register: comfyui_openai_api_image_build
+  changed_when: true
+  notify: Restart ComfyUI OpenAI API
+  when:
+    - comfyui_openai_api_enabled | bool
+    - not ansible_check_mode
+    - comfyui_openai_api_force_rebuild | bool or comfyui_openai_api_source.changed
+
+- name: Install ComfyUI OpenAI API systemd unit
+  ansible.builtin.template:
+    src: comfyui-openai-api.service.j2
+    dest: "/etc/systemd/system/{{ comfyui_openai_api_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload ComfyUI systemd
+    - Restart ComfyUI OpenAI API
+  when: comfyui_openai_api_enabled | bool
+
+- name: Remove ComfyUI OpenAI API systemd unit when disabled
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ comfyui_openai_api_service_name }}.service"
+    state: absent
+  notify: Reload ComfyUI systemd
+  when: not comfyui_openai_api_enabled | bool
+
 - name: Install ComfyUI idle restart helper
   ansible.builtin.template:
     src: comfyui-idle-restart.sh.j2
@@ -247,6 +331,14 @@
     name: comfyui-idle-restart.timer
     enabled: "{{ comfyui_enabled | bool and comfyui_idle_restart_enabled | bool }}"
     state: "{{ 'started' if comfyui_enabled | bool and comfyui_idle_restart_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Manage ComfyUI OpenAI API service
+  ansible.builtin.systemd_service:
+    name: "{{ comfyui_openai_api_service_name }}"
+    enabled: "{{ comfyui_enabled | bool and comfyui_openai_api_enabled | bool }}"
+    state: "{{ 'started' if comfyui_enabled | bool and comfyui_openai_api_enabled | bool else 'stopped' }}"
     daemon_reload: true
   when: not ansible_check_mode
 

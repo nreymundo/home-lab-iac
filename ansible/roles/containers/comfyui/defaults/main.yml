@@ -30,6 +30,11 @@ comfyui_cache_dir: "{{ comfyui_base_dir }}/cache"
 comfyui_workflows_dir: "{{ comfyui_base_dir }}/workflows/api"
 comfyui_idle_restart_script: /usr/local/sbin/comfyui-idle-restart
 comfyui_idle_restart_state_file: /run/comfyui-idle-restart.state
+comfyui_openai_api_base_dir: "{{ comfyui_base_dir }}/openai-api"
+comfyui_openai_api_source_dir: "{{ comfyui_openai_api_base_dir }}/src"
+comfyui_openai_api_config_dir: "{{ comfyui_openai_api_base_dir }}/config"
+comfyui_openai_api_workflows_dir: "{{ comfyui_openai_api_base_dir }}/workflows"
+comfyui_openai_api_config_file: "{{ comfyui_openai_api_config_dir }}/config.yaml"
 
 comfyui_bind_address: "0.0.0.0"
 comfyui_host_port: 8188
@@ -77,6 +82,26 @@ comfyui_idle_restart_enabled: true
 comfyui_idle_restart_after_seconds: 300
 comfyui_idle_restart_check_interval: 60
 comfyui_idle_restart_queue_url: "http://127.0.0.1:{{ comfyui_host_port }}/queue"
+comfyui_idle_restart_history_url: "http://127.0.0.1:{{ comfyui_host_port }}/history"
+
+comfyui_openai_api_enabled: true
+comfyui_openai_api_service_name: comfyui-openai-api
+comfyui_openai_api_container_name: comfyui-openai-api
+comfyui_openai_api_image: comfyui-openai-api:local
+comfyui_openai_api_repo: https://github.com/pnyxai/comfyui-openai-api.git
+comfyui_openai_api_version: HEAD
+comfyui_openai_api_force_rebuild: false
+comfyui_openai_api_bind_address: 127.0.0.1
+comfyui_openai_api_host_port: 10050
+comfyui_openai_api_container_port: 8080
+comfyui_openai_api_log_level: info
+comfyui_openai_api_client_id: comfyui-openai-api
+comfyui_openai_api_use_ws: false
+comfyui_openai_api_timeout_seconds: 900
+comfyui_openai_api_max_payload_size_mb: 20
+comfyui_openai_api_workflows:
+  - Qwen-Image-2512-BF16-4-Step-LoRA.json
+  - simple-sdxl-workflow.json
 
 # Disabled by default. Entries run inside a short-lived toolbox image container.
 # Example:
