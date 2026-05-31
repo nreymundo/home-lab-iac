@@ -1,0 +1,208 @@
+---
+- name: Ensure ComfyUI container role supports this system
+  ansible.builtin.assert:
+    that:
+      - ansible_system == 'Linux'
+    fail_msg: "ComfyUI container role supports Linux only"
+
+- name: Ensure required GPU device nodes are present
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ comfyui_required_device_nodes }}"
+  register: comfyui_device_nodes
+
+- name: Assert required GPU device nodes are present
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+    fail_msg: "Required GPU device node {{ item.item }} is missing"
+  loop: "{{ comfyui_device_nodes.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Ensure ComfyUI persistent directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ comfyui_base_dir }}"
+    - "{{ comfyui_models_dir }}"
+    - "{{ comfyui_input_dir }}"
+    - "{{ comfyui_output_dir }}"
+    - "{{ comfyui_user_dir }}"
+    - "{{ comfyui_cache_dir }}"
+    - "{{ comfyui_workflows_dir }}"
+
+- name: Ensure ComfyUI model directories exist
+  ansible.builtin.file:
+    path: "{{ comfyui_models_dir }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ comfyui_model_dirs }}"
+
+- name: Verify Docker Compose is available
+  ansible.builtin.command: docker compose version
+  register: comfyui_docker_compose_version
+  changed_when: false
+
+- name: Pull ComfyUI toolbox image
+  ansible.builtin.command: docker pull {{ comfyui_image | quote }}
+  register: comfyui_image_pull
+  changed_when: >-
+    'Downloaded newer image' in comfyui_image_pull.stdout
+    or 'Pull complete' in comfyui_image_pull.stdout
+    or 'Status: Downloaded' in comfyui_image_pull.stdout
+  when: not ansible_check_mode
+
+- name: Check ComfyUI seed marker
+  ansible.builtin.stat:
+    path: "{{ comfyui_seed_marker }}"
+  register: comfyui_seed_marker_stat
+
+- name: Seed ComfyUI bundled state from image
+  ansible.builtin.command:
+    argv:
+      - docker
+      - run
+      - --rm
+      - --entrypoint
+      - /bin/bash
+      - -v
+      - "{{ comfyui_base_dir }}:/seed"
+      - "{{ comfyui_image }}"
+      - -lc
+      - >-
+        set -euo pipefail;
+        mkdir -p /seed/input /seed/user /seed/workflows/api;
+        cp -an /opt/ComfyUI/input/. /seed/input/;
+        cp -an /opt/ComfyUI/user/. /seed/user/;
+        cp -an /opt/comfy-workflows/. /seed/workflows/api/;
+        date -u +%Y-%m-%dT%H:%M:%SZ > /seed/.seeded
+  changed_when: true
+  when:
+    - not ansible_check_mode
+    - comfyui_seed_force | bool or not comfyui_seed_marker_stat.stat.exists
+
+- name: Render ComfyUI Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ comfyui_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart ComfyUI container
+
+- name: Install ComfyUI systemd unit
+  ansible.builtin.template:
+    src: comfyui-container.service.j2
+    dest: "/etc/systemd/system/{{ comfyui_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload ComfyUI systemd
+    - Restart ComfyUI container
+
+- name: Ensure selected ComfyUI model download profiles exist
+  ansible.builtin.assert:
+    that:
+      - item in comfyui_model_download_profiles
+    fail_msg: "Unknown ComfyUI model download profile: {{ item }}"
+  loop: "{{ comfyui_model_download_profile_names }}"
+
+- name: Initialize selected ComfyUI model profile downloads
+  ansible.builtin.set_fact:
+    comfyui_model_profile_downloads: []
+
+- name: Resolve selected ComfyUI model profile downloads
+  ansible.builtin.set_fact:
+    comfyui_model_profile_downloads: >-
+      {{ comfyui_model_profile_downloads + comfyui_model_download_profiles[item] }}
+  loop: "{{ comfyui_model_download_profile_names }}"
+
+- name: Resolve effective ComfyUI model downloads
+  ansible.builtin.set_fact:
+    comfyui_model_downloads_effective: >-
+      {{ comfyui_model_profile_downloads + comfyui_model_downloads }}
+
+- name: Download optional ComfyUI models
+  ansible.builtin.command:
+    argv:
+      - docker
+      - run
+      - --rm
+      - -e
+      - HOME=/root
+      - -e
+      - "HF_HOME={{ comfyui_environment['HF_HOME'] }}"
+      - -e
+      - "HF_HUB_ENABLE_HF_TRANSFER={{ comfyui_environment['HF_HUB_ENABLE_HF_TRANSFER'] }}"
+      - -v
+      - "{{ comfyui_models_dir }}:/root/comfy-models"
+      - "{{ comfyui_image }}"
+      - /bin/bash
+      - -lc
+      - >-
+        bash /opt/{{ item.script }} {{ item.args | default([]) | map('quote') | join(' ') }}
+  loop: "{{ comfyui_model_downloads_effective }}"
+  register: comfyui_model_download
+  changed_when: "'Downloading' in comfyui_model_download.stdout"
+  when:
+    - not ansible_check_mode
+    - comfyui_model_downloads_effective | length > 0
+
+- name: Find ComfyUI model download staging directories
+  ansible.builtin.find:
+    paths: "{{ comfyui_models_dir }}"
+    patterns: ".hf_stage_*"
+    file_type: directory
+    recurse: false
+  register: comfyui_model_download_staging_dirs
+  when:
+    - not ansible_check_mode
+    - comfyui_model_download_cleanup_cache | bool
+    - comfyui_model_downloads_effective | length > 0
+
+- name: Remove ComfyUI model download cache and staging directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: >-
+    {{
+      [comfyui_models_dir + '/.cache/huggingface']
+      + (comfyui_model_download_staging_dirs.files | default([]) | map(attribute='path') | list)
+    }}
+  when:
+    - not ansible_check_mode
+    - comfyui_model_download_cleanup_cache | bool
+    - comfyui_model_downloads_effective | length > 0
+
+- name: Flush ComfyUI handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Manage ComfyUI service
+  ansible.builtin.systemd_service:
+    name: "{{ comfyui_service_name }}"
+    enabled: "{{ comfyui_enabled | bool }}"
+    state: "{{ 'started' if comfyui_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Validate ComfyUI health endpoint
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ comfyui_host_port }}/system_stats"
+    status_code: 200
+    return_content: true
+  register: comfyui_health
+  until: comfyui_health.status == 200
+  retries: "{{ comfyui_health_retries }}"
+  delay: "{{ comfyui_health_delay }}"
+  when:
+    - comfyui_enabled | bool
+    - comfyui_validate_health | bool
+    - not ansible_check_mode

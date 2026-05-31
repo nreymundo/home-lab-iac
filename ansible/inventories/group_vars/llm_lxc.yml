@@ -10,3 +10,7 @@ lxc_hardening_sshd_settings:
 
 docker_install_enabled: true
 docker_users: []
+
+comfyui_model_download_profile_names:
+  - qwen_image_lightning_bf16
+  - qwen_image_edit_lightning_bf16

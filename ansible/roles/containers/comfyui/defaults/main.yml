@@ -1,0 +1,98 @@
+---
+comfyui_enabled: true
+
+comfyui_service_name: comfyui-container
+comfyui_compose_project_name: comfyui
+comfyui_compose_service_name: comfyui
+comfyui_container_name: comfyui
+comfyui_image: >-
+  docker.io/kyuz0/amd-strix-halo-comfyui:latest@sha256:0066678ae9043f69a1c8c7699e70626ceffd35c1a8ca03227a05640ad0241ed2
+
+comfyui_base_dir: /opt/ai/containers/comfyui
+comfyui_models_dir: /opt/ai/models/comfyui
+comfyui_model_dirs:
+  - checkpoints
+  - diffusion_models
+  - text_encoders
+  - vae
+  - loras
+  - unet
+  - clip_vision
+  - latent_upscale_models
+comfyui_compose_file: "{{ comfyui_base_dir }}/docker-compose.yml"
+comfyui_seed_marker: "{{ comfyui_base_dir }}/.seeded"
+comfyui_seed_force: false
+
+comfyui_input_dir: "{{ comfyui_base_dir }}/input"
+comfyui_output_dir: "{{ comfyui_base_dir }}/output"
+comfyui_user_dir: "{{ comfyui_base_dir }}/user"
+comfyui_cache_dir: "{{ comfyui_base_dir }}/cache"
+comfyui_workflows_dir: "{{ comfyui_base_dir }}/workflows/api"
+
+comfyui_bind_address: "0.0.0.0"
+comfyui_host_port: 8188
+comfyui_container_port: 8000
+comfyui_listen_address: "0.0.0.0"
+
+comfyui_required_device_nodes:
+  - /dev/kfd
+  - /dev/dri/renderD128
+
+comfyui_devices:
+  - /dev/dri:/dev/dri
+  - /dev/kfd:/dev/kfd
+
+comfyui_group_add:
+  - "39"
+  - "105"
+
+comfyui_environment:
+  HOME: /root
+  HF_HOME: /root/comfy-models/.cache/huggingface
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TORCH_BLAS_PREFER_HIPBLASLT: "1"
+  TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL: "1"
+  PYTHONUNBUFFERED: "1"
+
+comfyui_cli_args:
+  - --listen
+  - "{{ comfyui_listen_address }}"
+  - --port
+  - "{{ comfyui_container_port }}"
+  - --output-directory
+  - /root/comfy-outputs
+  - --disable-mmap
+  - --gpu-only
+  - --disable-smart-memory
+  - --cache-none
+  - --bf16-vae
+
+# Disabled by default. Entries run inside a short-lived toolbox image container.
+# Example:
+# comfyui_model_downloads:
+#   - script: get_qwen_image.sh
+#     args: ["1", "bf16"]
+comfyui_model_download_profile_names: []
+comfyui_model_download_profiles:
+  qwen_image_lightning_bf16:
+    - script: get_qwen_image.sh
+      args:
+        - "1"
+        - bf16
+    - script: get_qwen_image.sh
+      args:
+        - "3"
+  qwen_image_edit_lightning_bf16:
+    - script: get_qwen_image.sh
+      args:
+        - "2"
+        - bf16
+    - script: get_qwen_image.sh
+      args:
+        - "4"
+comfyui_model_downloads: []
+comfyui_model_download_cleanup_cache: true
+
+comfyui_validate_health: true
+comfyui_health_retries: 60
+comfyui_health_delay: 2
