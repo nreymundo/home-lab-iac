@@ -71,6 +71,20 @@ data:
           tags:
             - llama-swap
 
+      - model_name: comfyui/*
+        model_info:
+          mode: image_generation
+        litellm_params:
+          model: openai/*
+          custom_llm_provider: openai
+          litellm_credential_name: llama-swap
+          input_cost_per_pixel: 0.0
+          output_cost_per_pixel: 0.0
+          tags:
+            - llama-swap
+            - comfyui
+            - image
+
       - model_name: hosted_vllm/*
         model_info:
           mode: chat

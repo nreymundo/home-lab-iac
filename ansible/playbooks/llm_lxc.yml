@@ -7,5 +7,8 @@
     - lxc_bootstrap
     - docker
     - llm_runtime
+    - role: comfyui
+      tags:
+        - comfyui
     - whisper_runtime
     - llama_swap

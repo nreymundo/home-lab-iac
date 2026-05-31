@@ -1,0 +1,17 @@
+[Unit]
+Description=ComfyUI container
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory={{ comfyui_base_dir }}
+ExecStart=/usr/bin/docker compose -p {{ comfyui_compose_project_name }} -f {{ comfyui_compose_file }} up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -p {{ comfyui_compose_project_name }} -f {{ comfyui_compose_file }} down
+TimeoutStartSec=0
+TimeoutStopSec=120s
+
+[Install]
+WantedBy=multi-user.target

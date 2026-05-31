@@ -1,0 +1,14 @@
+---
+log_level: {{ comfyui_openai_api_log_level | to_json }}
+server:
+  host: "0.0.0.0"
+  port: {{ comfyui_openai_api_container_port }}
+comfyui_backend:
+  host: "host.docker.internal"
+  port: {{ comfyui_host_port }}
+  workflows_folder: "/app/workflows"
+  client_id: {{ comfyui_openai_api_client_id | to_json }}
+  use_ws: {{ comfyui_openai_api_use_ws | bool | to_json }}
+routing:
+  timeout_seconds: {{ comfyui_openai_api_timeout_seconds }}
+  max_payload_size_mb: {{ comfyui_openai_api_max_payload_size_mb }}

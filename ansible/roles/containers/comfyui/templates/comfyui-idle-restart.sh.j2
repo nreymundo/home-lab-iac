@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+container_name={{ comfyui_container_name | quote }}
+service_name={{ comfyui_service_name | quote }}
+queue_url={{ comfyui_idle_restart_queue_url | quote }}
+history_url={{ comfyui_idle_restart_history_url | quote }}
+state_file={{ comfyui_idle_restart_state_file | quote }}
+idle_after={{ comfyui_idle_restart_after_seconds | int }}
+
+container_id=$(docker inspect "$container_name" --format '{{ '{{' }}.Id{{ '}}' }}' 2>/dev/null || true)
+if [[ -z "$container_id" ]]; then
+  exit 0
+fi
+
+running=$(docker inspect "$container_name" --format '{{ '{{' }}.State.Running{{ '}}' }}' 2>/dev/null || true)
+if [[ "$running" != "true" ]]; then
+  exit 0
+fi
+
+queue_json=$(curl --fail --silent --max-time 5 "$queue_url" 2>/dev/null || true)
+history_json=$(curl --fail --silent --max-time 5 "$history_url" 2>/dev/null || true)
+if [[ -z "$queue_json" || -z "$history_json" ]]; then
+  exit 0
+fi
+
+state_json=$(QUEUE_JSON="$queue_json" HISTORY_JSON="$history_json" python3 - <<'PY'
+import json
+import os
+import sys
+import time
+
+try:
+    queue = json.loads(os.environ["QUEUE_JSON"])
+    history = json.loads(os.environ["HISTORY_JSON"])
+except Exception:
+    sys.exit(1)
+
+running = queue.get("queue_running") or []
+pending = queue.get("queue_pending") or []
+if running or pending:
+    sys.exit(1)
+
+latest_ts = 0.0
+for item in history.values():
+    status = item.get("status") or {}
+    completed = status.get("completed") is True or status.get("status_str") == "success"
+    if not completed:
+        continue
+    messages = status.get("messages") or []
+    for message in messages:
+        if not isinstance(message, (list, tuple)) or len(message) < 2:
+            continue
+        payload = message[1]
+        if not isinstance(payload, dict):
+            continue
+        ts = payload.get("timestamp")
+        if isinstance(ts, (int, float)):
+            latest_ts = max(latest_ts, ts)
+
+if not latest_ts:
+    sys.exit(1)
+
+print(json.dumps({"last_prompt_epoch": int(latest_ts), "now": int(time.time())}))
+PY
+) || exit 0
+
+last_prompt_epoch=$(STATE_JSON="$state_json" python3 - <<'PY'
+import json
+import os
+print(json.loads(os.environ["STATE_JSON"])["last_prompt_epoch"])
+PY
+)
+now=$(STATE_JSON="$state_json" python3 - <<'PY'
+import json
+import os
+print(json.loads(os.environ["STATE_JSON"])["now"])
+PY
+)
+
+if [[ -z "$last_prompt_epoch" ]]; then
+  exit 0
+fi
+
+last_restarted_container_id=""
+last_restarted_prompt_epoch=0
+if [[ -r "$state_file" ]]; then
+  # shellcheck disable=SC1090
+  source "$state_file"
+fi
+
+if [[ "$last_restarted_container_id" == "$container_id" && "$last_restarted_prompt_epoch" -ge "$last_prompt_epoch" ]]; then
+  exit 0
+fi
+
+idle_for=$((now - last_prompt_epoch))
+if (( idle_for < idle_after )); then
+  exit 0
+fi
+
+systemctl restart "$service_name"
+install -d -m 0755 "$(dirname "$state_file")"
+cat > "$state_file" <<EOF
+last_restarted_container_id='$container_id'
+last_restarted_prompt_epoch=$last_prompt_epoch
+EOF

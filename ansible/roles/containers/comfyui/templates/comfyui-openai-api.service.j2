@@ -1,0 +1,16 @@
+[Unit]
+Description=ComfyUI OpenAI-compatible image API proxy
+Wants={{ comfyui_service_name }}.service
+After={{ comfyui_service_name }}.service docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/docker run -d --rm --name {{ comfyui_openai_api_container_name }} --add-host host.docker.internal:host-gateway -p {{ comfyui_openai_api_bind_address }}:{{ comfyui_openai_api_host_port }}:{{ comfyui_openai_api_container_port }} -e CONFIG_PATH=/app/config/config.yaml -v {{ comfyui_openai_api_config_dir }}:/app/config:ro -v {{ comfyui_openai_api_workflows_dir }}:/app/workflows:ro {{ comfyui_openai_api_image }}
+ExecStop=/usr/bin/docker stop {{ comfyui_openai_api_container_name }}
+TimeoutStartSec=0
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target

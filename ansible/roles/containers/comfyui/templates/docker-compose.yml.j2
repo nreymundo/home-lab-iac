@@ -1,0 +1,39 @@
+services:
+  {{ comfyui_compose_service_name }}:
+    image: "{{ comfyui_image }}"
+    container_name: "{{ comfyui_container_name }}"
+    restart: unless-stopped
+    security_opt:
+      - seccomp=unconfined
+    group_add:
+{% for group in comfyui_group_add %}
+      - "{{ group }}"
+{% endfor %}
+    devices:
+{% for device in comfyui_devices %}
+      - "{{ device }}"
+{% endfor %}
+    ports:
+      - "{{ comfyui_bind_address }}:{{ comfyui_host_port }}:{{ comfyui_container_port }}"
+    environment:
+{% for name, value in comfyui_environment.items() %}
+      {{ name }}: "{{ value }}"
+{% endfor %}
+    volumes:
+      - "{{ comfyui_models_dir }}:/root/comfy-models"
+      - "{{ comfyui_output_dir }}:/root/comfy-outputs"
+      - "{{ comfyui_cache_dir }}:/root/.cache"
+      - "{{ comfyui_input_dir }}:/opt/ComfyUI/input"
+      - "{{ comfyui_user_dir }}:/opt/ComfyUI/user"
+      - "{{ comfyui_workflows_dir }}:/opt/comfy-workflows"
+    command:
+      - /bin/bash
+      - -lc
+      - >-
+        source /etc/profile.d/01-rocm-envs.sh &&
+        /opt/set_extra_paths.sh &&
+{% for custom_node in comfyui_disabled_custom_nodes %}
+        if [ -d {{ ('/opt/ComfyUI/custom_nodes/' ~ custom_node) | quote }} ]; then rm -rf {{ ('/opt/ComfyUI/custom_nodes/' ~ custom_node ~ '.disabled') | quote }} && mv {{ ('/opt/ComfyUI/custom_nodes/' ~ custom_node) | quote }} {{ ('/opt/ComfyUI/custom_nodes/' ~ custom_node ~ '.disabled') | quote }}; fi &&
+{% endfor %}
+        cd /opt/ComfyUI &&
+        exec python main.py {{ comfyui_cli_args | map('quote') | join(' ') }}

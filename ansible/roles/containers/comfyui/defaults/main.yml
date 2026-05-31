@@ -1,0 +1,134 @@
+---
+comfyui_enabled: true
+
+comfyui_service_name: comfyui-container
+comfyui_compose_project_name: comfyui
+comfyui_compose_service_name: comfyui
+comfyui_container_name: comfyui
+comfyui_image: >-
+  docker.io/kyuz0/amd-strix-halo-comfyui:latest@sha256:0066678ae9043f69a1c8c7699e70626ceffd35c1a8ca03227a05640ad0241ed2
+
+comfyui_base_dir: /opt/ai/containers/comfyui
+comfyui_models_dir: /opt/ai/models/comfyui
+comfyui_model_dirs:
+  - checkpoints
+  - diffusion_models
+  - text_encoders
+  - vae
+  - loras
+  - unet
+  - clip_vision
+  - latent_upscale_models
+comfyui_compose_file: "{{ comfyui_base_dir }}/docker-compose.yml"
+comfyui_seed_marker: "{{ comfyui_base_dir }}/.seeded"
+comfyui_seed_force: false
+
+comfyui_input_dir: "{{ comfyui_base_dir }}/input"
+comfyui_output_dir: "{{ comfyui_base_dir }}/output"
+comfyui_user_dir: "{{ comfyui_base_dir }}/user"
+comfyui_cache_dir: "{{ comfyui_base_dir }}/cache"
+comfyui_workflows_dir: "{{ comfyui_base_dir }}/workflows/api"
+comfyui_idle_restart_script: /usr/local/sbin/comfyui-idle-restart
+comfyui_idle_restart_state_file: /run/comfyui-idle-restart.state
+comfyui_openai_api_base_dir: "{{ comfyui_base_dir }}/openai-api"
+comfyui_openai_api_source_dir: "{{ comfyui_openai_api_base_dir }}/src"
+comfyui_openai_api_config_dir: "{{ comfyui_openai_api_base_dir }}/config"
+comfyui_openai_api_workflows_dir: "{{ comfyui_openai_api_base_dir }}/workflows"
+comfyui_openai_api_config_file: "{{ comfyui_openai_api_config_dir }}/config.yaml"
+
+comfyui_bind_address: "0.0.0.0"
+comfyui_host_port: 8188
+comfyui_container_port: 8000
+comfyui_listen_address: "0.0.0.0"
+
+comfyui_required_device_nodes:
+  - /dev/kfd
+  - /dev/dri/renderD128
+
+comfyui_devices:
+  - /dev/dri:/dev/dri
+  - /dev/kfd:/dev/kfd
+
+comfyui_group_add:
+  - "39"
+  - "105"
+
+comfyui_environment:
+  HOME: /root
+  HF_HOME: /root/comfy-models/.cache/huggingface
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TORCH_BLAS_PREFER_HIPBLASLT: "1"
+  TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL: "1"
+  PYTHONUNBUFFERED: "1"
+
+comfyui_cli_args:
+  - --listen
+  - "{{ comfyui_listen_address }}"
+  - --port
+  - "{{ comfyui_container_port }}"
+  - --output-directory
+  - /root/comfy-outputs
+  - --lowvram
+  - --disable-smart-memory
+  - --cache-none
+  - --fp8_e4m3fn-unet
+  - --bf16-vae
+  - --disable-pinned-memory
+
+comfyui_disabled_custom_nodes:
+  - ComfyUI-AMDGPUMonitor
+
+comfyui_idle_restart_enabled: true
+comfyui_idle_restart_after_seconds: 300
+comfyui_idle_restart_check_interval: 60
+comfyui_idle_restart_queue_url: "http://127.0.0.1:{{ comfyui_host_port }}/queue"
+comfyui_idle_restart_history_url: "http://127.0.0.1:{{ comfyui_host_port }}/history"
+
+comfyui_openai_api_enabled: true
+comfyui_openai_api_service_name: comfyui-openai-api
+comfyui_openai_api_container_name: comfyui-openai-api
+comfyui_openai_api_image: comfyui-openai-api:local
+comfyui_openai_api_repo: https://github.com/pnyxai/comfyui-openai-api.git
+comfyui_openai_api_version: HEAD
+comfyui_openai_api_force_rebuild: false
+comfyui_openai_api_bind_address: 127.0.0.1
+comfyui_openai_api_host_port: 10050
+comfyui_openai_api_container_port: 8080
+comfyui_openai_api_log_level: info
+comfyui_openai_api_client_id: comfyui-openai-api
+comfyui_openai_api_use_ws: false
+comfyui_openai_api_timeout_seconds: 900
+comfyui_openai_api_max_payload_size_mb: 20
+comfyui_openai_api_workflows:
+  - Qwen-Image-2512-BF16-4-Step-LoRA.json
+  - simple-sdxl-workflow.json
+
+# Disabled by default. Entries run inside a short-lived toolbox image container.
+# Example:
+# comfyui_model_downloads:
+#   - script: get_qwen_image.sh
+#     args: ["1", "bf16"]
+comfyui_model_download_profile_names: []
+comfyui_model_download_profiles:
+  qwen_image_lightning_bf16:
+    - script: get_qwen_image.sh
+      args:
+        - "1"
+        - bf16
+    - script: get_qwen_image.sh
+      args:
+        - "3"
+  qwen_image_edit_lightning_bf16:
+    - script: get_qwen_image.sh
+      args:
+        - "2"
+        - bf16
+    - script: get_qwen_image.sh
+      args:
+        - "4"
+comfyui_model_downloads: []
+comfyui_model_download_cleanup_cache: true
+
+comfyui_validate_health: true
+comfyui_health_retries: 60
+comfyui_health_delay: 2
