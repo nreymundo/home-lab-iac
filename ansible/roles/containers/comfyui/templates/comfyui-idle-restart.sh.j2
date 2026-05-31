@@ -56,6 +56,8 @@ for item in history.values():
             continue
         ts = payload.get("timestamp")
         if isinstance(ts, (int, float)):
+            if ts > 10_000_000_000:
+                ts = ts / 1000
             latest_ts = max(latest_ts, ts)
 
 if not latest_ts:
