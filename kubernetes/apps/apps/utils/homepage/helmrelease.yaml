@@ -242,6 +242,10 @@ spec:
                 icon: ollama.png
                 description: "LLM model hot-swapping proxy"
                 href: https://llama.lan.${CLUSTER_DOMAIN}
+            - ComfyUI:
+                icon: comfyui.png
+                description: "AI image generation workflow UI"
+                href: https://comfyui.lan.${CLUSTER_DOMAIN}
             - Chatterbox:
                 icon: https://i.imgur.com/w9QDXK0.png
                 description: "Text-to-speech API"
