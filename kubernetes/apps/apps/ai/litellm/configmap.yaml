@@ -1079,8 +1079,11 @@ data:
             return
 
         public_path = "/public/litellm_model_cost_map"
-        if any(getattr(route, "path", None) == public_path for route in proxy_server.app.routes):
-            return
+        proxy_server.app.router.routes[:] = [
+            route
+            for route in proxy_server.app.router.routes
+            if getattr(route, "path", None) != public_path
+        ]
 
         @proxy_server.app.get(public_path, include_in_schema=False)
         async def public_litellm_model_cost_map():
