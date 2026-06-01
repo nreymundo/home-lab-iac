@@ -40,21 +40,19 @@ data:
         model_info:
           mode: responses
           max_input_tokens: 272000
-          supports_xhigh_reasoning_effort: true
         litellm_params:
           model: chatgpt/gpt-5.3-codex
           # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
           input_cost_per_token: 0.00000175
           output_cost_per_token: 0.000014
 
-      - model_name: openai/gpt-5.3-codex-spark
+      - model_name: openai/gpt-5.2
         model_info:
           mode: responses
           max_input_tokens: 272000
-          supports_xhigh_reasoning_effort: true
         litellm_params:
-          model: chatgpt/gpt-5.3-codex-spark
-          # Priced as gpt-5.3-codex; OpenAI does not list a separate Spark API rate.
+          model: chatgpt/gpt-5.2
+          # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
           input_cost_per_token: 0.00000175
           output_cost_per_token: 0.000014
 
@@ -409,14 +407,306 @@ data:
     def worker_startup_hook():
         patch_chatgpt_responses_streaming()
 
+  chatgpt_codex_catalog.py: |
+    from copy import deepcopy
+
+
+    SUPPORTED_OPENAI_PARAMS = [
+        "stream",
+        "tools",
+        "tool_choice",
+        "parallel_tool_calls",
+        "reasoning_effort",
+        "verbosity",
+        "extra_headers",
+    ]
+
+    REASONING_LEVELS = ["low", "medium", "high", "xhigh"]
+
+    CHATGPT_CODEX_MODELS = {
+        "gpt-5.5": {
+            "display_name": "GPT-5.5",
+            "description": "Frontier model for complex coding, research, and real-world work.",
+            "context_window": 272000,
+            "max_context_window": 272000,
+            "max_output_tokens": 128000,
+            "effective_context_window_percent": 95,
+            "default_reasoning_level": "medium",
+            "default_reasoning_summary": "none",
+            "default_verbosity": "low",
+            "input_modalities": ["text", "image"],
+            "web_search_tool_type": "text_and_image",
+            "supported_in_api": True,
+            "visibility": "list",
+            "priority": 9,
+            "service_tiers": [
+                {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
+            ],
+            "additional_speed_tiers": ["fast"],
+            "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "input_cost_per_token": 0.000005,
+            "output_cost_per_token": 0.00003,
+        },
+        "gpt-5.4": {
+            "display_name": "GPT-5.4",
+            "description": "Strong model for everyday coding.",
+            "context_window": 272000,
+            "max_context_window": 1000000,
+            "max_output_tokens": 128000,
+            "effective_context_window_percent": 95,
+            "default_reasoning_level": "medium",
+            "default_reasoning_summary": "none",
+            "default_verbosity": "low",
+            "input_modalities": ["text", "image"],
+            "web_search_tool_type": "text_and_image",
+            "supported_in_api": True,
+            "visibility": "list",
+            "priority": 16,
+            "service_tiers": [
+                {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
+            ],
+            "additional_speed_tiers": ["fast"],
+            "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "input_cost_per_token": 0.0000025,
+            "output_cost_per_token": 0.000015,
+        },
+        "gpt-5.4-mini": {
+            "display_name": "GPT-5.4-Mini",
+            "description": "Small, fast, and cost-efficient model for simpler coding tasks.",
+            "context_window": 272000,
+            "max_context_window": 272000,
+            "max_output_tokens": 128000,
+            "effective_context_window_percent": 95,
+            "default_reasoning_level": "medium",
+            "default_reasoning_summary": "none",
+            "default_verbosity": "medium",
+            "input_modalities": ["text", "image"],
+            "web_search_tool_type": "text_and_image",
+            "supported_in_api": True,
+            "visibility": "list",
+            "priority": 23,
+            "service_tiers": [],
+            "additional_speed_tiers": [],
+            "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "input_cost_per_token": 0.00000075,
+            "output_cost_per_token": 0.0000045,
+        },
+        "gpt-5.3-codex": {
+            "display_name": "GPT-5.3-Codex",
+            "description": "Coding-optimized model.",
+            "context_window": 272000,
+            "max_context_window": 272000,
+            "max_output_tokens": 128000,
+            "effective_context_window_percent": 95,
+            "default_reasoning_level": "medium",
+            "default_reasoning_summary": "none",
+            "default_verbosity": "low",
+            "input_modalities": ["text", "image"],
+            "web_search_tool_type": "text",
+            "supported_in_api": True,
+            "visibility": "list",
+            "priority": 25,
+            "service_tiers": [],
+            "additional_speed_tiers": [],
+            "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "input_cost_per_token": 0.00000175,
+            "output_cost_per_token": 0.000014,
+        },
+        "gpt-5.3-codex-spark": {
+            "display_name": "GPT-5.3-Codex-Spark",
+            "description": "Ultra-fast coding model.",
+            "context_window": 128000,
+            "max_context_window": 128000,
+            "max_output_tokens": 128000,
+            "effective_context_window_percent": 95,
+            "default_reasoning_level": "high",
+            "default_reasoning_summary": "none",
+            "default_verbosity": "low",
+            "input_modalities": ["text"],
+            "web_search_tool_type": "text",
+            "supported_in_api": False,
+            "visibility": "list",
+            "priority": 26,
+            "service_tiers": [],
+            "additional_speed_tiers": [],
+            "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "input_cost_per_token": 0.00000175,
+            "output_cost_per_token": 0.000014,
+        },
+        "gpt-5.2": {
+            "display_name": "GPT-5.2",
+            "description": "Optimized for professional work and long-running agents.",
+            "context_window": 272000,
+            "max_context_window": 272000,
+            "max_output_tokens": 64000,
+            "effective_context_window_percent": 95,
+            "default_reasoning_level": "medium",
+            "default_reasoning_summary": "auto",
+            "default_verbosity": "low",
+            "input_modalities": ["text", "image"],
+            "web_search_tool_type": "text",
+            "supported_in_api": True,
+            "visibility": "list",
+            "priority": 29,
+            "service_tiers": [],
+            "additional_speed_tiers": [],
+            "truncation_policy": {"mode": "bytes", "limit": 10000},
+            "input_cost_per_token": 0.00000175,
+            "output_cost_per_token": 0.000014,
+        },
+        "codex-auto-review": {
+            "display_name": "Codex Auto Review",
+            "description": "Automatic approval review model for Codex.",
+            "context_window": 272000,
+            "max_context_window": 1000000,
+            "max_output_tokens": 128000,
+            "effective_context_window_percent": 95,
+            "default_reasoning_level": "medium",
+            "default_reasoning_summary": "none",
+            "default_verbosity": "low",
+            "input_modalities": ["text", "image"],
+            "web_search_tool_type": "text_and_image",
+            "supported_in_api": True,
+            "visibility": "hide",
+            "priority": 43,
+            "service_tiers": [],
+            "additional_speed_tiers": [],
+            "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "input_cost_per_token": 0.0,
+            "output_cost_per_token": 0.0,
+        },
+    }
+
+    PUBLIC_MODEL_PREFIX = "openai/"
+    BACKEND_MODEL_PREFIX = "chatgpt/"
+
+
+    def get_chatgpt_codex_slug(model):
+        if not isinstance(model, str):
+            return None
+        if model in CHATGPT_CODEX_MODELS:
+            return model
+        for prefix in (PUBLIC_MODEL_PREFIX, BACKEND_MODEL_PREFIX):
+            if model.startswith(prefix):
+                slug = model[len(prefix) :]
+                return slug if slug in CHATGPT_CODEX_MODELS else None
+        return None
+
+
+    def get_chatgpt_codex_model(model):
+        slug = get_chatgpt_codex_slug(model)
+        if slug is None:
+            return None
+        return deepcopy(CHATGPT_CODEX_MODELS[slug])
+
+
+    def is_public_chatgpt_codex_model(model):
+        info = get_chatgpt_codex_model(model)
+        return bool(
+            info
+            and info.get("supported_in_api") is True
+            and info.get("visibility") != "hide"
+        )
+
+
+    def _reasoning_support_flags():
+        flags = {f"supports_{level}_reasoning_effort": True for level in REASONING_LEVELS}
+        flags["supports_minimal_reasoning_effort"] = False
+        flags["supports_none_reasoning_effort"] = False
+        return flags
+
+
+    def _base_metadata(slug, info):
+        supports_vision = "image" in info["input_modalities"]
+        metadata = {
+            "codex_model_slug": slug,
+            "display_name": info["display_name"],
+            "description": info["description"],
+            "litellm_provider": "chatgpt",
+            "mode": "responses",
+            "context_window": info["context_window"],
+            "max_input_tokens": info["context_window"],
+            "max_context_window": info["max_context_window"],
+            "max_output_tokens": info["max_output_tokens"],
+            "max_tokens": info["max_output_tokens"],
+            "effective_context_window_percent": info["effective_context_window_percent"],
+            "supports_reasoning": True,
+            "supported_reasoning_levels": list(REASONING_LEVELS),
+            "default_reasoning_level": info["default_reasoning_level"],
+            "supports_reasoning_summaries": True,
+            "default_reasoning_summary": info["default_reasoning_summary"],
+            "supports_verbosity": True,
+            "support_verbosity": True,
+            "default_verbosity": info["default_verbosity"],
+            "input_modalities": list(info["input_modalities"]),
+            "supports_vision": supports_vision,
+            "supports_image_input": supports_vision,
+            "supports_image_detail_original": False,
+            "supports_web_search": True,
+            "web_search_tool_type": info["web_search_tool_type"],
+            "supports_function_calling": True,
+            "supports_parallel_function_calling": True,
+            "supports_parallel_tool_calls": True,
+            "supported_openai_params": list(SUPPORTED_OPENAI_PARAMS),
+            "supported_in_api": info["supported_in_api"],
+            "visibility": info["visibility"],
+            "priority": info["priority"],
+            "service_tiers": deepcopy(info["service_tiers"]),
+            "additional_speed_tiers": list(info["additional_speed_tiers"]),
+            "truncation_policy": deepcopy(info["truncation_policy"]),
+            "input_cost_per_token": info["input_cost_per_token"],
+            "output_cost_per_token": info["output_cost_per_token"],
+        }
+        metadata.update(_reasoning_support_flags())
+        return metadata
+
+
+    def model_metadata_for(model):
+        slug = get_chatgpt_codex_slug(model)
+        if slug is None:
+            return None
+        return _base_metadata(slug, CHATGPT_CODEX_MODELS[slug])
+
+
+    def litellm_model_cost_for(model):
+        metadata = model_metadata_for(model)
+        if metadata is None:
+            return None
+        return deepcopy(metadata)
+
+
+    def public_model_name_for(model):
+        slug = get_chatgpt_codex_slug(model)
+        if slug is None:
+            return None
+        return f"{PUBLIC_MODEL_PREFIX}{slug}"
+
+
+    def backend_model_name_for(model):
+        slug = get_chatgpt_codex_slug(model)
+        if slug is None:
+            return None
+        return f"{BACKEND_MODEL_PREFIX}{slug}"
+
+
+    def iter_model_cost_entries():
+        for slug in CHATGPT_CODEX_MODELS:
+            info = litellm_model_cost_for(slug)
+            yield slug, deepcopy(info)
+            yield f"{BACKEND_MODEL_PREFIX}{slug}", deepcopy(info)
+            yield f"{PUBLIC_MODEL_PREFIX}{slug}", deepcopy(info)
+
   litellm_startup.py: |
     import os
+    import sys
 
     import litellm
     from litellm.llms.chatgpt.responses.transformation import ChatGPTResponsesAPIConfig
     from litellm.llms.openai.chat.gpt_5_transformation import OpenAIGPT5Config
+    from litellm.proxy.auth.route_checks import RouteChecks
     from litellm.router import Router
 
+    import chatgpt_codex_catalog
     import chatgpt_responses_streaming_patch
     import vllm_model_discovery
 
@@ -562,11 +852,50 @@ data:
         Router.async_function_with_retries = async_function_with_retries
 
 
-    def patch_chatgpt_codex_reasoning_metadata():
-        for model in ("gpt-5.3-codex", "gpt-5.3-codex-spark"):
-            litellm.model_cost.setdefault(model, {})[
-                "supports_xhigh_reasoning_effort"
-            ] = True
+    def _catalog_metadata_for_deployment(deployment):
+        if not isinstance(deployment, dict):
+            return None
+
+        metadata = chatgpt_codex_catalog.model_metadata_for(deployment.get("model_name"))
+        if metadata is not None:
+            return metadata
+
+        litellm_params = deployment.get("litellm_params") or {}
+        if isinstance(litellm_params, dict):
+            return chatgpt_codex_catalog.model_metadata_for(litellm_params.get("model"))
+
+        return None
+
+
+    def _apply_catalog_metadata_to_deployment(deployment):
+        metadata = _catalog_metadata_for_deployment(deployment)
+        if metadata is not None:
+            model_info = deployment.setdefault("model_info", {})
+            model_info.update(metadata)
+        return deployment
+
+
+    def patch_chatgpt_codex_model_catalog():
+        updated_model_cost = False
+        for model_name, catalog_info in chatgpt_codex_catalog.iter_model_cost_entries():
+            existing_info = dict(litellm.model_cost.get(model_name, {}) or {})
+            existing_info.update(catalog_info)
+            if litellm.model_cost.get(model_name) != existing_info:
+                updated_model_cost = True
+            litellm.model_cost[model_name] = existing_info
+
+        provider_models = litellm.models_by_provider.setdefault("chatgpt", [])
+        for slug in chatgpt_codex_catalog.CHATGPT_CODEX_MODELS:
+            if slug not in provider_models:
+                if hasattr(provider_models, "add"):
+                    provider_models.add(slug)
+                else:
+                    provider_models.append(slug)
+
+        if updated_model_cost:
+            from litellm.utils import _invalidate_model_cost_lowercase_map
+
+            _invalidate_model_cost_lowercase_map()
 
 
     def patch_chatgpt_codex_reasoning_validator():
@@ -580,11 +909,9 @@ data:
         original_supports = OpenAIGPT5Config._supports_reasoning_effort_level
 
         def supports_reasoning_effort_level(cls, model, level):
-            if level == "xhigh" and model in (
-                "gpt-5.3-codex",
-                "gpt-5.3-codex-spark",
-            ):
-                return True
+            metadata = chatgpt_codex_catalog.model_metadata_for(model)
+            if metadata is not None:
+                return level in metadata.get("supported_reasoning_levels", [])
             return original_supports(model, level)
 
         supports_reasoning_effort_level._chatgpt_codex_reasoning_patch = True
@@ -593,10 +920,182 @@ data:
         )
 
 
+    _MODEL_DISCOVERY_ROUTES = [
+        "/v1/models",
+        "/models",
+        "/v1/models/{model_id}",
+        "/models/{model_id}",
+        "/model/info",
+        "/v1/model/info",
+        "/model_group/info",
+    ]
+
+
+    def _is_model_discovery_route(route):
+        return RouteChecks.check_route_access(
+            route=route,
+            allowed_routes=_MODEL_DISCOVERY_ROUTES,
+        )
+
+
+    def patch_virtual_key_model_discovery_routes():
+        if getattr(
+            RouteChecks.is_virtual_key_allowed_to_call_route,
+            "_chatgpt_codex_model_discovery_patch",
+            False,
+        ):
+            return
+
+        original_is_allowed = RouteChecks.is_virtual_key_allowed_to_call_route
+
+        def is_virtual_key_allowed_to_call_route(route, valid_token):
+            if _is_model_discovery_route(route):
+                return True
+            return original_is_allowed(route, valid_token)
+
+        is_virtual_key_allowed_to_call_route._chatgpt_codex_model_discovery_patch = True
+        RouteChecks.is_virtual_key_allowed_to_call_route = staticmethod(
+            is_virtual_key_allowed_to_call_route
+        )
+
+
+    def patch_model_list_metadata():
+        import litellm.proxy.utils as proxy_utils
+
+        if getattr(
+            proxy_utils.create_model_info_response,
+            "_chatgpt_codex_model_list_metadata_patch",
+            False,
+        ):
+            return
+
+        original_create_model_info_response = proxy_utils.create_model_info_response
+
+        def create_model_info_response(
+            model_id,
+            provider,
+            include_metadata=False,
+            fallback_type=None,
+            llm_router=None,
+        ):
+            response = original_create_model_info_response(
+                model_id=model_id,
+                provider=provider,
+                include_metadata=include_metadata,
+                fallback_type=fallback_type,
+                llm_router=llm_router,
+            )
+            metadata = chatgpt_codex_catalog.model_metadata_for(model_id)
+            if metadata is None:
+                return response
+
+            response["owned_by"] = "chatgpt"
+            if include_metadata:
+                response_metadata = response.setdefault("metadata", {})
+                response_metadata.update(metadata)
+            return response
+
+        create_model_info_response._chatgpt_codex_model_list_metadata_patch = True
+        proxy_utils.create_model_info_response = create_model_info_response
+
+
+    def patch_proxy_model_info_endpoints():
+        proxy_server = sys.modules.get("litellm.proxy.proxy_server")
+        if proxy_server is None:
+            return
+
+        if not getattr(
+            proxy_server._get_proxy_model_info,
+            "_chatgpt_codex_proxy_model_info_patch",
+            False,
+        ):
+            original_get_proxy_model_info = proxy_server._get_proxy_model_info
+
+            def get_proxy_model_info(model):
+                _apply_catalog_metadata_to_deployment(model)
+                deployment = original_get_proxy_model_info(model)
+                return _apply_catalog_metadata_to_deployment(deployment)
+
+            get_proxy_model_info._chatgpt_codex_proxy_model_info_patch = True
+            proxy_server._get_proxy_model_info = get_proxy_model_info
+
+        if not getattr(
+            proxy_server._enrich_model_info_with_litellm_data,
+            "_chatgpt_codex_enrich_model_info_patch",
+            False,
+        ):
+            original_enrich_model_info = proxy_server._enrich_model_info_with_litellm_data
+
+            def enrich_model_info_with_litellm_data(model, debug=False, llm_router=None):
+                _apply_catalog_metadata_to_deployment(model)
+                deployment = original_enrich_model_info(
+                    model=model,
+                    debug=debug,
+                    llm_router=llm_router,
+                )
+                return _apply_catalog_metadata_to_deployment(deployment)
+
+            enrich_model_info_with_litellm_data._chatgpt_codex_enrich_model_info_patch = True
+            proxy_server._enrich_model_info_with_litellm_data = enrich_model_info_with_litellm_data
+
+        if getattr(
+            proxy_server._get_model_group_info,
+            "_chatgpt_codex_model_group_info_patch",
+            False,
+        ):
+            return
+
+        original_get_model_group_info = proxy_server._get_model_group_info
+
+        def get_model_group_info(llm_router, all_models_str, model_group):
+            model_groups = original_get_model_group_info(
+                llm_router=llm_router,
+                all_models_str=all_models_str,
+                model_group=model_group,
+            )
+            normalized_groups = []
+            for model_group_info in model_groups:
+                if hasattr(model_group_info, "model_dump"):
+                    group = model_group_info.model_dump(exclude_none=True)
+                else:
+                    group = dict(model_group_info)
+
+                metadata = chatgpt_codex_catalog.model_metadata_for(
+                    group.get("model_group")
+                )
+                if metadata is not None:
+                    group.update(metadata)
+                    group["providers"] = ["chatgpt"]
+                normalized_groups.append(group)
+            return normalized_groups
+
+        get_model_group_info._chatgpt_codex_model_group_info_patch = True
+        proxy_server._get_model_group_info = get_model_group_info
+
+
+    def patch_public_model_cost_map_endpoint():
+        proxy_server = sys.modules.get("litellm.proxy.proxy_server")
+        if proxy_server is None:
+            return
+
+        public_path = "/public/litellm_model_cost_map"
+        if any(getattr(route, "path", None) == public_path for route in proxy_server.app.routes):
+            return
+
+        @proxy_server.app.get(public_path, include_in_schema=False)
+        async def public_litellm_model_cost_map():
+            patch_chatgpt_codex_model_catalog()
+            return litellm.model_cost
+
+
     def worker_startup_hook():
-        patch_chatgpt_codex_reasoning_metadata()
+        patch_chatgpt_codex_model_catalog()
         patch_chatgpt_codex_reasoning_validator()
         patch_chatgpt_responses_request_transform()
+        patch_virtual_key_model_discovery_routes()
+        patch_model_list_metadata()
+        patch_proxy_model_info_endpoints()
+        patch_public_model_cost_map_endpoint()
         patch_router_response_retries()
         vllm_model_discovery.worker_startup_hook()
         chatgpt_responses_streaming_patch.worker_startup_hook()

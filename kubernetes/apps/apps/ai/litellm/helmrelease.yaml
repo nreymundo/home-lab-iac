@@ -221,6 +221,9 @@ spec:
               - path: /etc/litellm/chatgpt_responses_streaming_patch.py
                 subPath: chatgpt_responses_streaming_patch.py
                 readOnly: true
+              - path: /etc/litellm/chatgpt_codex_catalog.py
+                subPath: chatgpt_codex_catalog.py
+                readOnly: true
               - path: /etc/litellm/litellm_startup.py
                 subPath: litellm_startup.py
                 readOnly: true
