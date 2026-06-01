@@ -69,11 +69,25 @@ data:
           tags:
             - llama-swap
 
-      - model_name: comfyui/*
+      - model_name: comfyui/Qwen-Image-2512-BF16-4-Step-LoRA
         model_info:
           mode: image_generation
         litellm_params:
-          model: openai/*
+          model: openai/Qwen-Image-2512-BF16-4-Step-LoRA
+          custom_llm_provider: openai
+          litellm_credential_name: llama-swap
+          input_cost_per_pixel: 0.0
+          output_cost_per_pixel: 0.0
+          tags:
+            - llama-swap
+            - comfyui
+            - image
+
+      - model_name: comfyui/simple-sdxl-workflow
+        model_info:
+          mode: image_generation
+        litellm_params:
+          model: openai/simple-sdxl-workflow
           custom_llm_provider: openai
           litellm_credential_name: llama-swap
           input_cost_per_pixel: 0.0
