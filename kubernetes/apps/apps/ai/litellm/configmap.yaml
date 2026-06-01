@@ -939,8 +939,12 @@ data:
             # Z.AI GLM models support native `thinking`, but not OpenAI-style
             # `reasoning_effort`. Keep `thinking` accepted even while the public
             # LiteLLM metadata hides generic reasoning support from clients.
-            if _zai_coding_slug(model) is not None and "thinking" not in supported_params:
-                supported_params.append("thinking")
+            # OpenAI-compatible clients may also send max_completion_tokens;
+            # Z.AI accepts it, but LiteLLM's ZAI provider does not list it by default.
+            if _zai_coding_slug(model) is not None:
+                for param in ("thinking", "max_completion_tokens"):
+                    if param not in supported_params:
+                        supported_params.append(param)
             return supported_params
 
         get_supported_openai_params._zai_coding_supported_params_patch = True
