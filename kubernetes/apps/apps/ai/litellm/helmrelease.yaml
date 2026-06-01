@@ -224,6 +224,9 @@ spec:
               - path: /etc/litellm/chatgpt_codex_catalog.py
                 subPath: chatgpt_codex_catalog.py
                 readOnly: true
+              - path: /etc/litellm/zai_coding_catalog.py
+                subPath: zai_coding_catalog.py
+                readOnly: true
               - path: /etc/litellm/litellm_startup.py
                 subPath: litellm_startup.py
                 readOnly: true

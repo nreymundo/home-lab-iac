@@ -122,6 +122,95 @@ data:
           input_cost_per_token: 0.0
           output_cost_per_token: 0.0
 
+      - model_name: zai-coding/glm-5.1
+        model_info:
+          mode: chat
+          max_input_tokens: 200000
+          max_output_tokens: 128000
+          supports_function_calling: true
+          supports_reasoning: true
+          supports_tool_choice: true
+        litellm_params:
+          model: zai/glm-5.1
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          input_cost_per_token: 0.0000014
+          output_cost_per_token: 0.0000044
+          tags:
+            - zai
+            - coding-plan
+
+      - model_name: zai-coding/glm-5
+        model_info:
+          mode: chat
+          max_input_tokens: 200000
+          max_output_tokens: 128000
+          supports_function_calling: true
+          supports_reasoning: true
+          supports_tool_choice: true
+        litellm_params:
+          model: zai/glm-5
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          input_cost_per_token: 0.000001
+          output_cost_per_token: 0.0000032
+          tags:
+            - zai
+            - coding-plan
+
+      - model_name: zai-coding/glm-5-turbo
+        model_info:
+          mode: chat
+          max_input_tokens: 200000
+          max_output_tokens: 128000
+          supports_function_calling: true
+          supports_reasoning: true
+          supports_tool_choice: true
+        litellm_params:
+          model: zai/glm-5-turbo
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          input_cost_per_token: 0.0000012
+          output_cost_per_token: 0.000004
+          tags:
+            - zai
+            - coding-plan
+
+      - model_name: zai-coding/glm-4.7
+        model_info:
+          mode: chat
+          max_input_tokens: 200000
+          max_output_tokens: 128000
+          supports_function_calling: true
+          supports_reasoning: true
+          supports_tool_choice: true
+        litellm_params:
+          model: zai/glm-4.7
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          input_cost_per_token: 0.0000006
+          output_cost_per_token: 0.0000022
+          tags:
+            - zai
+            - coding-plan
+
+      - model_name: zai-coding/glm-4.5-air
+        model_info:
+          mode: chat
+          max_input_tokens: 128000
+          max_output_tokens: 96000
+          supports_function_calling: true
+          supports_tool_choice: true
+        litellm_params:
+          model: zai/glm-4.5-air
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          input_cost_per_token: 0.0000002
+          output_cost_per_token: 0.0000011
+          tags:
+            - zai
+            - coding-plan
+
     credential_list:
       - credential_name: llama-swap
         credential_values:
@@ -135,6 +224,13 @@ data:
           api_key: os.environ/LITELLM_CREDENTIAL_OPENROUTER_API_KEY
         credential_info:
           custom_llm_provider: openrouter
+
+      - credential_name: zai-coding
+        credential_values:
+          api_base: os.environ/LITELLM_CREDENTIAL_ZAI_CODING_API_BASE
+          api_key: os.environ/LITELLM_CREDENTIAL_ZAI_CODING_API_KEY
+        credential_info:
+          custom_llm_provider: zai
 
     litellm_settings:
       callbacks:
@@ -710,6 +806,102 @@ data:
             yield f"{BACKEND_MODEL_PREFIX}{slug}", deepcopy(info)
             yield f"{PUBLIC_MODEL_PREFIX}{slug}", deepcopy(info)
 
+  zai_coding_catalog.py: |
+    from copy import deepcopy
+
+    import litellm
+
+
+    ZAI_CODING_MODELS = {
+        "glm-5.1": {
+            "context_window": 200000,
+            "max_output_tokens": 128000,
+            "input_cost_per_token": 0.0000014,
+            "output_cost_per_token": 0.0000044,
+            "supports_reasoning": True,
+        },
+        "glm-5": {
+            "context_window": 200000,
+            "max_output_tokens": 128000,
+            "input_cost_per_token": 0.000001,
+            "output_cost_per_token": 0.0000032,
+            "supports_reasoning": True,
+        },
+        "glm-5-turbo": {
+            "context_window": 200000,
+            "max_output_tokens": 128000,
+            "input_cost_per_token": 0.0000012,
+            "output_cost_per_token": 0.000004,
+            "supports_reasoning": True,
+        },
+        "glm-4.7": {
+            "context_window": 200000,
+            "max_output_tokens": 128000,
+            "input_cost_per_token": 0.0000006,
+            "output_cost_per_token": 0.0000022,
+            "supports_reasoning": True,
+        },
+        "glm-4.5-air": {
+            "context_window": 128000,
+            "max_output_tokens": 96000,
+            "input_cost_per_token": 0.0000002,
+            "output_cost_per_token": 0.0000011,
+            "supports_reasoning": False,
+        },
+    }
+
+
+    def _metadata_for(slug):
+        info = ZAI_CODING_MODELS[slug]
+        return {
+            "litellm_provider": "zai",
+            "mode": "chat",
+            "context_window": info["context_window"],
+            "max_input_tokens": info["context_window"],
+            "max_output_tokens": info["max_output_tokens"],
+            "max_tokens": info["max_output_tokens"],
+            "supports_function_calling": True,
+            "supports_tool_choice": True,
+            "supports_reasoning": info["supports_reasoning"],
+            "input_cost_per_token": info["input_cost_per_token"],
+            "output_cost_per_token": info["output_cost_per_token"],
+            "source": "https://docs.z.ai/guides/overview/pricing",
+        }
+
+
+    def iter_model_cost_entries():
+        for slug in ZAI_CODING_MODELS:
+            metadata = _metadata_for(slug)
+            yield f"zai/{slug}", deepcopy(metadata)
+            yield f"zai-coding/{slug}", deepcopy(metadata)
+
+
+    def patch_zai_coding_model_catalog():
+        updated_model_cost = False
+        for model_name, catalog_info in iter_model_cost_entries():
+            existing_info = dict(litellm.model_cost.get(model_name, {}) or {})
+            existing_info.update(catalog_info)
+            if litellm.model_cost.get(model_name) != existing_info:
+                updated_model_cost = True
+            litellm.model_cost[model_name] = existing_info
+
+        provider_models = litellm.models_by_provider.setdefault("zai", [])
+        for slug in ZAI_CODING_MODELS:
+            if slug not in provider_models:
+                if hasattr(provider_models, "add"):
+                    provider_models.add(slug)
+                else:
+                    provider_models.append(slug)
+
+        if updated_model_cost:
+            from litellm.utils import _invalidate_model_cost_lowercase_map
+
+            _invalidate_model_cost_lowercase_map()
+
+
+    def worker_startup_hook():
+        patch_zai_coding_model_catalog()
+
   litellm_startup.py: |
     import os
     import sys
@@ -723,6 +915,7 @@ data:
     import chatgpt_codex_catalog
     import chatgpt_responses_streaming_patch
     import vllm_model_discovery
+    import zai_coding_catalog
 
 
     _SYSTEM_INSTRUCTION_ROLES = {"system", "developer"}
@@ -1102,11 +1295,13 @@ data:
         @proxy_server.app.get(public_path, include_in_schema=False)
         async def public_litellm_model_cost_map():
             patch_chatgpt_codex_model_catalog()
+            zai_coding_catalog.worker_startup_hook()
             return litellm.model_cost
 
 
     def worker_startup_hook():
         patch_chatgpt_codex_model_catalog()
+        zai_coding_catalog.worker_startup_hook()
         patch_chatgpt_codex_reasoning_validator()
         patch_chatgpt_responses_request_transform()
         patch_virtual_key_model_discovery_routes()
