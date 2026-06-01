@@ -128,7 +128,7 @@ data:
           max_input_tokens: 200000
           max_output_tokens: 128000
           supports_function_calling: true
-          supports_reasoning: true
+          supports_reasoning: false
           supports_tool_choice: true
         litellm_params:
           model: zai/glm-5.1
@@ -146,7 +146,7 @@ data:
           max_input_tokens: 200000
           max_output_tokens: 128000
           supports_function_calling: true
-          supports_reasoning: true
+          supports_reasoning: false
           supports_tool_choice: true
         litellm_params:
           model: zai/glm-5
@@ -164,7 +164,7 @@ data:
           max_input_tokens: 200000
           max_output_tokens: 128000
           supports_function_calling: true
-          supports_reasoning: true
+          supports_reasoning: false
           supports_tool_choice: true
         litellm_params:
           model: zai/glm-5-turbo
@@ -176,13 +176,34 @@ data:
             - zai
             - coding-plan
 
+      - model_name: zai-coding/glm-5v-turbo
+        model_info:
+          mode: chat
+          max_input_tokens: 200000
+          max_output_tokens: 128000
+          supports_function_calling: true
+          supports_image_input: true
+          supports_reasoning: false
+          supports_tool_choice: true
+          supports_vision: true
+        litellm_params:
+          model: zai/glm-5v-turbo
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          input_cost_per_token: 0.0000012
+          output_cost_per_token: 0.000004
+          tags:
+            - zai
+            - coding-plan
+            - vision
+
       - model_name: zai-coding/glm-4.7
         model_info:
           mode: chat
           max_input_tokens: 200000
           max_output_tokens: 128000
           supports_function_calling: true
-          supports_reasoning: true
+          supports_reasoning: false
           supports_tool_choice: true
         litellm_params:
           model: zai/glm-4.7
@@ -200,6 +221,7 @@ data:
           max_input_tokens: 128000
           max_output_tokens: 96000
           supports_function_calling: true
+          supports_reasoning: false
           supports_tool_choice: true
         litellm_params:
           model: zai/glm-4.5-air
@@ -810,6 +832,7 @@ data:
     from copy import deepcopy
 
     import litellm
+    from litellm.llms.zai.chat.transformation import ZAIChatConfig
 
 
     ZAI_CODING_MODELS = {
@@ -818,42 +841,45 @@ data:
             "max_output_tokens": 128000,
             "input_cost_per_token": 0.0000014,
             "output_cost_per_token": 0.0000044,
-            "supports_reasoning": True,
         },
         "glm-5": {
             "context_window": 200000,
             "max_output_tokens": 128000,
             "input_cost_per_token": 0.000001,
             "output_cost_per_token": 0.0000032,
-            "supports_reasoning": True,
         },
         "glm-5-turbo": {
             "context_window": 200000,
             "max_output_tokens": 128000,
             "input_cost_per_token": 0.0000012,
             "output_cost_per_token": 0.000004,
-            "supports_reasoning": True,
+        },
+        "glm-5v-turbo": {
+            "context_window": 200000,
+            "max_output_tokens": 128000,
+            "input_cost_per_token": 0.0000012,
+            "output_cost_per_token": 0.000004,
+            "supports_vision": True,
         },
         "glm-4.7": {
             "context_window": 200000,
             "max_output_tokens": 128000,
             "input_cost_per_token": 0.0000006,
             "output_cost_per_token": 0.0000022,
-            "supports_reasoning": True,
         },
         "glm-4.5-air": {
             "context_window": 128000,
             "max_output_tokens": 96000,
             "input_cost_per_token": 0.0000002,
             "output_cost_per_token": 0.0000011,
-            "supports_reasoning": False,
         },
     }
 
 
     def _metadata_for(slug):
         info = ZAI_CODING_MODELS[slug]
-        return {
+        supports_vision = info.get("supports_vision", False)
+        metadata = {
             "litellm_provider": "zai",
             "mode": "chat",
             "context_window": info["context_window"],
@@ -862,11 +888,23 @@ data:
             "max_tokens": info["max_output_tokens"],
             "supports_function_calling": True,
             "supports_tool_choice": True,
-            "supports_reasoning": info["supports_reasoning"],
+            # Z.AI GLM models support native thinking, but not OpenAI-style
+            # reasoning_effort. Do not advertise generic reasoning support to
+            # LiteLLM clients, or they may send unsupported OpenAI params.
+            "supports_reasoning": False,
             "input_cost_per_token": info["input_cost_per_token"],
             "output_cost_per_token": info["output_cost_per_token"],
             "source": "https://docs.z.ai/guides/overview/pricing",
         }
+        if supports_vision:
+            metadata.update(
+                {
+                    "input_modalities": ["text", "image"],
+                    "supports_image_input": True,
+                    "supports_vision": True,
+                }
+            )
+        return metadata
 
 
     def iter_model_cost_entries():
@@ -874,6 +912,39 @@ data:
             metadata = _metadata_for(slug)
             yield f"zai/{slug}", deepcopy(metadata)
             yield f"zai-coding/{slug}", deepcopy(metadata)
+
+
+    def _zai_coding_slug(model):
+        if not isinstance(model, str):
+            return None
+        for prefix in ("zai/", "zai-coding/"):
+            if model.startswith(prefix):
+                model = model[len(prefix) :]
+                break
+        return model if model in ZAI_CODING_MODELS else None
+
+
+    def patch_zai_coding_supported_params():
+        if getattr(
+            ZAIChatConfig.get_supported_openai_params,
+            "_zai_coding_supported_params_patch",
+            False,
+        ):
+            return
+
+        original_get_supported_openai_params = ZAIChatConfig.get_supported_openai_params
+
+        def get_supported_openai_params(self, model):
+            supported_params = list(original_get_supported_openai_params(self, model))
+            # Z.AI GLM models support native `thinking`, but not OpenAI-style
+            # `reasoning_effort`. Keep `thinking` accepted even while the public
+            # LiteLLM metadata hides generic reasoning support from clients.
+            if _zai_coding_slug(model) is not None and "thinking" not in supported_params:
+                supported_params.append("thinking")
+            return supported_params
+
+        get_supported_openai_params._zai_coding_supported_params_patch = True
+        ZAIChatConfig.get_supported_openai_params = get_supported_openai_params
 
 
     def patch_zai_coding_model_catalog():
@@ -901,6 +972,7 @@ data:
 
     def worker_startup_hook():
         patch_zai_coding_model_catalog()
+        patch_zai_coding_supported_params()
 
   litellm_startup.py: |
     import os
