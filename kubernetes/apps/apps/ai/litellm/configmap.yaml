@@ -1020,8 +1020,12 @@ data:
         return summary_default.lower() in {"", "0", "false", "none", "off", "disabled"}
 
 
-    def _apply_chatgpt_reasoning_summary_default(request):
-        summary_default = os.getenv("CHATGPT_REASONING_SUMMARY_DEFAULT", "detailed").strip()
+    def _apply_chatgpt_reasoning_summary_default(request, model=None):
+        metadata = chatgpt_codex_catalog.model_metadata_for(model)
+        if metadata is not None:
+            summary_default = str(metadata.get("default_reasoning_summary", "none")).strip()
+        else:
+            summary_default = os.getenv("CHATGPT_REASONING_SUMMARY_DEFAULT", "detailed").strip()
         if _summary_default_disabled(summary_default):
             return
 
@@ -1068,7 +1072,7 @@ data:
                 headers=headers,
             )
             _move_system_input_items_to_instructions(request)
-            _apply_chatgpt_reasoning_summary_default(request)
+            _apply_chatgpt_reasoning_summary_default(request, model)
             return request
 
         transform_responses_api_request._chatgpt_responses_request_patch = True
