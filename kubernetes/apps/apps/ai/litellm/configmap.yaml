@@ -36,22 +36,12 @@ data:
           input_cost_per_token: 0.00000075
           output_cost_per_token: 0.0000045
 
-      - model_name: openai/gpt-5.3-codex
+      - model_name: openai/gpt-5.3-codex-spark
         model_info:
           mode: responses
-          max_input_tokens: 272000
+          max_input_tokens: 128000
         litellm_params:
-          model: chatgpt/gpt-5.3-codex
-          # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
-          input_cost_per_token: 0.00000175
-          output_cost_per_token: 0.000014
-
-      - model_name: openai/gpt-5.2
-        model_info:
-          mode: responses
-          max_input_tokens: 272000
-        litellm_params:
-          model: chatgpt/gpt-5.2
+          model: chatgpt/gpt-5.3-codex-spark
           # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
           input_cost_per_token: 0.00000175
           output_cost_per_token: 0.000014
@@ -576,6 +566,7 @@ data:
             ],
             "additional_speed_tiers": ["fast"],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh"],
             "input_cost_per_token": 0.000005,
             "output_cost_per_token": 0.00003,
         },
@@ -599,6 +590,7 @@ data:
             ],
             "additional_speed_tiers": ["fast"],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh"],
             "input_cost_per_token": 0.0000025,
             "output_cost_per_token": 0.000015,
         },
@@ -620,29 +612,9 @@ data:
             "service_tiers": [],
             "additional_speed_tiers": [],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh"],
             "input_cost_per_token": 0.00000075,
             "output_cost_per_token": 0.0000045,
-        },
-        "gpt-5.3-codex": {
-            "display_name": "GPT-5.3-Codex",
-            "description": "Coding-optimized model.",
-            "context_window": 272000,
-            "max_context_window": 272000,
-            "max_output_tokens": 128000,
-            "effective_context_window_percent": 95,
-            "default_reasoning_level": "medium",
-            "default_reasoning_summary": "none",
-            "default_verbosity": "low",
-            "input_modalities": ["text", "image"],
-            "web_search_tool_type": "text",
-            "supported_in_api": True,
-            "visibility": "list",
-            "priority": 25,
-            "service_tiers": [],
-            "additional_speed_tiers": [],
-            "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "input_cost_per_token": 0.00000175,
-            "output_cost_per_token": 0.000014,
         },
         "gpt-5.3-codex-spark": {
             "display_name": "GPT-5.3-Codex-Spark",
@@ -656,33 +628,13 @@ data:
             "default_verbosity": "low",
             "input_modalities": ["text"],
             "web_search_tool_type": "text",
-            "supported_in_api": False,
+            "supported_in_api": True,
             "visibility": "list",
             "priority": 26,
             "service_tiers": [],
             "additional_speed_tiers": [],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "input_cost_per_token": 0.00000175,
-            "output_cost_per_token": 0.000014,
-        },
-        "gpt-5.2": {
-            "display_name": "GPT-5.2",
-            "description": "Optimized for professional work and long-running agents.",
-            "context_window": 272000,
-            "max_context_window": 272000,
-            "max_output_tokens": 64000,
-            "effective_context_window_percent": 95,
-            "default_reasoning_level": "medium",
-            "default_reasoning_summary": "auto",
-            "default_verbosity": "low",
-            "input_modalities": ["text", "image"],
-            "web_search_tool_type": "text",
-            "supported_in_api": True,
-            "visibility": "list",
-            "priority": 29,
-            "service_tiers": [],
-            "additional_speed_tiers": [],
-            "truncation_policy": {"mode": "bytes", "limit": 10000},
+            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh"],
             "input_cost_per_token": 0.00000175,
             "output_cost_per_token": 0.000014,
         },
@@ -704,6 +656,7 @@ data:
             "service_tiers": [],
             "additional_speed_tiers": [],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh"],
             "input_cost_per_token": 0.0,
             "output_cost_per_token": 0.0,
         },
@@ -741,10 +694,14 @@ data:
         )
 
 
-    def _reasoning_support_flags():
-        flags = {f"supports_{level}_reasoning_effort": True for level in REASONING_LEVELS}
-        flags["supports_minimal_reasoning_effort"] = False
-        flags["supports_none_reasoning_effort"] = False
+    def _reasoning_support_flags(info):
+        supported_efforts = set(info.get("supported_reasoning_efforts", REASONING_LEVELS))
+        flags = {
+            f"supports_{level}_reasoning_effort": level in supported_efforts
+            for level in REASONING_LEVELS
+        }
+        flags["supports_minimal_reasoning_effort"] = "minimal" in supported_efforts
+        flags["supports_none_reasoning_effort"] = "none" in supported_efforts
         return flags
 
 
@@ -763,7 +720,11 @@ data:
             "max_tokens": info["max_output_tokens"],
             "effective_context_window_percent": info["effective_context_window_percent"],
             "supports_reasoning": True,
-            "supported_reasoning_levels": list(REASONING_LEVELS),
+            "supported_reasoning_levels": [
+                level
+                for level in REASONING_LEVELS
+                if level in info.get("supported_reasoning_efforts", REASONING_LEVELS)
+            ],
             "default_reasoning_level": info["default_reasoning_level"],
             "supports_reasoning_summaries": True,
             "default_reasoning_summary": info["default_reasoning_summary"],
@@ -789,7 +750,7 @@ data:
             "input_cost_per_token": info["input_cost_per_token"],
             "output_cost_per_token": info["output_cost_per_token"],
         }
-        metadata.update(_reasoning_support_flags())
+        metadata.update(_reasoning_support_flags(info))
         return metadata
 
 
