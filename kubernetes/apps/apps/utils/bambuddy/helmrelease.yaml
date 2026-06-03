@@ -8,6 +8,11 @@ spec:
     spec:
       chart: app-template
   values:
+    defaultPodOptions:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: k3s-node-03
     controllers:
       main:
         strategy: Recreate
