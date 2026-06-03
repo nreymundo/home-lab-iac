@@ -27,7 +27,7 @@ spec:
               PUID: "1000"
               PGID: "1000"
               PORT: "8000"
-              VIRTUAL_PRINTER_PASV_ADDRESS: ${BAMBUDDY_LB_IP}
+              VIRTUAL_PRINTER_PASV_ADDRESS: 192.168.10.52
             securityContext:
               capabilities:
                 add:
