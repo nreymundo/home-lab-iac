@@ -6,4 +6,3 @@ components:
   - ../../../../components/ingress/auth-guard
 resources:
   - helmrelease.yaml
-  - service-virtual-printer.yaml

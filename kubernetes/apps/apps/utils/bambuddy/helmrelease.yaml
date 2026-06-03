@@ -8,6 +8,11 @@ spec:
     spec:
       chart: app-template
   values:
+    defaultPodOptions:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: k3s-node-03
     controllers:
       main:
         strategy: Recreate
@@ -22,7 +27,7 @@ spec:
               PUID: "1000"
               PGID: "1000"
               PORT: "8000"
-              VIRTUAL_PRINTER_PASV_ADDRESS: ${BAMBUDDY_LB_IP}
+              VIRTUAL_PRINTER_PASV_ADDRESS: ${BAMBUDDY_IP}
             securityContext:
               capabilities:
                 add:
