@@ -88,6 +88,11 @@ spec:
                   secretKeyRef:
                     name: frigate-secrets
                     key: FRIGATE_AUTH_SECRET
+              FRIGATE_LITELLM_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: frigate-secrets
+                    key: FRIGATE_LITELLM_API_KEY
             securityContext:
               capabilities:
                 add:
