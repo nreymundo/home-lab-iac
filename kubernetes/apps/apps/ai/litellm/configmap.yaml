@@ -1196,10 +1196,10 @@ data:
 
         original_is_allowed = RouteChecks.is_virtual_key_allowed_to_call_route
 
-        def is_virtual_key_allowed_to_call_route(route, valid_token):
+        def is_virtual_key_allowed_to_call_route(route, valid_token, *args, **kwargs):
             if _is_model_discovery_route(route):
                 return True
-            return original_is_allowed(route, valid_token)
+            return original_is_allowed(route, valid_token, *args, **kwargs)
 
         is_virtual_key_allowed_to_call_route._chatgpt_codex_model_discovery_patch = True
         RouteChecks.is_virtual_key_allowed_to_call_route = staticmethod(
