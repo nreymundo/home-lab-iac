@@ -19,7 +19,7 @@ spec:
   monitoring:
     enablePodMonitor: false
   storage:
-    size: 2Gi
+    size: 10Gi
     storageClass: longhorn-r2
 
   postgresql:
