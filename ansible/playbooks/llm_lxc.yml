@@ -12,3 +12,17 @@
         - comfyui
     - whisper_runtime
     - llama_swap
+
+- name: Update llama.cpp from source
+  hosts: llm_lxc
+  become: true
+  tags:
+    - never
+    - llama_cpp_update
+  vars:
+    llm_runtime_enable_rocm: true
+    llm_runtime_enable_vulkan: true
+    llm_runtime_llama_update: true
+    llm_runtime_force_rebuild: true
+  roles:
+    - llm_runtime
