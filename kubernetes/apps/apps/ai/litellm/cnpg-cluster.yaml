@@ -60,7 +60,7 @@ metadata:
   name: litellm-pg-backup
   namespace: ai
 spec:
-  schedule: "0 0 * * *"  # Daily at midnight
+  schedule: "0 0 0 * * *"  # Daily at midnight
   backupOwnerReference: self
   cluster:
     name: litellm-pg

@@ -58,7 +58,7 @@ metadata:
   name: n8n-pg-backup
   namespace: automation
 spec:
-  schedule: "0 0 * * *"  # Daily at midnight
+  schedule: "0 0 0 * * *"  # Daily at midnight
   backupOwnerReference: self
   cluster:
     name: n8n-pg

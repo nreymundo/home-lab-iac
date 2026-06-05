@@ -60,7 +60,7 @@ metadata:
   name: paperless-pg-backup
   namespace: paperless
 spec:
-  schedule: "0 0 * * *"  # Daily at midnight
+  schedule: "0 0 0 * * *"  # Daily at midnight
   backupOwnerReference: self
   cluster:
     name: paperless-pg
