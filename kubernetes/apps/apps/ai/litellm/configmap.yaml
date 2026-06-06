@@ -257,7 +257,8 @@ data:
         ssl_check_hostname: false
 
     general_settings:
-      store_model_in_db: true
+      # Keep GitOps config authoritative; LiteLLM DB config rows otherwise override router_settings.
+      store_model_in_db: false
 
     router_settings:
       routing_strategy: simple-shuffle
@@ -1343,6 +1344,31 @@ data:
             return litellm.model_cost
 
 
+    def patch_file_authoritative_router_settings():
+        proxy_server = sys.modules.get("litellm.proxy.proxy_server")
+        if proxy_server is None:
+            return
+
+        proxy_config_cls = getattr(proxy_server, "ProxyConfig", None)
+        if proxy_config_cls is None:
+            return
+
+        current = getattr(proxy_config_cls, "_add_router_settings_from_db_config", None)
+        if current is None or getattr(current, "_file_authoritative_patch", False):
+            return
+
+        async def add_router_settings_from_config(self, config_data, llm_router, prisma_client):
+            if llm_router is None:
+                return
+
+            router_settings = config_data.get("router_settings") or {}
+            if isinstance(router_settings, dict) and router_settings:
+                llm_router.update_settings(**router_settings)
+
+        add_router_settings_from_config._file_authoritative_patch = True
+        proxy_config_cls._add_router_settings_from_db_config = add_router_settings_from_config
+
+
     def worker_startup_hook():
         patch_chatgpt_codex_model_catalog()
         zai_coding_catalog.worker_startup_hook()
@@ -1352,6 +1378,7 @@ data:
         patch_model_list_metadata()
         patch_proxy_model_info_endpoints()
         patch_public_model_cost_map_endpoint()
+        patch_file_authoritative_router_settings()
         patch_router_response_retries()
         vllm_model_discovery.worker_startup_hook()
         chatgpt_responses_streaming_patch.worker_startup_hook()
