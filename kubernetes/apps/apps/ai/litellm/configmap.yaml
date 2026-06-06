@@ -90,7 +90,7 @@ data:
       - model_name: hosted_vllm/*
         model_info:
           mode: chat
-          health_check_model: unsloth/qwen3-4b-instruct-2507
+          health_check_model: unsloth/gemma-4-e4b-it-qat
         litellm_params:
           model: hosted_vllm/*
           custom_llm_provider: hosted_vllm
@@ -273,10 +273,13 @@ data:
         local/tts: openai/chatterbox
         local/rerank: hosted_vllm/qwen3-reranker-0.6b
         local/stt-fast: hosted_vllm/whisper/large-v3-turbo-q5_0
-        local/embedding: hosted_vllm/qwen3-embedding-0.6b
+        local/embedding: hosted_vllm/qwen3-embedding-4b
         local/stt-large: hosted_vllm/whisper/large-v3-q5_0
-        local/automation-lite: hosted_vllm/unsloth/qwen3-4b-instruct-2507
-        local/document-analysis: hosted_vllm/unsloth/qwen3-vl-30b-a3b-instruct
+        local/automation-lite: hosted_vllm/unsloth/gemma-4-e4b-it-qat
+        local/camera-analysis: hosted_vllm/unsloth/gemma-4-12b-it-qat-camera
+        local/document-analysis: hosted_vllm/unsloth/gemma-4-26b-a4b-it-qat-doc
+        local/document-best: hosted_vllm/unsloth/gemma-4-31b-it-qat-doc-best
+        local/reasoning-max-context: hosted_vllm/unsloth/gemma-4-26b-a4b-it-qat-reasoning-max-context
 
   cache_bypass.py: |
     import json
