@@ -24,7 +24,7 @@ spec:
     parameters:
       wal_level: "replica"
       archive_timeout: "43200"
-      archive_mode: "on"
+      archive_mode: "off"
 
   bootstrap:
     initdb:
@@ -32,28 +32,6 @@ spec:
       owner: nextcloud
       secret:
         name: nextcloud-db-secrets
-
-  backup:
-    barmanObjectStore:
-      wal:
-        compression: gzip
-      data:
-        compression: gzip
-
-      s3Credentials:
-        accessKeyId:
-          name: cnpg-backup-s3
-          key: ACCESS_KEY_ID
-        secretAccessKey:
-          name: cnpg-backup-s3
-          key: ACCESS_SECRET_KEY
-        region:
-          name: cnpg-backup-s3
-          key: AWS_DEFAULT_REGION
-      destinationPath: "s3://cloudnative-pg/nextcloud"
-      endpointURL: "https://s3.${CLUSTER_DOMAIN}"
-      serverName: "nextcloud-pg-v1"
-    retentionPolicy: "14d"
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
@@ -62,6 +40,7 @@ metadata:
   namespace: nextcloud
 spec:
   schedule: "0 0 0 * * *"
+  suspend: true
   backupOwnerReference: self
   cluster:
     name: nextcloud-pg
