@@ -16,7 +16,7 @@ spec:
             image:
               # renovate: datasource=docker depName=linuxserver/prowlarr registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/prowlarr
-              tag: 2.3.5
+              tag: 2.4.0
             env:
               TZ: Europe/Berlin
             ports:
