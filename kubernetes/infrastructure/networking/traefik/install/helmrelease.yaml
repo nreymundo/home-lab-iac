@@ -55,7 +55,8 @@ spec:
             - 10.42.0.0/16
         transport:
           respondingTimeouts:
-            readTimeout: 10m
+            # Registry pull-through cache fills can exceed 10m for large layers; keep reads open.
+            readTimeout: 1h
             writeTimeout: 0s
             idleTimeout: 1h
         http:
