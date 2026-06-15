@@ -28,7 +28,7 @@ spec:
             image:
               # renovate: datasource=docker depName=danny-avila/librechat registryUrl=https://registry.librechat.ai
               repository: registry.librechat.ai/danny-avila/librechat
-              tag: v0.8.6-rc1
+              tag: v0.8.7-rc1
             env:
               TZ: Europe/Berlin
               HOST: 0.0.0.0
