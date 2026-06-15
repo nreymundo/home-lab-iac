@@ -35,7 +35,7 @@ k3s_registry_mirrors:
     endpoint:
       - "{{ k3s_harbor_registry_endpoint }}"
     rewrite:
-      "^(.*)$": "n8n/$1"
+      "^(.*)$": "dockerhub/$1"
   docker.gitea.com:
     endpoint:
       - "{{ k3s_harbor_registry_endpoint }}"
