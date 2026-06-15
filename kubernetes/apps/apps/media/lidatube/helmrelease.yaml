@@ -16,7 +16,7 @@ spec:
             image:
               # renovate: datasource=docker depName=thewicklowwolf/lidatube
               repository: thewicklowwolf/lidatube
-              tag: 0.2.51
+              tag: 0.2.52
             env:
               TZ: Europe/Berlin
               PUID: "99"
