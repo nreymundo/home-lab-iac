@@ -950,18 +950,48 @@ data:
 
         def get_supported_openai_params(self, model):
             supported_params = list(original_get_supported_openai_params(self, model))
-            # Z.AI GLM models support native `thinking`, but the public API
-            # schema does not expose OpenAI-style `reasoning_effort`.
+            # Z.AI GLM models support native `thinking`, and GLM-5.2 also
+            # accepts OpenAI-style `reasoning_effort` values `high` and `max`.
             # OpenAI-compatible clients may also send max_completion_tokens;
             # Z.AI accepts it, but LiteLLM's ZAI provider does not list it by default.
-            if _zai_coding_slug(model) is not None:
-                for param in ("thinking", "max_completion_tokens"):
+            slug = _zai_coding_slug(model)
+            if slug is not None:
+                params = ["thinking", "max_completion_tokens", "extra_body"]
+                if slug == "glm-5.2":
+                    params.append("reasoning_effort")
+                for param in params:
                     if param not in supported_params:
                         supported_params.append(param)
             return supported_params
 
         get_supported_openai_params._zai_coding_supported_params_patch = True
         ZAIChatConfig.get_supported_openai_params = get_supported_openai_params
+
+        if getattr(
+            ZAIChatConfig.map_openai_params,
+            "_zai_coding_map_params_patch",
+            False,
+        ):
+            return
+
+        original_map_openai_params = ZAIChatConfig.map_openai_params
+
+        def map_openai_params(self, non_default_params, optional_params, model, drop_params):
+            optional_params = original_map_openai_params(
+                self,
+                non_default_params=non_default_params,
+                optional_params=optional_params,
+                model=model,
+                drop_params=drop_params,
+            )
+            if _zai_coding_slug(model) is not None and "thinking" in optional_params:
+                extra_body = dict(optional_params.get("extra_body") or {})
+                extra_body["thinking"] = optional_params.pop("thinking")
+                optional_params["extra_body"] = extra_body
+            return optional_params
+
+        map_openai_params._zai_coding_map_params_patch = True
+        ZAIChatConfig.map_openai_params = map_openai_params
 
 
     def patch_zai_coding_model_catalog():
