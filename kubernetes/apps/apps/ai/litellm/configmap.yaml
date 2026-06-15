@@ -112,13 +112,39 @@ data:
           input_cost_per_token: 0.0
           output_cost_per_token: 0.0
 
+      - model_name: zai-coding/glm-5.2
+        model_info:
+          mode: chat
+          max_input_tokens: 1000000
+          max_output_tokens: 131072
+          supports_function_calling: true
+          supports_reasoning: true
+          reasoning_options:
+            - type: effort
+              values:
+                - high
+                - max
+          default_reasoning_effort: high
+          supports_tool_choice: true
+        litellm_params:
+          model: zai/glm-5.2
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - zai
+            - coding-plan
+
       - model_name: zai-coding/glm-5.1
         model_info:
           mode: chat
           max_input_tokens: 200000
           max_output_tokens: 128000
           supports_function_calling: true
-          supports_reasoning: false
+          supports_reasoning: true
+          reasoning_options:
+            - type: toggle
           supports_tool_choice: true
         litellm_params:
           model: zai/glm-5.1
@@ -136,7 +162,9 @@ data:
           max_input_tokens: 200000
           max_output_tokens: 128000
           supports_function_calling: true
-          supports_reasoning: false
+          supports_reasoning: true
+          reasoning_options:
+            - type: toggle
           supports_tool_choice: true
         litellm_params:
           model: zai/glm-5
@@ -154,7 +182,9 @@ data:
           max_input_tokens: 200000
           max_output_tokens: 128000
           supports_function_calling: true
-          supports_reasoning: false
+          supports_reasoning: true
+          reasoning_options:
+            - type: toggle
           supports_tool_choice: true
         litellm_params:
           model: zai/glm-5-turbo
@@ -173,7 +203,9 @@ data:
           max_output_tokens: 128000
           supports_function_calling: true
           supports_image_input: true
-          supports_reasoning: false
+          supports_reasoning: true
+          reasoning_options:
+            - type: toggle
           supports_tool_choice: true
           supports_vision: true
         litellm_params:
@@ -193,7 +225,9 @@ data:
           max_input_tokens: 200000
           max_output_tokens: 128000
           supports_function_calling: true
-          supports_reasoning: false
+          supports_reasoning: true
+          reasoning_options:
+            - type: toggle
           supports_tool_choice: true
         litellm_params:
           model: zai/glm-4.7
@@ -211,7 +245,9 @@ data:
           max_input_tokens: 128000
           max_output_tokens: 96000
           supports_function_calling: true
-          supports_reasoning: false
+          supports_reasoning: true
+          reasoning_options:
+            - type: toggle
           supports_tool_choice: true
         litellm_params:
           model: zai/glm-4.5-air
@@ -801,6 +837,15 @@ data:
 
 
     ZAI_CODING_MODELS = {
+        "glm-5.2": {
+            "context_window": 1000000,
+            "max_output_tokens": 131072,
+            "input_cost_per_token": 0.0,
+            "output_cost_per_token": 0.0,
+            "reasoning_options": [{"type": "effort", "values": ["high", "max"]}],
+            "default_reasoning_effort": "high",
+            "source": "https://docs.z.ai/devpack/latest-model",
+        },
         "glm-5.1": {
             "context_window": 200000,
             "max_output_tokens": 128000,
@@ -853,14 +898,18 @@ data:
             "max_tokens": info["max_output_tokens"],
             "supports_function_calling": True,
             "supports_tool_choice": True,
-            # Z.AI GLM models support native thinking, but not OpenAI-style
-            # reasoning_effort. Do not advertise generic reasoning support to
-            # LiteLLM clients, or they may send unsupported OpenAI params.
-            "supports_reasoning": False,
+            # Z.AI uses native `thinking`; do not advertise OpenAI-style
+            # `reasoning_effort` as a supported request parameter below.
+            "supports_reasoning": True,
+            "reasoning_options": deepcopy(
+                info.get("reasoning_options", [{"type": "toggle"}])
+            ),
             "input_cost_per_token": info["input_cost_per_token"],
             "output_cost_per_token": info["output_cost_per_token"],
-            "source": "https://docs.z.ai/guides/overview/pricing",
+            "source": info.get("source", "https://docs.z.ai/guides/overview/pricing"),
         }
+        if "default_reasoning_effort" in info:
+            metadata["default_reasoning_effort"] = info["default_reasoning_effort"]
         if supports_vision:
             metadata.update(
                 {
@@ -901,9 +950,8 @@ data:
 
         def get_supported_openai_params(self, model):
             supported_params = list(original_get_supported_openai_params(self, model))
-            # Z.AI GLM models support native `thinking`, but not OpenAI-style
-            # `reasoning_effort`. Keep `thinking` accepted even while the public
-            # LiteLLM metadata hides generic reasoning support from clients.
+            # Z.AI GLM models support native `thinking`, but the public API
+            # schema does not expose OpenAI-style `reasoning_effort`.
             # OpenAI-compatible clients may also send max_completion_tokens;
             # Z.AI accepts it, but LiteLLM's ZAI provider does not list it by default.
             if _zai_coding_slug(model) is not None:
