@@ -510,6 +510,8 @@ spec:
             claimName: librechat-meilisearch
         advancedMounts:
           meilisearch:
+            auto-wipe:
+              - path: /meili_data
             init-permissions:
               - path: /meili_data
             meilisearch:
