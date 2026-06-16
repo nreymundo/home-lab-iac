@@ -90,9 +90,8 @@ spec:
           default: true
         exposedPort: 9000
         protocol: TCP
-    logs:
-      access:
-        enabled: true
+    accessLog:
+      enabled: true
     metrics:
       prometheus:
         enabled: true
