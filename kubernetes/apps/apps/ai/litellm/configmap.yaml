@@ -130,8 +130,8 @@ data:
           model: zai/glm-5.2
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
-          input_cost_per_token: 0.0
-          output_cost_per_token: 0.0
+          input_cost_per_token: 0.0000012
+          output_cost_per_token: 0.0000041
           tags:
             - zai
             - coding-plan
@@ -840,11 +840,11 @@ data:
         "glm-5.2": {
             "context_window": 1000000,
             "max_output_tokens": 131072,
-            "input_cost_per_token": 0.0,
-            "output_cost_per_token": 0.0,
+            "input_cost_per_token": 0.0000012,
+            "output_cost_per_token": 0.0000041,
             "reasoning_options": [{"type": "effort", "values": ["high", "max"]}],
             "default_reasoning_effort": "high",
-            "source": "https://docs.z.ai/devpack/latest-model",
+            "source": "https://openrouter.ai/z-ai/glm-5.2/api",
         },
         "glm-5.1": {
             "context_window": 200000,
