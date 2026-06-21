@@ -161,6 +161,7 @@
           --write-kubeconfig-mode 644
           --tls-san {{ k3s_api_vip }}
           {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
+          {% if k3s_disable_default_registry_endpoint | bool %}--disable-default-registry-endpoint{% endif %}
           --disable traefik
           --disable metrics-server
           --disable servicelb
@@ -270,6 +271,7 @@
           --flannel-iface {{ k3s_iface }}
           --tls-san {{ k3s_api_vip }}
           {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
+          {% if k3s_disable_default_registry_endpoint | bool %}--disable-default-registry-endpoint{% endif %}
           --disable traefik
           --disable metrics-server
           --disable servicelb

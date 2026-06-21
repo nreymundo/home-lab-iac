@@ -5,10 +5,12 @@ k3s_cluster_init: false
 k3s_server_args: ""
 k3s_agent_args: ""
 k3s_embedded_registry_enabled: true
+k3s_disable_default_registry_endpoint: true
 k3s_cluster_domain: "{{ lookup('ansible.builtin.env', 'CLUSTER_DOMAIN') | default('', true) }}"
 k3s_harbor_registry_endpoint: "https://harbor.lan.{{ k3s_cluster_domain }}"
-# Keep K3s/containerd's default endpoint fallback enabled. On first cluster
-# bootstrap Harbor will not exist yet, so nodes must still pull from upstream.
+# Force configured registries through Harbor instead of falling back directly to
+# upstream. Set k3s_disable_default_registry_endpoint=false only for first
+# cluster bootstrap before Harbor exists.
 k3s_registry_mirrors:
   "*": {}
   docker.io:
