@@ -22,7 +22,7 @@ spec:
   postgresql:
     parameters:
       wal_level: "replica"
-      archive_timeout: "43200" # Wait 12 hours before shipping WALs when no activity
+      archive_timeout: "21600" # Wait 6 hours before shipping WALs when no activity
       archive_mode: "on"
     shared_preload_libraries:
       - "vchord.so"

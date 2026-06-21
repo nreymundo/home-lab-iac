@@ -25,7 +25,7 @@ spec:
   postgresql:
     parameters:
       wal_level: "logical"
-      archive_timeout: "5min"
+      archive_timeout: "21600"
       archive_mode: "on"
 
   backup:
