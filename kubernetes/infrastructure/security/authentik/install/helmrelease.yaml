@@ -199,6 +199,11 @@ spec:
             secretKeyRef:
               name: authentik-env
               key: AK_BLUEPRINT_USER_PASSWORD
+        - name: AK_BLUEPRINT_USER_AVATAR
+          valueFrom:
+            secretKeyRef:
+              name: authentik-env
+              key: AK_BLUEPRINT_USER_AVATAR
         - name: AK_LDAP_SEARCH_PASSWORD
           valueFrom:
             secretKeyRef:
