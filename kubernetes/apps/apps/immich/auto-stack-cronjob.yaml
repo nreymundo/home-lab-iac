@@ -3,6 +3,11 @@ kind: CronJob
 metadata:
   name: immich-auto-stack
   namespace: immich
+  annotations:
+    checkov.io/skip1: CKV_K8S_14=Upstream image does not publish stable versioned tags.
+    checkov.io/skip2: CKV_K8S_35=Immich auto-stack expects its API key as an environment variable.
+    checkov.io/skip3: CKV_K8S_43=Image tags are Renovate-managed; digest pinning will be handled separately.
+    checkov.io/skip4: CKV_K8S_40=Upstream image runs as UID 1000 by design.
 spec:
   schedule: "0 * * * *"
   concurrencyPolicy: Forbid
@@ -13,11 +18,25 @@ spec:
       backoffLimit: 1
       template:
         spec:
+          automountServiceAccountToken: false
           restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
           containers:
             - name: auto-stack
               image: majorfi/immich-stack:latest
               imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
               env:
                 - name: API_URL
                   value: "http://immich-main.immich.svc.cluster.local:2283/api"
@@ -34,6 +53,8 @@ spec:
                   value: '{"mode":"advanced","expression":{"operator":"AND","children":[{"operator":"OR","children":[{"criteria":{"key":"originalFileName","regex":{"key":"BURST(\\d+)","index":1}}},{"criteria":{"key":"originalFileName","split":{"delimiters":["~","."],"index":0}}}]},{"criteria":{"key":"localDateTime","delta":{"milliseconds":1000}}}]}}'
                 - name: TZ
                   value: "Europe/Berlin"
+                - name: HOME
+                  value: /tmp
                 - name: PARENT_FILENAME_PROMOTE
                   value: "cover,sequence,edit,crop,hdr,biggestNumber"
                 - name: PARENT_EXT_PROMOTE
@@ -47,3 +68,10 @@ spec:
                 limits:
                   cpu: 250m
                   memory: 256Mi
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir:
+                sizeLimit: 64Mi
