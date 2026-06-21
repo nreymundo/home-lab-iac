@@ -11,6 +11,8 @@ spec:
     fullnameOverride: sabnzbd
     controllers:
       main:
+        annotations:
+          reloader.stakater.com/auto: "true"
         strategy: Recreate
         containers:
           main:
