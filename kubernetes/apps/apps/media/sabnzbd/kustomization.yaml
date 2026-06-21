@@ -7,4 +7,5 @@ resources:
   - helmrelease.yaml
   - ingressroutetcp-privoxy.yaml
   - ingressroutetcp-socks.yaml
+  - middlewaretcp-privoxy-lan-allowlist.yaml
   - sabnzbd-wireguard.sops.yaml
