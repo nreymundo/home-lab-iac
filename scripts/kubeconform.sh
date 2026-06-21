@@ -27,6 +27,10 @@ if [[ ${#kustomizations[@]} -eq 0 ]]; then
 fi
 
 for kustomization in "${kustomizations[@]}"; do
+  if grep -Eq '^kind:[[:space:]]*Component[[:space:]]*$' "$kustomization"; then
+    continue
+  fi
+
   dir="${kustomization%/*}"
   echo "Building $dir"
   kubectl kustomize "$dir" >>"$tmp_manifest"
