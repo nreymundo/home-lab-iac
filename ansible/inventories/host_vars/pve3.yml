@@ -6,6 +6,10 @@ proxmox_extra_host_directories:
     owner: "100000"
     group: "100000"
     mode: "0755"
+  - path: /mnt/garage-s3
+    owner: "100980"
+    group: "100980"
+    mode: "0750"
 
 proxmox_kernel_params_add:
   - "ttm.pages_limit=28311552"
