@@ -14,6 +14,7 @@ readonly REQUIRED_TOOLS=(
   kubectl
   flux
   ansible-playbook
+  ansible-galaxy
   bws
   jq
   yq
@@ -220,7 +221,7 @@ prepare_arch_package_plan() {
     packer)
       append_unique PACMAN_PACKAGES_TO_INSTALL packer
       ;;
-    ansible-playbook)
+    ansible-playbook|ansible-galaxy)
       append_unique PACMAN_PACKAGES_TO_INSTALL ansible
       ;;
     ansible-lint)
@@ -269,7 +270,7 @@ prepare_ubuntu_package_plan() {
     rg)
       append_unique APT_PACKAGES_TO_INSTALL ripgrep
       ;;
-    ansible-playbook)
+    ansible-playbook|ansible-galaxy)
       append_unique APT_PACKAGES_TO_INSTALL ansible
       ;;
     ansible-lint)

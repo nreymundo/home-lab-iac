@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  pre-commit:
-    name: Pre-commit
+  repository-validation:
+    name: Repository Validation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,8 +46,9 @@ jobs:
           sudo install -m 0755 kubeconform /usr/local/bin/kubeconform
           python -m pip install --upgrade pip
           python -m pip install ansible-lint pre-commit
+          ansible-galaxy collection install -r ansible/requirements.yml
 
-      - name: Run default pre-commit hooks
+      - name: Run repository validation hooks
         run: pre-commit run --all-files
 
   kubeconform:
@@ -85,12 +86,13 @@ jobs:
         with:
           scan-type: fs
           scan-ref: .
-          scanners: vuln,secret,misconfig
+          scanners: vuln,secret
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           skip-dirs: .git,kubernetes/clusters/production/flux-system
           format: table
           exit-code: "1"
+          version: v0.71.2
 
   checkov:
     name: Checkov

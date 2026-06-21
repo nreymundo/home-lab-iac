@@ -60,7 +60,7 @@ The repository uses pre-commit to enforce code quality:
 | `forbid-sensitive-files` | Block committing private key material |
 | `prevent-plaintext-k8s-secrets` | Block unencrypted Kubernetes Secret manifests |
 | `kubeconform` | Validate rendered Kubernetes manifests |
-| `trivy-fs` | Scan repository files for vulnerabilities, secrets, and IaC misconfiguration |
+| `trivy-fs` | Scan repository files for vulnerabilities and secrets |
 | `checkov` | Scan Terraform and Kubernetes IaC policy checks |
 | `sops-auto-encrypt` | Auto-encrypt `*.sops.yaml` files when needed |
 | `forbid-commit-attribution` | Enforce commit subject policy and block forbidden attribution trailers |
@@ -82,7 +82,7 @@ pre-commit run checkov --all-files --hook-stage manual
 pre-commit autoupdate
 ```
 
-`trivy-fs` and `checkov` are manual local hooks because they are slower and need baseline tuning. CI runs both as soft-fail scans while `kubeconform` is a required structural validation gate.
+`trivy-fs` and `checkov` are manual local hooks because they are slower and need baseline tuning. CI runs both as hard-failing jobs; keep them non-required in branch protection until their baselines are tuned.
 
 The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` hook rather than through the normal file-based pre-commit scan.
 
