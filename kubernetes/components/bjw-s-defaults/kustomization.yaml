@@ -9,6 +9,9 @@ patches:
         path: /spec/interval
         value: 15m
       - op: add
+        path: /spec/timeout
+        value: 10m
+      - op: add
         path: /spec/chart/spec/version
         # renovate: datasource=helm depName=app-template registryUrl=https://bjw-s-labs.github.io/helm-charts/
         value: "5.0.1"
