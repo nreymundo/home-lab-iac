@@ -36,6 +36,11 @@ kind: CronJob
 metadata:
   name: paperless-backup
   namespace: paperless
+  annotations:
+    checkov.io/skip1: CKV_K8S_14=Kubectl client image tracks the cluster until digest pinning is adopted.
+    checkov.io/skip2: CKV_K8S_38=This job intentionally needs a token to run kubectl exec.
+    checkov.io/skip3: CKV_K8S_43=Image tags are Renovate-managed; digest pinning will be handled separately.
+    checkov.io/skip4: CKV_K8S_40=Bitnami kubectl image runs as non-root UID 1001 by design.
 spec:
   schedule: "0 3 */3 * *"
   concurrencyPolicy: Forbid
@@ -48,9 +53,23 @@ spec:
         spec:
           serviceAccountName: paperless-backup-cron
           restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            fsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
           containers:
             - name: runner
               image: bitnami/kubectl:latest
+              imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
               command:
                 - /bin/sh
                 - -lc
@@ -84,6 +103,9 @@ spec:
 
                     echo "Backup complete!"
                   '
+              env:
+                - name: HOME
+                  value: /tmp
               resources:
                 requests:
                   cpu: 10m
@@ -91,3 +113,10 @@ spec:
                 limits:
                   cpu: 100m
                   memory: 64Mi
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir:
+                sizeLimit: 64Mi

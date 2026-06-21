@@ -3,6 +3,10 @@ kind: CronJob
 metadata:
   name: immich-db-backup
   namespace: immich
+  annotations:
+    checkov.io/skip1: CKV_K8S_35=pg_dump consumes database credentials from libpq environment variables.
+    checkov.io/skip2: CKV_K8S_43=Image tags are Renovate-managed; digest pinning will be handled separately.
+    checkov.io/skip3: CKV_K8S_40=NFS backup path ownership requires the existing UID/GID mapping.
 spec:
   schedule: "0 2 * * *"
   successfulJobsHistoryLimit: 3
@@ -11,14 +15,25 @@ spec:
     spec:
       template:
         spec:
+          automountServiceAccountToken: false
           restartPolicy: OnFailure
           securityContext:
             runAsUser: 99
             runAsGroup: 100
             fsGroup: 100
+            seccompProfile:
+              type: RuntimeDefault
           containers:
             - name: backup
               image: postgres:14-alpine
+              imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
               command: ["/bin/sh", "-c"]
               args:
                 - |
@@ -51,8 +66,20 @@ spec:
               volumeMounts:
                 - name: backup
                   mountPath: /backup
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+                limits:
+                  cpu: 250m
+                  memory: 256Mi
           volumes:
             - name: backup
               nfs:
                 server: "${UNRAID_IP}"
                 path: /mnt/user/backup
+            - name: tmp
+              emptyDir:
+                sizeLimit: 64Mi

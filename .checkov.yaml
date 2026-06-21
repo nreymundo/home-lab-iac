@@ -1,0 +1,12 @@
+---
+directory:
+  - terraform
+  - kubernetes
+framework:
+  - terraform
+  - kubernetes
+skip-path:
+  - kubernetes/clusters/production/flux-system/.*
+  - .*\.sops\.ya?ml$
+quiet: true
+compact: true

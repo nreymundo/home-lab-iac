@@ -17,6 +17,9 @@ readonly REQUIRED_TOOLS=(
   bws
   jq
   yq
+  kubeconform
+  trivy
+  checkov
 )
 
 readonly ARCH_DISTRO_TOKENS=(
@@ -238,6 +241,15 @@ prepare_arch_package_plan() {
     yq)
       append_unique PACMAN_PACKAGES_TO_INSTALL yq
       ;;
+    kubeconform)
+      append_unique PACMAN_PACKAGES_TO_INSTALL kubeconform
+      ;;
+    trivy)
+      append_unique PACMAN_PACKAGES_TO_INSTALL trivy
+      ;;
+    checkov)
+      append_unique MANUAL_TOOLS_TO_INSTALL checkov
+      ;;
     *)
       die "No package mapping defined for tool: $tool"
       ;;
@@ -268,6 +280,15 @@ prepare_ubuntu_package_plan() {
       ;;
     yq)
       append_unique APT_PACKAGES_TO_INSTALL yq
+      ;;
+    kubeconform)
+      append_unique BREW_PACKAGES_TO_INSTALL kubeconform
+      ;;
+    trivy)
+      append_unique BREW_PACKAGES_TO_INSTALL trivy
+      ;;
+    checkov)
+      append_unique BREW_PACKAGES_TO_INSTALL checkov
       ;;
     sops)
       append_unique BREW_PACKAGES_TO_INSTALL sops
@@ -331,8 +352,11 @@ print_manual_install_hint() {
     bws)
       printf '    - bws: install the Bitwarden Secrets Manager CLI from the vendor-provided binary or package.\n' >&2
       ;;
+    checkov)
+      printf '    - checkov: install with `pipx install checkov`, or another isolated Python package method that puts `checkov` on PATH.\n' >&2
+      ;;
     *)
-      printf '    - %s: install manually for Ubuntu.\n' "$tool" >&2
+      printf '    - %s: install manually.\n' "$tool" >&2
       ;;
   esac
 }
@@ -383,6 +407,15 @@ EOF
         printf '\n' >&2
       else
         printf '  No AUR packages need installation.\n' >&2
+      fi
+
+      if [[ ${#MANUAL_TOOLS_TO_INSTALL[@]} -gt 0 ]]; then
+        printf '  Manual installation still required for:\n' >&2
+        for tool in "${MANUAL_TOOLS_TO_INSTALL[@]}"; do
+          print_manual_install_hint "$tool"
+        done
+      else
+        printf '  No manual installs are required.\n' >&2
       fi
       ;;
     ubuntu)
@@ -440,6 +473,11 @@ install_missing_tools() {
       if [[ ${#AUR_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
         log_info "Installing missing AUR packages with $AUR_HELPER"
         "$AUR_HELPER" -S --needed "${AUR_PACKAGES_TO_INSTALL[@]}"
+      fi
+
+      if [[ ${#MANUAL_TOOLS_TO_INSTALL[@]} -gt 0 ]]; then
+        print_install_plan
+        die "Some required tools still need manual installation on Arch. Install them and rerun the script."
       fi
       ;;
     ubuntu)

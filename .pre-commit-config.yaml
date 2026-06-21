@@ -59,6 +59,30 @@ repos:
         language: system
         pass_filenames: false
 
+      - id: kubeconform
+        name: kubeconform rendered Kubernetes manifests
+        entry: scripts/kubeconform.sh
+        language: system
+        files: ^kubernetes/.*\.ya?ml$
+        pass_filenames: false
+
+      - id: trivy-fs
+        name: Trivy filesystem scan
+        entry: >-
+          trivy fs --scanners vuln,secret --severity HIGH,CRITICAL
+          --ignore-unfixed --skip-dirs .git
+          --skip-dirs kubernetes/clusters/production/flux-system --exit-code 1 .
+        language: system
+        pass_filenames: false
+        stages: [manual]
+
+      - id: checkov
+        name: Checkov IaC scan
+        entry: checkov --config-file .checkov.yaml
+        language: system
+        pass_filenames: false
+        stages: [manual]
+
       # Auto-encrypt *.sops.yaml files if they are not already encrypted
       - id: sops-auto-encrypt
         name: Auto-encrypt *.sops.yaml with sops (skip if already encrypted)
