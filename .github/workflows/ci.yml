@@ -12,9 +12,75 @@ permissions:
   contents: read
 
 jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      checkov: ${{ steps.filter.outputs.checkov }}
+      kubeconform: ${{ steps.filter.outputs.kubeconform }}
+      trivy: ${{ steps.filter.outputs.trivy }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+
+      - name: Detect relevant changed paths
+        id: filter
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            {
+              echo "checkov=true"
+              echo "kubeconform=true"
+              echo "trivy=true"
+            } >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base_sha="$PR_BASE_SHA"
+            head_sha="$PR_HEAD_SHA"
+          else
+            base_sha="$PUSH_BEFORE_SHA"
+            head_sha="$GITHUB_SHA"
+          fi
+
+          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
+
+          matches() {
+            local pattern="$1"
+            printf '%s\n' "$changed_files" | grep -Eq "$pattern"
+          }
+
+          if matches '^(kubernetes/|scripts/kubeconform\.sh$|\.github/workflows/ci\.yml$)'; then
+            echo "kubeconform=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "kubeconform=false" >>"$GITHUB_OUTPUT"
+          fi
+
+          if matches '^(kubernetes/|terraform/|\.checkov\.ya?ml$|\.github/workflows/ci\.yml$)'; then
+            echo "checkov=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "checkov=false" >>"$GITHUB_OUTPUT"
+          fi
+
+          if matches '^(ansible/|kubernetes/|packer/|scripts/|terraform/|\.github/workflows/ci\.yml$|\.pre-commit-config\.yaml$|\.sops\.yaml$|renovate\.json$)'; then
+            echo "trivy=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "trivy=false" >>"$GITHUB_OUTPUT"
+          fi
+
   kubeconform:
     name: Kubeconform
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.kubeconform == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -38,6 +104,8 @@ jobs:
   trivy:
     name: Trivy
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.trivy == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -58,6 +126,8 @@ jobs:
   checkov:
     name: Checkov
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.checkov == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
