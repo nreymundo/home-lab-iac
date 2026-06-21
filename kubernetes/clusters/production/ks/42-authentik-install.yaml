@@ -14,7 +14,7 @@ spec:
     - name: cluster-identity
     - name: observability-kube-prometheus-stack-install
   wait: true
-  timeout: 10m
+  timeout: 35m
   decryption:
     provider: sops
     secretRef:
