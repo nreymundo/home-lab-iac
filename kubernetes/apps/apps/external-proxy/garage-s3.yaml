@@ -59,7 +59,7 @@ metadata:
   namespace: external-proxy
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    external-dns.alpha.kubernetes.io/hostname: "*.web.${CLUSTER_DOMAIN}"
+    external-dns.alpha.kubernetes.io/controller: ignore
 spec:
   ingressClassName: traefik
   rules:
