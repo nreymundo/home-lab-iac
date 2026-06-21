@@ -1,0 +1,142 @@
+---
+- name: Resolve configured Garage major version
+  ansible.builtin.set_fact:
+    garage_configured_major: "{{ garage_version | regex_replace('^v?([0-9]+)\\..*$', '\\1') }}"
+
+- name: Verify Garage architecture support
+  ansible.builtin.assert:
+    that:
+      - ansible_architecture in garage_arch_targets
+    fail_msg: "Garage binary download target is not configured for {{ ansible_architecture }}"
+
+- name: Fetch Garage release index
+  ansible.builtin.uri:
+    url: "{{ garage_release_index_url }}"
+    return_content: true
+  register: garage_release_index
+  changed_when: false
+  failed_when: false
+  when: garage_auto_minor_updates | bool
+
+- name: Resolve latest Garage release in configured major
+  ansible.builtin.set_fact:
+    garage_same_major_releases: >-
+      {{
+        garage_release_index.content
+        | default('')
+        | regex_findall('v' ~ garage_configured_major ~ '\\.[0-9]+\\.[0-9]+')
+        | unique
+      }}
+  when: garage_auto_minor_updates | bool
+
+- name: Resolve effective Garage version
+  ansible.builtin.set_fact:
+    garage_effective_version: "{{ garage_version }}"
+
+- name: Use latest Garage release in configured major
+  ansible.builtin.set_fact:
+    garage_effective_version: "{{ garage_same_major_releases[0] }}"
+  when:
+    - garage_auto_minor_updates | bool
+    - (garage_same_major_releases | default([]) | length) > 0
+
+- name: Verify Garage effective version remains in configured major
+  ansible.builtin.assert:
+    that:
+      - garage_effective_version | trim | regex_replace('^v?([0-9]+)\\..*$', '\\1') == garage_configured_major
+    fail_msg: "Resolved Garage version {{ garage_effective_version }} crosses configured major {{ garage_configured_major }}"
+
+- name: Resolve Garage binary paths
+  ansible.builtin.set_fact:
+    garage_binary_target: "{{ garage_arch_targets[ansible_architecture] }}"
+    garage_versioned_bin_path: "{{ garage_install_dir }}/garage-{{ garage_effective_version | trim }}"
+    garage_binary_url: "{{ garage_download_base_url }}/{{ garage_effective_version | trim }}/{{ garage_arch_targets[ansible_architecture] }}/garage"
+
+- name: Ensure Garage group exists
+  ansible.builtin.group:
+    name: "{{ garage_group }}"
+    gid: "{{ garage_gid }}"
+    system: true
+
+- name: Ensure Garage user exists
+  ansible.builtin.user:
+    name: "{{ garage_user }}"
+    uid: "{{ garage_uid }}"
+    group: "{{ garage_group }}"
+    home: "{{ garage_data_dir }}"
+    shell: /usr/sbin/nologin
+    system: true
+    create_home: false
+
+- name: Ensure Garage install directory exists
+  ansible.builtin.file:
+    path: "{{ garage_install_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Ensure Garage data directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ garage_user }}"
+    group: "{{ garage_group }}"
+    mode: "0750"
+  loop:
+    - "{{ garage_data_dir }}"
+    - "{{ garage_metadata_dir }}"
+    - "{{ garage_object_data_dir }}"
+
+- name: Download Garage binary
+  ansible.builtin.get_url:
+    url: "{{ garage_binary_url }}"
+    dest: "{{ garage_versioned_bin_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart garage
+
+- name: Link active Garage binary
+  ansible.builtin.file:
+    src: "{{ garage_versioned_bin_path }}"
+    dest: "{{ garage_bin_path }}"
+    state: link
+    owner: root
+    group: root
+  notify: Restart garage
+
+- name: Install Garage systemd unit
+  ansible.builtin.template:
+    src: garage.service.j2
+    dest: /etc/systemd/system/garage.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart garage
+
+- name: Check manually managed Garage config
+  ansible.builtin.stat:
+    path: "{{ garage_config_path }}"
+  register: garage_config_stat
+
+- name: Report missing manually managed Garage config
+  ansible.builtin.debug:
+    msg: "Create {{ garage_config_path }} manually before starting Garage; Ansible intentionally does not manage it."
+  when:
+    - garage_require_config | bool
+    - not garage_config_stat.stat.exists
+
+- name: Enable and start Garage service
+  ansible.builtin.systemd_service:
+    name: garage
+    state: "{{ garage_service_state }}"
+    enabled: "{{ garage_service_enabled }}"
+    daemon_reload: true
+  when:
+    - garage_config_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Report Garage version selection
+  ansible.builtin.debug:
+    msg: "Garage {{ garage_effective_version }} selected for {{ ansible_architecture }} from {{ garage_binary_url }}"

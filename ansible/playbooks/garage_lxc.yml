@@ -1,0 +1,8 @@
+---
+- name: Provision Garage S3 LXC containers
+  hosts: garage_lxc
+  become: true
+  roles:
+    - lxc_hardening
+    - lxc_bootstrap
+    - garage
