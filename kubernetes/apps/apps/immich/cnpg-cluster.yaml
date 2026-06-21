@@ -23,7 +23,7 @@ spec:
     parameters:
       wal_level: "replica"
       archive_timeout: "43200" # Wait 12 hours before shipping WALs when no activity
-      archive_mode: "off"
+      archive_mode: "on"
     shared_preload_libraries:
       - "vchord.so"
 
@@ -36,6 +36,28 @@ spec:
       postInitApplicationSQL:
         - CREATE EXTENSION vchord CASCADE;
         - CREATE EXTENSION earthdistance CASCADE;
+
+  backup:
+    barmanObjectStore:
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-backup-s3
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-backup-s3
+          key: ACCESS_SECRET_KEY
+        region:
+          name: cnpg-backup-s3
+          key: AWS_DEFAULT_REGION
+      destinationPath: "s3://cloudnative-pg/immich"
+      endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+      serverName: "immich-pg-v1"
+    retentionPolicy: "14d"
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
@@ -44,7 +66,6 @@ metadata:
   namespace: immich
 spec:
   schedule: "0 0 0 * * *"  # Daily at midnight
-  suspend: true
   backupOwnerReference: self
   cluster:
     name: immich-pg

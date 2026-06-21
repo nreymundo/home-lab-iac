@@ -21,7 +21,7 @@ spec:
     parameters:
       wal_level: "replica"
       archive_timeout: "43200" # Wait 12 hours before shipping WALs when no activity
-      archive_mode: "off"
+      archive_mode: "on"
 
   bootstrap:
     initdb:
@@ -29,6 +29,28 @@ spec:
       owner: n8n
       secret:
         name: n8n-db-secrets
+
+  backup:
+    barmanObjectStore:
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-backup-s3
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-backup-s3
+          key: ACCESS_SECRET_KEY
+        region:
+          name: cnpg-backup-s3
+          key: AWS_DEFAULT_REGION
+      destinationPath: "s3://cloudnative-pg/n8n"
+      endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+      serverName: "n8n-pg-v1"
+    retentionPolicy: "14d"
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
@@ -37,7 +59,6 @@ metadata:
   namespace: automation
 spec:
   schedule: "0 0 0 * * *"  # Daily at midnight
-  suspend: true
   backupOwnerReference: self
   cluster:
     name: n8n-pg

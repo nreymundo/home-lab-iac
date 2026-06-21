@@ -7,3 +7,4 @@ resources:
   - settings-failover.yaml
   - ingress-longhorn-ui.yaml
   - longhorn-backup-secret.sops.yaml
+  - recurring-backup-jobs.yaml

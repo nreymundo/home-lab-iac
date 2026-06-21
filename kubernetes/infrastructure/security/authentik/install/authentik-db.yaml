@@ -26,8 +26,30 @@ spec:
     parameters:
       wal_level: "logical"
       archive_timeout: "5min"
-      archive_mode: "off"
+      archive_mode: "on"
 
+  backup:
+    barmanObjectStore:
+      wal:
+        compression: gzip
+        encryption: AES256
+      data:
+        compression: gzip
+        encryption: AES256
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-backup-s3
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-backup-s3
+          key: ACCESS_SECRET_KEY
+        region:
+          name: cnpg-backup-s3
+          key: AWS_DEFAULT_REGION
+      destinationPath: "s3://cloudnative-pg/authentik"
+      endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+      serverName: "authentik-pg-v1"
+    retentionPolicy: "14d"
 
   bootstrap:
     initdb:
@@ -43,7 +65,6 @@ metadata:
   namespace: authentik
 spec:
   schedule: "0 0 0 * * *"
-  suspend: true
   backupOwnerReference: self
   cluster:
     name: authentik-pg
