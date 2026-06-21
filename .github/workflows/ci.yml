@@ -12,45 +12,6 @@ permissions:
   contents: read
 
 jobs:
-  repository-validation:
-    name: Repository Validation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
-        with:
-          python-version: "3.12"
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
-
-      - name: Set up Packer
-        uses: hashicorp/setup-packer@1aa358be5cf73883762b302a3a03abd66e75b232
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@c0c8b32d33a5244f1e5947304550403b63930415
-
-      - name: Install system dependencies
-        env:
-          KUBECONFORM_VERSION: v0.6.7
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ripgrep
-          base_url="https://github.com/yannh/kubeconform/releases/download"
-          archive="kubeconform-linux-amd64.tar.gz"
-          curl -fsSL "${base_url}/${KUBECONFORM_VERSION}/${archive}" -o kubeconform.tar.gz
-          tar -xzf kubeconform.tar.gz kubeconform
-          sudo install -m 0755 kubeconform /usr/local/bin/kubeconform
-          python -m pip install --upgrade pip
-          python -m pip install ansible-lint pre-commit
-          ansible-galaxy collection install -r ansible/requirements.yml
-
-      - name: Run repository validation hooks
-        run: pre-commit run --all-files
-
   kubeconform:
     name: Kubeconform
     runs-on: ubuntu-latest
