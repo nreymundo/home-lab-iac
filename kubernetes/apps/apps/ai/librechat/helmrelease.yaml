@@ -221,7 +221,7 @@ spec:
             image:
               # renovate: datasource=docker depName=getmeili/meilisearch registryUrl=https://docker.io
               repository: docker.io/getmeili/meilisearch
-              tag: v1.47.0
+              tag: v1.48.0
             command:
               - /bin/sh
               - -c
@@ -245,7 +245,7 @@ spec:
             image:
               # renovate: datasource=docker depName=getmeili/meilisearch registryUrl=https://docker.io
               repository: docker.io/getmeili/meilisearch
-              tag: v1.47.0
+              tag: v1.48.0
             env:
               TZ: Europe/Berlin
               MEILI_ENV: production
