@@ -14,8 +14,9 @@ spec:
         initContainers:
           copy-trakt-config:
             image:
-              repository: busybox
-              tag: latest
+              # renovate: datasource=docker depName=library/busybox registryUrl=https://docker.io
+              repository: docker.io/library/busybox
+              tag: 1.38.0
             command:
               - /bin/sh
               - -c

@@ -28,8 +28,9 @@ spec:
         initContainers:
           init-permissions:
             image:
-              repository: alpine
-              tag: latest
+              # renovate: datasource=docker depName=library/alpine registryUrl=https://docker.io
+              repository: docker.io/library/alpine
+              tag: 3.24.1
             command: ["/bin/sh", "-c", "chown -R 1000:1000 /home/node/.n8n && chmod 700 /home/node/.n8n"]
             securityContext:
               runAsUser: 0
