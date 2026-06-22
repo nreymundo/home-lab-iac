@@ -140,7 +140,7 @@ spec:
             image:
               # renovate: datasource=docker depName=apache/tika registryUrl=https://docker.io
               repository: docker.io/apache/tika
-              tag: latest
+              tag: 3.3.1.0
             resources:
               requests:
                 cpu: 50m

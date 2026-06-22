@@ -42,6 +42,34 @@
       "allowedVersions": "/^3\\.\\d+\\.\\d+$/"
     },
     {
+      "description": "Keep Alpine on stable semver tags",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["library/alpine"],
+      "matchPackageNames": ["library/alpine", "docker.io/library/alpine"],
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
+      "description": "Keep BusyBox on stable semver tags",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["library/busybox"],
+      "matchPackageNames": ["library/busybox", "docker.io/library/busybox"],
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
+      "description": "Keep Apache Tika on stable semver tags",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["apache/tika"],
+      "matchPackageNames": ["apache/tika", "docker.io/apache/tika"],
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
+      "description": "Keep Frigate on stable semver tags",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["blakeblackshear/frigate"],
+      "matchPackageNames": ["blakeblackshear/frigate", "ghcr.io/blakeblackshear/frigate"],
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
       "description": "Global stability and automerge schedule",
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "minimumReleaseAge": "5 days",
