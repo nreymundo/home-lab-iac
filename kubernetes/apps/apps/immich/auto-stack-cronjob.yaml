@@ -4,10 +4,9 @@ metadata:
   name: immich-auto-stack
   namespace: immich
   annotations:
-    checkov.io/skip1: CKV_K8S_14=Upstream image does not publish stable versioned tags.
-    checkov.io/skip2: CKV_K8S_35=Immich auto-stack expects its API key as an environment variable.
-    checkov.io/skip3: CKV_K8S_43=Upstream image is pinned to an immutable commit tag; digest pinning will be handled separately.
-    checkov.io/skip4: CKV_K8S_40=Upstream image runs as UID 1000 by design.
+    checkov.io/skip1: CKV_K8S_35=Immich auto-stack expects its API key as an environment variable.
+    checkov.io/skip2: CKV_K8S_43=Upstream image is pinned to an immutable commit tag; digest pinning will be handled separately.
+    checkov.io/skip3: CKV_K8S_40=Upstream image runs as UID 1000 by design.
 spec:
   schedule: "0 * * * *"
   concurrencyPolicy: Forbid
