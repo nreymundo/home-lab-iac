@@ -5,19 +5,19 @@ metadata:
     namespace: media
 type: Opaque
 stringData:
-    wg0.conf: ENC[AES256_GCM,data:R2viTvRyU0f34JCVLgP6K2deCGeI/yWxsw6bCTxiGl3oWZbMvvU1K9Js2pftG/+EAUtE+St8aY6lDCDM+0TlipUstpCHs69dPHTJF4oFUOjX3Bwb1bY2Fcag4Uq4H/PEVVP3cwFSz6ZaZARtBAMtDMqFf+ytUqDaZphO2+yMJ3U3GqSkyFJrbntY6EbQSJfoMic8nLycz4g6koA9UoEKgGhBgS5GWEaGYxpGT1W8H1NMJyK7X/plEMa0otduDo/ZyyGi1ftIHJSxiT1TL6E1i+VJeW4KV7pHz+d3EKf7yLPZspeHZ/TU+gByAL1plck6PfDDRu5ZkdRcmmffg9FMjG0OLGoqQqzuZE/AfB4UOs4WVmq+20JAh60Xqw==,iv:YujyC0n31ouT//gKiEv2hoP6p/RsAyFvPWEhKsVlC/M=,tag:Bg4y70J6H3kKUyBIZzS0qw==,type:str]
+    wg0.conf: ENC[AES256_GCM,data:R4ESHacMbBtItJHK5rMBYtGLGumKWiNfvNXHPM651onwYf2H7mXbdpkq46fgpePiEkJ0BfCV/4eoDdNPzPO+DL5TpHg3yi318aIeDmsCptTjuC7t2Yg8Ip6OcXdVtTT0O3/Jo2MYUn21cZ4X1EcgUI9h64Lh4n7qoq0/ECdV+dvzThRgDYO+CtfoZ5KNpJGyhyMTpQerj3/5H2zRVvADLqN/ImkQYJIeTaFO3et88WKGGbMdXeA3UVNUxJDYapkls9HTWNJy2XPcZCoE2DFq1mbZSZP9DT7OCIARBQiaKqP31kAiZzooNga36bO+LfYHW+VvV+VYL8wRWvW3tBYvuiF+xBCqYrV4AYJelnS5fG16HnqimP7f16E8,iv:sCzhaN5mZAEdmJWbHEU0wixQzYB9uuyv30IoWxqH/aM=,tag:v2dQzBexMPDsLpn+U32UVw==,type:str]
 sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBoZFpnT0NPMlBJdVlaanBX
-            dW1CYVU0NHJNZ0haZmpxWmo3WW5CRTBGRG44CnV3enFyaGFaSHNJckloWTlxL050
-            L3dWeWdwcisySW92YTNsYkRmeFozcFkKLS0tIFBYVlgrSkdDRXl6K2hIQlBqNlNv
-            aTZKZGNKZTNNd0dpa2Nsd0RZeGNuTjQK8WgpTMkQcZJs069/hahQ+A+1eFLYgL50
-            OhkyK/7huM+vjFhVqjuqjh/YTNOQg+e9LaPYqiTVw5DgH2uaUy5dCA==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB1WmIyQlZ4Z01GZlZPM0FZ
+            aEF2QlppUTBwVkVFVnRoOS9LQmZsTGVSRkQwCmlwNDRPZzBYRHd3UlZDKy9PZU5S
+            aVVZR012UFRBbjBnNHFHd2JWT2tnbFkKLS0tIGI4OWU2TXVKK1BVWXhBOVplQ1pQ
+            VXZiL2Zrbm5xdXltci9QdVMxSm54ZWcK5IoFlkSqBhy0g3IblBP16msqV4TW1Gix
+            1QQ65dL6DIXP1ocrtaFWS8yw7nHDhoQPj9KVBWtpFsgI0NPJAWtVvw==
             -----END AGE ENCRYPTED FILE-----
           recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-06-21T11:21:14Z"
-    mac: ENC[AES256_GCM,data:hOb/e+N21m4pViqLKgww7vkgjD900v/7WTAK/6AWlyGtjAfk/blmCbw3vJDI1PRa3wuFIb9kEnRlZDFClDo8aluM6nuT4d4yJZP4XauaOUH2jXBPW9efeoIdJUkyM3PexZSMVJ/qVErYqBNLGyrNdFDMXbm8cKKpUnbokK0BmJY=,iv:RE2gBszgQQz1Dc+lxvcTyNoRgWgUAVTtuQvBBTs5l7o=,tag:Ldnn9rQJgyvqkhgGjNj+Nw==,type:str]
+    lastmodified: "2026-06-22T23:59:07Z"
+    mac: ENC[AES256_GCM,data:sScGEj5JACEb9FF/S/0wOgobF5zCcvXYvLpsJdjdbSHfKRHtqgN7x8B7nqOC7FWvi4Ow7f4TCi3Ex2tFhlmf1SqXVlNsX7OxynxSOg3WPP7OQ/RiantyAAtNZPeyEkhABQPaX0kbP4woO/+yWzyF8EGOWXs/ufM+QtqUED3cqhQ=,iv:Y55VVcIzgbTfXgwpJbPHs3K5b4inVbnazHkdImNugBM=,tag:4pA56k5+4Df2m5PnaAg/8w==,type:str]
     version: 3.13.1
