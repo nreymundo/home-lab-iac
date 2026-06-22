@@ -75,7 +75,7 @@
       "matchDepNames": ["danny-avila/librechat-rag-api-dev-lite"],
       "matchPackageNames": [
         "danny-avila/librechat-rag-api-dev-lite",
-        "registry.librechat.ai/danny-avila/librechat-rag-api-dev-lite"
+        "ghcr.io/danny-avila/librechat-rag-api-dev-lite"
       ],
       "versioning": "semver",
       "allowedVersions": "/^v\\d+\\.\\d+\\.\\d+$/"

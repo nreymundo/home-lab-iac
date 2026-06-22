@@ -353,8 +353,8 @@ spec:
         containers:
           rag-api:
             image:
-              # renovate: datasource=docker depName=danny-avila/librechat-rag-api-dev-lite registryUrl=https://registry.librechat.ai
-              repository: registry.librechat.ai/danny-avila/librechat-rag-api-dev-lite
+              # renovate: datasource=docker depName=danny-avila/librechat-rag-api-dev-lite registryUrl=https://ghcr.io
+              repository: ghcr.io/danny-avila/librechat-rag-api-dev-lite
               tag: v0.8.0
             env:
               TZ: Europe/Berlin
