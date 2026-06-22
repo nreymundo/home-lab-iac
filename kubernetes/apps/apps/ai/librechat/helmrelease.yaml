@@ -127,9 +127,8 @@ spec:
         containers:
           admin-panel:
             image:
-              # renovate: datasource=docker depName=clickhouse/librechat-admin-panel registryUrl=https://ghcr.io
               repository: ghcr.io/clickhouse/librechat-admin-panel
-              tag: latest
+              tag: 6768bdeb40873ffeac63f84f48365b4ff33d69c8
             env:
               TZ: Europe/Berlin
               PORT: "3000"
