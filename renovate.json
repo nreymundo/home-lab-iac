@@ -70,6 +70,17 @@
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
     },
     {
+      "description": "Keep LibreChat RAG API on release semver tags",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["danny-avila/librechat-rag-api-dev-lite"],
+      "matchPackageNames": [
+        "danny-avila/librechat-rag-api-dev-lite",
+        "registry.librechat.ai/danny-avila/librechat-rag-api-dev-lite"
+      ],
+      "versioning": "semver",
+      "allowedVersions": "/^v\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
       "description": "Global stability and automerge schedule",
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "minimumReleaseAge": "5 days",
