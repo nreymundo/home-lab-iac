@@ -177,6 +177,12 @@ helm_plugin_source_is_local_path() {
   [[ "$plugin_source" == /* ]]
 }
 
+helm_plugin_source_is_tarball() {
+  local plugin_source="$1"
+
+  [[ "$plugin_source" == *.tgz || "$plugin_source" == *.tar.gz ]]
+}
+
 print_helm_plugin_install_command() {
   local plugin_source="$1"
 
@@ -184,6 +190,11 @@ print_helm_plugin_install_command() {
     # shellcheck disable=SC2016
     printf '  mkdir -p "$(helm env HELM_PLUGINS)" && ln -s %q "$(helm env HELM_PLUGINS)/%s"\n' \
       "$plugin_source" "${plugin_source##*/}" >&2
+    return
+  fi
+
+  if helm_plugin_source_is_tarball "$plugin_source"; then
+    printf '  helm plugin install --verify=false %q\n' "$plugin_source" >&2
     return
   fi
 
@@ -650,7 +661,11 @@ install_helm_plugins() {
     fi
 
     log_info "Installing Helm plugin $plugin_name"
-    helm plugin install "$plugin_url"
+    if helm_plugin_source_is_tarball "$plugin_url"; then
+      helm plugin install --verify=false "$plugin_url"
+    else
+      helm plugin install "$plugin_url"
+    fi
   done
 }
 
