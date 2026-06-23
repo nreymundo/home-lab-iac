@@ -12,6 +12,18 @@ spec:
       main:
         annotations:
           reloader.stakater.com/auto: "true"
+        initContainers:
+          install-headroom:
+            image:
+              repository: ghcr.io/berriai/litellm
+              tag: v1.89.0-rc.2
+            command:
+              - /bin/sh
+              - -lc
+              - |
+                set -euo pipefail
+                python3 -m ensurepip --default-pip >/dev/null
+                python3 -m pip install --no-cache-dir --no-deps --target /opt/headroom headroom-ai==0.27.0
         containers:
           main:
             image:
@@ -20,7 +32,7 @@ spec:
               tag: v1.89.0-rc.2
             env:
               TZ: Europe/Berlin
-              PYTHONPATH: /etc/litellm
+              PYTHONPATH: /opt/headroom:/etc/litellm
               LITELLM_WORKER_STARTUP_HOOKS: litellm_startup:worker_startup_hook
               STORE_MODEL_IN_DB: "True"
               CONFIG_FILE_PATH: /etc/litellm/config.yaml
@@ -202,6 +214,15 @@ spec:
           valkey:
             valkey:
               - path: /data
+      headroom-site:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          main:
+            install-headroom:
+              - path: /opt/headroom
+            main:
+              - path: /opt/headroom
       config:
         enabled: true
         type: configMap
@@ -232,4 +253,7 @@ spec:
                 readOnly: true
               - path: /etc/litellm/sitecustomize.py
                 subPath: sitecustomize.py
+                readOnly: true
+              - path: /etc/litellm/headroom_adapter.py
+                subPath: headroom_adapter.py
                 readOnly: true

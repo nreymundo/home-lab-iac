@@ -283,6 +283,7 @@ data:
     litellm_settings:
       callbacks:
         - cache_bypass.proxy_handler_instance
+        - headroom_adapter.headroom_callback_instance
       check_provider_endpoint: true
       cache: true
       cache_params:
@@ -1466,6 +1467,153 @@ data:
 
 
     litellm_startup.worker_startup_hook()
+
+  headroom_adapter.py: |
+    import logging
+    from typing import Any
+
+    from litellm.integrations.custom_logger import CustomLogger
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        from headroom.integrations.litellm_callback import HeadroomCallback
+    except ImportError:
+        HeadroomCallback = None
+
+
+    _SUPPORTED_CALL_TYPES = {
+        "completion",
+        "acompletion",
+        "responses",
+        "aresponses",
+    }
+
+
+    def _normalize_responses_input(input_items: Any) -> list[dict[str, Any]]:
+        if isinstance(input_items, str):
+            return [{"role": "user", "content": input_items}]
+
+        if not isinstance(input_items, list):
+            return []
+
+        messages = []
+        for item in input_items:
+            if not isinstance(item, dict):
+                continue
+            if item.get("type", "message") != "message":
+                continue
+
+            role = item.get("role") or "user"
+            content = item.get("content")
+            if isinstance(content, str):
+                normalized_content = content
+            elif isinstance(content, list):
+                normalized_content = []
+                for part in content:
+                    if isinstance(part, str):
+                        normalized_content.append({"type": "text", "text": part})
+                    elif isinstance(part, dict):
+                        normalized_content.append(part)
+                if not normalized_content:
+                    continue
+            elif isinstance(content, dict):
+                normalized_content = [content]
+            else:
+                continue
+
+            messages.append({"role": role, "content": normalized_content})
+        return messages
+
+
+    def _responses_messages_changed(original_input: Any, compressed_messages: list[dict[str, Any]]) -> bool:
+        normalized_original = _normalize_responses_input(original_input)
+        return normalized_original != compressed_messages
+
+
+    def _merge_compressed_responses_input(original_input: Any, compressed_messages: list[dict[str, Any]]):
+        if not isinstance(original_input, list):
+            return original_input
+
+        compressed_iter = iter(compressed_messages)
+        merged_items = []
+        for item in original_input:
+            if not isinstance(item, dict) or item.get("type", "message") != "message":
+                merged_items.append(item)
+                continue
+
+            try:
+                compressed_message = next(compressed_iter)
+            except StopIteration:
+                merged_items.append(item)
+                continue
+
+            updated_item = dict(item)
+            updated_item["role"] = compressed_message.get("role", item.get("role"))
+            updated_item["content"] = compressed_message.get("content", item.get("content"))
+            merged_items.append(updated_item)
+
+        return merged_items
+
+
+    class HeadroomAdapterCallback(CustomLogger):
+        def __init__(self):
+            self._headroom_callback = None
+            if HeadroomCallback is None:
+                logger.warning("Headroom package not available; callback disabled")
+                return
+            try:
+                self._headroom_callback = HeadroomCallback()
+                logger.info("Headroom callback adapter initialized")
+            except Exception as exc:
+                logger.warning("Headroom callback failed to initialize: %s", exc)
+
+        async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
+            if not self._headroom_callback or call_type not in _SUPPORTED_CALL_TYPES:
+                return data
+
+            request_data = data
+            request_call_type = call_type
+            restore_responses = False
+            original_input = None
+
+            if call_type in {"responses", "aresponses"}:
+                original_input = data.get("input")
+                request_data = dict(data)
+                request_data["messages"] = _normalize_responses_input(original_input)
+                if not request_data["messages"]:
+                    return data
+                request_call_type = "completion"
+                restore_responses = True
+            elif not data.get("messages"):
+                return data
+
+            try:
+                updated = await self._headroom_callback.async_pre_call_hook(
+                    user_api_key_dict,
+                    request_data,
+                    request_call_type,
+                )
+            except Exception as exc:
+                logger.warning("Headroom pre-call hook failed: %s", exc)
+                return data
+
+            if not isinstance(updated, dict):
+                return data
+
+            if restore_responses:
+                compressed_messages = updated.get("messages") or []
+                if _responses_messages_changed(original_input, compressed_messages):
+                    data["input"] = _merge_compressed_responses_input(
+                        original_input,
+                        compressed_messages,
+                    )
+                return data
+
+            return updated
+
+
+    headroom_callback_instance = HeadroomAdapterCallback()
 
   vllm_model_discovery.py: |
     import os
