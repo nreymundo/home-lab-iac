@@ -81,6 +81,13 @@
       "allowedVersions": "/^v\\d+\\.\\d+\\.\\d+$/"
     },
     {
+      "description": "Keep Posterizarr on released semver tags",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["fscorrupt/posterizarr"],
+      "matchPackageNames": ["fscorrupt/posterizarr", "ghcr.io/fscorrupt/posterizarr"],
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
       "description": "Global stability and automerge schedule",
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "minimumReleaseAge": "5 days",
