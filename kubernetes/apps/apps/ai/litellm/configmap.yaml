@@ -4,6 +4,11 @@ metadata:
   name: litellm-config
   namespace: ai
 data:
+  headroom-requirements.txt: |
+    headroom-ai==0.27.0 \
+        --hash=sha256:640e67a41743265376582a92691a192a8c2448ef0b2167a0e14a2a458adbe2dd \
+        --hash=sha256:f8fa150061db2513e8584d2e4b50af930131bcfe301080f297464b351a03f577
+
   config.yaml: |
     model_list:
       - model_name: openai/gpt-5.5

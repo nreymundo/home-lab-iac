@@ -22,8 +22,63 @@ spec:
               - -lc
               - |
                 set -euo pipefail
+                python3 - <<'PY'
+                import time
+                import urllib.request
+
+                urls = [
+                    "https://pypi.org/simple/headroom-ai/",
+                    "https://files.pythonhosted.org/",
+                ]
+
+                for url in urls:
+                    last_error = None
+                    for attempt in range(1, 6):
+                        try:
+                            with urllib.request.urlopen(url, timeout=10) as response:
+                                if 200 <= response.status < 400:
+                                    break
+                                last_error = RuntimeError(f"unexpected status {response.status}")
+                        except Exception as exc:
+                            last_error = exc
+                        if attempt == 5:
+                            raise SystemExit(f"PyPI endpoint unavailable: {url}: {last_error}")
+                        time.sleep(attempt * 2)
+                PY
                 python3 -m ensurepip --default-pip >/dev/null
-                python3 -m pip install --no-cache-dir --no-deps --target /opt/headroom headroom-ai==0.27.0
+                python3 -m pip install \
+                  --no-cache-dir \
+                  --no-deps \
+                  --only-binary=:all: \
+                  --require-hashes \
+                  --retries 5 \
+                  --timeout 30 \
+                  --target /opt/headroom \
+                  -r /etc/litellm/headroom-requirements.txt
+                PYTHONPATH=/opt/headroom:/etc/litellm python3 - <<'PY'
+                import asyncio
+
+                from headroom.integrations.litellm_callback import HeadroomCallback
+                import headroom_adapter
+
+                callback = HeadroomCallback()
+                assert callback is not None
+
+                async def main():
+                    data = {
+                        "model": "test-model",
+                        "messages": [{"role": "user", "content": "hello"}],
+                    }
+                    result = await headroom_adapter.headroom_callback_instance.async_pre_call_hook(
+                        None,
+                        None,
+                        data,
+                        "completion",
+                    )
+                    assert isinstance(result, dict)
+
+                asyncio.run(main())
+                PY
         containers:
           main:
             image:
@@ -229,6 +284,13 @@ spec:
         name: litellm-config
         advancedMounts:
           main:
+            install-headroom:
+              - path: /etc/litellm/headroom-requirements.txt
+                subPath: headroom-requirements.txt
+                readOnly: true
+              - path: /etc/litellm/headroom_adapter.py
+                subPath: headroom_adapter.py
+                readOnly: true
             main:
               - path: /etc/litellm/config.yaml
                 subPath: config.yaml
@@ -256,4 +318,7 @@ spec:
                 readOnly: true
               - path: /etc/litellm/headroom_adapter.py
                 subPath: headroom_adapter.py
+                readOnly: true
+              - path: /etc/litellm/headroom-requirements.txt
+                subPath: headroom-requirements.txt
                 readOnly: true
