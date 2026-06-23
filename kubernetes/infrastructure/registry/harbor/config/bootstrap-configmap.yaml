@@ -218,8 +218,8 @@ data:
                     "priority": 1,
                     "disabled": False,
                     "action": "retain",
-                    "template": "nDaysSinceLastPull",
-                    "params": {"nDaysSinceLastPull": 30},
+                    "template": "latestPushedK",
+                    "params": {"latestPushedK": 5},
                     "tag_selectors": [
                         {"kind": "doublestar", "decoration": "matches", "pattern": "**"}
                     ],
@@ -246,11 +246,11 @@ data:
         retention_id = metadata.get("retention_id")
         if retention_id:
             request("PUT", f"/retentions/{retention_id}", retention_policy(project, retention_id), ok=(200,))
-            print(f"configured 30-day retention for project {name}", flush=True)
+            print(f"configured latest-5 retention for project {name}", flush=True)
             return
 
         request("POST", "/retentions", retention_policy(project), ok=(201,))
-        print(f"created 30-day retention for project {name}", flush=True)
+        print(f"created latest-5 retention for project {name}", flush=True)
 
     def gc_schedule():
         return {
@@ -335,6 +335,20 @@ data:
             "description": "Gitea registry proxy cache upstream",
             "type": "docker-registry",
             "url": "https://docker.gitea.com",
+            "storage_limit": 10 * gib,
+        },
+        {
+            "name": "n8n",
+            "description": "n8n registry proxy cache upstream",
+            "type": "docker-registry",
+            "url": "https://docker.n8n.io",
+            "storage_limit": 10 * gib,
+        },
+        {
+            "name": "librechat",
+            "description": "LibreChat registry proxy cache upstream",
+            "type": "docker-registry",
+            "url": "https://registry.librechat.ai",
             "storage_limit": 10 * gib,
         },
     ]
