@@ -9,6 +9,9 @@ spec:
     - name: s3
       port: 9000
       targetPort: 9000
+    - name: web
+      port: 3902
+      targetPort: 3902
 ---
 apiVersion: v1
 kind: Endpoints
@@ -21,6 +24,9 @@ subsets:
     ports:
       - name: s3
         port: 9000
+        protocol: TCP
+      - name: web
+        port: 3902
         protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
@@ -45,3 +51,25 @@ spec:
                 name: garage-s3
                 port:
                   name: s3
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: garage-s3-web
+  namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    external-dns.alpha.kubernetes.io/controller: ignore
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: "*.web.${CLUSTER_DOMAIN}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: garage-s3
+                port:
+                  name: web

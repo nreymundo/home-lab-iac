@@ -85,16 +85,6 @@ spec:
     cache:
       enabled: true
 
-    proxy:
-      httpProxy: http://sabnzbd.media.svc.cluster.local:8118
-      httpsProxy: http://sabnzbd.media.svc.cluster.local:8118
-      noProxy: >-
-        127.0.0.1,localhost,.local,.internal,.svc,.cluster.local,10.42.0.0/16,10.43.0.0/16,harbor.lan.${CLUSTER_DOMAIN}
-      components:
-        - core
-        - jobservice
-        - trivy
-
     portal:
       resources:
         requests:

@@ -37,10 +37,9 @@ metadata:
   name: plextraktsync-sync
   namespace: media
   annotations:
-    checkov.io/skip1: CKV_K8S_14=Kubectl client image tracks the cluster until digest pinning is adopted.
-    checkov.io/skip2: CKV_K8S_38=This job intentionally needs a token to run kubectl exec.
-    checkov.io/skip3: CKV_K8S_43=Image tags are Renovate-managed; digest pinning will be handled separately.
-    checkov.io/skip4: CKV_K8S_40=Bitnami kubectl image runs as non-root UID 1001 by design.
+    checkov.io/skip1: CKV_K8S_38=This job intentionally needs a token to run kubectl exec.
+    checkov.io/skip2: CKV_K8S_43=Kubectl tag intentionally matches the cluster Kubernetes version; digest pinning will be handled separately.
+    checkov.io/skip3: CKV_K8S_40=Kubectl job runs under explicit non-root UID 1001.
 spec:
   schedule: "0 */12 * * *"
   concurrencyPolicy: Forbid
@@ -62,7 +61,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: runner
-              image: bitnami/kubectl:latest
+              image: alpine/kubectl:1.35.1
               imagePullPolicy: Always
               securityContext:
                 allowPrivilegeEscalation: false

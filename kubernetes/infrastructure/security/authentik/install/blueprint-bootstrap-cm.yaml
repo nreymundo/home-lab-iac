@@ -22,6 +22,8 @@ data:
           is_active: true
           is_superuser: true  # This ensures the Admin Console is visible
           password: !Env AK_BLUEPRINT_USER_PASSWORD
+          attributes:
+            avatar: !Env AK_BLUEPRINT_USER_AVATAR
 
       # 2. Ensure user is in the "authentik Admins" group
       - model: authentik_core.group

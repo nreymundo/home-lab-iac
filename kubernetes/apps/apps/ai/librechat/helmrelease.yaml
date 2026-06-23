@@ -127,9 +127,8 @@ spec:
         containers:
           admin-panel:
             image:
-              # renovate: datasource=docker depName=clickhouse/librechat-admin-panel registryUrl=https://ghcr.io
               repository: ghcr.io/clickhouse/librechat-admin-panel
-              tag: latest
+              tag: 6768bdeb40873ffeac63f84f48365b4ff33d69c8
             env:
               TZ: Europe/Berlin
               PORT: "3000"
@@ -221,7 +220,7 @@ spec:
             image:
               # renovate: datasource=docker depName=getmeili/meilisearch registryUrl=https://docker.io
               repository: docker.io/getmeili/meilisearch
-              tag: v1.47.0
+              tag: v1.48.1
             command:
               - /bin/sh
               - -c
@@ -245,7 +244,7 @@ spec:
             image:
               # renovate: datasource=docker depName=getmeili/meilisearch registryUrl=https://docker.io
               repository: docker.io/getmeili/meilisearch
-              tag: v1.47.0
+              tag: v1.48.1
             env:
               TZ: Europe/Berlin
               MEILI_ENV: production
@@ -354,9 +353,9 @@ spec:
         containers:
           rag-api:
             image:
-              # renovate: datasource=docker depName=danny-avila/librechat-rag-api-dev-lite registryUrl=https://registry.librechat.ai
-              repository: registry.librechat.ai/danny-avila/librechat-rag-api-dev-lite
-              tag: latest
+              # renovate: datasource=docker depName=danny-avila/librechat-rag-api-dev-lite registryUrl=https://ghcr.io
+              repository: ghcr.io/danny-avila/librechat-rag-api-dev-lite
+              tag: v0.8.0
             env:
               TZ: Europe/Berlin
               RAG_HOST: 0.0.0.0

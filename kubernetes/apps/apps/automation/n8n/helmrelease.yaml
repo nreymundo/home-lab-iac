@@ -28,8 +28,9 @@ spec:
         initContainers:
           init-permissions:
             image:
-              repository: alpine
-              tag: latest
+              # renovate: datasource=docker depName=library/alpine registryUrl=https://docker.io
+              repository: docker.io/library/alpine
+              tag: 3.24.1
             command: ["/bin/sh", "-c", "chown -R 1000:1000 /home/node/.n8n && chmod 700 /home/node/.n8n"]
             securityContext:
               runAsUser: 0
@@ -38,7 +39,7 @@ spec:
             image:
               # renovate: datasource=docker depName=n8nio/n8n registryUrl=https://docker.n8n.io
               repository: docker.n8n.io/n8nio/n8n
-              tag: 2.27.3
+              tag: 2.28.0
             env:
               TZ: Europe/Berlin
               DB_TYPE: postgresdb
@@ -98,7 +99,7 @@ spec:
             image:
               # renovate: datasource=docker depName=n8nio/n8n registryUrl=https://docker.n8n.io
               repository: docker.n8n.io/n8nio/n8n
-              tag: 2.27.3
+              tag: 2.28.0
             command: ["/bin/sh", "-c", "n8n worker"]
             env:
               TZ: Europe/Berlin

@@ -14,3 +14,4 @@ spec:
   dnsNames:
     - "*.${CLUSTER_DOMAIN}"
     - "*.lan.${CLUSTER_DOMAIN}"
+    - "*.web.${CLUSTER_DOMAIN}"
