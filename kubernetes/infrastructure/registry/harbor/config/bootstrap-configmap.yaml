@@ -331,6 +331,13 @@ data:
             "storage_limit": 10 * gib,
         },
         {
+            "name": "k8s",
+            "description": "Kubernetes registry proxy cache upstream",
+            "type": "docker-registry",
+            "url": "https://registry.k8s.io",
+            "storage_limit": 10 * gib,
+        },
+        {
             "name": "gitea",
             "description": "Gitea registry proxy cache upstream",
             "type": "docker-registry",
