@@ -3,6 +3,8 @@ kind: Kustomization
 resources:
   - bambuddy-data-pvc.yaml
   - bambuddy-logs-pvc.yaml
+  - dawarich-pvc.yaml
+  - dawarich-redis-pvc.yaml
   - discord-presence-alternate-pvc.yaml
   - discord-presence-main-pvc.yaml
   - searxng-pvc.yaml

@@ -1,0 +1,436 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: dawarich
+  namespace: utils
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: docker.io/freikin/dawarich
+              tag: 1.9.1
+            command:
+              - web-entrypoint.sh
+            args:
+              - bin/rails
+              - server
+              - -p
+              - "3000"
+              - -b
+              - "::"
+            env:
+              TZ: Europe/Berlin
+              RAILS_ENV: production
+              PUID: "1000"
+              PGID: "1000"
+              REDIS_URL: redis://dawarich-redis:6379
+              DATABASE_HOST: dawarich-pg-rw
+              DATABASE_PORT: "5432"
+              DATABASE_NAME: dawarich
+              DATABASE_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-db-secrets
+                    key: username
+              DATABASE_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-db-secrets
+                    key: password
+              APPLICATION_HOSTS: dawarich.${CLUSTER_DOMAIN}
+              DOMAIN: dawarich.${CLUSTER_DOMAIN}
+              APPLICATION_PROTOCOL: https
+              TIME_ZONE: Europe/Berlin
+              SELF_HOSTED: "true"
+              STORE_GEODATA: "false"
+              RAILS_LOG_TO_STDOUT: "true"
+              PROMETHEUS_EXPORTER_ENABLED: "true"
+              SIDEKIQ_METRICS_URL: http://dawarich-sidekiq:9394/metrics
+              SECRET_KEY_BASE:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: SECRET_KEY_BASE
+              JWT_SECRET_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: JWT_SECRET_KEY
+              AUTH_JWT_SECRET_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: AUTH_JWT_SECRET_KEY
+              METRICS_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: METRICS_USERNAME
+              METRICS_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: METRICS_PASSWORD
+              OTP_ENCRYPTION_PRIMARY_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: OTP_ENCRYPTION_PRIMARY_KEY
+              OTP_ENCRYPTION_DETERMINISTIC_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: OTP_ENCRYPTION_DETERMINISTIC_KEY
+              OTP_ENCRYPTION_KEY_DERIVATION_SALT:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: OTP_ENCRYPTION_KEY_DERIVATION_SALT
+              OIDC_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-oidc-secrets
+                    key: OIDC_CLIENT_ID
+              OIDC_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-oidc-secrets
+                    key: OIDC_CLIENT_SECRET
+              OIDC_ISSUER: https://sso.${CLUSTER_DOMAIN}/application/o/dawarich/
+              OIDC_REDIRECT_URI: https://dawarich.${CLUSTER_DOMAIN}/users/auth/openid_connect/callback
+              OIDC_PROVIDER_NAME: Authentik
+              OIDC_AUTO_REGISTER: "true"
+              ALLOW_EMAIL_PASSWORD_REGISTRATION: "false"
+              ALLOW_EMAIL_PASSWORD_LOGIN: "false"
+              # External Photon placeholder. Enable after the separate Photon host is ready.
+              # PHOTON_API_HOST: photon.example.com:2322
+              # PHOTON_API_USE_HTTPS: "true"
+              # PHOTON_API_KEY: optional-api-key
+              # STORE_GEODATA: "true"
+            ports:
+              - name: http
+                containerPort: 3000
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v1/health
+                    port: 3000
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v1/health
+                    port: 3000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v1/health
+                    port: 3000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 100m
+                memory: 1Gi
+              limits:
+                cpu: 2000m
+                memory: 4Gi
+
+      sidekiq:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/controller: main
+                      app.kubernetes.io/instance: dawarich
+                      app.kubernetes.io/name: dawarich
+                  topologyKey: kubernetes.io/hostname
+        containers:
+          sidekiq:
+            image:
+              repository: docker.io/freikin/dawarich
+              tag: 1.9.1
+            command:
+              - sidekiq-entrypoint.sh
+            args:
+              - sidekiq
+            env:
+              TZ: Europe/Berlin
+              RAILS_ENV: production
+              PUID: "1000"
+              PGID: "1000"
+              REDIS_URL: redis://dawarich-redis:6379
+              DATABASE_HOST: dawarich-pg-rw
+              DATABASE_PORT: "5432"
+              DATABASE_NAME: dawarich
+              DATABASE_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-db-secrets
+                    key: username
+              DATABASE_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-db-secrets
+                    key: password
+              APPLICATION_HOSTS: dawarich.${CLUSTER_DOMAIN}
+              DOMAIN: dawarich.${CLUSTER_DOMAIN}
+              APPLICATION_PROTOCOL: https
+              TIME_ZONE: Europe/Berlin
+              SELF_HOSTED: "true"
+              STORE_GEODATA: "false"
+              RAILS_LOG_TO_STDOUT: "true"
+              BACKGROUND_PROCESSING_CONCURRENCY: "5"
+              PROMETHEUS_EXPORTER_ENABLED: "true"
+              PROMETHEUS_EXPORTER_PORT: "9394"
+              SECRET_KEY_BASE:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: SECRET_KEY_BASE
+              JWT_SECRET_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: JWT_SECRET_KEY
+              AUTH_JWT_SECRET_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: AUTH_JWT_SECRET_KEY
+              METRICS_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: METRICS_USERNAME
+              METRICS_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: METRICS_PASSWORD
+              OTP_ENCRYPTION_PRIMARY_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: OTP_ENCRYPTION_PRIMARY_KEY
+              OTP_ENCRYPTION_DETERMINISTIC_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: OTP_ENCRYPTION_DETERMINISTIC_KEY
+              OTP_ENCRYPTION_KEY_DERIVATION_SALT:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-secrets
+                    key: OTP_ENCRYPTION_KEY_DERIVATION_SALT
+              OIDC_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-oidc-secrets
+                    key: OIDC_CLIENT_ID
+              OIDC_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: dawarich-oidc-secrets
+                    key: OIDC_CLIENT_SECRET
+              OIDC_ISSUER: https://sso.${CLUSTER_DOMAIN}/application/o/dawarich/
+              OIDC_REDIRECT_URI: https://dawarich.${CLUSTER_DOMAIN}/users/auth/openid_connect/callback
+              OIDC_PROVIDER_NAME: Authentik
+              OIDC_AUTO_REGISTER: "true"
+              ALLOW_EMAIL_PASSWORD_REGISTRATION: "false"
+              ALLOW_EMAIL_PASSWORD_LOGIN: "false"
+              # External Photon placeholder. Enable after the separate Photon host is ready.
+              # PHOTON_API_HOST: photon.example.com:2322
+              # PHOTON_API_USE_HTTPS: "true"
+              # PHOTON_API_KEY: optional-api-key
+              # STORE_GEODATA: "true"
+            ports:
+              - name: metrics
+                containerPort: 9394
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - pgrep -f sidekiq
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - pgrep -f sidekiq
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 100m
+                memory: 1Gi
+              limits:
+                cpu: 2000m
+                memory: 4Gi
+
+      redis:
+        containers:
+          redis:
+            image:
+              # renovate: datasource=docker depName=library/redis registryUrl=https://docker.io
+              repository: docker.io/library/redis
+              tag: 7.4-alpine
+            command:
+              - redis-server
+              - --save
+              - "900"
+              - "1"
+              - --save
+              - "300"
+              - "10"
+              - --appendonly
+              - "no"
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - redis-cli ping || exit 1
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - redis-cli ping || exit 1
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 3000
+      sidekiq:
+        controller: sidekiq
+        ports:
+          metrics:
+            port: 9394
+      redis:
+        controller: redis
+        ports:
+          redis:
+            port: 6379
+
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: dawarich.${CLUSTER_DOMAIN}
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Dawarich
+          gethomepage.dev/description: Location history tracker
+          gethomepage.dev/group: "Kubernetes"
+          gethomepage.dev/icon: dawarich.png
+        hosts:
+          - host: dawarich.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: dawarich
+        advancedMounts:
+          main:
+            main:
+              - path: /var/app/public
+                subPath: public
+              - path: /var/app/tmp/imports/watched
+                subPath: watched
+              - path: /var/app/storage
+                subPath: storage
+          sidekiq:
+            sidekiq:
+              - path: /var/app/public
+                subPath: public
+              - path: /var/app/tmp/imports/watched
+                subPath: watched
+              - path: /var/app/storage
+                subPath: storage
+      redis-data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: dawarich-redis
+        advancedMounts:
+          redis:
+            redis:
+              - path: /data

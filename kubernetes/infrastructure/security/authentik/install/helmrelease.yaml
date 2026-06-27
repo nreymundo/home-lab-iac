@@ -112,6 +112,16 @@ spec:
             secretKeyRef:
               name: paperless-sso-secret
               key: CLIENT_SECRET
+        - name: DAWARICH_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-sso-secret
+              key: CLIENT_ID
+        - name: DAWARICH_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-sso-secret
+              key: CLIENT_SECRET
         - name: NEXTCLOUD_CLIENT_ID
           valueFrom:
             secretKeyRef:
