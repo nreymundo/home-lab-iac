@@ -1,0 +1,9 @@
+---
+- name: Provision Photon LXC containers
+  hosts: photon_lxc
+  become: true
+  roles:
+    - lxc_hardening
+    - lxc_bootstrap
+    - docker
+    - photon

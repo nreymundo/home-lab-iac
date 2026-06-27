@@ -1,0 +1,16 @@
+---
+lxc_hardening_user: "{{ ansible_user | default('root') }}"
+
+lxc_hardening_sshd_settings:
+  PermitRootLogin: "prohibit-password"
+  PasswordAuthentication: "no"
+  KbdInteractiveAuthentication: "no"
+  ChallengeResponseAuthentication: "no"
+  X11Forwarding: "no"
+
+docker_install_enabled: true
+docker_users: []
+
+photon_region: planet
+photon_update_strategy: SEQUENTIAL
+photon_enable_metrics: true

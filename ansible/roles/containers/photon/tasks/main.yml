@@ -1,0 +1,80 @@
+---
+- name: Ensure Photon container role supports this system
+  ansible.builtin.assert:
+    that:
+      - ansible_system == 'Linux'
+    fail_msg: "Photon container role supports Linux only"
+
+- name: Ensure Photon persistent directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ photon_base_dir }}"
+    - "{{ photon_data_dir }}"
+
+- name: Verify Docker Compose is available
+  ansible.builtin.command: docker compose version
+  register: photon_docker_compose_version
+  changed_when: false
+
+- name: Pull Photon image
+  ansible.builtin.command: docker pull {{ photon_image | quote }}
+  register: photon_image_pull
+  changed_when: >-
+    'Downloaded newer image' in photon_image_pull.stdout
+    or 'Pull complete' in photon_image_pull.stdout
+    or 'Status: Downloaded' in photon_image_pull.stdout
+  when: not ansible_check_mode
+
+- name: Render Photon Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ photon_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Photon container
+
+- name: Install Photon systemd unit
+  ansible.builtin.template:
+    src: photon-container.service.j2
+    dest: "/etc/systemd/system/{{ photon_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload Photon systemd
+    - Restart Photon container
+
+- name: Flush Photon handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Manage Photon service
+  ansible.builtin.systemd_service:
+    name: "{{ photon_service_name }}"
+    enabled: "{{ photon_enabled | bool }}"
+    state: "{{ 'started' if photon_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Validate Photon health endpoint
+  ansible.builtin.uri:
+    url: "{{ photon_health_url }}"
+    status_code: 200
+    return_content: true
+  register: photon_health
+  until: photon_health.status == 200
+  retries: "{{ photon_health_retries }}"
+  delay: "{{ photon_health_delay }}"
+  when:
+    - photon_enabled | bool
+    - photon_validate_health | bool
+    - not ansible_check_mode
+
+- name: Report Photon endpoint
+  ansible.builtin.debug:
+    msg: "Photon will listen on http://{{ ansible_host | default(inventory_hostname) }}:{{ photon_host_port }}"
