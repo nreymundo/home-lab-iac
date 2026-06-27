@@ -58,7 +58,7 @@ spec:
               APPLICATION_PROTOCOL: https
               TIME_ZONE: Europe/Berlin
               SELF_HOSTED: "true"
-              STORE_GEODATA: "false"
+              STORE_GEODATA: "true"
               RAILS_LOG_TO_STDOUT: "true"
               PROMETHEUS_EXPORTER_ENABLED: "true"
               SIDEKIQ_METRICS_URL: http://dawarich-sidekiq:9394/metrics
@@ -118,11 +118,8 @@ spec:
               OIDC_AUTO_REGISTER: "true"
               ALLOW_EMAIL_PASSWORD_REGISTRATION: "false"
               ALLOW_EMAIL_PASSWORD_LOGIN: "false"
-              # External Photon placeholder. Enable after the separate Photon host is ready.
-              # PHOTON_API_HOST: photon.example.com:2322
-              # PHOTON_API_USE_HTTPS: "true"
-              # PHOTON_API_KEY: optional-api-key
-              # STORE_GEODATA: "true"
+              PHOTON_API_HOST: ${PHOTON_IP}:2322
+              PHOTON_API_USE_HTTPS: "false"
             ports:
               - name: http
                 containerPort: 3000
@@ -212,7 +209,7 @@ spec:
               APPLICATION_PROTOCOL: https
               TIME_ZONE: Europe/Berlin
               SELF_HOSTED: "true"
-              STORE_GEODATA: "false"
+              STORE_GEODATA: "true"
               RAILS_LOG_TO_STDOUT: "true"
               BACKGROUND_PROCESSING_CONCURRENCY: "5"
               PROMETHEUS_EXPORTER_ENABLED: "true"
@@ -273,11 +270,8 @@ spec:
               OIDC_AUTO_REGISTER: "true"
               ALLOW_EMAIL_PASSWORD_REGISTRATION: "false"
               ALLOW_EMAIL_PASSWORD_LOGIN: "false"
-              # External Photon placeholder. Enable after the separate Photon host is ready.
-              # PHOTON_API_HOST: photon.example.com:2322
-              # PHOTON_API_USE_HTTPS: "true"
-              # PHOTON_API_KEY: optional-api-key
-              # STORE_GEODATA: "true"
+              PHOTON_API_HOST: ${PHOTON_IP}:2322
+              PHOTON_API_USE_HTTPS: "false"
             ports:
               - name: metrics
                 containerPort: 9394
