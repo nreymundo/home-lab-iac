@@ -319,10 +319,25 @@ variable "containers" {
   validation {
     condition = alltrue(flatten([
       for container in var.containers : [
-        for mount_point in container.mount_points : startswith(mount_point.path, "/") && startswith(mount_point.volume, "/")
+        for mount_point in container.mount_points :
+        startswith(mount_point.path, "/") && (
+          startswith(mount_point.volume, "/") ||
+          can(regex("^[A-Za-z0-9][A-Za-z0-9_.-]*$", mount_point.volume)) ||
+          can(regex("^[A-Za-z0-9][A-Za-z0-9_.-]*:.+$", mount_point.volume))
+        )
       ]
     ]))
-    error_message = "Each LXC mount point path and volume must be absolute paths."
+    error_message = "Each LXC mount point path must be absolute, and volume must be an absolute host path, Proxmox storage ID, or full Proxmox volume ID."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for container in var.containers : [
+        for mount_point in container.mount_points :
+        !can(regex("^[A-Za-z0-9][A-Za-z0-9_.-]*$", mount_point.volume)) || try(mount_point.size, null) != null
+      ]
+    ]))
+    error_message = "Each LXC mount point that allocates a new storage-backed volume must set size."
   }
 
   validation {

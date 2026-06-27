@@ -15,6 +15,7 @@ resources:
   - gitea-sso-secret.sops.yaml
   - immich-sso-secret.sops.yaml
   - paperless-sso-secret.sops.yaml
+  - dawarich-sso-secret.sops.yaml
   - nextcloud-sso-secret.sops.yaml
   - litellm-sso-secret.sops.yaml
   - librechat-sso-secret.sops.yaml

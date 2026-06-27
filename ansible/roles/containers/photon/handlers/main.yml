@@ -1,0 +1,13 @@
+---
+- name: Reload Photon systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Restart Photon container
+  ansible.builtin.systemd_service:
+    name: "{{ photon_service_name }}"
+    state: restarted
+    daemon_reload: true
+  when:
+    - photon_enabled | bool
+    - not ansible_check_mode

@@ -1,0 +1,16 @@
+services:
+  {{ photon_compose_service_name }}:
+    image: "{{ photon_image }}"
+    container_name: "{{ photon_container_name }}"
+    restart: unless-stopped
+    ports:
+      - "{{ photon_bind_address }}:{{ photon_host_port }}:{{ photon_container_port }}"
+    environment:
+{% for name, value in photon_environment.items() %}
+      {{ name }}: "{{ value }}"
+{% endfor %}
+{% if photon_java_params | length > 0 %}
+      JAVA_PARAMS: "{{ photon_java_params }}"
+{% endif %}
+    volumes:
+      - "{{ photon_data_dir }}:/photon/data"

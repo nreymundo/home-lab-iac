@@ -1,0 +1,42 @@
+---
+photon_enabled: true
+
+photon_service_name: photon-container
+photon_compose_project_name: photon
+photon_compose_service_name: photon
+photon_container_name: photon
+photon_image: >-
+  docker.io/rtuszik/photon-docker:2.3.0@sha256:827cedf9fa3337e657611d62ada669def75dff61c56b51ae55056155d1a9b236
+
+photon_base_dir: /opt/photon
+photon_data_dir: "{{ photon_base_dir }}/data"
+photon_compose_file: "{{ photon_base_dir }}/docker-compose.yml"
+
+photon_bind_address: "0.0.0.0"
+photon_host_port: 2322
+photon_container_port: 2322
+
+photon_import_mode: db
+photon_region: planet
+photon_update_strategy: PARALLEL
+photon_update_interval: 720h
+photon_log_level: INFO
+photon_enable_metrics: true
+photon_uid: 9011
+photon_gid: 9011
+photon_java_params: ""
+
+photon_environment:
+  IMPORT_MODE: "{{ photon_import_mode }}"
+  REGION: "{{ photon_region }}"
+  UPDATE_STRATEGY: "{{ photon_update_strategy }}"
+  UPDATE_INTERVAL: "{{ photon_update_interval }}"
+  LOG_LEVEL: "{{ photon_log_level }}"
+  ENABLE_METRICS: "{{ photon_enable_metrics | bool | ternary('TRUE', 'FALSE') }}"
+  PUID: "{{ photon_uid }}"
+  PGID: "{{ photon_gid }}"
+
+photon_validate_health: false
+photon_health_url: "http://127.0.0.1:{{ photon_host_port }}/status"
+photon_health_retries: 12
+photon_health_delay: 10
