@@ -543,6 +543,8 @@ data:
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
           encryption_key: null
           client_type: confidential
+          grant_types:
+            - authorization_code
           client_authentication_method: client_secret_basic
           redirect_uris:
             - url: "https://dawarich.${CLUSTER_DOMAIN}/users/auth/openid_connect/callback"
