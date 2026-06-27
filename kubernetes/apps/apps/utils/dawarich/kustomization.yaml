@@ -10,4 +10,4 @@ resources:
   - dawarich-oidc-secrets.sops.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml
-  - servicemonitor.yaml
+  - scrapeconfig.yaml

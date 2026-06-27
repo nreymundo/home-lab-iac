@@ -18,7 +18,7 @@ photon_container_port: 2322
 
 photon_import_mode: db
 photon_region: planet
-photon_update_strategy: SEQUENTIAL
+photon_update_strategy: PARALLEL
 photon_update_interval: 720h
 photon_log_level: INFO
 photon_enable_metrics: true

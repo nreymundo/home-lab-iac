@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: dawarich
+  namespace: utils
+  labels:
+    release: observability-kube-prometheus-stack
+spec:
+  metricsPath: /metrics
+  scrapeInterval: 30s
+  basicAuth:
+    username:
+      name: dawarich-secrets
+      key: METRICS_USERNAME
+    password:
+      name: dawarich-secrets
+      key: METRICS_PASSWORD
+  staticConfigs:
+    - labels:
+        job: dawarich
+      targets:
+        - dawarich-main.utils.svc.cluster.local:3000

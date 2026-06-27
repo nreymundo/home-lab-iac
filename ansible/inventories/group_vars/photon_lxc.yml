@@ -12,5 +12,5 @@ docker_install_enabled: true
 docker_users: []
 
 photon_region: planet
-photon_update_strategy: SEQUENTIAL
+photon_update_strategy: PARALLEL
 photon_enable_metrics: true

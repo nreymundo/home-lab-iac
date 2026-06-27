@@ -53,9 +53,9 @@ spec:
                   secretKeyRef:
                     name: dawarich-db-secrets
                     key: password
-              APPLICATION_HOSTS: dawarich.${CLUSTER_DOMAIN}
+              APPLICATION_HOSTS: dawarich.${CLUSTER_DOMAIN},dawarich-main.utils.svc.cluster.local
               DOMAIN: dawarich.${CLUSTER_DOMAIN}
-              APPLICATION_PROTOCOL: https
+              APPLICATION_PROTOCOL: http
               TIME_ZONE: Europe/Berlin
               SELF_HOSTED: "true"
               STORE_GEODATA: "true"
@@ -204,9 +204,9 @@ spec:
                   secretKeyRef:
                     name: dawarich-db-secrets
                     key: password
-              APPLICATION_HOSTS: dawarich.${CLUSTER_DOMAIN}
+              APPLICATION_HOSTS: dawarich.${CLUSTER_DOMAIN},dawarich-main.utils.svc.cluster.local
               DOMAIN: dawarich.${CLUSTER_DOMAIN}
-              APPLICATION_PROTOCOL: https
+              APPLICATION_PROTOCOL: http
               TIME_ZONE: Europe/Berlin
               SELF_HOSTED: "true"
               STORE_GEODATA: "true"
