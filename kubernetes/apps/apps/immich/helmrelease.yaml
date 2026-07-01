@@ -19,7 +19,7 @@ spec:
         containers:
           server:
             image:
-              # renovate: datasource=github-tags depName=immich-app/immich
+              # renovate: datasource=docker depName=immich-app/immich-server registryUrl=https://ghcr.io
               repository: ghcr.io/immich-app/immich-server
               tag: v2.7.5
             env:
@@ -86,7 +86,7 @@ spec:
         containers:
           machine-learning:
             image:
-              # renovate: datasource=github-tags depName=immich-app/immich
+              # renovate: datasource=docker depName=immich-app/immich-machine-learning registryUrl=https://ghcr.io
               repository: ghcr.io/immich-app/immich-machine-learning
               tag: v2.7.5
             env:
