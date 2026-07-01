@@ -8,6 +8,8 @@
   "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
   "commitMessagePrefix": "chore(deps):",
+  "prCreation": "not-pending",
+  "internalChecksFilter": "strict",
   "ignorePaths": ["kubernetes/clusters/production/flux-system/**"],
 
   "separateMajorMinor": true,
@@ -96,6 +98,11 @@
       "automergeType": "pr",
       "rebaseWhen": "conflicted",
       "automergeSchedule": ["at any time"]
+    },
+    {
+      "description": "Major updates wait before manual review",
+      "matchUpdateTypes": ["major"],
+      "minimumReleaseAge": "5 days"
     },
     {
       "description": "Kubernetes major updates require manual review",
