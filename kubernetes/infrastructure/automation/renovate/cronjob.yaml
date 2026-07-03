@@ -49,6 +49,8 @@ spec:
                   value: /tmp/renovate
                 - name: RENOVATE_CACHE_DIR
                   value: /tmp/renovate/cache
+                - name: RENOVATE_DOCKER_MAX_PAGES
+                  value: "200"
               envFrom:
                 - secretRef:
                     name: renovate-token

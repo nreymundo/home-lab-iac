@@ -90,6 +90,17 @@
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
     },
     {
+      "description": "Keep Immich images on exact release tags",
+      "matchDatasources": ["docker"],
+      "matchDepNames": [
+        "immich-app/immich-server",
+        "immich-app/immich-machine-learning"
+      ],
+      "groupName": "Immich",
+      "versioning": "semver",
+      "allowedVersions": "/^v\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
       "description": "Global stability and automerge schedule",
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "minimumReleaseAge": "5 days",
