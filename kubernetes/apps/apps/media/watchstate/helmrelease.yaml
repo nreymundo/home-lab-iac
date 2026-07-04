@@ -89,7 +89,7 @@ spec:
           gethomepage.dev/name: WatchState
           gethomepage.dev/description: Media watch state sync
           gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: watchstate.png
+          gethomepage.dev/icon: https://assets.web.${CLUSTER_DOMAIN}/icons/watchstate.png
           gethomepage.dev/enabled: "true"
         hosts:
           - host: watchstate.lan.${CLUSTER_DOMAIN}
