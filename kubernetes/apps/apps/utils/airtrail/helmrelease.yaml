@@ -52,8 +52,8 @@ spec:
               OAUTH_TOKEN_ENDPOINT_AUTH_METHOD: client_secret_post
               OAUTH_SCOPE: openid profile email
               OAUTH_AUTO_REGISTER: "true"
-              OAUTH_AUTO_LOGIN: "false"
-              OAUTH_HIDE_PASSWORD_FORM: "false"
+              OAUTH_AUTO_LOGIN: "true"
+              OAUTH_HIDE_PASSWORD_FORM: "true"
               OAUTH_BUTTON_TEXT: Log in with Authentik
             ports:
               - name: http
