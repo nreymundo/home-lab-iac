@@ -1,0 +1,123 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: watchstate
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsUser: 1000
+        runAsGroup: 1000
+    controllers:
+      main:
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=arabcoders/watchstate registryUrl=https://ghcr.io
+              repository: ghcr.io/arabcoders/watchstate
+              tag: v1.9.1
+            env:
+              TZ: Europe/Berlin
+              WS_TZ: Europe/Berlin
+              WS_SECURE_API_ENDPOINTS: "true"
+              WS_TRUST_PROXY: "true"
+              WS_TRUST_LOCAL: "true"
+              WS_GUID_PATH_ENABLED: "true"
+            envFrom:
+              - secretRef:
+                  name: watchstate-secrets
+            ports:
+              - name: http
+                containerPort: 8080
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/api/system/healthcheck
+                    port: 8080
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/api/system/healthcheck
+                    port: 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/api/system/healthcheck
+                    port: 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8080
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: watchstate.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/name: WatchState
+          gethomepage.dev/description: Media watch state sync
+          gethomepage.dev/group: "Kubernetes"
+          gethomepage.dev/icon: watchstate.png
+          gethomepage.dev/enabled: "true"
+        hosts:
+          - host: watchstate.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+      webhook:
+        enabled: true
+        className: traefik
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+          traefik.ingress.kubernetes.io/router.priority: "100"
+        hosts:
+          - host: watchstate.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /v1/api/webhook
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      config:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: watchstate
+        globalMounts:
+          - path: /config
