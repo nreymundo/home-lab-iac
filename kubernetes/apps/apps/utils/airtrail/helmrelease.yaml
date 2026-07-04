@@ -37,6 +37,16 @@ spec:
                   secretKeyRef:
                     name: airtrail-db-secrets
                     key: DB_URL
+              INTEGRATIONS_AERO_DATA_BOX_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: airtrail-integration-secrets
+                    key: INTEGRATIONS_AERO_DATA_BOX_KEY
+              INTEGRATIONS_OPEN_AIP_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: airtrail-integration-secrets
+                    key: INTEGRATIONS_OPEN_AIP_KEY
               OAUTH_ENABLED: "true"
               OAUTH_ISSUER_URL: https://sso.${CLUSTER_DOMAIN}/application/o/airtrail/
               OAUTH_CLIENT_ID:
