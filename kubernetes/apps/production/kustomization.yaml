@@ -13,6 +13,7 @@ resources:
   - ../apps/utils/it-tools
   - ../apps/utils/searxng
   - ../apps/utils/dawarich
+  - ../apps/utils/airtrail
   - ../apps/nextcloud
   - ../apps/media/audiobookshelf
   - ../apps/media/jellyfin

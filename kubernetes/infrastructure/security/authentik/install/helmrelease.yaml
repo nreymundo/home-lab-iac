@@ -122,6 +122,16 @@ spec:
             secretKeyRef:
               name: dawarich-sso-secret
               key: CLIENT_SECRET
+        - name: AIRTRAIL_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: airtrail-sso-secret
+              key: CLIENT_ID
+        - name: AIRTRAIL_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: airtrail-sso-secret
+              key: CLIENT_SECRET
         - name: NEXTCLOUD_CLIENT_ID
           valueFrom:
             secretKeyRef:
