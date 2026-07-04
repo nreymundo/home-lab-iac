@@ -28,7 +28,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: auto-stack
-              image: majorfi/immich-stack:sha-48a5450
+              image: majorfi/immich-stack:sha-b0e0c82
               imagePullPolicy: Always
               securityContext:
                 allowPrivilegeEscalation: false
