@@ -33,6 +33,7 @@ resources:
   - ../apps/security/frigate
   - ../apps/immich
   - ../apps/media/jellyplex-watched
+  - ../apps/media/watchstate
   - ../apps/utils/discord-presence
   - ../apps/media/plextraktsync
   - ../apps/media/plex-media-enrichment

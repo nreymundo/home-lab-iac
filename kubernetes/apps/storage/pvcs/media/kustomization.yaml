@@ -17,3 +17,4 @@ resources:
   - sonarr-pvc.yaml
   - tautulli-pvc.yaml
   - tidarr-pvc.yaml
+  - watchstate-pvc.yaml
