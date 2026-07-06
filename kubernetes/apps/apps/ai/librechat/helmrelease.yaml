@@ -13,6 +13,27 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
         initContainers:
+          wait-for-oidc:
+            image:
+              repository: docker.io/curlimages/curl
+              tag: 8.16.0
+            command:
+              - /bin/sh
+              - -c
+              - |
+                for i in $(seq 1 60); do
+                  if curl -fsS "${OPENID_ISSUER}.well-known/openid-configuration" >/dev/null; then
+                    exit 0
+                  fi
+
+                  echo "Waiting for OIDC discovery endpoint (${i}/60)"
+                  sleep 5
+                done
+
+                echo "OIDC discovery endpoint did not become ready" >&2
+                exit 1
+            env:
+              OPENID_ISSUER: https://sso.${CLUSTER_DOMAIN}/application/o/librechat/
           init-permissions:
             image:
               repository: docker.io/library/busybox
