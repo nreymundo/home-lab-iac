@@ -178,7 +178,7 @@ spec:
             image:
               # renovate: datasource=docker depName=mongo registryUrl=https://docker.io
               repository: docker.io/library/mongo
-              tag: 8.3.3
+              tag: 8.3.4
             args:
               - --noauth
               - --bind_ip_all
