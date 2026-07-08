@@ -173,6 +173,9 @@ spec:
                 memory: 512Mi
 
       mongodb:
+        type: statefulset
+        replicas: 1
+        strategy: RollingUpdate
         containers:
           mongodb:
             image:
