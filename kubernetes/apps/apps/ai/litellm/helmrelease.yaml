@@ -84,7 +84,7 @@ spec:
             image:
               # renovate: datasource=docker depName=berriai/litellm registryUrl=https://ghcr.io
               repository: ghcr.io/berriai/litellm
-              tag: v1.89.0-rc.2
+              tag: v1.92.0-rc.2
             env:
               TZ: Europe/Berlin
               PYTHONPATH: /opt/headroom:/etc/litellm
