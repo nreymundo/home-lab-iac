@@ -11,6 +11,36 @@ data:
 
   config.yaml: |
     model_list:
+      - model_name: openai/gpt-5.6-terra
+        model_info:
+          mode: responses
+          max_input_tokens: 372000
+        litellm_params:
+          model: chatgpt/gpt-5.6-terra
+          # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
+          input_cost_per_token: 0.0000025
+          output_cost_per_token: 0.000015
+
+      - model_name: openai/gpt-5.6-sol
+        model_info:
+          mode: responses
+          max_input_tokens: 372000
+        litellm_params:
+          model: chatgpt/gpt-5.6-sol
+          # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
+          input_cost_per_token: 0.000005
+          output_cost_per_token: 0.00003
+
+      - model_name: openai/gpt-5.6-luna
+        model_info:
+          mode: responses
+          max_input_tokens: 372000
+        litellm_params:
+          model: chatgpt/gpt-5.6-luna
+          # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
+          input_cost_per_token: 0.000001
+          output_cost_per_token: 0.000006
+
       - model_name: openai/gpt-5.5
         model_info:
           mode: responses
@@ -21,16 +51,6 @@ data:
           input_cost_per_token: 0.000005
           output_cost_per_token: 0.00003
 
-      - model_name: openai/gpt-5.4
-        model_info:
-          mode: responses
-          max_input_tokens: 272000
-        litellm_params:
-          model: chatgpt/gpt-5.4
-          # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
-          input_cost_per_token: 0.0000025
-          output_cost_per_token: 0.000015
-
       - model_name: openai/gpt-5.4-mini
         model_info:
           mode: responses
@@ -40,16 +60,6 @@ data:
           # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
           input_cost_per_token: 0.00000075
           output_cost_per_token: 0.0000045
-
-      - model_name: openai/gpt-5.3-codex-spark
-        model_info:
-          mode: responses
-          max_input_tokens: 128000
-        litellm_params:
-          model: chatgpt/gpt-5.3-codex-spark
-          # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
-          input_cost_per_token: 0.00000175
-          output_cost_per_token: 0.000014
 
       - model_name: openai/chatterbox
         model_info:
@@ -589,9 +599,84 @@ data:
         "extra_headers",
     ]
 
-    REASONING_LEVELS = ["low", "medium", "high", "xhigh"]
+    REASONING_LEVELS = ["low", "medium", "high", "xhigh", "max", "ultra"]
 
     CHATGPT_CODEX_MODELS = {
+        "gpt-5.6-sol": {
+            "display_name": "GPT-5.6-Sol",
+            "description": "Latest frontier agentic coding model.",
+            "context_window": 372000,
+            "max_context_window": 372000,
+            "max_output_tokens": 128000,
+            "effective_context_window_percent": 95,
+            "default_reasoning_level": "medium",
+            "default_reasoning_summary": "none",
+            "default_verbosity": "low",
+            "input_modalities": ["text", "image"],
+            "web_search_tool_type": "text_and_image",
+            "supports_image_detail_original": True,
+            "supported_in_api": True,
+            "visibility": "list",
+            "priority": 1,
+            "service_tiers": [
+                {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
+            ],
+            "additional_speed_tiers": ["fast"],
+            "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh", "max", "ultra"],
+            "input_cost_per_token": 0.000005,
+            "output_cost_per_token": 0.00003,
+        },
+        "gpt-5.6-terra": {
+            "display_name": "GPT-5.6-Terra",
+            "description": "Balanced agentic coding model for everyday work.",
+            "context_window": 372000,
+            "max_context_window": 372000,
+            "max_output_tokens": 128000,
+            "effective_context_window_percent": 95,
+            "default_reasoning_level": "medium",
+            "default_reasoning_summary": "none",
+            "default_verbosity": "low",
+            "input_modalities": ["text", "image"],
+            "web_search_tool_type": "text_and_image",
+            "supports_image_detail_original": True,
+            "supported_in_api": True,
+            "visibility": "list",
+            "priority": 2,
+            "service_tiers": [
+                {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
+            ],
+            "additional_speed_tiers": ["fast"],
+            "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh", "max", "ultra"],
+            "input_cost_per_token": 0.0000025,
+            "output_cost_per_token": 0.000015,
+        },
+        "gpt-5.6-luna": {
+            "display_name": "GPT-5.6-Luna",
+            "description": "Fast and affordable agentic coding model.",
+            "context_window": 372000,
+            "max_context_window": 372000,
+            "max_output_tokens": 128000,
+            "effective_context_window_percent": 95,
+            "default_reasoning_level": "medium",
+            "default_reasoning_summary": "none",
+            "default_verbosity": "low",
+            "input_modalities": ["text", "image"],
+            "web_search_tool_type": "text_and_image",
+            "supports_image_detail_original": True,
+            "supported_in_api": True,
+            "visibility": "list",
+            "priority": 3,
+            "service_tiers": [
+                {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
+            ],
+            "additional_speed_tiers": ["fast"],
+            "truncation_policy": {"mode": "tokens", "limit": 10000},
+            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+            "input_cost_per_token": 0.000001,
+            "output_cost_per_token": 0.000006,
+        },
         "gpt-5.5": {
             "display_name": "GPT-5.5",
             "description": "Frontier model for complex coding, research, and real-world work.",
@@ -604,41 +689,18 @@ data:
             "default_verbosity": "low",
             "input_modalities": ["text", "image"],
             "web_search_tool_type": "text_and_image",
+            "supports_image_detail_original": True,
             "supported_in_api": True,
             "visibility": "list",
-            "priority": 9,
+            "priority": 7,
             "service_tiers": [
                 {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
             ],
             "additional_speed_tiers": ["fast"],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh"],
+            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh"],
             "input_cost_per_token": 0.000005,
             "output_cost_per_token": 0.00003,
-        },
-        "gpt-5.4": {
-            "display_name": "GPT-5.4",
-            "description": "Strong model for everyday coding.",
-            "context_window": 272000,
-            "max_context_window": 1000000,
-            "max_output_tokens": 128000,
-            "effective_context_window_percent": 95,
-            "default_reasoning_level": "medium",
-            "default_reasoning_summary": "none",
-            "default_verbosity": "low",
-            "input_modalities": ["text", "image"],
-            "web_search_tool_type": "text_and_image",
-            "supported_in_api": True,
-            "visibility": "list",
-            "priority": 16,
-            "service_tiers": [
-                {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
-            ],
-            "additional_speed_tiers": ["fast"],
-            "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh"],
-            "input_cost_per_token": 0.0000025,
-            "output_cost_per_token": 0.000015,
         },
         "gpt-5.4-mini": {
             "display_name": "GPT-5.4-Mini",
@@ -652,37 +714,16 @@ data:
             "default_verbosity": "medium",
             "input_modalities": ["text", "image"],
             "web_search_tool_type": "text_and_image",
+            "supports_image_detail_original": True,
             "supported_in_api": True,
             "visibility": "list",
             "priority": 23,
             "service_tiers": [],
             "additional_speed_tiers": [],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh"],
+            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh"],
             "input_cost_per_token": 0.00000075,
             "output_cost_per_token": 0.0000045,
-        },
-        "gpt-5.3-codex-spark": {
-            "display_name": "GPT-5.3-Codex-Spark",
-            "description": "Ultra-fast coding model.",
-            "context_window": 128000,
-            "max_context_window": 128000,
-            "max_output_tokens": 128000,
-            "effective_context_window_percent": 95,
-            "default_reasoning_level": "high",
-            "default_reasoning_summary": "none",
-            "default_verbosity": "low",
-            "input_modalities": ["text"],
-            "web_search_tool_type": "text",
-            "supported_in_api": True,
-            "visibility": "list",
-            "priority": 26,
-            "service_tiers": [],
-            "additional_speed_tiers": [],
-            "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh"],
-            "input_cost_per_token": 0.00000175,
-            "output_cost_per_token": 0.000014,
         },
         "codex-auto-review": {
             "display_name": "Codex Auto Review",
@@ -780,7 +821,9 @@ data:
             "input_modalities": list(info["input_modalities"]),
             "supports_vision": supports_vision,
             "supports_image_input": supports_vision,
-            "supports_image_detail_original": False,
+            "supports_image_detail_original": info.get(
+                "supports_image_detail_original", False
+            ),
             "supports_web_search": True,
             "web_search_tool_type": info["web_search_tool_type"],
             "supports_function_calling": True,
