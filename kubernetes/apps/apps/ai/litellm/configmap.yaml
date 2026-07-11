@@ -599,7 +599,7 @@ data:
         "extra_headers",
     ]
 
-    REASONING_LEVELS = ["low", "medium", "high", "xhigh", "max"]
+    REASONING_LEVELS = ["none", "low", "medium", "high", "xhigh", "max"]
 
     CHATGPT_CODEX_MODELS = {
         "gpt-5.6-sol": {
@@ -623,7 +623,7 @@ data:
             ],
             "additional_speed_tiers": ["fast"],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
             "input_cost_per_token": 0.000005,
             "output_cost_per_token": 0.00003,
         },
@@ -648,7 +648,7 @@ data:
             ],
             "additional_speed_tiers": ["fast"],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
             "input_cost_per_token": 0.0000025,
             "output_cost_per_token": 0.000015,
         },
@@ -673,7 +673,7 @@ data:
             ],
             "additional_speed_tiers": ["fast"],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
             "input_cost_per_token": 0.000001,
             "output_cost_per_token": 0.000006,
         },
