@@ -27,7 +27,8 @@ spec:
           containers:
             - name: configure
               # renovate: datasource=docker depName=library/python registryUrl=https://docker.io
-              image: docker.io/library/python:3.13-alpine
+              image: docker.io/library/python:3.13-alpine@sha256:c25cd44f45df1279a2cba589e67dfcd9db04647ea483b117a7de8b1a99bdfb23
+              imagePullPolicy: Always
               securityContext:
                 allowPrivilegeEscalation: false
                 capabilities:
@@ -49,9 +50,9 @@ spec:
                       print("Jellyfin automation is disabled.")
                       raise SystemExit(0)
 
-                  api_key = os.environ.get("JELLYFIN_API_KEY")
+                  api_key = open(os.environ["JELLYFIN_API_KEY_FILE"], encoding="utf-8").read().strip()
                   if not api_key:
-                      raise SystemExit("JELLYFIN_API_KEY is required when automation is enabled.")
+                      raise SystemExit("Jellyfin automation API key is required when automation is enabled.")
 
                   common_options = {
                       "Enabled": True,
@@ -183,12 +184,8 @@ spec:
                     configMapKeyRef:
                       name: jellyfin-automation
                       key: enabled
-                - name: JELLYFIN_API_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: jellyfin-automation-secret
-                      key: api-key
-                      optional: true
+                - name: JELLYFIN_API_KEY_FILE
+                  value: /credentials/api-key
               resources:
                 requests:
                   cpu: 10m
@@ -200,7 +197,13 @@ spec:
                 - name: configuration
                   mountPath: /config
                   readOnly: true
+                - name: credentials
+                  mountPath: /credentials
+                  readOnly: true
           volumes:
             - name: configuration
               configMap:
                 name: jellyfin-automation
+            - name: credentials
+              secret:
+                secretName: jellyfin-automation-secret
