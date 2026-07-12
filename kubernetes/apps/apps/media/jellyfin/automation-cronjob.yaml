@@ -131,33 +131,27 @@ spec:
                   ]
                   request("POST", "/Repositories", repositories)
 
-                  available_packages = {
-                      package["guid"]: package for package in request("GET", "/Packages")
-                  }
                   installed_plugins = {
                       plugin["Id"]: plugin for plugin in request("GET", "/Plugins")
                   }
-                  for plugin in json.load(open("/config/plugins.json")):
-                      installed = installed_plugins.get(plugin["guid"])
-                      if installed and installed["Version"] == plugin["version"]:
-                          print(f"{plugin['name']} {plugin['version']} is installed.")
-                          continue
+                  desired_plugins = json.load(open("/config/plugins.json"))
+                  desired_plugin_ids = {plugin["guid"] for plugin in desired_plugins}
+                  for installed in installed_plugins.values():
+                      if installed["CanUninstall"] and installed["Id"] not in desired_plugin_ids:
+                          request("DELETE", f"/Plugins/{installed['Id']}/{installed['Version']}")
+                          print(f"Uninstalled {installed['Name']}; restart Jellyfin to unload it.")
 
-                      package = available_packages.get(plugin["guid"])
-                      if not package or not any(
-                          version["version"] == plugin["version"]
-                          and version["repositoryUrl"] == plugin["repositoryUrl"]
-                          for version in package["versions"]
-                      ):
-                          raise SystemExit(f"{plugin['name']} {plugin['version']} is unavailable.")
+                  for plugin in desired_plugins:
+                      if plugin["guid"] in installed_plugins:
+                          print(f"{plugin['name']} is installed.")
+                          continue
 
                       query = urllib.parse.urlencode({
                           "assemblyGuid": plugin["guid"],
-                          "version": plugin["version"],
                           "repositoryUrl": plugin["repositoryUrl"],
                       })
                       request("POST", f"/Packages/Installed/{urllib.parse.quote(plugin['name'])}?{query}")
-                      print(f"Installed {plugin['name']} {plugin['version']}; restart Jellyfin to load it.")
+                      print(f"Installed the latest compatible {plugin['name']}; restart Jellyfin to load it.")
 
                   libraries = json.load(open("/config/libraries.json"))
                   existing = {library["Name"]: library for library in request("GET", "/Library/VirtualFolders")}

@@ -8,10 +8,10 @@ data:
   enabled: "true"
   plugins.json: |
     [
-      {"name":"Intro Skipper","guid":"c83d86bba1e04c35a113e2101cf4ee6","version":"1.10.11.22","repositoryUrl":"https://intro-skipper.org/manifest.json"},
-      {"name":"LDAP Authentication","guid":"958aad6637844d2ab89aa7b6fab6e25c","version":"23.0.0.0","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"},
-      {"name":"TheTVDB","guid":"a677c0dafac54cde941a7134223f14c8","version":"22.0.0.0","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"},
-      {"name":"Webhook","guid":"71552a5a5c5c4350a2aeebe451a30173","version":"21.0.0.0","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"}
+      {"name":"Intro Skipper","guid":"c83d86bba1e04c35a113e2101cf4ee6b","repositoryUrl":"https://intro-skipper.org/manifest.json"},
+      {"name":"LDAP Authentication","guid":"958aad6637844d2ab89aa7b6fab6e25c","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"},
+      {"name":"TheTVDB","guid":"a677c0dafac54cde941a7134223f14c8","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"},
+      {"name":"Webhook","guid":"71552a5a5c5c4350a2aeebe451a30173","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"}
     ]
   libraries.json: |
     [
