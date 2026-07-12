@@ -22,6 +22,22 @@ spec:
               # renovate: datasource=docker depName=linuxserver/jellyfin registryUrl=https://lscr.io
               repository: lscr.io/linuxserver/jellyfin
               tag: 10.11.11
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 99
+              runAsGroup: 100
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 64Mi
             command:
               - sh
               - -c
