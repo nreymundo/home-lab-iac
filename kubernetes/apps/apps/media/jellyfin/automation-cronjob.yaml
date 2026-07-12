@@ -1,0 +1,206 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: jellyfin-automation
+  namespace: media
+spec:
+  suspend: false
+  schedule: "17 */6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 120
+      template:
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: configure
+              # renovate: datasource=docker depName=library/python registryUrl=https://docker.io
+              image: docker.io/library/python:3.13-alpine
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+              command:
+                - sh
+                - -ec
+                - |
+                  exec python3 - <<'PY'
+                  import json
+                  import os
+                  import urllib.error
+                  import urllib.parse
+                  import urllib.request
+
+                  if os.environ["JELLYFIN_AUTOMATION_ENABLED"] != "true":
+                      print("Jellyfin automation is disabled.")
+                      raise SystemExit(0)
+
+                  api_key = os.environ.get("JELLYFIN_API_KEY")
+                  if not api_key:
+                      raise SystemExit("JELLYFIN_API_KEY is required when automation is enabled.")
+
+                  common_options = {
+                      "Enabled": True,
+                      "EnablePhotos": True,
+                      "EnableRealtimeMonitor": True,
+                      "EnableLUFSScan": True,
+                      "SaveLocalMetadata": False,
+                      "EnableInternetProviders": False,
+                      "EnableEmbeddedTitles": False,
+                      "EnableEmbeddedExtrasTitles": False,
+                      "EnableEmbeddedEpisodeInfos": False,
+                      "SeasonZeroDisplayName": "Specials",
+                      "MetadataSavers": [],
+                      "DisabledLocalMetadataReaders": [],
+                      "LocalMetadataReaderOrder": ["Nfo"],
+                      "DisabledSubtitleFetchers": [],
+                      "SubtitleFetcherOrder": [],
+                      "DisabledMediaSegmentProviders": [],
+                      "MediaSegmentProviderOrder": [],
+                      "SkipSubtitlesIfEmbeddedSubtitlesPresent": False,
+                      "SkipSubtitlesIfAudioTrackMatches": False,
+                      "SubtitleDownloadLanguages": [],
+                      "RequirePerfectSubtitleMatch": True,
+                      "SaveSubtitlesWithMedia": True,
+                      "SaveLyricsWithMedia": False,
+                      "SaveTrickplayWithMedia": False,
+                      "DisabledLyricFetchers": [],
+                      "LyricFetcherOrder": [],
+                      "PreferNonstandardArtistsTag": False,
+                      "UseCustomTagDelimiters": False,
+                      "CustomTagDelimiters": ["/", "|", ";", "\\"],
+                      "DelimiterWhitelist": [],
+                      "AutomaticallyAddToCollection": False,
+                      "AllowEmbeddedSubtitles": "AllowAll",
+                  }
+
+                  movie_type_options = [{
+                      "Type": "Movie",
+                      "MetadataFetchers": ["TheMovieDb", "The Open Movie Database"],
+                      "MetadataFetcherOrder": ["TheMovieDb", "The Open Movie Database"],
+                      "ImageFetchers": ["TheMovieDb", "The Open Movie Database", "Embedded Image Extractor", "Screen Grabber"],
+                      "ImageFetcherOrder": ["TheMovieDb", "The Open Movie Database", "Embedded Image Extractor", "Screen Grabber"],
+                      "ImageOptions": [],
+                  }]
+                  show_type_options = [
+                      {"Type": "Series", "MetadataFetchers": ["TheMovieDb", "The Open Movie Database"], "MetadataFetcherOrder": ["TheMovieDb", "The Open Movie Database"], "ImageFetchers": ["TheMovieDb"], "ImageFetcherOrder": ["TheMovieDb"], "ImageOptions": []},
+                      {"Type": "Season", "MetadataFetchers": ["TheMovieDb"], "MetadataFetcherOrder": ["TheMovieDb"], "ImageFetchers": ["TheMovieDb"], "ImageFetcherOrder": ["TheMovieDb"], "ImageOptions": []},
+                      {"Type": "Episode", "MetadataFetchers": ["TheMovieDb", "The Open Movie Database"], "MetadataFetcherOrder": ["TheMovieDb", "The Open Movie Database"], "ImageFetchers": ["TheMovieDb", "The Open Movie Database", "Embedded Image Extractor", "Screen Grabber"], "ImageFetcherOrder": ["TheMovieDb", "The Open Movie Database", "Embedded Image Extractor", "Screen Grabber"], "ImageOptions": []},
+                  ]
+                  profiles = {
+                      "anime_movie": {"EnableChapterImageExtraction": True, "ExtractChapterImagesDuringLibraryScan": True, "EnableTrickplayImageExtraction": True, "ExtractTrickplayImagesDuringLibraryScan": True, "EnableAutomaticSeriesGrouping": False, "AutomaticRefreshIntervalDays": 0, "PreferredMetadataLanguage": "ja", "MetadataCountryCode": "JP", "TypeOptions": movie_type_options},
+                      "anime_show": {"EnableChapterImageExtraction": True, "ExtractChapterImagesDuringLibraryScan": True, "EnableTrickplayImageExtraction": True, "ExtractTrickplayImagesDuringLibraryScan": True, "EnableAutomaticSeriesGrouping": True, "AutomaticRefreshIntervalDays": 0, "PreferredMetadataLanguage": "ja", "MetadataCountryCode": "JP", "TypeOptions": show_type_options},
+                      "movie": {"EnableChapterImageExtraction": True, "ExtractChapterImagesDuringLibraryScan": True, "EnableTrickplayImageExtraction": True, "ExtractTrickplayImagesDuringLibraryScan": True, "EnableAutomaticSeriesGrouping": False, "AutomaticRefreshIntervalDays": 30, "PreferredMetadataLanguage": "", "MetadataCountryCode": "", "TypeOptions": movie_type_options},
+                      "music": {"EnableChapterImageExtraction": False, "ExtractChapterImagesDuringLibraryScan": False, "EnableTrickplayImageExtraction": False, "ExtractTrickplayImagesDuringLibraryScan": False, "EnableAutomaticSeriesGrouping": False, "AutomaticRefreshIntervalDays": 30, "PreferredMetadataLanguage": "", "MetadataCountryCode": "", "SaveLyricsWithMedia": True, "TypeOptions": [{"Type": "MusicArtist", "MetadataFetchers": ["MusicBrainz"], "MetadataFetcherOrder": ["TheAudioDB", "MusicBrainz"], "ImageFetchers": ["TheAudioDB"], "ImageFetcherOrder": ["TheAudioDB"], "ImageOptions": []}, {"Type": "MusicAlbum", "MetadataFetchers": ["MusicBrainz"], "MetadataFetcherOrder": ["MusicBrainz", "TheAudioDB"], "ImageFetchers": ["TheAudioDB"], "ImageFetcherOrder": ["TheAudioDB"], "ImageOptions": []}, {"Type": "Audio", "MetadataFetchers": [], "MetadataFetcherOrder": [], "ImageFetchers": ["Image Extractor"], "ImageFetcherOrder": ["Image Extractor"], "ImageOptions": []}, {"Type": "MusicVideo", "MetadataFetchers": [], "MetadataFetcherOrder": [], "ImageFetchers": ["Embedded Image Extractor", "Screen Grabber"], "ImageFetcherOrder": ["Embedded Image Extractor", "Screen Grabber"], "ImageOptions": []}]},
+                      "music_video": {"EnableChapterImageExtraction": True, "ExtractChapterImagesDuringLibraryScan": True, "EnableTrickplayImageExtraction": True, "ExtractTrickplayImagesDuringLibraryScan": True, "EnableAutomaticSeriesGrouping": False, "AutomaticRefreshIntervalDays": 0, "PreferredMetadataLanguage": "", "MetadataCountryCode": "", "TypeOptions": [{"Type": "MusicVideo", "MetadataFetchers": [], "MetadataFetcherOrder": [], "ImageFetchers": ["Embedded Image Extractor", "Screen Grabber"], "ImageFetcherOrder": ["Embedded Image Extractor", "Screen Grabber"], "ImageOptions": []}]},
+                      "tv_show": {"EnableChapterImageExtraction": True, "ExtractChapterImagesDuringLibraryScan": True, "EnableTrickplayImageExtraction": True, "ExtractTrickplayImagesDuringLibraryScan": True, "EnableAutomaticSeriesGrouping": True, "AutomaticRefreshIntervalDays": 0, "PreferredMetadataLanguage": "", "MetadataCountryCode": "", "TypeOptions": show_type_options},
+                  }
+
+                  def request(method, path, payload=None):
+                      data = json.dumps(payload).encode() if payload is not None else None
+                      request = urllib.request.Request(
+                          f"http://jellyfin.media.svc.cluster.local:8096{path}",
+                          data=data,
+                          method=method,
+                          headers={"X-Emby-Token": api_key, "Content-Type": "application/json"},
+                      )
+                      try:
+                          with urllib.request.urlopen(request, timeout=30) as response:
+                              return json.load(response) if response.length != 0 else None
+                      except urllib.error.HTTPError as error:
+                          raise SystemExit(f"{method} {path} failed: {error.code} {error.read().decode()}") from error
+
+                  repositories = [
+                      {"Name": "Jellyfin Stable", "Url": "https://repo.jellyfin.org/files/plugin/manifest.json", "Enabled": True},
+                      {"Name": "Intro-Skipper", "Url": "https://intro-skipper.org/manifest.json", "Enabled": True},
+                  ]
+                  request("POST", "/Repositories", repositories)
+
+                  available_packages = {
+                      package["guid"]: package for package in request("GET", "/Packages")
+                  }
+                  installed_plugins = {
+                      plugin["Id"]: plugin for plugin in request("GET", "/Plugins")
+                  }
+                  for plugin in json.load(open("/config/plugins.json")):
+                      installed = installed_plugins.get(plugin["guid"])
+                      if installed and installed["Version"] == plugin["version"]:
+                          print(f"{plugin['name']} {plugin['version']} is installed.")
+                          continue
+
+                      package = available_packages.get(plugin["guid"])
+                      if not package or not any(
+                          version["version"] == plugin["version"]
+                          and version["repositoryUrl"] == plugin["repositoryUrl"]
+                          for version in package["versions"]
+                      ):
+                          raise SystemExit(f"{plugin['name']} {plugin['version']} is unavailable.")
+
+                      query = urllib.parse.urlencode({
+                          "assemblyGuid": plugin["guid"],
+                          "version": plugin["version"],
+                          "repositoryUrl": plugin["repositoryUrl"],
+                      })
+                      request("POST", f"/Packages/Installed/{urllib.parse.quote(plugin['name'])}?{query}")
+                      print(f"Installed {plugin['name']} {plugin['version']}; restart Jellyfin to load it.")
+
+                  libraries = json.load(open("/config/libraries.json"))
+                  existing = {library["Name"]: library for library in request("GET", "/Library/VirtualFolders")}
+                  for library in libraries:
+                      current = existing.get(library["name"])
+                      if current:
+                          if current["CollectionType"] != library["collectionType"] or current["Locations"] != [library["path"]]:
+                              raise SystemExit(f"{library['name']} conflicts with the configured library type or path.")
+                          print(f"{library['name']} already exists.")
+                          continue
+
+                      query = urllib.parse.urlencode([
+                          ("name", library["name"]),
+                          ("collectionType", library["collectionType"]),
+                          ("refreshLibrary", "false"),
+                          ("paths", library["path"]),
+                      ])
+                      request("POST", f"/Library/VirtualFolders?{query}", common_options | profiles[library["profile"]])
+                      print(f"Created {library['name']}.")
+                  PY
+              env:
+                - name: JELLYFIN_AUTOMATION_ENABLED
+                  valueFrom:
+                    configMapKeyRef:
+                      name: jellyfin-automation
+                      key: enabled
+                - name: JELLYFIN_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: jellyfin-automation-secret
+                      key: api-key
+                      optional: true
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
+              volumeMounts:
+                - name: configuration
+                  mountPath: /config
+                  readOnly: true
+          volumes:
+            - name: configuration
+              configMap:
+                name: jellyfin-automation

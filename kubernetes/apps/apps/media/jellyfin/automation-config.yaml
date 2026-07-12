@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jellyfin-automation
+  namespace: media
+data:
+  enabled: "true"
+  plugins.json: |
+    [
+      {"name":"Intro Skipper","guid":"c83d86bba1e04c35a113e2101cf4ee6","version":"1.10.11.22","repositoryUrl":"https://intro-skipper.org/manifest.json"},
+      {"name":"LDAP Authentication","guid":"958aad6637844d2ab89aa7b6fab6e25c","version":"23.0.0.0","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"},
+      {"name":"TheTVDB","guid":"a677c0dafac54cde941a7134223f14c8","version":"22.0.0.0","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"},
+      {"name":"Webhook","guid":"71552a5a5c5c4350a2aeebe451a30173","version":"21.0.0.0","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"}
+    ]
+  libraries.json: |
+    [
+      {"name":"Anime Movies","path":"/data/libraries/anime_movies","collectionType":"movies","profile":"anime_movie"},
+      {"name":"Anime Shows","path":"/data/libraries/anime","collectionType":"tvshows","profile":"anime_show"},
+      {"name":"Movies","path":"/data/libraries/movies","collectionType":"movies","profile":"movie"},
+      {"name":"Music","path":"/data/libraries/music","collectionType":"music","profile":"music"},
+      {"name":"Music Videos","path":"/data/libraries/music_videos","collectionType":"musicvideos","profile":"music_video"},
+      {"name":"TV Shows","path":"/data/libraries/tv","collectionType":"tvshows","profile":"tv_show"}
+    ]
