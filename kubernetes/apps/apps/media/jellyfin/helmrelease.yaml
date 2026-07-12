@@ -16,6 +16,48 @@ spec:
     controllers:
       main:
         strategy: Recreate
+        initContainers:
+          configure-transcoding:
+            image:
+              # renovate: datasource=docker depName=linuxserver/jellyfin registryUrl=https://lscr.io
+              repository: lscr.io/linuxserver/jellyfin
+              tag: 10.11.11
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 99
+              runAsGroup: 100
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 64Mi
+            command:
+              - sh
+              - -c
+              - |
+                xmlstarlet ed -L \
+                  -u '/EncodingOptions/HardwareAccelerationType' -v vaapi \
+                  -u '/EncodingOptions/VaapiDevice' -v /dev/dri/renderD128 \
+                  -u '/EncodingOptions/EnableHardwareEncoding' -v true \
+                  -u '/EncodingOptions/AllowHevcEncoding' -v true \
+                  -d '/EncodingOptions/TranscodingTempPath' \
+                  -s '/EncodingOptions' -t elem -n TranscodingTempPath -v /transcode \
+                  -d '/EncodingOptions/HardwareDecodingCodecs/string' \
+                  -s '/EncodingOptions/HardwareDecodingCodecs' -t elem -n string -v h264 \
+                  -s '/EncodingOptions/HardwareDecodingCodecs' -t elem -n string -v hevc \
+                  -s '/EncodingOptions/HardwareDecodingCodecs' -t elem -n string -v mpeg2video \
+                  -s '/EncodingOptions/HardwareDecodingCodecs' -t elem -n string -v vc1 \
+                  -s '/EncodingOptions/HardwareDecodingCodecs' -t elem -n string -v vp8 \
+                  -s '/EncodingOptions/HardwareDecodingCodecs' -t elem -n string -v vp9 \
+                  -s '/EncodingOptions/HardwareDecodingCodecs' -t elem -n string -v av1 \
+                  /config/encoding.xml
         containers:
           main:
             image:
@@ -24,6 +66,7 @@ spec:
               tag: 10.11.11
             env:
               TZ: Europe/Berlin
+              LIBVA_DRIVER_NAME: iHD
               PUID: "99"
               PGID: "100"
             ports:
@@ -68,9 +111,11 @@ spec:
                   failureThreshold: 30
             resources:
               requests:
+                gpu.intel.com/i915: 1
                 cpu: 500m
                 memory: 1Gi
               limits:
+                gpu.intel.com/i915: 1
                 cpu: 2000m
                 memory: 4Gi
     service:
@@ -113,3 +158,9 @@ spec:
         path: /mnt/user/media
         globalMounts:
           - path: /data
+      transcode:
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 1Gi
+        globalMounts:
+          - path: /transcode

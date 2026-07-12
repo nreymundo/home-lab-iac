@@ -5,3 +5,6 @@ components:
   - ../../../../components/ingress/traefik-base
 resources:
   - helmrelease.yaml
+  - automation-config.yaml
+  - automation-cronjob.yaml
+  - jellyfin-automation-secret.sops.yaml
