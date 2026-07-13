@@ -67,6 +67,8 @@ spec:
             env:
               TZ: Europe/Berlin
               LIBVA_DRIVER_NAME: iHD
+              # Keep rendered artwork on the persistent Longhorn volume, never the NFS media mount.
+              JELLYFIN_CACHE_DIR: /config/cache
               PUID: "99"
               PGID: "100"
             ports:

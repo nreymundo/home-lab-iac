@@ -153,6 +153,12 @@ spec:
                       request("POST", f"/Packages/Installed/{urllib.parse.quote(plugin['name'])}?{query}")
                       print(f"Installed the latest compatible {plugin['name']}; restart Jellyfin to load it.")
 
+                  cache_settings = json.load(open("/config/cache.json"))
+                  server_configuration = request("GET", "/System/Configuration")
+                  server_configuration.update(cache_settings)
+                  request("POST", "/System/Configuration", server_configuration)
+                  print(f"Configured Jellyfin image cache limit: {cache_settings['CacheSize']} MiB.")
+
                   ldap_settings = json.load(open("/config/ldap.json"))
                   ldap_plugin = installed_plugins.get(ldap_settings.pop("pluginId"))
                   if ldap_plugin is None:
