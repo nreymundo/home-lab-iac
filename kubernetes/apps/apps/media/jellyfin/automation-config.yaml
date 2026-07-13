@@ -13,6 +13,35 @@ data:
       {"name":"TheTVDB","guid":"a677c0dafac54cde941a7134223f14c8","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"},
       {"name":"Webhook","guid":"71552a5a5c5c4350a2aeebe451a30173","repositoryUrl":"https://repo.jellyfin.org/files/plugin/manifest.json"}
     ]
+  ldap.json: |
+    {
+      "pluginId": "958aad6637844d2ab89aa7b6fab6e25c",
+      "LdapServer": "ak-outpost-ldap-outpost.authentik.svc.cluster.local",
+      "LdapPort": 636,
+      "UseSsl": true,
+      "UseStartTls": false,
+      "SkipSslVerify": true,
+      "LdapBindUser": "cn=ldap-search,ou=users,dc=home,dc=lan",
+      "LdapBaseDn": "ou=users,dc=home,dc=lan",
+      "LdapSearchFilter": "(&(objectClass=user)(|(memberOf=cn=Jellyfin Users,ou=groups,dc=home,dc=lan)(memberOf=cn=Jellyfin Admins,ou=groups,dc=home,dc=lan)))",
+      "LdapAdminBaseDn": "ou=users,dc=home,dc=lan",
+      "LdapAdminFilter": "(memberOf=cn=Jellyfin Admins,ou=groups,dc=home,dc=lan)",
+      "EnableLdapAdminFilterMemberUid": false,
+      "LdapSearchAttributes": "uid, cn, mail, displayName",
+      "LdapClientCertPath": "",
+      "LdapClientKeyPath": "",
+      "LdapRootCaPath": "",
+      "CreateUsersFromLdap": true,
+      "AllowPassChange": false,
+      "LdapUidAttribute": "uid",
+      "LdapUsernameAttribute": "cn",
+      "LdapPasswordAttribute": "userPassword",
+      "EnableLdapProfileImageSync": false,
+      "RemoveImagesNotInLdap": false,
+      "LdapProfileImageAttribute": "",
+      "EnableAllFolders": false,
+      "EnabledFolders": []
+    }
   libraries.json: |
     [
       {"name":"Anime Movies","path":"/data/libraries/anime_movies","collectionType":"movies","profile":"anime_movie"},

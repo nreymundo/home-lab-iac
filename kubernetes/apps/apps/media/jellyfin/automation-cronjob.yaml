@@ -153,6 +153,61 @@ spec:
                       request("POST", f"/Packages/Installed/{urllib.parse.quote(plugin['name'])}?{query}")
                       print(f"Installed the latest compatible {plugin['name']}; restart Jellyfin to load it.")
 
+                  ldap_settings = json.load(open("/config/ldap.json"))
+                  ldap_plugin = installed_plugins.get(ldap_settings.pop("pluginId"))
+                  if ldap_plugin is None:
+                      print("LDAP Authentication was installed; restart Jellyfin before configuring it.")
+                  else:
+                      ldap_password_path = "/ldap-credentials/AK_LDAP_SEARCH_PASSWORD"
+                      if not os.path.exists(ldap_password_path):
+                          raise SystemExit("Replicated LDAP credentials are unavailable.")
+
+                      ldap_configuration = request(
+                          "GET", f"/Plugins/{ldap_plugin['Id']}/Configuration"
+                      )
+                      # Preserve LdapUsers because it records account links created after LDAP logins.
+                      ldap_configuration.update(ldap_settings)
+                      ldap_configuration["LdapBindPassword"] = open(
+                          ldap_password_path, encoding="utf-8"
+                      ).read().strip()
+                      request(
+                          "POST", f"/Plugins/{ldap_plugin['Id']}/Configuration", ldap_configuration
+                      )
+
+                      bind_result = request(
+                          "POST",
+                          "/Ldap/TestServerBind",
+                          {
+                              key: ldap_configuration.get(key, "")
+                              for key in (
+                                  "LdapServer", "LdapPort", "UseSsl", "UseStartTls",
+                                  "SkipSslVerify", "AllowPassChange", "LdapBindUser",
+                                  "LdapBindPassword", "LdapBaseDn", "PasswordResetUrl",
+                                  "LdapClientCertPath", "LdapClientKeyPath", "LdapRootCaPath",
+                              )
+                          },
+                      )
+                      if bind_result.get("Connect") != "Success" or bind_result.get("Bind") != "Success":
+                          raise SystemExit(f"LDAP bind validation failed: {bind_result.get('Error', bind_result)}")
+
+                      filter_result = request(
+                          "POST",
+                          "/Ldap/TestLdapFilters",
+                          {
+                              "LdapSearchFilter": ldap_configuration["LdapSearchFilter"],
+                              "LdapAdminFilter": ldap_configuration["LdapAdminFilter"],
+                              "EnableLdapAdminFilterMemberUid": ldap_configuration[
+                                  "EnableLdapAdminFilterMemberUid"
+                              ],
+                          },
+                      )
+                      if filter_result.get("Users", 0) == 0 or not filter_result.get("IsSubset"):
+                          raise SystemExit(f"LDAP filter validation failed: {filter_result}")
+                      print(
+                          f"Configured LDAP: {filter_result['Users']} users, "
+                          f"{filter_result['Admins']} administrators."
+                      )
+
                   libraries = json.load(open("/config/libraries.json"))
                   existing = {library["Name"]: library for library in request("GET", "/Library/VirtualFolders")}
                   for library in libraries:
@@ -194,6 +249,9 @@ spec:
                 - name: credentials
                   mountPath: /credentials
                   readOnly: true
+                - name: ldap-credentials
+                  mountPath: /ldap-credentials
+                  readOnly: true
           volumes:
             - name: configuration
               configMap:
@@ -201,3 +259,7 @@ spec:
             - name: credentials
               secret:
                 secretName: jellyfin-automation-secret
+            - name: ldap-credentials
+              secret:
+                secretName: ldap-search-secret
+                optional: true
