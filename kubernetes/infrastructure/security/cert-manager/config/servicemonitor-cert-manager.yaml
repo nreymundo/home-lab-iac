@@ -11,5 +11,5 @@ spec:
       app.kubernetes.io/instance: cert-manager-cert-manager
       app.kubernetes.io/name: cert-manager
   endpoints:
-    - port: tcp-prometheus-servicemonitor
+    - port: http-metrics
       path: /metrics
