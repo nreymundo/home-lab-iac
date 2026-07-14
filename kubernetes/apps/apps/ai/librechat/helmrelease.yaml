@@ -318,7 +318,7 @@ spec:
             image:
               # renovate: datasource=docker depName=pgvector/pgvector registryUrl=https://docker.io
               repository: docker.io/pgvector/pgvector
-              tag: 0.8.4-pg15-trixie
+              tag: 0.8.5-pg15-trixie
             env:
               TZ: Europe/Berlin
               POSTGRES_DB: librechat-vectordb
