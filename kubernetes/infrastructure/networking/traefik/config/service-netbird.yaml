@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-netbird
+  namespace: traefik
+spec:
+  type: ClusterIP
+  ports:
+    - name: websecure
+      port: 443
+      protocol: TCP
+      targetPort: websecure
+  selector:
+    app.kubernetes.io/instance: traefik-traefik-traefik
+    app.kubernetes.io/name: traefik

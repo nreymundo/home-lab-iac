@@ -8,6 +8,6 @@ spec:
     name: production-ingress
     namespace: netbird
   serviceRef:
-    name: traefik-traefik
+    name: traefik-netbird
   groups:
     - name: kubernetes-ingress
