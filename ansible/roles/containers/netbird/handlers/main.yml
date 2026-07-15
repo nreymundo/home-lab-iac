@@ -1,0 +1,13 @@
+---
+- name: Reload NetBird systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Restart NetBird containers
+  ansible.builtin.systemd_service:
+    name: "{{ netbird_service_name }}"
+    state: restarted
+    daemon_reload: true
+  when:
+    - netbird_enabled | bool
+    - not ansible_check_mode

@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly NetBird Docker Compose update
+
+[Timer]
+OnCalendar={{ netbird_update_calendar }}
+RandomizedDelaySec={{ netbird_update_randomized_delay }}
+Persistent=true
+Unit={{ netbird_update_service_name }}.service
+
+[Install]
+WantedBy=timers.target
