@@ -127,6 +127,7 @@ services:
     restart: unless-stopped
     # Host networking lets the public proxy containers reach the NetBird interface.
     network_mode: host
+    # NetBird recommends these capabilities for tunnel administration, eBPF, and raw sockets.
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -139,6 +140,12 @@ services:
       NB_WIREGUARD_PORT: "{{ netbird_mesh_proxy_wireguard_port }}"
     volumes:
       - netbird_mesh_proxy_state:/var/lib/netbird
+    healthcheck:
+      test: [CMD, netbird, status, --check, live]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
 volumes:
   netbird_data:

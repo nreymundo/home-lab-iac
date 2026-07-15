@@ -21,3 +21,8 @@ sops ansible/secrets/netbird.sops.yml
 The Ansible control host needs `sops` and access to the matching Age private key.
 The role defaults to `~/.config/sops/age/keys.txt`; override it with
 `SOPS_AGE_KEY_FILE` when the identity is stored elsewhere.
+
+The mesh proxy setup key is consumed during initial enrollment. Its persistent
+Docker volume preserves the peer identity. If that volume is lost, create a new
+setup key for `netbird-proxy`, replace the encrypted value, and rerun the
+NetBird playbook.
