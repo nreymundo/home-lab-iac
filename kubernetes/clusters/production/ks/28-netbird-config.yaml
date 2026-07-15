@@ -13,4 +13,5 @@ spec:
   dependsOn:
     - name: netbird-operator-install
     - name: traefik-install
+    - name: traefik-config
   wait: true

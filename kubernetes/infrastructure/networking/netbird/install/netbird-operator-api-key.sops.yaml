@@ -5,7 +5,7 @@ metadata:
     namespace: netbird
 type: Opaque
 stringData:
-    NB_API_KEY: ENC[AES256_GCM,data:ziltJZ0Qz+byviRmdDmv0MEZ+0Ea8xHik1cpSpbxjupE8F3/ErEqjw==,iv:tRk8tytjtAzx+oCsnvSFozdnt8+D0mc2NlBy/wu4exU=,tag:807+gDY6RSGt1fXqsmweeA==,type:str]
+    NB_API_KEY: ENC[AES256_GCM,data:kIVcnmJ5sFpFpRB5u/N+WWOa0yWJIgj7o+g27Q7ccIPCbVCz5ZMuIQ==,iv:qjIeE5z2Q+zD+iLYwm1r2/iEqOo2FOsJB8e2LFEtq8s=,tag:VnmD3lZpCMfvp9C/jIp2Eg==,type:str]
 sops:
     age:
         - enc: |
@@ -18,6 +18,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-07-15T21:24:35Z"
-    mac: ENC[AES256_GCM,data:tkzKAI8aki/tHFyqkRpFFUTuo7i41Z1TlyoVHZOhlo3jfi7/hPOjKaSrdYMd0q/oP/RGsgZVmdm7Qy+vU23DOnkOD57zl7qa3lrcDe5B65iv3U+tWDVRwMRB6eID8dXcGR/F6f/2HyxCBnw6nGWc41UhOSQMCFjmrQp62T9tMiI=,iv:5rAh7OsnvIdMyDzy3d+omBvWht9yPMlqNbjVVGD4ggI=,tag:M3ZwN5BYblB5nF7FpixFuA==,type:str]
+    lastmodified: "2026-07-15T22:50:34Z"
+    mac: ENC[AES256_GCM,data:cRqLeEINuUav1rsV72/OmgS0Ff3iF+eeWj5ojUYenfF49ZKPNjiyLXSd5Cm3BWD2PBZzpnVoZ2ADyQf43CrzT1G2+5G59sJEqJDvcJVJmSpkwhg8zWEh/Hozk3ihuPRjsFxbx6+pQEDCpU2ui8RjX8vksld5snouctLtQ8NWhHw=,iv:qlNh5c8r8uy1hVgI2fHabRPJrlJN189MOHKIHRtA1C0=,tag:zEahecOmsCWLndmPGFCVgQ==,type:str]
     version: 3.13.2
