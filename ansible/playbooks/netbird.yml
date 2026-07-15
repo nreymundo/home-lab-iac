@@ -1,0 +1,8 @@
+---
+- name: Provision NetBird
+  hosts: netbird
+  become: true
+  roles:
+    - common
+    - docker
+    - netbird

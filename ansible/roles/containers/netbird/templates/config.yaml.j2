@@ -1,0 +1,26 @@
+server:
+  listenAddress: ":80"
+  exposedAddress: "https://{{ netbird_secrets.netbird_fqdn }}:443"
+  stunPorts:
+    - {{ netbird_stun_port }}
+  metricsPort: 9090
+  healthcheckAddress: ":9000"
+  logLevel: "info"
+  logFile: "console"
+  authSecret: "{{ netbird_relay_auth_secret }}"
+  dataDir: "/var/lib/netbird"
+  auth:
+    issuer: "https://{{ netbird_secrets.netbird_fqdn }}/oauth2"
+    localAuthDisabled: false
+    signKeyRefreshEnabled: true
+    dashboardRedirectURIs:
+      - "https://{{ netbird_secrets.netbird_fqdn }}/nb-auth"
+      - "https://{{ netbird_secrets.netbird_fqdn }}/nb-silent-auth"
+    cliRedirectURIs:
+      - "http://localhost:53000/"
+  reverseProxy:
+    trustedHTTPProxies:
+      - "{{ netbird_traefik_ip }}/32"
+  store:
+    engine: "sqlite"
+    encryptionKey: "{{ netbird_datastore_encryption_key }}"

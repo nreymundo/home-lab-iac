@@ -1,0 +1,35 @@
+---
+netbird_enabled: true
+netbird_container_owner: netbird
+netbird_container_group: netbird
+netbird_base_dir: "/home/{{ netbird_container_owner }}/docker/netbird"
+netbird_compose_file: "{{ netbird_base_dir }}/docker-compose.yml"
+netbird_config_file: "{{ netbird_base_dir }}/config.yaml"
+netbird_dashboard_env_file: "{{ netbird_base_dir }}/dashboard.env"
+netbird_proxy_env_file: "{{ netbird_base_dir }}/proxy.env"
+netbird_bootstrap_pat_file: "{{ netbird_base_dir }}/.bootstrap-pat"
+netbird_bootstrap_complete_file: "{{ netbird_base_dir }}/.bootstrap-complete"
+netbird_service_name: netbird-compose
+netbird_update_service_name: netbird-update
+netbird_update_timer_name: netbird-update.timer
+netbird_secrets_file: "{{ playbook_dir }}/../secrets/netbird.sops.yml"
+netbird_authentik_sso_secret_file: >-
+  {{ playbook_dir }}/../../kubernetes/infrastructure/security/authentik/install/netbird-sso-secret.sops.yaml
+netbird_sops_age_key_file: >-
+  {{ lookup('env', 'SOPS_AGE_KEY_FILE') | default(lookup('env', 'HOME') + '/.config/sops/age/keys.txt', true) }}
+
+# Match the upstream quickstart update model. The systemd timer pulls and applies
+# these tags weekly without requiring a subsequent Ansible run.
+netbird_dashboard_image: netbirdio/dashboard:latest
+netbird_server_image: netbirdio/netbird-server:latest
+netbird_proxy_image: netbirdio/reverse-proxy:latest
+netbird_traefik_image: traefik:latest
+netbird_crowdsec_image: crowdsecurity/crowdsec:latest
+
+netbird_stun_port: 3478
+netbird_traefik_ip: 172.30.0.10
+netbird_update_calendar: "Sun *-*-* 04:00:00"
+netbird_update_randomized_delay: 1h
+netbird_health_retries: 30
+netbird_health_delay: 5
+netbird_disable_local_auth: true

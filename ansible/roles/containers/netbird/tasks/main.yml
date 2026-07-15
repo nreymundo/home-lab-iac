@@ -1,0 +1,547 @@
+---
+- name: Ensure NetBird role supports Linux
+  ansible.builtin.assert:
+    that:
+      - ansible_system == 'Linux'
+    fail_msg: NetBird container role supports Linux only
+
+- name: Verify NetBird secrets file exists
+  ansible.builtin.stat:
+    path: "{{ netbird_secrets_file }}"
+  delegate_to: localhost
+  become: false
+  register: netbird_secrets_file_stat
+  run_once: true
+
+- name: Require NetBird secrets file
+  ansible.builtin.assert:
+    that:
+      - netbird_secrets_file_stat.stat.exists
+    fail_msg: >-
+      Create and encrypt {{ netbird_secrets_file }} as documented in
+      ansible/secrets/README.md before running this playbook.
+  run_once: true
+
+- name: Decrypt NetBird secrets
+  ansible.builtin.command:
+    argv:
+      - sops
+      - --decrypt
+      - "{{ netbird_secrets_file }}"
+  delegate_to: localhost
+  become: false
+  environment:
+    SOPS_AGE_KEY_FILE: "{{ netbird_sops_age_key_file }}"
+  changed_when: false
+  no_log: true
+  register: netbird_decrypted_secrets
+  run_once: true
+
+- name: Load NetBird secrets
+  ansible.builtin.set_fact:
+    netbird_secrets: "{{ netbird_decrypted_secrets.stdout | from_yaml }}"
+  no_log: true
+
+- name: Decrypt Authentik NetBird OAuth credentials
+  ansible.builtin.command:
+    argv:
+      - sops
+      - --decrypt
+      - "{{ netbird_authentik_sso_secret_file }}"
+  delegate_to: localhost
+  become: false
+  environment:
+    SOPS_AGE_KEY_FILE: "{{ netbird_sops_age_key_file }}"
+  changed_when: false
+  no_log: true
+  register: netbird_decrypted_authentik_sso_secret
+  run_once: true
+
+- name: Load Authentik NetBird OAuth credentials
+  ansible.builtin.set_fact:
+    netbird_authentik_sso_secret: "{{ netbird_decrypted_authentik_sso_secret.stdout | from_yaml }}"
+  no_log: true
+
+- name: Verify required NetBird secret values
+  ansible.builtin.assert:
+    that:
+      - netbird_secrets.netbird_fqdn | default('') | length > 0
+      - netbird_secrets.netbird_acme_email | default('') | length > 0
+      - netbird_secrets.netbird_owner_email | default('') | length > 0
+      - netbird_secrets.netbird_owner_name | default('') | length > 0
+      - netbird_secrets.netbird_owner_password | default('') | length >= 8
+      - netbird_secrets.netbird_fqdn is match('^netbird\\..+')
+      - netbird_authentik_sso_secret.stringData.CLIENT_ID | default('') | length > 0
+      - netbird_authentik_sso_secret.stringData.CLIENT_SECRET | default('') | length > 0
+    fail_msg: NetBird secrets must define an FQDN, ACME email, and local Owner credentials.
+  no_log: true
+
+- name: Ensure NetBird directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0750"
+  loop:
+    - "{{ netbird_base_dir }}"
+    - "{{ netbird_base_dir }}/crowdsec"
+
+- name: Verify Docker Compose is available
+  ansible.builtin.command: docker compose version
+  changed_when: false
+
+- name: Check for existing NetBird configuration
+  ansible.builtin.stat:
+    path: "{{ netbird_config_file }}"
+  register: netbird_config_stat
+
+- name: Check whether NetBird bootstrap is complete
+  ansible.builtin.stat:
+    path: "{{ netbird_bootstrap_complete_file }}"
+  register: netbird_bootstrap_complete_stat
+
+- name: Generate NetBird persistent secrets
+  ansible.builtin.command:
+    argv:
+      - openssl
+      - rand
+      - -base64
+      - "32"
+  loop:
+    - relay_auth_secret
+    - datastore_encryption_key
+  register: netbird_generated_secrets
+  changed_when: false
+  check_mode: false
+  no_log: true
+  when: not netbird_config_stat.stat.exists
+
+- name: Render NetBird server configuration
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ netbird_config_file }}"
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0600"
+  vars:
+    netbird_relay_auth_secret: "{{ netbird_generated_secrets.results[0].stdout | trim }}"
+    netbird_datastore_encryption_key: "{{ netbird_generated_secrets.results[1].stdout | trim }}"
+  no_log: true
+  when: not netbird_config_stat.stat.exists
+
+- name: Render NetBird dashboard environment
+  ansible.builtin.template:
+    src: dashboard.env.j2
+    dest: "{{ netbird_dashboard_env_file }}"
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0640"
+  no_log: true
+  notify: Restart NetBird containers
+
+- name: Render Traefik dynamic configuration
+  ansible.builtin.template:
+    src: traefik-dynamic.yaml.j2
+    dest: "{{ netbird_base_dir }}/traefik-dynamic.yaml"
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0644"
+  notify: Restart NetBird containers
+
+- name: Render NetBird Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ netbird_compose_file }}"
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0644"
+  vars:
+    netbird_setup_pat_enabled: "{{ not netbird_bootstrap_complete_stat.stat.exists }}"
+  notify: Restart NetBird containers
+
+- name: Check for existing NetBird proxy credentials
+  ansible.builtin.stat:
+    path: "{{ netbird_proxy_env_file }}"
+  register: netbird_proxy_env_stat
+
+- name: Create temporary NetBird proxy environment
+  ansible.builtin.copy:
+    content: "NB_PROXY_TOKEN=placeholder\n"
+    dest: "{{ netbird_proxy_env_file }}"
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0600"
+  when: not netbird_proxy_env_stat.stat.exists
+
+- name: Start NetBird core services for proxy bootstrap
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - up
+      - -d
+      - traefik
+      - dashboard
+      - netbird-server
+      - crowdsec
+  changed_when: true
+  when:
+    - not netbird_proxy_env_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Wait for NetBird server before proxy bootstrap
+  ansible.builtin.uri:
+    url: "https://{{ netbird_secrets.netbird_fqdn }}/oauth2/.well-known/openid-configuration"
+    status_code: 200
+    return_content: true
+  register: netbird_oidc_ready
+  until: netbird_oidc_ready.status == 200
+  retries: "{{ netbird_health_retries }}"
+  delay: "{{ netbird_health_delay }}"
+  when:
+    - not netbird_proxy_env_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Create NetBird proxy access token
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - exec
+      - -T
+      - netbird-server
+      - /go/bin/netbird-server
+      - token
+      - create
+      - --name
+      - default-proxy
+      - --config
+      - /etc/netbird/config.yaml
+  register: netbird_proxy_token_command
+  changed_when: true
+  no_log: true
+  when:
+    - not netbird_proxy_env_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Wait for CrowdSec before proxy bootstrap
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - exec
+      - -T
+      - crowdsec
+      - cscli
+      - lapi
+      - status
+  register: netbird_crowdsec_ready
+  changed_when: false
+  until: netbird_crowdsec_ready.rc == 0
+  retries: "{{ netbird_health_retries }}"
+  delay: "{{ netbird_health_delay }}"
+  when:
+    - not netbird_proxy_env_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Create CrowdSec proxy bouncer credentials
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - exec
+      - -T
+      - crowdsec
+      - cscli
+      - bouncers
+      - add
+      - netbird-proxy
+      - -o
+      - raw
+  register: netbird_crowdsec_bouncer_command
+  changed_when: true
+  no_log: true
+  when:
+    - not netbird_proxy_env_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Render NetBird proxy environment
+  ansible.builtin.template:
+    src: proxy.env.j2
+    dest: "{{ netbird_proxy_env_file }}"
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0600"
+  vars:
+    netbird_proxy_token: "{{ netbird_proxy_token_command.stdout | regex_search('(?m)^Token:\\s*(\\S+)$', '\\1') | first }}"
+    netbird_crowdsec_bouncer_key: "{{ netbird_crowdsec_bouncer_command.stdout | trim }}"
+  no_log: true
+  when:
+    - not netbird_proxy_env_stat.stat.exists
+    - not ansible_check_mode
+  notify: Restart NetBird containers
+
+- name: Validate NetBird Docker Compose configuration
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - config
+      - --quiet
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Install NetBird Compose systemd unit
+  ansible.builtin.template:
+    src: netbird-compose.service.j2
+    dest: "/etc/systemd/system/{{ netbird_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload NetBird systemd
+    - Restart NetBird containers
+
+- name: Install NetBird update systemd unit
+  ansible.builtin.template:
+    src: netbird-update.service.j2
+    dest: "/etc/systemd/system/{{ netbird_update_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload NetBird systemd
+
+- name: Install NetBird update timer
+  ansible.builtin.template:
+    src: netbird-update.timer.j2
+    dest: "/etc/systemd/system/{{ netbird_update_timer_name }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload NetBird systemd
+
+- name: Flush NetBird handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start NetBird services
+  ansible.builtin.systemd_service:
+    name: "{{ netbird_service_name }}"
+    enabled: "{{ netbird_enabled | bool }}"
+    state: "{{ 'started' if netbird_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Enable NetBird automatic update timer
+  ansible.builtin.systemd_service:
+    name: "{{ netbird_update_timer_name }}"
+    enabled: "{{ netbird_enabled | bool }}"
+    state: "{{ 'started' if netbird_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Wait for NetBird setup API
+  ansible.builtin.uri:
+    url: "https://{{ netbird_secrets.netbird_fqdn }}/api/instance"
+    status_code: 200
+    return_content: true
+  register: netbird_instance
+  until: netbird_instance.status == 200
+  retries: "{{ netbird_health_retries }}"
+  delay: "{{ netbird_health_delay }}"
+  when:
+    - netbird_enabled | bool
+    - not ansible_check_mode
+
+- name: Create the initial NetBird Owner
+  ansible.builtin.uri:
+    url: "https://{{ netbird_secrets.netbird_fqdn }}/api/setup"
+    method: POST
+    body_format: json
+    body:
+      email: "{{ netbird_secrets.netbird_owner_email }}"
+      name: "{{ netbird_secrets.netbird_owner_name }}"
+      password: "{{ netbird_secrets.netbird_owner_password }}"
+      create_pat: true
+      pat_expire_in: 1
+    status_code: 200
+    return_content: false
+  no_log: true
+  register: netbird_initial_owner
+  when:
+    - netbird_enabled | bool
+    - netbird_instance.json.setup_required | default(false) | bool
+    - not ansible_check_mode
+
+- name: Store temporary NetBird bootstrap token
+  ansible.builtin.copy:
+    content: "{{ netbird_initial_owner.json.personal_access_token }}\n"
+    dest: "{{ netbird_bootstrap_pat_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  when:
+    - netbird_enabled | bool
+    - netbird_instance.json.setup_required | default(false) | bool
+    - not ansible_check_mode
+
+- name: Check for temporary NetBird bootstrap token
+  ansible.builtin.stat:
+    path: "{{ netbird_bootstrap_pat_file }}"
+  register: netbird_bootstrap_pat_stat
+  when: not ansible_check_mode
+
+- name: Require bootstrap token until Authentik is configured
+  ansible.builtin.assert:
+    that:
+      - netbird_bootstrap_pat_stat.stat.exists
+    fail_msg: >-
+      NetBird setup is complete but its Authentik connector was not configured and the bootstrap token is unavailable.
+      Create an Owner PAT in the dashboard, save it to {{ netbird_bootstrap_pat_file }}, and rerun this playbook.
+  when:
+    - not netbird_bootstrap_complete_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Read temporary NetBird bootstrap token
+  ansible.builtin.slurp:
+    src: "{{ netbird_bootstrap_pat_file }}"
+  register: netbird_bootstrap_pat
+  no_log: true
+  when:
+    - not netbird_bootstrap_complete_stat.stat.exists
+    - not ansible_check_mode
+
+- name: List configured NetBird identity providers
+  ansible.builtin.uri:
+    url: "https://{{ netbird_secrets.netbird_fqdn }}/api/identity-providers"
+    headers:
+      Authorization: "Token {{ netbird_bootstrap_pat.content | b64decode | trim }}"
+    status_code: 200
+    return_content: true
+  register: netbird_identity_providers
+  no_log: true
+  when:
+    - not netbird_bootstrap_complete_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Configure Authentik as a NetBird identity provider
+  ansible.builtin.uri:
+    url: "https://{{ netbird_secrets.netbird_fqdn }}/api/identity-providers"
+    method: POST
+    headers:
+      Authorization: "Token {{ netbird_bootstrap_pat.content | b64decode | trim }}"
+    body_format: json
+    body:
+      type: oidc
+      name: Authentik
+      issuer: >-
+        https://sso.{{ netbird_secrets.netbird_fqdn | regex_replace('^netbird[.]', '') }}/application/o/netbird/
+      client_id: "{{ netbird_authentik_sso_secret.stringData.CLIENT_ID }}"
+      client_secret: "{{ netbird_authentik_sso_secret.stringData.CLIENT_SECRET }}"
+    status_code:
+      - 200
+      - 201
+      - 422
+    return_content: true
+  register: netbird_authentik_configuration
+  no_log: true
+  when:
+    - not netbird_bootstrap_complete_stat.stat.exists
+    - netbird_identity_providers.json | selectattr('name', 'equalto', 'Authentik') | list | length == 0
+    - not ansible_check_mode
+
+- name: Require successful Authentik identity provider configuration
+  ansible.builtin.assert:
+    that:
+      - netbird_authentik_configuration.status | default(200) in [200, 201]
+    fail_msg: >-
+      NetBird rejected the Authentik identity provider: {{ netbird_authentik_configuration.json.message
+      | default(netbird_authentik_configuration.content | default(netbird_authentik_configuration.msg | default('unknown validation error'))) }}
+  when:
+    - not netbird_bootstrap_complete_stat.stat.exists
+    - netbird_identity_providers.json | selectattr('name', 'equalto', 'Authentik') | list | length == 0
+    - not ansible_check_mode
+
+- name: Verify Authentik OpenID Connect discovery endpoint
+  ansible.builtin.uri:
+    url: >-
+      https://sso.{{ netbird_secrets.netbird_fqdn | regex_replace('^netbird[.]', '') }}/application/o/netbird/.well-known/openid-configuration
+    status_code: 200
+    return_content: false
+  when:
+    - not netbird_bootstrap_complete_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Mark NetBird bootstrap complete
+  ansible.builtin.copy:
+    content: "Authentik connector configured by Ansible.\n"
+    dest: "{{ netbird_bootstrap_complete_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  when:
+    - not netbird_bootstrap_complete_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Remove temporary NetBird bootstrap token
+  ansible.builtin.file:
+    path: "{{ netbird_bootstrap_pat_file }}"
+    state: absent
+  no_log: true
+  when:
+    - not netbird_bootstrap_complete_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Disable NetBird setup token creation
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ netbird_compose_file }}"
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0644"
+  vars:
+    netbird_setup_pat_enabled: false
+  notify: Restart NetBird containers
+  when:
+    - not netbird_bootstrap_complete_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Disable NetBird local email and password authentication
+  ansible.builtin.replace:
+    path: "{{ netbird_config_file }}"
+    regexp: '^(\s*localAuthDisabled:\s*)false\s*$'
+    replace: '\1true'
+  notify: Restart NetBird containers
+  when:
+    - netbird_disable_local_auth | bool
+    - not ansible_check_mode
+
+- name: Validate NetBird OIDC endpoint
+  ansible.builtin.uri:
+    url: "https://{{ netbird_secrets.netbird_fqdn }}/oauth2/.well-known/openid-configuration"
+    status_code: 200
+    return_content: false
+  when:
+    - netbird_enabled | bool
+    - not ansible_check_mode
