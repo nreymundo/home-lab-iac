@@ -9,6 +9,7 @@ netbird_acme_email: admin@example.com
 netbird_owner_email: admin@example.com
 netbird_owner_name: NetBird Owner
 netbird_owner_password: replace-with-a-long-random-password
+netbird_mesh_proxy_setup_key: replace-with-the-one-time-netbird-setup-key
 ```
 
 Edit and encrypt the file with:

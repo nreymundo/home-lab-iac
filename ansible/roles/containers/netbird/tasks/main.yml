@@ -70,6 +70,7 @@
       - netbird_secrets.netbird_owner_email | default('') | length > 0
       - netbird_secrets.netbird_owner_name | default('') | length > 0
       - netbird_secrets.netbird_owner_password | default('') | length >= 8
+      - netbird_secrets.netbird_mesh_proxy_setup_key | default('') | length > 0
       - netbird_secrets.netbird_fqdn is match('^netbird\\..+')
       - netbird_authentik_sso_secret.stringData.CLIENT_ID | default('') | length > 0
       - netbird_authentik_sso_secret.stringData.CLIENT_SECRET | default('') | length > 0
@@ -90,6 +91,14 @@
 - name: Verify Docker Compose is available
   ansible.builtin.command: docker compose version
   changed_when: false
+
+- name: Allow NetBird mesh proxy WireGuard traffic through UFW
+  community.general.ufw:
+    rule: allow
+    port: "{{ netbird_mesh_proxy_wireguard_port }}"
+    proto: udp
+    comment: NetBird mesh proxy WireGuard
+  when: netbird_enabled | bool
 
 - name: Check for existing NetBird configuration
   ansible.builtin.stat:

@@ -1,0 +1,48 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: netbird-operator
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: netbird
+  install:
+    crds: Create
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  chart:
+    spec:
+      chart: netbird-operator
+      # renovate: datasource=helm depName=netbird-operator registryUrl=oci://ghcr.io/netbirdio/helm-charts
+      version: "0.7.0"
+      sourceRef:
+        kind: HelmRepository
+        name: netbird
+        namespace: flux-system
+      interval: 1h
+  values:
+    clusterSecretsPermissions:
+      allowAllSecrets: false
+    operator:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 250m
+          memory: 256Mi
+      metrics:
+        enabled: true
+    webhook:
+      enableCertManager: true
+    cluster:
+      name: production
+      dns: svc.cluster.local
+    netbirdAPI:
+      keyFromSecret:
+        name: netbird-operator-api-key
+        key: NB_API_KEY
