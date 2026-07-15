@@ -79,6 +79,14 @@ locals {
             source_ips  = ["0.0.0.0/0", "::/0"]
             description = "Allow WireGuard VPN"
           },
+          {
+            # NetBird peers can originate from arbitrary networks, so direct P2P requires public UDP ingress.
+            direction   = "in"
+            protocol    = "udp"
+            port        = "51821"
+            source_ips  = ["0.0.0.0/0", "::/0"]
+            description = "Allow NetBird mesh proxy WireGuard"
+          },
         ]
       }
     }

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: netbird-operator-api-key
+    namespace: netbird
+type: Opaque
+stringData:
+    NB_API_KEY: ENC[AES256_GCM,data:ziltJZ0Qz+byviRmdDmv0MEZ+0Ea8xHik1cpSpbxjupE8F3/ErEqjw==,iv:tRk8tytjtAzx+oCsnvSFozdnt8+D0mc2NlBy/wu4exU=,tag:807+gDY6RSGt1fXqsmweeA==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBoYjBqSHd1VUxOdC9IVDFv
+            YkoxUWhIcDJ5YWZVVlFzNWRxVTAyRGRHT0ZJCjg3Zis2Y0hKc0JKY2xXV1RWTU9o
+            S3dDWWtITmcyRkVGVytDUkQ4WUxZTjAKLS0tIGwwbjhGUGRvbEtBWXJ6TkJYczE4
+            S2g5d2tFbGtGU2hJRVd6bmlZWW1ib3cKVoaz6YuYGDXdCJU33z8uL78+SXBAKl6Z
+            VWPFVL2ZfrncR1qBico623dUJBbra2emuKSqf8dozy2KyWAoR/hm6A==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-07-15T21:24:35Z"
+    mac: ENC[AES256_GCM,data:tkzKAI8aki/tHFyqkRpFFUTuo7i41Z1TlyoVHZOhlo3jfi7/hPOjKaSrdYMd0q/oP/RGsgZVmdm7Qy+vU23DOnkOD57zl7qa3lrcDe5B65iv3U+tWDVRwMRB6eID8dXcGR/F6f/2HyxCBnw6nGWc41UhOSQMCFjmrQp62T9tMiI=,iv:5rAh7OsnvIdMyDzy3d+omBvWht9yPMlqNbjVVGD4ggI=,tag:M3ZwN5BYblB5nF7FpixFuA==,type:str]
+    version: 3.13.2

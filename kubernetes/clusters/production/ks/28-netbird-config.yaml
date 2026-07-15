@@ -1,0 +1,16 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: netbird-config
+  namespace: flux-system
+spec:
+  interval: 30m
+  path: ./kubernetes/infrastructure/networking/netbird/config
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: netbird-operator-install
+    - name: traefik-install
+  wait: true

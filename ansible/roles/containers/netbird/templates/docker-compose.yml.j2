@@ -120,10 +120,38 @@ services:
       - traefik.tcp.services.proxy-tls.loadbalancer.server.port=8443
       - traefik.tcp.services.proxy-tls.loadbalancer.serverstransport=pp-v2@file
 
+  mesh-proxy:
+    image: "{{ netbird_client_image }}"
+    container_name: netbird-mesh-proxy
+    hostname: "{{ netbird_mesh_proxy_hostname }}"
+    restart: unless-stopped
+    # Host networking lets the public proxy containers reach the NetBird interface.
+    network_mode: host
+    # NetBird recommends these capabilities for tunnel administration, eBPF, and raw sockets.
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      NB_SETUP_KEY: "{{ netbird_secrets.netbird_mesh_proxy_setup_key }}"
+      NB_MANAGEMENT_URL: "https://{{ netbird_secrets.netbird_fqdn }}"
+      NB_WIREGUARD_PORT: "{{ netbird_mesh_proxy_wireguard_port }}"
+    volumes:
+      - netbird_mesh_proxy_state:/var/lib/netbird
+    healthcheck:
+      test: [CMD, netbird, status, --check, live]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
 volumes:
   netbird_data:
   netbird_traefik_letsencrypt:
   netbird_proxy_certs:
+  netbird_mesh_proxy_state:
   crowdsec_db:
 
 networks:

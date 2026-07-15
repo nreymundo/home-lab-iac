@@ -21,11 +21,14 @@ netbird_sops_age_key_file: >-
 # Match the upstream quickstart update model. The systemd timer pulls and applies
 # these tags weekly without requiring a subsequent Ansible run.
 netbird_dashboard_image: netbirdio/dashboard:latest
+netbird_client_image: netbirdio/netbird:latest
 netbird_server_image: netbirdio/netbird-server:latest
 netbird_proxy_image: netbirdio/reverse-proxy:latest
 netbird_traefik_image: traefik:latest
 netbird_crowdsec_image: crowdsecurity/crowdsec:latest
 
+netbird_mesh_proxy_hostname: netbird-proxy
+netbird_mesh_proxy_wireguard_port: 51821
 netbird_stun_port: 3478
 netbird_traefik_ip: 172.30.0.10
 netbird_update_calendar: "Sun *-*-* 04:00:00"

@@ -1,0 +1,13 @@
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: traefik-ingress
+  namespace: traefik
+spec:
+  networkRouterRef:
+    name: production-ingress
+    namespace: netbird
+  serviceRef:
+    name: traefik-traefik
+  groups:
+    - name: kubernetes-ingress

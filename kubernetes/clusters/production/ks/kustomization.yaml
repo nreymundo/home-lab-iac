@@ -10,6 +10,8 @@ resources:
   - 21-traefik-config.yaml
   - 25-external-dns-install.yaml
   - 26-cloudflared-install.yaml
+  - 27-netbird-operator-install.yaml
+  - 28-netbird-config.yaml
   - 30-kube-replicator-install.yaml
   - 31-reloader-install.yaml
   - 42-authentik-install.yaml

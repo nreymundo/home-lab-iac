@@ -20,3 +20,4 @@ resources:
   - nfd.yaml
   - intel.yaml
   - harbor.yaml
+  - netbird.yaml

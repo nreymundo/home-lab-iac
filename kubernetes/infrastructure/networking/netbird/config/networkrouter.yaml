@@ -1,0 +1,10 @@
+apiVersion: netbird.io/v1alpha1
+kind: NetworkRouter
+metadata:
+  name: production-ingress
+  namespace: netbird
+spec:
+  dnsZoneRef:
+    name: k3s.netbird.internal
+  workloadOverride:
+    replicas: 3
