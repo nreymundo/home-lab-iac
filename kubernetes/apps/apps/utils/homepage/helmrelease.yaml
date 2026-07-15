@@ -185,6 +185,10 @@ spec:
                 #   url: http://192.168.10.1
                 #   username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
                 #   password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
+            - NetBird:
+                icon: netbird.png
+                description: "Zero-trust network access"
+                href: https://netbird.${CLUSTER_DOMAIN}
             - Pi-hole:
                 icon: pi-hole.png
                 description: "DNS resolver and ad-blocker"

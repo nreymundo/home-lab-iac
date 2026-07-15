@@ -172,6 +172,16 @@ spec:
             secretKeyRef:
               name: harbor-sso-secret
               key: CLIENT_SECRET
+        - name: NETBIRD_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: netbird-sso-secret
+              key: CLIENT_ID
+        - name: NETBIRD_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: netbird-sso-secret
+              key: CLIENT_SECRET
         - name: DISCORD_BASIC_AUTH
           valueFrom:
             secretKeyRef:
