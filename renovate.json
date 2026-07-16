@@ -162,11 +162,13 @@
       "automerge": false
     },
     {
-      "description": "LiteLLM image updates require manual review while local monkey patches are active",
+      "description": "Keep LiteLLM on stable releases with manual review while local monkey patches are active",
       "matchDatasources": ["docker"],
       "matchDepNames": ["berriai/litellm"],
       "matchPackageNames": ["berriai/litellm", "ghcr.io/berriai/litellm"],
       "matchPaths": ["kubernetes/apps/apps/ai/litellm/helmrelease.yaml"],
+      "versioning": "semver",
+      "allowedVersions": "/^v\\d+\\.\\d+\\.\\d+$/",
       "automerge": false,
       "platformAutomerge": false
     }
