@@ -306,7 +306,6 @@ data:
         host: litellm-valkey
         port: "6379"
         ssl: false
-        ssl_check_hostname: false
 
     general_settings:
       # Keep GitOps config authoritative; LiteLLM DB config rows otherwise override router_settings.
