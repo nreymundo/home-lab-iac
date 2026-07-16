@@ -9,9 +9,6 @@ services:
     command:
       - --log.level=INFO
       - --accesslog=true
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --providers.docker.network=netbird
       - --providers.file.filename=/etc/traefik/dynamic.yaml
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
@@ -28,7 +25,6 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - netbird_traefik_letsencrypt:/letsencrypt
       - ./traefik-dynamic.yaml:/etc/traefik/dynamic.yaml:ro
 
@@ -38,13 +34,6 @@ services:
     restart: unless-stopped
     networks: [netbird]
     env_file: ./dashboard.env
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.netbird-dashboard.rule=Host(`{{ netbird_secrets.netbird_fqdn }}`)
-      - traefik.http.routers.netbird-dashboard.entrypoints=websecure
-      - traefik.http.routers.netbird-dashboard.tls=true
-      - traefik.http.routers.netbird-dashboard.tls.certresolver=letsencrypt
-      - traefik.http.services.netbird-dashboard.loadbalancer.server.port=80
 
   netbird-server:
     image: "{{ netbird_server_image }}"
@@ -59,23 +48,6 @@ services:
       - netbird_data:/var/lib/netbird
       - ./config.yaml:/etc/netbird/config.yaml:ro
     command: [--config, /etc/netbird/config.yaml]
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.netbird-grpc.rule=Host(`{{ netbird_secrets.netbird_fqdn }}`) && (PathPrefix(`/signalexchange.SignalExchange/`) || PathPrefix(`/management.ManagementService/`) || PathPrefix(`/management.ProxyService/`))
-      - traefik.http.routers.netbird-grpc.entrypoints=websecure
-      - traefik.http.routers.netbird-grpc.tls=true
-      - traefik.http.routers.netbird-grpc.tls.certresolver=letsencrypt
-      - traefik.http.routers.netbird-grpc.service=netbird-server-h2c
-      - traefik.http.routers.netbird-grpc.priority=100
-      - traefik.http.routers.netbird-backend.rule=Host(`{{ netbird_secrets.netbird_fqdn }}`) && (PathPrefix(`/relay`) || PathPrefix(`/ws-proxy/`) || PathPrefix(`/api`) || PathPrefix(`/oauth2`))
-      - traefik.http.routers.netbird-backend.entrypoints=websecure
-      - traefik.http.routers.netbird-backend.tls=true
-      - traefik.http.routers.netbird-backend.tls.certresolver=letsencrypt
-      - traefik.http.routers.netbird-backend.service=netbird-server
-      - traefik.http.routers.netbird-backend.priority=100
-      - traefik.http.services.netbird-server.loadbalancer.server.port=80
-      - traefik.http.services.netbird-server-h2c.loadbalancer.server.port=80
-      - traefik.http.services.netbird-server-h2c.loadbalancer.server.scheme=h2c
 
   crowdsec:
     image: "{{ netbird_crowdsec_image }}"
@@ -110,15 +82,6 @@ services:
     env_file: ./proxy.env
     volumes:
       - netbird_proxy_certs:/certs
-    labels:
-      - traefik.enable=true
-      - traefik.tcp.routers.proxy-passthrough.entrypoints=websecure
-      - traefik.tcp.routers.proxy-passthrough.rule=HostSNI(`*`)
-      - traefik.tcp.routers.proxy-passthrough.tls.passthrough=true
-      - traefik.tcp.routers.proxy-passthrough.service=proxy-tls
-      - traefik.tcp.routers.proxy-passthrough.priority=1
-      - traefik.tcp.services.proxy-tls.loadbalancer.server.port=8443
-      - traefik.tcp.services.proxy-tls.loadbalancer.serverstransport=pp-v2@file
 
   mesh-proxy:
     image: "{{ netbird_client_image }}"

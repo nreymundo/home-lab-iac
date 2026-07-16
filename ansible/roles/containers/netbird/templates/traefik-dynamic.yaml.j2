@@ -1,4 +1,67 @@
+http:
+  routers:
+    netbird-dashboard:
+      rule: "Host(`{{ netbird_secrets.netbird_fqdn }}`)"
+      entryPoints:
+        - websecure
+      service: netbird-dashboard
+      tls:
+        certResolver: letsencrypt
+    netbird-grpc:
+      rule: >-
+        Host(`{{ netbird_secrets.netbird_fqdn }}`) &&
+        (PathPrefix(`/signalexchange.SignalExchange/`) ||
+        PathPrefix(`/management.ManagementService/`) ||
+        PathPrefix(`/management.ProxyService/`))
+      entryPoints:
+        - websecure
+      service: netbird-server-h2c
+      priority: 100
+      tls:
+        certResolver: letsencrypt
+    netbird-backend:
+      rule: >-
+        Host(`{{ netbird_secrets.netbird_fqdn }}`) &&
+        (PathPrefix(`/relay`) ||
+        PathPrefix(`/ws-proxy/`) ||
+        PathPrefix(`/api`) ||
+        PathPrefix(`/oauth2`))
+      entryPoints:
+        - websecure
+      service: netbird-server
+      priority: 100
+      tls:
+        certResolver: letsencrypt
+  services:
+    netbird-dashboard:
+      loadBalancer:
+        servers:
+          - url: "http://dashboard:80"
+    netbird-server:
+      loadBalancer:
+        servers:
+          - url: "http://netbird-server:80"
+    netbird-server-h2c:
+      loadBalancer:
+        servers:
+          - url: "h2c://netbird-server:80"
+
 tcp:
+  routers:
+    proxy-passthrough:
+      rule: "HostSNI(`*`)"
+      entryPoints:
+        - websecure
+      service: proxy-tls
+      priority: 1
+      tls:
+        passthrough: true
+  services:
+    proxy-tls:
+      loadBalancer:
+        servers:
+          - address: "proxy:8443"
+        serversTransport: pp-v2
   serversTransports:
     pp-v2:
       proxyProtocol:
