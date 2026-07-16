@@ -17,7 +17,7 @@ spec:
             image:
               # renovate: datasource=docker depName=berriai/litellm registryUrl=https://ghcr.io
               repository: ghcr.io/berriai/litellm
-              tag: v1.93.0-rc.2
+              tag: v1.92.0-rc.2
             command:
               - /bin/sh
               - -lc
@@ -85,7 +85,7 @@ spec:
             image:
               # renovate: datasource=docker depName=berriai/litellm registryUrl=https://ghcr.io
               repository: ghcr.io/berriai/litellm
-              tag: v1.93.0-rc.2
+              tag: v1.92.0-rc.2
             env:
               TZ: Europe/Berlin
               PYTHONPATH: /opt/headroom:/etc/litellm
@@ -126,6 +126,7 @@ spec:
               GENERIC_USER_ROLE_ATTRIBUTE: litellm_role
               PROXY_BASE_URL: https://litellm.lan.${CLUSTER_DOMAIN}
               AUTO_REDIRECT_UI_LOGIN_TO_SSO: "true"
+              REDIS_URL: redis://litellm-valkey:6379
               SET_DEBUG: "True"
             envFrom:
               - secretRef:
