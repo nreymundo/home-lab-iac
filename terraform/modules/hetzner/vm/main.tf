@@ -49,7 +49,9 @@ resource "hcloud_server" "vms" {
   rebuild_protection = each.value.rebuild_protection
 
   lifecycle {
-    ignore_changes = [ssh_keys] # Hetzner treats ssh_keys changes as ForceNew after creation.
+    # Hetzner only accepts SSH keys and user data when provisioning a server.
+    # Bootstrap firewall attachments are intentionally managed outside Terraform afterward.
+    ignore_changes = [ssh_keys, user_data, firewall_ids]
 
     precondition {
       condition = each.value.cloud_init == null || each.value.explicit_user_data || (
