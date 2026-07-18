@@ -5,6 +5,10 @@ http:
       entryPoints:
         - websecure
       service: netbird-dashboard
+{% if netbird_traefik_bouncer_enabled | bool %}
+      middlewares:
+        - crowdsec-bouncer
+{% endif %}
       tls:
         certResolver: letsencrypt
     netbird-grpc:
@@ -45,6 +49,20 @@ http:
       loadBalancer:
         servers:
           - url: "h2c://netbird-server:80"
+{% if netbird_traefik_bouncer_enabled | bool %}
+  middlewares:
+    crowdsec-bouncer:
+      plugin:
+        crowdsec-bouncer-traefik-plugin:
+          enabled: true
+          crowdsecMode: live
+          crowdsecLapiHost: crowdsec:8080
+          crowdsecLapiKeyFile: /etc/traefik/crowdsec/traefik-bouncer.key
+          crowdsecLapiScheme: http
+          forwardedHeadersCustomName: ""
+          defaultDecisionSeconds: 60
+          logLevel: INFO
+{% endif %}
 
 tcp:
   routers:

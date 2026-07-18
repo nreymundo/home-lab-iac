@@ -88,6 +88,11 @@
     - "{{ netbird_base_dir }}"
     - "{{ netbird_base_dir }}/crowdsec"
 
+- name: Check for existing Traefik CrowdSec bouncer credentials
+  ansible.builtin.stat:
+    path: "{{ netbird_traefik_bouncer_key_file }}"
+  register: netbird_traefik_bouncer_key_stat
+
 - name: Verify Docker Compose is available
   ansible.builtin.command: docker compose version
   changed_when: false
@@ -149,6 +154,15 @@
   no_log: true
   notify: Restart NetBird containers
 
+- name: Render CrowdSec acquisition configuration
+  ansible.builtin.template:
+    src: crowdsec-acquis.yaml.j2
+    dest: "{{ netbird_crowdsec_acquisition_file }}"
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0640"
+  notify: Restart NetBird containers
+
 - name: Render Traefik dynamic configuration
   ansible.builtin.template:
     src: traefik-dynamic.yaml.j2
@@ -156,6 +170,9 @@
     owner: "{{ netbird_container_owner }}"
     group: "{{ netbird_container_group }}"
     mode: "0644"
+  vars:
+    netbird_traefik_bouncer_enabled: >-
+      {{ netbird_traefik_bouncer_requested | bool and netbird_traefik_bouncer_key_stat.stat.exists }}
   notify: Restart NetBird containers
 
 - name: Render NetBird Docker Compose file
@@ -194,7 +211,6 @@
       - "{{ netbird_compose_file }}"
       - up
       - -d
-      - traefik
       - dashboard
       - netbird-server
       - crowdsec
@@ -202,6 +218,193 @@
   when:
     - not netbird_proxy_env_stat.stat.exists
     - not ansible_check_mode
+
+- name: Wait for CrowdSec before bouncer bootstrap
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - exec
+      - -T
+      - crowdsec
+      - cscli
+      - lapi
+      - status
+  register: netbird_crowdsec_bouncer_ready
+  changed_when: false
+  until: netbird_crowdsec_bouncer_ready.rc == 0
+  retries: "{{ netbird_health_retries }}"
+  delay: "{{ netbird_health_delay }}"
+  when:
+    - netbird_traefik_bouncer_requested | bool
+    - not netbird_traefik_bouncer_key_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Create CrowdSec Traefik bouncer credentials
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - exec
+      - -T
+      - crowdsec
+      - cscli
+      - bouncers
+      - add
+      - netbird-traefik
+      - -o
+      - raw
+  register: netbird_traefik_bouncer_command
+  changed_when: true
+  no_log: true
+  when:
+    - netbird_traefik_bouncer_requested | bool
+    - not netbird_traefik_bouncer_key_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Store CrowdSec Traefik bouncer credentials
+  ansible.builtin.copy:
+    content: "{{ netbird_traefik_bouncer_command.stdout | trim }}\n"
+    dest: "{{ netbird_traefik_bouncer_key_file }}"
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0600"
+  no_log: true
+  when:
+    - netbird_traefik_bouncer_requested | bool
+    - not netbird_traefik_bouncer_key_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Render Traefik configuration with CrowdSec bouncer
+  ansible.builtin.template:
+    src: traefik-dynamic.yaml.j2
+    dest: "{{ netbird_base_dir }}/traefik-dynamic.yaml"
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0644"
+  vars:
+    netbird_traefik_bouncer_enabled: "{{ netbird_traefik_bouncer_requested | bool }}"
+  notify: Restart NetBird containers
+  when:
+    - netbird_traefik_bouncer_requested | bool
+    - not netbird_traefik_bouncer_key_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Start Traefik after bouncer bootstrap
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - up
+      - -d
+      - traefik
+  changed_when: true
+  when:
+    - not netbird_proxy_env_stat.stat.exists
+    - not ansible_check_mode
+
+- name: List installed CrowdSec collections
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - exec
+      - -T
+      - crowdsec
+      - cscli
+      - collections
+      - list
+      - -o
+      - json
+  register: netbird_crowdsec_installed_collections
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Remove persisted CrowdSec SSH collection
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - exec
+      - -T
+      - crowdsec
+      - cscli
+      - collections
+      - remove
+      - crowdsecurity/linux
+      - --purge
+  changed_when: true
+  when:
+    - >-
+      (netbird_crowdsec_installed_collections.stdout | from_json).collections
+      | selectattr('name', 'equalto', 'crowdsecurity/linux') | list | length > 0
+    - not ansible_check_mode
+  notify: Restart NetBird containers
+
+- name: List installed CrowdSec parsers
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - exec
+      - -T
+      - crowdsec
+      - cscli
+      - parsers
+      - list
+      - -o
+      - json
+  register: netbird_crowdsec_installed_parsers
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Install non-syslog parser for Traefik Docker logs
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - exec
+      - -T
+      - crowdsec
+      - cscli
+      - parsers
+      - install
+      - crowdsecurity/syslog-logs
+  changed_when: true
+  when:
+    - >-
+      (netbird_crowdsec_installed_parsers.stdout | from_json).parsers
+      | selectattr('name', 'equalto', 'crowdsecurity/syslog-logs') | list | length == 0
+    - not ansible_check_mode
+  notify: Restart NetBird containers
 
 - name: Wait for NetBird server before proxy bootstrap
   ansible.builtin.uri:
@@ -359,6 +562,76 @@
     enabled: "{{ netbird_enabled | bool }}"
     state: "{{ 'started' if netbird_enabled | bool else 'stopped' }}"
     daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Remove obsolete CrowdSec firewall bouncer registration
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - netbird
+      - -f
+      - "{{ netbird_compose_file }}"
+      - exec
+      - -T
+      - crowdsec
+      - cscli
+      - bouncers
+      - delete
+      - netbird-firewall
+      - --ignore-missing
+  register: netbird_firewall_bouncer_delete
+  changed_when: netbird_firewall_bouncer_delete.stdout | length > 0
+  when: not ansible_check_mode
+
+- name: Gather installed package facts for firewall bouncer cleanup
+  ansible.builtin.package_facts:
+    manager: auto
+  when: not ansible_check_mode
+
+- name: Disable and stop obsolete CrowdSec firewall bouncer
+  ansible.builtin.systemd_service:
+    name: crowdsec-firewall-bouncer
+    enabled: false
+    state: stopped
+    daemon_reload: true
+  when:
+    - "'crowdsec-firewall-bouncer' in ansible_facts.packages"
+    - not ansible_check_mode
+
+- name: Remove residual CrowdSec firewall IP sets
+  ansible.builtin.command:
+    argv:
+      - ipset
+      - destroy
+      - "{{ item }}"
+  loop:
+    - crowdsec-blacklists
+    - crowdsec6-blacklists
+  register: netbird_crowdsec_ipset_remove
+  changed_when: netbird_crowdsec_ipset_remove.rc == 0
+  failed_when: netbird_crowdsec_ipset_remove.rc not in [0, 1]
+  when:
+    - "'ipset' in ansible_facts.packages"
+    - not ansible_check_mode
+
+- name: Remove CrowdSec firewall bouncer packages
+  ansible.builtin.apt:
+    name:
+      - crowdsec-firewall-bouncer
+      - ipset
+    state: absent
+    purge: true
+
+- name: Remove obsolete CrowdSec firewall bouncer files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/crowdsec/bouncers/netbird-firewall-bouncer.key
+    - /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
+    - /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml.local
   when: not ansible_check_mode
 
 - name: Enable NetBird automatic update timer

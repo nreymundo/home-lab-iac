@@ -9,6 +9,8 @@ netbird_dashboard_env_file: "{{ netbird_base_dir }}/dashboard.env"
 netbird_proxy_env_file: "{{ netbird_base_dir }}/proxy.env"
 netbird_bootstrap_pat_file: "{{ netbird_base_dir }}/.bootstrap-pat"
 netbird_bootstrap_complete_file: "{{ netbird_base_dir }}/.bootstrap-complete"
+netbird_crowdsec_acquisition_file: "{{ netbird_base_dir }}/crowdsec/acquis.yaml"
+netbird_traefik_bouncer_key_file: "{{ netbird_base_dir }}/crowdsec/traefik-bouncer.key"
 netbird_service_name: netbird-compose
 netbird_update_service_name: netbird-update
 netbird_update_timer_name: netbird-update.timer
@@ -26,6 +28,13 @@ netbird_server_image: netbirdio/netbird-server:latest
 netbird_proxy_image: netbirdio/reverse-proxy:latest
 netbird_traefik_image: traefik:latest
 netbird_crowdsec_image: crowdsecurity/crowdsec:latest
+
+netbird_crowdsec_collections:
+  - crowdsecurity/traefik
+  - crowdsecurity/http-cve
+  - crowdsecurity/http-dos
+netbird_traefik_bouncer_requested: true
+netbird_traefik_bouncer_plugin_version: v1.3.5
 
 netbird_mesh_proxy_hostname: netbird-proxy
 netbird_mesh_proxy_wireguard_port: 51821
