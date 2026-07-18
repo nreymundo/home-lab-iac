@@ -18,7 +18,7 @@ Read the repo root `AGENTS.md` and `kubernetes/AGENTS.md` first. This file only 
 
 ## Validation
 - Before editing a shared component, inspect its downstream references in workload and infrastructure manifests.
-- Use `kubectl apply --dry-run=client -f <consumer-path>` on one or more representative consumers when the change affects rendered manifests.
+- Use `kubectl kustomize <consumer-path> >/dev/null` on one or more representative consumers when the change affects rendered manifests.
 
 ## Notes
-- Most consumers live under `kubernetes/apps/apps/`, but infrastructure manifests can depend on shared components too.
+- All current active consumers live under `kubernetes/apps/apps/`; search workload and infrastructure manifests before assuming a component has no wider impact.

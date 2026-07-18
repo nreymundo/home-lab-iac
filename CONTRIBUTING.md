@@ -8,7 +8,7 @@ Guidelines for contributing to the home-lab-iac repository.
 
 ```bash
 # Clone the repository
-git clone https://github.com/<user>/home-lab-iac.git
+git clone https://github.com/nreymundo/home-lab-iac.git
 cd home-lab-iac
 
 # Check required host tools
@@ -22,13 +22,15 @@ pre-commit install
 
 1. Create a new branch: `git checkout -b feature/my-change`
 2. Make your changes
-3. Run pre-commit hooks: `pre-commit run --all-files`
+3. Run applicable pre-commit hooks: `pre-commit run --files <changed-file> [<changed-file>...]`
 4. Test locally when possible
+
+Some hooks format files or encrypt and stage `*.sops.yaml` files. Review `git diff` after running them.
 
 ### 3. Commit and Push
 
 ```bash
-git add .
+git add <changed-paths>
 git commit -m "feat: descriptive commit message"
 git push origin feature/my-change
 ```
@@ -68,7 +70,7 @@ The repository uses pre-commit to enforce code quality:
 ### Running Hooks
 
 ```bash
-# Run all hooks on all files
+# Run all hooks on all files. Some hooks can format, encrypt, and stage files.
 pre-commit run --all-files
 
 # Run specific hook
@@ -93,7 +95,7 @@ The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` 
 ### YAML
 
 - Use 2-space indentation
-- Use `---` at the start of files
+- Use `---` for multi-document YAML; follow the existing local style for single-document manifests and Kustomizations
 - Prefer explicit `true`/`false` over `yes`/`no`
 - Keep lines under 120 characters
 
@@ -126,7 +128,7 @@ The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` 
 
 | Directory | Purpose | Notes |
 |-----------|---------|-------|
-| `packer/<distro>-<version>-base/` | VM template definitions | One folder per template |
+| `packer/<template-name>/` | VM template definitions | One folder per template |
 | `terraform/instances/vm/<instance>/` | Terraform VM instance roots | Concrete VM deployments using shared modules |
 | `terraform/instances/lxc/<instance>/` | Terraform LXC instance roots | Concrete container deployments using shared modules |
 | `ansible/roles/<role>/` | Reusable Ansible roles | Standard role structure |
@@ -140,33 +142,44 @@ The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` 
 ### Packer
 
 ```bash
-packer validate packer/ubuntu-24.04-base
-packer validate packer/fedora-43-server
+for template in packer/ubuntu-24.04-base packer/ubuntu-26.04-base packer/fedora-43-server; do
+  packer init "$template"
+  packer fmt -check -recursive "$template"
+  packer validate "$template"
+done
 ```
 
 ### Terraform
 
 ```bash
-terraform -chdir=terraform/instances/vm/k3s_nodes validate
-terraform -chdir=terraform/instances/vm/k3s_nodes plan
-terraform -chdir=terraform/instances/vm/openclaw validate
-terraform -chdir=terraform/instances/vm/openclaw plan
+ROOT=terraform/instances/vm/k3s_nodes
+terraform -chdir="$ROOT" init
+terraform -chdir="$ROOT" fmt -check
+terraform -chdir="$ROOT" validate
+terraform -chdir="$ROOT" plan
 ```
+
+Set `ROOT` to each modified Terraform root. `plan` requires the configured backend and provider credentials.
 
 ### Ansible
 
 ```bash
-ansible-lint ansible/playbooks/ ansible/roles/
-ansible-playbook ansible/playbooks/<playbook>.yml --check
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint ansible/playbooks/ ansible/roles/
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/<playbook>.yml --syntax-check
+# With reachable target hosts:
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/<playbook>.yml --check
 ```
 
 ### Kubernetes
 
 ```bash
-# Dry-run apply
-kubectl apply --dry-run=client -f <path>
+# Render a Kustomize path, then dry-run its rendered resources
+kubectl kustomize <path> | kubectl apply --dry-run=client -f -
 
-# Wait for Flux reconciliation
+# Validate all rendered Kustomizations
+scripts/kubeconform.sh
+
+# Intentional live reconciliation of committed state
 flux reconcile kustomization flux-system --with-source
 ```
 
@@ -208,7 +221,7 @@ chore(deps): update helm chart versions
 
 The repository uses Renovate for dependency updates:
 
-- Minor/patch updates are auto-merged on Sundays
+- Package rules define automerge eligibility and minimum release age; see `renovate.json` for the current policy
 - Major updates require manual review
 - Updates are grouped by category (observability, networking)
 
