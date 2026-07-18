@@ -13,6 +13,12 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Keep changes narrowly scoped to the user's request.
 - Validate changes with the most direct evidence available for the kind of change you made.
 
+## jCodeMunch Exploration
+- When jCodeMunch MCP tools are available and this repository is indexed, prefer them for unfamiliar code exploration, symbol and text search, dependency/reference tracing, change-impact analysis, and task-context assembly.
+- Use native tools for known paths, complete reads of process-control files such as `AGENTS.md` and `README.md`, command output, test output, files outside the index, and pre-edit line-number verification.
+- Fall back to native tools when the index is unavailable or stale.
+- Never index decrypted secrets, credential material, or local override files. Keep them excluded from the index even when they are ignored by git.
+
 ## What Not To Do
 - Do not patch, apply, edit, scale, or restart Kubernetes resources directly when the repo can express the change.
 - Do not edit generated artifacts as if they were normal source files.
