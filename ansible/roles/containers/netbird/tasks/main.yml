@@ -355,10 +355,10 @@
       - --purge
   changed_when: true
   when:
+    - not ansible_check_mode
     - >-
       (netbird_crowdsec_installed_collections.stdout | from_json).collections
       | selectattr('name', 'equalto', 'crowdsecurity/linux') | list | length > 0
-    - not ansible_check_mode
   notify: Restart NetBird containers
 
 - name: List installed CrowdSec parsers
@@ -400,10 +400,10 @@
       - crowdsecurity/syslog-logs
   changed_when: true
   when:
+    - not ansible_check_mode
     - >-
       (netbird_crowdsec_installed_parsers.stdout | from_json).parsers
       | selectattr('name', 'equalto', 'crowdsecurity/syslog-logs') | list | length == 0
-    - not ansible_check_mode
   notify: Restart NetBird containers
 
 - name: Wait for NetBird server before proxy bootstrap
