@@ -11,14 +11,14 @@ repos:
       - id: check-added-large-files
       - id: check-yaml
         args: ["--allow-multiple-documents"]
-        exclude: ^kubernetes/clusters/homelab/flux-system/
+        exclude: ^kubernetes/clusters/production/flux-system/
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
     hooks:
       - id: yamllint
         files: \.ya?ml$
-        exclude: (^kubernetes/clusters/homelab/flux-system/|\.sops\.ya?ml$)
+        exclude: (^kubernetes/clusters/production/flux-system/|\.sops\.ya?ml$)
 
   - repo: local
     hooks:

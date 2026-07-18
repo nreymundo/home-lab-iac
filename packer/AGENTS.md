@@ -20,10 +20,11 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 
 ## Validation
 ```bash
-packer validate packer/ubuntu-24.04-base
-packer validate packer/ubuntu-26.04-base
-packer validate packer/fedora-43-server
+TEMPLATE=packer/ubuntu-24.04-base
+packer init "$TEMPLATE"
+packer fmt -check -recursive "$TEMPLATE"
+packer validate "$TEMPLATE"
 ```
 
-- Treat those commands as representative examples of validating template roots; keep this file aligned when new template directories are added.
+- Set `TEMPLATE` to each modified template root. `packer init` is required on a fresh plugin cache.
 - After changing a base template used by Terraform, call out the downstream impact on cloned node builds and any image compatibility assumptions.

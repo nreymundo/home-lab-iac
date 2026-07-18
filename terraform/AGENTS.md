@@ -4,11 +4,11 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 
 ## What This Subtree Owns
 - `terraform/modules/` holds reusable infrastructure building blocks.
-- Concrete root modules live under both `terraform/instances/` and `terraform/cloud/`; those roots are allowed to produce downstream artifacts such as Ansible inventory or cloud-specific infrastructure state.
+- Concrete root modules live under both `terraform/instances/` and `terraform/cloud/`; those roots can produce downstream artifacts such as Ansible inventory or cloud-specific infrastructure state.
 - Secrets belong in Bitwarden-backed flows, not inline Terraform values or plaintext files.
 
 ## Source Of Truth Boundaries
-- Treat instance roots as the source of truth for generated inventory under `ansible/inventories/`.
+- Treat Terraform roots, including cloud roots, as the source of truth for generated inventory under `ansible/inventories/`.
 - Treat Terraform Cloud workspace settings in each root module's `providers.tf` as part of the root-module contract.
 - For the K3s node fleet, prefer the current `local.k3s.nodes`-driven topology instead of reintroducing older count-based patterns.
 
@@ -20,13 +20,12 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 
 ## Validation
 ```bash
-terraform -chdir=terraform/instances/vm/k3s_nodes fmt
-terraform -chdir=terraform/instances/vm/k3s_nodes validate
-terraform -chdir=terraform/instances/vm/k3s_nodes plan
-terraform -chdir=terraform/instances/vm/openclaw fmt
-terraform -chdir=terraform/instances/vm/openclaw validate
-terraform -chdir=terraform/instances/vm/openclaw plan
+ROOT=terraform/instances/vm/k3s_nodes
+terraform -chdir="$ROOT" init
+terraform -chdir="$ROOT" fmt -check
+terraform -chdir="$ROOT" validate
+terraform -chdir="$ROOT" plan
 ```
 
-- Treat those commands as representative root-module examples, not an exhaustive list of every Terraform root in the repo.
+- Set `ROOT` to each modified root module, including cloud roots. `plan` requires the configured backend and provider credentials.
 - After changing Terraform that feeds Ansible, inspect the generated inventory diff and any host labels, users, or topology assumptions consumed downstream.

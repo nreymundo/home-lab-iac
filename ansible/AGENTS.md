@@ -3,7 +3,7 @@
 Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers Ansible-local editing rules.
 
 ## What This Subtree Owns
-- `ansible/` is responsible for host and cluster configuration after Terraform has provisioned infrastructure.
+- `ansible/` configures Terraform-provisioned infrastructure and independently managed hosts and clusters.
 - Roles are the durable unit of reuse; playbooks should stay thin and primarily compose roles.
 - `ansible.cfg` is part of the execution contract because it defines role paths, inventory defaults, and command expectations.
 
@@ -20,8 +20,10 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 
 ## Validation
 ```bash
-ansible-lint ansible/playbooks/ ansible/roles/
-ansible-playbook ansible/playbooks/k3s_cluster.yml --check
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint ansible/playbooks/ ansible/roles/
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/k3s_cluster.yml --syntax-check
+# With reachable target hosts:
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/k3s_cluster.yml --check
 ```
 
 - Treat the playbook command above as a representative example; for subtree-local validation, run the specific playbook(s) you modified with `--check` when possible.

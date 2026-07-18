@@ -20,9 +20,10 @@ Read the repo root `AGENTS.md` and `kubernetes/AGENTS.md` first. This file only 
 
 ## Validation
 ```bash
-kubectl apply --dry-run=client -f kubernetes/infrastructure
+kubectl kustomize kubernetes/infrastructure >/dev/null
 flux get helmreleases -A
-pre-commit run --all-files
+pre-commit run --files <changed-file> [<changed-file>...]
 ```
 
 - Security and storage subtrees usually have the most local nuance because they mix install objects, policies, ingress, and secrets in the same service tree.
+- Some pre-commit hooks can format files or encrypt and stage `*.sops.yaml` files; inspect `git diff` afterward.
