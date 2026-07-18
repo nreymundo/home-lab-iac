@@ -1,0 +1,13 @@
+{
+  // Keep the MCP tool schema compact while retaining core code-navigation tools.
+  "tool_surface": "full",
+  "tool_profile": "core",
+
+  // Do not send usage telemetry or select remote AI summarization.
+  "share_savings": false,
+  "use_ai_summaries": false,
+  "summarizer_provider": "none",
+  "cross_repo_default": false,
+  "redact_source_root": true,
+  "stats_file_interval": 0
+}

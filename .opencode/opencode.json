@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "jcodemunch": {
+      "type": "local",
+      "command": [
+        "/bin/sh",
+        "-c",
+        "exec env CODE_INDEX_PATH=\"${XDG_DATA_HOME:-$HOME/.local/share}/jcodemunch\" uvx --from jcodemunch-mcp==1.108.144 jcodemunch-mcp"
+      ],
+      "enabled": true,
+      "timeout": 30000
+    }
+  }
+}
