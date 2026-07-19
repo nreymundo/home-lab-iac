@@ -516,10 +516,7 @@ data:
             headers=headers,
         )
         data = BaseResponsesAPIConfig.normalize_responses_api_request_dict(data)
-        return_stream = bool(
-            response_api_optional_request_params.get("stream", False)
-            or data.get("stream")
-        )
+        return_stream = bool(response_api_optional_request_params.get("stream", False))
         data["stream"] = True
         if extra_body:
             data.update(extra_body)
