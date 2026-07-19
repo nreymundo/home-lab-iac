@@ -516,6 +516,10 @@ data:
             headers=headers,
         )
         data = BaseResponsesAPIConfig.normalize_responses_api_request_dict(data)
+        return_stream = bool(
+            response_api_optional_request_params.get("stream", False)
+            or data.get("stream")
+        )
         data["stream"] = True
         if extra_body:
             data.update(extra_body)
@@ -560,7 +564,7 @@ data:
             )
 
         verbose_logger.debug("Using local ChatGPT Responses streaming patch")
-        return ChatGPTResponsesStreamingIterator(
+        iterator = ChatGPTResponsesStreamingIterator(
             response=response,
             model=model,
             logging_obj=logging_obj,
@@ -570,6 +574,15 @@ data:
             request_data=request_context,
             call_type=CallTypes.responses.value,
         )
+        if return_stream or fake_stream:
+            return iterator
+
+        async for _ in iterator:
+            pass
+        completed_response = iterator._get_completed_response_object()
+        if completed_response is None:
+            raise ValueError("ChatGPT Responses stream ended without a completed response")
+        return completed_response
 
 
     def patch_chatgpt_responses_streaming():
