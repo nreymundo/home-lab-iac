@@ -306,7 +306,6 @@ data:
         host: litellm-valkey
         port: "6379"
         ssl: false
-        ssl_check_hostname: false
 
     general_settings:
       # Keep GitOps config authoritative; LiteLLM DB config rows otherwise override router_settings.
@@ -1356,6 +1355,7 @@ data:
             include_metadata=False,
             fallback_type=None,
             llm_router=None,
+            get_model_info=litellm.get_model_info,
         ):
             response = original_create_model_info_response(
                 model_id=model_id,
@@ -1363,6 +1363,7 @@ data:
                 include_metadata=include_metadata,
                 fallback_type=fallback_type,
                 llm_router=llm_router,
+                get_model_info=get_model_info,
             )
             metadata = chatgpt_codex_catalog.model_metadata_for(model_id)
             if metadata is None:
