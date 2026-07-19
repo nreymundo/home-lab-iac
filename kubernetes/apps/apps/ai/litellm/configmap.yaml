@@ -464,10 +464,8 @@ data:
         litellm_metadata=None,
         shared_session=None,
     ):
-        stream = response_api_optional_request_params.get("stream", False)
         if (
             custom_llm_provider != "chatgpt"
-            or stream is not True
             or not isinstance(responses_api_provider_config, ChatGPTResponsesAPIConfig)
         ):
             return await _original_async_response_api_handler(
@@ -1230,6 +1228,36 @@ data:
         Router.async_function_with_retries = async_function_with_retries
 
 
+    def patch_responses_iterator_cache_callback():
+        from litellm.caching.caching_handler import LLMCachingHandler
+        from litellm.responses.streaming_iterator import BaseResponsesAPIStreamingIterator
+
+        if getattr(
+            LLMCachingHandler.async_set_cache,
+            "_responses_iterator_cache_patch",
+            False,
+        ):
+            return
+
+        original_async_set_cache = LLMCachingHandler.async_set_cache
+
+        async def async_set_cache(self, result, original_function, kwargs, args=None):
+            # Responses iterators persist their completed response when the stream
+            # finishes. The generic callback only sees the non-serializable iterator.
+            if isinstance(result, BaseResponsesAPIStreamingIterator):
+                return
+            return await original_async_set_cache(
+                self,
+                result=result,
+                original_function=original_function,
+                kwargs=kwargs,
+                args=args,
+            )
+
+        async_set_cache._responses_iterator_cache_patch = True
+        LLMCachingHandler.async_set_cache = async_set_cache
+
+
     def _catalog_metadata_for_deployment(deployment):
         if not isinstance(deployment, dict):
             return None
@@ -1508,6 +1536,7 @@ data:
         patch_public_model_cost_map_endpoint()
         patch_file_authoritative_router_settings()
         patch_router_response_retries()
+        patch_responses_iterator_cache_callback()
         vllm_model_discovery.worker_startup_hook()
         chatgpt_responses_streaming_patch.worker_startup_hook()
 
