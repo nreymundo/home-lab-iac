@@ -24,7 +24,7 @@ spec:
             image:
               # renovate: datasource=docker depName=arabcoders/watchstate registryUrl=https://ghcr.io
               repository: ghcr.io/arabcoders/watchstate
-              tag: v1.9.2
+              tag: v1.10.0
             env:
               TZ: Europe/Berlin
               WS_TZ: Europe/Berlin
