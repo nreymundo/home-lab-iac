@@ -1,0 +1,72 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tempo
+  namespace: flux-system
+spec:
+  interval: 30m
+  releaseName: tempo
+  targetNamespace: observability
+
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+
+  upgrade:
+    remediation:
+      retries: 3
+
+  chart:
+    spec:
+      chart: tempo
+      # renovate: datasource=helm depName=tempo registryUrl=https://grafana-community.github.io/helm-charts
+      version: "2.2.3"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana-community
+        namespace: flux-system
+      interval: 12h
+
+  values:
+    replicas: 1
+
+    tempo:
+      reportingEnabled: false
+      memBallastSizeMbs: 0
+      retention: 168h
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+            http:
+              endpoint: 0.0.0.0:4318
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+
+    persistence:
+      enabled: true
+      storageClassName: longhorn-r2
+      accessModes:
+        - ReadWriteOnce
+      size: 20Gi
+
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: observability-kube-prometheus-stack
+
+    serviceAccount:
+      create: true
+      automountServiceAccountToken: false

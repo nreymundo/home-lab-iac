@@ -30,9 +30,11 @@ resources:
   - 72-observability-loki-install.yaml
   - 73-observability-alloy-syslog-install.yaml
   - 74-observability-alloy-install.yaml
-  - 75-nfd-install.yaml
-  - 75-nfd-config.yaml
-  - 76-intel-device-plugins-operator-install.yaml
-  - 77-gpu-plugin-install.yaml
+  - 75-observability-tempo-install.yaml
+  - 76-observability-opentelemetry-collector-install.yaml
+  - 80-nfd-install.yaml
+  - 81-nfd-config.yaml
+  - 82-intel-device-plugins-operator-install.yaml
+  - 83-gpu-plugin-install.yaml
   - 90-storage.yaml
   - 91-apps.yaml

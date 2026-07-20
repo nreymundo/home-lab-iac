@@ -1,0 +1,27 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: observability-opentelemetry-collector-install
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./kubernetes/infrastructure/observability/opentelemetry-collector/install
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cluster-identity
+    - name: traefik-config
+    - name: observability-kube-prometheus-stack-install
+    - name: observability-loki-install
+    - name: observability-tempo-install
+  wait: true
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-identity

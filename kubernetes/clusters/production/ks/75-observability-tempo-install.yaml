@@ -1,0 +1,20 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: observability-tempo-install
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./kubernetes/infrastructure/observability/tempo/install
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cluster-identity
+    - name: longhorn-config
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-identity
