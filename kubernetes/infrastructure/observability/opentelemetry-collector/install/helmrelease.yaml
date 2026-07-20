@@ -1,0 +1,267 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: opentelemetry-collector
+  namespace: flux-system
+spec:
+  interval: 30m
+  releaseName: opentelemetry-collector
+  targetNamespace: observability
+
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+
+  upgrade:
+    remediation:
+      retries: 3
+
+  chart:
+    spec:
+      chart: opentelemetry-collector
+      # renovate: datasource=helm depName=opentelemetry-collector registryUrl=https://open-telemetry.github.io/opentelemetry-helm-charts
+      version: "0.165.0"
+      sourceRef:
+        kind: HelmRepository
+        name: open-telemetry
+        namespace: flux-system
+      interval: 12h
+
+  values:
+    mode: statefulset
+    replicaCount: 2
+    annotations:
+      reloader.stakater.com/auto: "true"
+
+    image:
+      repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
+    command:
+      name: otelcol-k8s
+
+    serviceAccount:
+      create: true
+      automountServiceAccountToken: false
+
+    config:
+      receivers:
+        jaeger: null
+        prometheus: null
+        zipkin: null
+        otlp:
+          protocols:
+            grpc:
+              # The chart injects MY_POD_IP; $$ preserves collector env syntax through Flux substitution.
+              endpoint: $${env:MY_POD_IP}:4317
+              auth:
+                authenticator: basicauth/server
+            http:
+              endpoint: $${env:MY_POD_IP}:4318
+              auth:
+                authenticator: basicauth/server
+
+      processors:
+        memory_limiter:
+          check_interval: 5s
+          limit_percentage: 75
+          spike_limit_percentage: 20
+        resource/common:
+          attributes:
+            - key: deployment.environment.name
+              value: home
+              action: upsert
+            - key: k8s.cluster.name
+              value: production
+              action: upsert
+        transform/metric_cardinality:
+          error_mode: ignore
+          metric_statements:
+            - context: datapoint
+              statements:
+                - delete_key(attributes, "session.id")
+                - delete_key(attributes, "message.id")
+                - delete_key(attributes, "request.id")
+                - delete_key(attributes, "trace.id")
+                - delete_key(attributes, "span.id")
+        batch:
+          send_batch_size: 4096
+          timeout: 5s
+
+      exporters:
+        debug: null
+        otlphttp/prometheus:
+          endpoint: http://observability-kube-prometh-prometheus.observability.svc.cluster.local:9090/api/v1/otlp
+          sending_queue:
+            enabled: true
+            storage: file_storage
+            queue_size: 1000
+          retry_on_failure:
+            enabled: true
+            initial_interval: 1s
+            max_interval: 30s
+            max_elapsed_time: 5m
+        otlphttp/loki:
+          endpoint: http://observability-loki-gateway.observability.svc.cluster.local:80/otlp
+          sending_queue:
+            enabled: true
+            storage: file_storage
+            queue_size: 1000
+          retry_on_failure:
+            enabled: true
+            initial_interval: 1s
+            max_interval: 30s
+            max_elapsed_time: 5m
+        otlp/tempo:
+          endpoint: tempo.observability.svc.cluster.local:4317
+          tls:
+            insecure: true
+          sending_queue:
+            enabled: true
+            storage: file_storage
+            queue_size: 1000
+          retry_on_failure:
+            enabled: true
+            initial_interval: 1s
+            max_interval: 30s
+            max_elapsed_time: 5m
+
+      extensions:
+        basicauth/server:
+          htpasswd:
+            file: /etc/otel-auth/.htpasswd
+        file_storage:
+          directory: /var/lib/otelcol/queue
+          create_directory: true
+        health_check:
+          # Bind health checks to this pod rather than every node interface.
+          endpoint: $${env:MY_POD_IP}:13133
+
+      service:
+        extensions:
+          - basicauth/server
+          - file_storage
+          - health_check
+        pipelines:
+          metrics:
+            receivers:
+              - otlp
+            processors:
+              - memory_limiter
+              - resource/common
+              - transform/metric_cardinality
+              - batch
+            exporters:
+              - otlphttp/prometheus
+          logs:
+            receivers:
+              - otlp
+            processors:
+              - memory_limiter
+              - resource/common
+              - batch
+            exporters:
+              - otlphttp/loki
+          traces:
+            receivers:
+              - otlp
+            processors:
+              - memory_limiter
+              - resource/common
+              - batch
+            exporters:
+              - otlp/tempo
+
+    ports:
+      jaeger-compact:
+        enabled: false
+      jaeger-thrift:
+        enabled: false
+      jaeger-grpc:
+        enabled: false
+      zipkin:
+        enabled: false
+      metrics:
+        enabled: true
+        containerPort: 8888
+        servicePort: 8888
+        protocol: TCP
+
+    serviceMonitor:
+      enabled: true
+      extraLabels:
+        release: observability-kube-prometheus-stack
+
+    prometheusRule:
+      enabled: true
+      extraLabels:
+        release: observability-kube-prometheus-stack
+      defaultRules:
+        enabled: true
+
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 1
+
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 10001
+      runAsGroup: 10001
+      fsGroup: 10001
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: opentelemetry-collector
+                app.kubernetes.io/name: opentelemetry-collector
+            topologyKey: kubernetes.io/hostname
+
+    extraVolumes:
+      - name: auth
+        secret:
+          secretName: opentelemetry-collector-auth
+          items:
+            - key: htpasswd
+              path: .htpasswd
+    extraVolumeMounts:
+      - name: auth
+        mountPath: /etc/otel-auth
+        readOnly: true
+      - name: data
+        mountPath: /var/lib/otelcol
+
+    statefulset:
+      persistentVolumeClaimRetentionPolicy:
+        enabled: true
+        whenDeleted: Retain
+        whenScaled: Retain
+      volumeClaimTemplates:
+        - metadata:
+            name: data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            storageClassName: longhorn-r1
+            resources:
+              requests:
+                storage: 2Gi
+
+    networkPolicy:
+      enabled: true
+      allowIngressFrom:
+        - namespaceSelector: {}

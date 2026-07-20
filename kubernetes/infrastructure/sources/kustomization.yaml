@@ -21,3 +21,4 @@ resources:
   - intel.yaml
   - harbor.yaml
   - netbird.yaml
+  - open-telemetry.yaml

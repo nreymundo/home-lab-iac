@@ -89,6 +89,7 @@ spec:
 
       additionalDataSources:
         - name: Loki
+          uid: loki
           type: loki
           access: proxy
           url: http://observability-loki-gateway.observability.svc.cluster.local:80
@@ -96,6 +97,19 @@ spec:
             httpHeaderName1: X-Scope-OrgID
           secureJsonData:
             httpHeaderValue1: "1"
+        - name: Tempo
+          uid: tempo
+          type: tempo
+          access: proxy
+          url: http://tempo.observability.svc.cluster.local:3200
+          jsonData:
+            httpMethod: GET
+            tracesToLogsV2:
+              datasourceUid: loki
+              spanStartTimeShift: -1h
+              spanEndTimeShift: 1h
+              filterByTraceID: true
+              filterBySpanID: false
 
       ingress:
         enabled: true
@@ -129,6 +143,9 @@ spec:
         hosts:
           - prometheus.lan.${CLUSTER_DOMAIN}
       prometheusSpec:
+        enableOTLPReceiver: true
+        tsdb:
+          outOfOrderTimeWindow: 30m
         resources:
           requests:
             cpu: 500m
@@ -136,8 +153,8 @@ spec:
           limits:
             cpu: 2000m
             memory: 3Gi
-        retention: 7d
-        retentionSize: 55GiB
+        retention: 30d
+        retentionSize: 85GiB
         scrapeConfigSelector:
           matchLabels:
             release: observability-kube-prometheus-stack
@@ -151,7 +168,7 @@ spec:
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
-                  storage: 60Gi
+                  storage: 100Gi
 
     alertmanager:
       alertmanagerSpec:

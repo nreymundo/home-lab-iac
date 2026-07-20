@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: opentelemetry-collector-grpc
+  namespace: observability
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: otel-grpc.lan.${CLUSTER_DOMAIN}
+    external-dns.alpha.kubernetes.io/target: ${TRAEFIK_LB_IP}
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: observability-opentelemetry-allowlist@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serversscheme: h2c
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: otel-grpc.lan.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: opentelemetry-collector
+                port:
+                  name: otlp

@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: opentelemetry-collector-auth
+    namespace: observability
+type: Opaque
+data:
+    OPENCODE_USERNAME: ENC[AES256_GCM,data:7WUE2lx1FxnT9gYZ,iv:J+iVsRc1Vx0i3hJ3zoZ8yE/bhr5/LktYeEztVWNsge8=,tag:xwExCCsPA19iOspqWMU9aA==,type:str]
+    OPENCODE_PASSWORD: ENC[AES256_GCM,data:wZkjlJ90aD+3DKBQeCuTef4kxoa5OjOqwU/mNGUCjgRK0ACqi00FEGCI6ocUMjGMCbHm+984k3wPe/3dd0VRNVTVk0BT9ITzNDfHbzyprASgEcN6ViWCsg==,iv:SdAKbhN6BX7OS1U4WrZ1WRNiMcSsHKxer6vfTNH3OuM=,tag:ZKTkipzMHh8dNpFJZP9z1Q==,type:str]
+    SYSTEMS_USERNAME: ENC[AES256_GCM,data:QBn0jXFnyhvjKcWi,iv:Gr1G+C24smoXvf82p10tOThbj0N9grBheFCW5bA2iZA=,tag:rmRoBkkK9vomWDVprhiiRg==,type:str]
+    SYSTEMS_PASSWORD: ENC[AES256_GCM,data:R5Ff+anpTBSHizBJnIZish66Mhlw4fhzCm0BjMuF6gp4arhk9BWMznTD+RhdTIdhpMkiNi63+b58jyZ+HX3gtz44f51CU8dl2zteaFK9/Jzd1PprS6HyuA==,iv:QilJCh/Ek4DQcrhACKjDSAEVmbJch+hh9AzfAOqz9Yk=,tag:kMFv4Tos+lRSJRXGrDh2Nw==,type:str]
+    htpasswd: ENC[AES256_GCM,data:/jxVtLgH/aFip7kzzC7oJK54DIlOE5arSM67rjoGPn/zkpOzajbvjyf/UF0PXOlI+FiF9L9/0vwCYkOLRIJQiDfKfYyWHU4m15g9yd7+Y+/Bx6QuoaZIU977JJKXXJ2fTV/JvayFxcFkt+YpWL6Wpd+Qg/OomcEr87MZWw==,iv:FG29MAb5PpwaMBeR+eidj5idT2g8FCq0rhrdWVma+/Q=,tag:LvBCEqjVgK/XpI9D4DDqDg==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBnc0krMGRPL2gzUWFGR2N2
+            MlQwUjNHdHE2QVZUZ0tRcGh2QnlzRkhCN0d3CkMrUDN5a2xwL2xzVHpFRU1sRndU
+            a0RiY01JU1pjejhYbkRpK0FKd2FZblUKLS0tIEQ4VkIzUm1mRFpXUkRCVGduNVNt
+            ZGJDd0JTT2ZlcHdNNXdWTkYzWGpXQkEK0lAHiI+pxCtstkmWj03G0uxYbpwQzlcx
+            dEfO551k2PsWEjB5zOfnNG1Tk7LgqquiMHyLxwwieS03erfJtJRLZg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-07-20T17:52:36Z"
+    mac: ENC[AES256_GCM,data:FJgZliBQ50mmePMcUxnTfwoOhwGCHQvnxX9uvMLPzHP4jTwsDEzUnrmjfa6pREPRbAHm+jdB3p4QCzRy54MpuEaEQ3LOyBwFiTHKpUJAVTbpowLW79+D6Y/AVXUIO8l6F2RbpNGYcKV6PTixA4L6WCjyVzPQfqZcNARc7GkC0B8=,iv:/3GMjn5iTXFvjBG7x3SKQR5Uex1a50zbd0dJuRInbZs=,tag:JcEqqwMVw72iBUEsk5bZxg==,type:str]
+    version: 3.13.2
