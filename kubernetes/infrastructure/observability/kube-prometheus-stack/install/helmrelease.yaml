@@ -115,12 +115,6 @@ spec:
           url: http://tempo.observability.svc.cluster.local:3200
           jsonData:
             httpMethod: GET
-            tracesToLogsV2:
-              datasourceUid: loki
-              spanStartTimeShift: -1h
-              spanEndTimeShift: 1h
-              filterByTraceID: true
-              filterBySpanID: false
 
       ingress:
         enabled: true
