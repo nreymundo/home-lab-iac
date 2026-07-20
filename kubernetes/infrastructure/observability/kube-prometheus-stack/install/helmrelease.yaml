@@ -35,15 +35,14 @@ spec:
 
     grafana:
       enabled: true
+      defaultDashboardsEnabled: false
       annotations:
-        configmap.reloader.stakater.com/reload: "observability-kube-prometh-grafana-datasource,opentelemetry-collector-dashboard"
+        configmap.reloader.stakater.com/reload: "observability-kube-prometh-grafana-datasource"
       deploymentStrategy:
         type: Recreate
       sidecar:
         dashboards:
-          initDashboards: true
-          skipReload: true
-          watchMethod: LIST
+          enabled: false
         datasources:
           initDatasources: true
           skipReload: true
@@ -101,6 +100,7 @@ spec:
 
       additionalDataSources:
         - name: Loki
+          uid: loki
           type: loki
           access: proxy
           url: http://observability-loki-gateway.observability.svc.cluster.local:80
@@ -115,6 +115,12 @@ spec:
           url: http://tempo.observability.svc.cluster.local:3200
           jsonData:
             httpMethod: GET
+            tracesToLogsV2:
+              datasourceUid: loki
+              spanStartTimeShift: -1h
+              spanEndTimeShift: 1h
+              filterByTraceID: true
+              filterBySpanID: false
 
       ingress:
         enabled: true
