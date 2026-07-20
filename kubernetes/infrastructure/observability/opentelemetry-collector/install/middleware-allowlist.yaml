@@ -1,0 +1,12 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: opentelemetry-allowlist
+  namespace: observability
+spec:
+  ipAllowList:
+    sourceRange:
+      - 192.168.0.0/16
+      - 10.1.20.0/27
+      # NetBird NetworkRouter pods masquerade traffic before it reaches Traefik.
+      - 10.42.0.0/16

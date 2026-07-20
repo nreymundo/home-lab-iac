@@ -6,3 +6,4 @@ resources:
   - helmrelease.yaml
   - ingress-grpc.yaml
   - ingress-http.yaml
+  - middleware-allowlist.yaml

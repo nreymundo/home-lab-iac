@@ -7,7 +7,7 @@ metadata:
     external-dns.alpha.kubernetes.io/hostname: otel.lan.${CLUSTER_DOMAIN}
     external-dns.alpha.kubernetes.io/target: ${TRAEFIK_LB_IP}
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: observability-opentelemetry-allowlist@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
