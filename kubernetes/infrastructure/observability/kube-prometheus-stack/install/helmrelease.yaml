@@ -35,8 +35,19 @@ spec:
 
     grafana:
       enabled: true
+      annotations:
+        configmap.reloader.stakater.com/reload: "observability-kube-prometh-grafana-datasource,opentelemetry-collector-dashboard"
       deploymentStrategy:
         type: Recreate
+      sidecar:
+        dashboards:
+          initDashboards: true
+          skipReload: true
+          watchMethod: LIST
+        datasources:
+          initDatasources: true
+          skipReload: true
+          watchMethod: LIST
       env:
         # SERVER SETTINGS - THIS FIXES THE REDIRECT MISMATCH
         GF_SERVER_ROOT_URL: "https://grafana.lan.${CLUSTER_DOMAIN}"
