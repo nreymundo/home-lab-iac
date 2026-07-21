@@ -14,6 +14,7 @@ resources:
   - ../apps/utils/searxng
   - ../apps/utils/dawarich
   - ../apps/utils/airtrail
+  - ../apps/utils/karakeep
   - ../apps/nextcloud
   - ../apps/media/audiobookshelf
   - ../apps/media/jellyfin

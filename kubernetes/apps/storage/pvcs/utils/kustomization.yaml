@@ -8,4 +8,6 @@ resources:
   - dawarich-redis-pvc.yaml
   - discord-presence-alternate-pvc.yaml
   - discord-presence-main-pvc.yaml
+  - karakeep-pvc.yaml
+  - karakeep-meilisearch-pvc.yaml
   - searxng-pvc.yaml

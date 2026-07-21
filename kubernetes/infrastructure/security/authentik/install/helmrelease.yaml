@@ -132,6 +132,16 @@ spec:
             secretKeyRef:
               name: airtrail-sso-secret
               key: CLIENT_SECRET
+        - name: KARAKEEP_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: karakeep-sso-secret
+              key: CLIENT_ID
+        - name: KARAKEEP_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: karakeep-sso-secret
+              key: CLIENT_SECRET
         - name: NEXTCLOUD_CLIENT_ID
           valueFrom:
             secretKeyRef:
