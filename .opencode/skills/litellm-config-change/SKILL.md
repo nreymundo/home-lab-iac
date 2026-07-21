@@ -101,7 +101,8 @@ model to confirm routing and credentials.
   patches — this is exactly the failure mode `renovate.json:165-174` protects
   against.
 - Adding provider keys as plaintext env vars instead of
-  `litellm-credentials.sops.yaml` (blocked by pre-commit + CI).
+  `litellm-credentials.sops.yaml` (blocked by the local
+  `prevent-plaintext-k8s-secrets` pre-commit hook; CI does not enforce it).
 - Changing cache backend without checking `cache_bypass.py` and the Valkey
   sidecar configuration together.
 - Forgetting that `PYTHONPATH` ordering matters: `/opt/headroom` must come

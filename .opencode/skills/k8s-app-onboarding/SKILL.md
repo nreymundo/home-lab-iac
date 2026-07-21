@@ -190,7 +190,8 @@ pre-commit run --files kubernetes/apps/apps/<category>/<app>/*
   presence alone is not active state).
 - Putting a manually declared PVC inside the app dir instead of
   `kubernetes/apps/storage/pvcs/<domain>/`.
-- Plaintext `Secret` manifests (blocked by pre-commit and CI).
+- Plaintext `Secret` manifests (blocked by the local `prevent-plaintext-k8s-secrets`
+  pre-commit hook; CI does not currently enforce this, so do not rely on it).
 - Forgetting the `# renovate: datasource=...` comment, which silently leaves the
   image tag untracked.
 - Adding a `ks/*.yaml` ordering entry for a normal app (not needed).

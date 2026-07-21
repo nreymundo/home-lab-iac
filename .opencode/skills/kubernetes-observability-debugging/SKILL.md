@@ -62,7 +62,8 @@ runtime config lives elsewhere.
    - Loki: `kubectl -n observability get pods -l app.kubernetes.io/name=loki`;
      verify the gateway and backend pods are ready.
    - Tempo: same pattern; trace ingestion depends on OTel exporter config.
-   - Prometheus: `kubectl -n observability get prometheus,podmonitor,servicemonitor -A`.
+   - Prometheus: `kubectl get prometheus,podmonitor,servicemonitor -A`
+     (cluster-wide; these CRs may live in any namespace).
 4. **Visualization (Grafana)**: see section below — this is the most fragile
    area in recent history.
 5. **End-to-end**: confirm a known-good log/traces/metric query returns data in
@@ -95,11 +96,13 @@ kubectl kustomize kubernetes/infrastructure/observability/<component>/install >/
 # (e.g. .../loki/install, .../tempo/install, .../kube-prometheus-stack/install)
 kubectl kustomize kubernetes/infrastructure >/dev/null   # root infra kustomization exists
 scripts/kubeconform.sh
-pre-commit run --files kubernetes/infrastructure/observability/**
+# pre-commit needs explicit file paths — bash's `**` does not recurse without
+# `shopt -s globstar`, so enumerate YAML files explicitly:
+pre-commit run --files $(find kubernetes/infrastructure/observability -type f)
 
 # Live (only if reachable + intended)
 kubectl -n observability get pods
-kubectl -n observability get prometheus,servicemonitor,podmonitor -A
+kubectl get prometheus,servicemonitor,podmonitor -A
 flux get helmreleases -A | grep -E 'loki|tempo|alloy|kube-prometheus|opentelemetry'
 ```
 
