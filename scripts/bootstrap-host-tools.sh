@@ -23,6 +23,8 @@ readonly REQUIRED_TOOLS=(
   kubeconform
   trivy
   checkov
+  shellcheck
+  shfmt
 )
 
 readonly ARCH_DISTRO_TOKENS=(
@@ -382,6 +384,12 @@ prepare_arch_package_plan() {
     checkov)
       append_unique MANUAL_TOOLS_TO_INSTALL checkov
       ;;
+    shellcheck)
+      append_unique PACMAN_PACKAGES_TO_INSTALL shellcheck
+      ;;
+    shfmt)
+      append_unique PACMAN_PACKAGES_TO_INSTALL shfmt
+      ;;
     *)
       die "No package mapping defined for tool: $tool"
       ;;
@@ -421,6 +429,12 @@ prepare_ubuntu_package_plan() {
       ;;
     checkov)
       append_unique BREW_PACKAGES_TO_INSTALL checkov
+      ;;
+    shellcheck)
+      append_unique APT_PACKAGES_TO_INSTALL shellcheck
+      ;;
+    shfmt)
+      append_unique BREW_PACKAGES_TO_INSTALL shfmt
       ;;
     sops)
       append_unique BREW_PACKAGES_TO_INSTALL sops
@@ -498,6 +512,9 @@ print_manual_install_hint() {
       ;;
     checkov)
       printf '    - checkov: install with `pipx install checkov`, or another isolated Python package method that puts `checkov` on PATH.\n' >&2
+      ;;
+    shfmt)
+      printf '    - shfmt: install a release binary from https://github.com/mvdan/sh/releases and place it on PATH.\n' >&2
       ;;
     *)
       printf '    - %s: install manually.\n' "$tool" >&2

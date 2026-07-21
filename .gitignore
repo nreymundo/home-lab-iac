@@ -85,3 +85,9 @@ local
 
 # Local agent planning artifacts
 .sisyphus/
+
+# OpenCode infra-change control plane (temporary; remove before committing)
+.opencode/agents/
+.opencode/commands/
+scripts/opencode/
+docs/changes/
