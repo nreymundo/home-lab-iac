@@ -1,0 +1,337 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: karakeep
+  namespace: utils
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsUser: 1000
+        runAsGroup: 1000
+
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=karakeep-app/karakeep registryUrl=https://ghcr.io
+              repository: ghcr.io/karakeep-app/karakeep
+              tag: "0.32.0"
+            env:
+              TZ: Europe/Berlin
+              # --- Core ---
+              PORT: "3000"
+              DATA_DIR: /data
+              NEXTAUTH_URL: https://keep.${CLUSTER_DOMAIN}
+              NEXTAUTH_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: karakeep-secrets
+                    key: NEXTAUTH_SECRET
+              DB_WAL_MODE: "true"
+              DISABLE_NEW_RELEASE_CHECK: "true"
+              LOG_LEVEL: notice
+              # App-wide asset + request guardrails.
+              MAX_ASSET_SIZE_MB: "25"
+              RATE_LIMITING_ENABLED: "true"
+              # OCR text extraction from images; cache lives under /data.
+              OCR_CACHE_DIR: /data/ocr-cache
+              OCR_LANGS: eng,deu,spa
+              # --- Search ---
+              MEILI_ADDR: http://karakeep-meilisearch:7700
+              MEILI_MASTER_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: karakeep-secrets
+                    key: MEILI_MASTER_KEY
+              # --- Browser crawler ---
+              BROWSER_WEB_URL: http://karakeep-chrome:9222
+              # Per-domain crawl rate limiting.
+              CRAWLER_DOMAIN_RATE_LIMIT_WINDOW_MS: "60000"
+              CRAWLER_DOMAIN_RATE_LIMIT_MAX_REQUESTS: "20"
+              # --- Auth: native OIDC against Authentik ---
+              # TEMPORARY bootstrap: DISABLE_SIGNUPS is opened so the intended
+              # Authentik-authorized user can perform the first OIDC login and
+              # become the Karakeep admin. Flip DISABLE_SIGNUPS back to "true"
+              # in Git immediately after that first login lands.
+              DISABLE_SIGNUPS: "false"
+              DISABLE_PASSWORD_AUTH: "true"
+              OAUTH_AUTO_REDIRECT: "true"
+              # Permit linking an existing local account to an OIDC subject on
+              # first SSO login when the Authentik email matches. Required here
+              # because signups/password auth are disabled above, so the only
+              # way to attach pre-existing accounts to SSO identities is via
+              # this documented Karakeep escape hatch. Safe because Authentik
+              # is the sole, locally-trusted OIDC provider for this cluster.
+              OAUTH_ALLOW_DANGEROUS_EMAIL_ACCOUNT_LINKING: "true"
+              OAUTH_WELLKNOWN_URL: https://sso.${CLUSTER_DOMAIN}/application/o/karakeep/.well-known/openid-configuration
+              OAUTH_SCOPE: openid email profile
+              OAUTH_PROVIDER_NAME: Authentik
+              OAUTH_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: karakeep-oidc-secrets
+                    key: OAUTH_CLIENT_ID
+              OAUTH_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: karakeep-oidc-secrets
+                    key: OAUTH_CLIENT_SECRET
+              # --- AI via LiteLLM (enabled; virtual key in karakeep-ai-secrets) ---
+              OPENAI_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
+              OPENAI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: karakeep-ai-secrets
+                    key: LITELLM_API_KEY
+              INFERENCE_TEXT_MODEL: local/automation-lite
+              INFERENCE_IMAGE_MODEL: local/camera-analysis
+              EMBEDDING_TEXT_MODEL: local/embedding
+              # AI enrichment is on: auto-tagging and summarization run
+              # against LiteLLM via the karakeep-ai-secrets virtual key
+              # (see plan.md).
+              INFERENCE_ENABLE_AUTO_TAGGING: "true"
+              INFERENCE_ENABLE_AUTO_SUMMARIZATION: "true"
+              # Inference tuning: context/output caps and worker pool.
+              INFERENCE_CONTEXT_LENGTH: "4096"
+              INFERENCE_MAX_OUTPUT_TOKENS: "512"
+              INFERENCE_JOB_TIMEOUT_SEC: "120"
+              INFERENCE_NUM_WORKERS: "1"
+            ports:
+              - name: http
+                containerPort: 3000
+            probes:
+              # Karakeep exposes no documented dedicated health endpoint.
+              # Root "/" is the only viable documented target on port 3000.
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 3000
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 3000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 3000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 2000m
+                memory: 2Gi
+
+      meilisearch:
+        containers:
+          meilisearch:
+            image:
+              # renovate: datasource=docker depName=getmeili/meilisearch registryUrl=https://docker.io
+              repository: docker.io/getmeili/meilisearch
+              tag: v1.41.0
+            env:
+              TZ: Europe/Berlin
+              MEILI_NO_ANALYTICS: "true"
+              MEILI_ENV: production
+              MEILI_MASTER_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: karakeep-secrets
+                    key: MEILI_MASTER_KEY
+            ports:
+              - name: http
+                containerPort: 7700
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 7700
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 7700
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 7700
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+
+      chrome:
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            fsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+        containers:
+          chrome:
+            image:
+              # renovate: datasource=docker depName=zenika-hub/alpine-chrome registryUrl=https://gcr.io
+              repository: gcr.io/zenika-hub/alpine-chrome
+              tag: "124"
+            # Pass flags as args so the image ENTRYPOINT (chromium-browser)
+            # is preserved instead of being overwritten.
+            args:
+              - --no-sandbox
+              - --disable-gpu
+              - --disable-dev-shm-usage
+              - --remote-debugging-address=0.0.0.0
+              - --remote-debugging-port=9222
+              - --hide-scrollbars
+              - --disable-blink-features=AutomationControlled
+              - --window-size=1440,900
+            ports:
+              - name: cdp
+                containerPort: 9222
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /json/version
+                    port: 9222
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /json/version
+                    port: 9222
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /json/version
+                    port: 9222
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 2Gi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 3000
+      meilisearch:
+        controller: meilisearch
+        ports:
+          http:
+            port: 7700
+      chrome:
+        controller: chrome
+        ports:
+          cdp:
+            port: 9222
+
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: keep.${CLUSTER_DOMAIN}
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Karakeep
+          gethomepage.dev/description: Self-hosted bookmark manager
+          gethomepage.dev/group: "Kubernetes"
+          gethomepage.dev/icon: karakeep.png
+        hosts:
+          - host: keep.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: karakeep
+        # Scope /data to the main Karakeep container only. Meilisearch mounts
+        # its own PVC below; the headless Chrome container needs no data mount.
+        advancedMounts:
+          main:
+            main:
+              - path: /data
+      meilisearch:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: karakeep-meilisearch
+        advancedMounts:
+          meilisearch:
+            meilisearch:
+              - path: /meili_data

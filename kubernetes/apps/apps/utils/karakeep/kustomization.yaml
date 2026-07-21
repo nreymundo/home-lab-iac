@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+  - ../../../../components/bjw-s-defaults
+  - ../../../../components/ingress/traefik-base
+
+resources:
+  - karakeep-secrets.sops.yaml
+  - karakeep-oidc-secrets.sops.yaml
+  - karakeep-ai-secrets.sops.yaml
+  - helmrelease.yaml
