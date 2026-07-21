@@ -49,20 +49,26 @@ else
   declare -A affected_templates=()
 
   for line in "${status_lines[@]}"; do
-    path="${line:3}"
-    if [[ "$path" == *" -> "* ]]; then
-      path="${path##* -> }"
+    field="${line:3}"
+    if [[ "$field" == *" -> "* ]]; then
+      # Handle rename: "R  old -> new". Process BOTH sides so a move OUT of a
+      # template still surfaces the now-broken source (mirrors the deletion case).
+      paths=( "${field%% -> *}" "${field##* -> }" )
+    else
+      paths=( "$field" )
     fi
-    if [[ "$path" != "$PACKER_ROOT"/* ]]; then
-      continue
-    fi
-    # Any change inside packer/<template>/ affects that template, since
-    # scripts, http/autoinstall files, and variable files are all part of it.
-    # Deletions are included: a surviving template may now be broken, while a
-    # template emptied of its last *.pkr.hcl is filtered out below.
-    rel="${path#$PACKER_ROOT/}"
-    template_name="${rel%%/*}"
-    [[ -n "$template_name" ]] && affected_templates["$PACKER_ROOT/$template_name"]=1
+    for path in "${paths[@]}"; do
+      if [[ "$path" != "$PACKER_ROOT"/* ]]; then
+        continue
+      fi
+      # Any change inside packer/<template>/ affects that template, since
+      # scripts, http/autoinstall files, and variable files are all part of it.
+      # Deletions are included: a surviving template may now be broken, while a
+      # template emptied of its last *.pkr.hcl is filtered out below.
+      rel="${path#$PACKER_ROOT/}"
+      template_name="${rel%%/*}"
+      [[ -n "$template_name" ]] && affected_templates["$PACKER_ROOT/$template_name"]=1
+    done
   done
 
   if [[ ${#affected_templates[@]} -gt 0 ]]; then

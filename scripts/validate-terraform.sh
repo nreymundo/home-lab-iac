@@ -60,26 +60,27 @@ else
   declare -A affected_roots=()
 
   for line in "${status_lines[@]}"; do
-    path="${line:3}"
-    # Handle rename: "R  old -> new"
-    if [[ "$path" == *" -> "* ]]; then
-      path="${path##* -> }"
-    fi
-    # Only *.tf files affect validation. tfvars, plans, etc. do not.
-    if [[ "$path" != *.tf ]]; then
-      continue
-    fi
-    if [[ "$path" != "$TERRAFORM_ROOT"/* ]]; then
-      continue
-    fi
-    if [[ "$path" == "$MODULES_PREFIX"* ]]; then
-      # Module changes (including deletions) may affect every consuming root.
-      modules_changed=true
+    field="${line:3}"
+    # Handle rename: "R  old -> new". Process BOTH sides so a move OUT of a
+    # root still surfaces the now-broken source (mirrors the deletion case).
+    if [[ "$field" == *" -> "* ]]; then
+      paths=( "${field%% -> *}" "${field##* -> }" )
     else
-      # Deletions matter too: a surviving root may now be broken. Validate the
-      # containing root only if it still exists on disk (a fully removed root is gone).
-      [[ -d "${path%/*}" ]] && affected_roots["${path%/*}"]=1
+      paths=( "$field" )
     fi
+    for path in "${paths[@]}"; do
+      # Only *.tf files affect validation. tfvars, plans, etc. do not.
+      [[ "$path" == *.tf ]] || continue
+      [[ "$path" == "$TERRAFORM_ROOT"/* ]] || continue
+      if [[ "$path" == "$MODULES_PREFIX"* ]]; then
+        # Module changes (including deletions) may affect every consuming root.
+        modules_changed=true
+      else
+        # Deletions matter too: a surviving root may now be broken. Validate the
+        # containing root only if it still exists on disk (a fully removed root is gone).
+        [[ -d "${path%/*}" ]] && affected_roots["${path%/*}"]=1
+      fi
+    done
   done
 
   if [[ "$modules_changed" == "true" ]]; then
