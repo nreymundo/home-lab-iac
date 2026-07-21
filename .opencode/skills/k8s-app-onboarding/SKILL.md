@@ -78,6 +78,8 @@ kubernetes/apps/apps/<category>/<app>/
 
 ### `kustomization.yaml` template
 
+The minimal template:
+
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -85,9 +87,22 @@ components:
   - ../../../../components/bjw-s-defaults
   - ../../../../components/ingress/traefik-base
 resources:
-  - <app>-secrets.sops.yaml
   - helmrelease.yaml
 ```
+
+Add to `resources:` based on what the app actually uses. Every SOPS file the
+HelmRelease consumes via `secretKeyRef` / `envFrom` must be listed here, and
+so must every sidecar manifest. Cross-check against a real sibling's
+`kustomization.yaml` — typical conditional entries:
+
+- `- <app>-secrets.sops.yaml` — always, when the HelmRelease reads app secrets.
+- `- <app>-oidc-secrets.sops.yaml` — when SSO-protected (Authentik OIDC).
+- `- <app>-db-secrets.sops.yaml` — when DB-backed (consumed by CNPG or app).
+- `- <app>-credentials.sops.yaml` — when the app needs provider API keys.
+- `- cnpg-cluster.yaml` — **when DB-backed**; every DB-backed app in the repo
+  includes this (omitting it leaves the `Cluster` unrendered and the app
+  deploys without its database).
+- `- backup-job.yaml` — when a per-app backup `CronJob` is wanted.
 
 Add `storage/backup-policy` to `components:` only when Longhorn backup labels
 are wanted and the workload owns its own PVC semantics.
@@ -109,18 +124,18 @@ are wanted and the workload owns its own PVC semantics.
 1. Local app creds: `<app>-oidc-secrets.sops.yaml` in the app dir with
    `OAUTH_CLIENT_ID` / `OAUTH_CLIENT_SECRET` (or whatever env keys the app
    expects), referenced via `secretKeyRef` in the HelmRelease.
-2. Authentik side (three pieces, all required for login to work):
+2. Authentik side:
    - `<app>-sso-secret.sops.yaml` under
-     `kubernetes/infrastructure/security/authentik/install/` — the OAuth client
-     secret injected into the Authentik HelmRelease.
+     `kubernetes/infrastructure/security/authentik/install/` — **required**;
+     the OAuth client secret injected into the Authentik HelmRelease.
    - An `<app>-sso` entry in
      `kubernetes/infrastructure/security/authentik/install/blueprint-bootstrap-cm.yaml`
      declaring the Authentik `application` + `oauth2provider` (and any groups
-     or property mappings). **Without this entry the issuer has no application
-     or provider and `https://sso.${CLUSTER_DOMAIN}/application/o/<app>/...`
-     returns nothing.** Mirror an existing sibling entry (e.g. `airtrail-sso`,
-     `dawarich-sso`).
-   - Optional `middleware-<app>.yaml` under `.../authentik/config/` when a
+     or property mappings). **Required** — without this entry the issuer has
+     no application or provider and
+     `https://sso.${CLUSTER_DOMAIN}/application/o/<app>/...` returns nothing.
+     Mirror an existing sibling entry (e.g. `airtrail-sso`, `dawarich-sso`).
+   - Optional: `middleware-<app>.yaml` under `.../authentik/config/` when a
      Traefik forward-auth middleware is wanted.
    Add each new file to its respective parent `kustomization.yaml`.
 3. Endpoints use `https://sso.${CLUSTER_DOMAIN}/application/o/<app>/...`.
@@ -148,8 +163,11 @@ are wanted and the workload owns its own PVC semantics.
 # Render the app and its storage domain
 kubectl kustomize --load-restrictor=LoadRestrictionsNone \
   kubernetes/apps/apps/<category>/<app> >/dev/null
-kubectl kustomize --load-restrictor=LoadRestrictionsNone \
-  kubernetes/apps/apps/<category> >/dev/null
+# Only when a category-level kustomization.yaml exists (most categories don't —
+# see "Flux inclusion" above):
+[ -f kubernetes/apps/apps/<category>/kustomization.yaml ] && \
+  kubectl kustomize --load-restrictor=LoadRestrictionsNone \
+    kubernetes/apps/apps/<category> >/dev/null
 kubectl kustomize --load-restrictor=LoadRestrictionsNone \
   kubernetes/apps/production >/dev/null
 [ -n "$PVC_DOMAIN" ] && kubectl kustomize --load-restrictor=LoadRestrictionsNone \

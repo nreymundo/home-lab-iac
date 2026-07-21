@@ -128,8 +128,11 @@ self-sufficient.
 
 CloudNativePG backs up via native `barmanObjectStore` in each `Cluster` to
 `s3://cloudnative-pg/<app>` with `serverName` like `<cluster>-v1`, retention
-`14d`. Current clusters: `authentik-pg`, `n8n-pg`, `nextcloud-pg`,
-`paperless-pg`, `immich-pg`, `litellm-pg`.
+`14d`. Current clusters: `authentik-pg` (lives under
+`kubernetes/infrastructure/security/authentik/install/authentik-db.yaml`), and
+the per-app ones under `kubernetes/apps/apps/**/cnpg-cluster.yaml`:
+`airtrail-pg`, `dawarich-pg`, `immich-pg`, `litellm-pg`, `n8n-pg`,
+`nextcloud-pg`, `paperless-pg`.
 
 CNPG restore is **not in-place**. Create a new `Cluster` (e.g.
 `<app>-pg-restore`) that bootstraps from `recovery.source` referencing an
