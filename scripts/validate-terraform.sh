@@ -36,8 +36,11 @@ fi
 discover_all_roots() {
   # Roots are directories that contain at least one *.tf file, excluding modules.
   # --cached --others --exclude-standard includes untracked-but-not-ignored files
-  # so newly added roots are seen by --all and the module-change fan-out.
+  # so newly added roots are seen by --all and the module-change fan-out. The
+  # existence filter drops tracked files deleted from the working tree (unstaged
+  # removals) so removed roots are not reported.
   git ls-files --cached --others --exclude-standard "$TERRAFORM_ROOT/**/*.tf" \
+    | while IFS= read -r f; do if [[ -f "$f" ]]; then printf '%s\n' "$f"; fi; done \
     | grep -v "^${MODULES_PREFIX}" \
     | xargs -r -n1 dirname \
     | sort -u

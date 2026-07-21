@@ -31,7 +31,10 @@ discover_all_templates() {
   # Templates are directories containing at least one *.pkr.hcl file.
   # --cached --others --exclude-standard includes untracked-but-not-ignored files
   # so newly added templates are seen by --all and the qualification filter below.
+  # The existence filter drops tracked files deleted from the working tree
+  # (unstaged removals) so removed templates are not reported.
   git ls-files --cached --others --exclude-standard "$PACKER_ROOT/**/*.pkr.hcl" \
+    | while IFS= read -r f; do if [[ -f "$f" ]]; then printf '%s\n' "$f"; fi; done \
     | xargs -r -n1 dirname \
     | sort -u
 }
