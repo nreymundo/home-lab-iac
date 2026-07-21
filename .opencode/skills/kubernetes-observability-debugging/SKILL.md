@@ -88,9 +88,12 @@ provisioning, and OTel integration. When changing Grafana provisioning:
 ## Validation
 
 ```bash
-# Render
-kubectl kustomize kubernetes/infrastructure/observability >/dev/null
-kubectl kustomize kubernetes/infrastructure >/dev/null
+# Render. There is NO root kubernetes/infrastructure/observability/kustomization.yaml —
+# Flux reconciles each component's install dir individually, so render the
+# changed component(s) explicitly:
+kubectl kustomize kubernetes/infrastructure/observability/<component>/install >/dev/null
+# (e.g. .../loki/install, .../tempo/install, .../kube-prometheus-stack/install)
+kubectl kustomize kubernetes/infrastructure >/dev/null   # root infra kustomization exists
 scripts/kubeconform.sh
 pre-commit run --files kubernetes/infrastructure/observability/**
 

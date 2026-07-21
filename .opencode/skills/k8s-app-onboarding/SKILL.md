@@ -109,18 +109,34 @@ are wanted and the workload owns its own PVC semantics.
 1. Local app creds: `<app>-oidc-secrets.sops.yaml` in the app dir with
    `OAUTH_CLIENT_ID` / `OAUTH_CLIENT_SECRET` (or whatever env keys the app
    expects), referenced via `secretKeyRef` in the HelmRelease.
-2. Authentik side: `<app>-sso-secret.sops.yaml` under
-   `kubernetes/infrastructure/security/authentik/install/` and an optional
-   `middleware-<app>.yaml` under `.../authentik/config/`. Add both to their
-   respective parent `kustomization.yaml`.
+2. Authentik side (three pieces, all required for login to work):
+   - `<app>-sso-secret.sops.yaml` under
+     `kubernetes/infrastructure/security/authentik/install/` — the OAuth client
+     secret injected into the Authentik HelmRelease.
+   - An `<app>-sso` entry in
+     `kubernetes/infrastructure/security/authentik/install/blueprint-bootstrap-cm.yaml`
+     declaring the Authentik `application` + `oauth2provider` (and any groups
+     or property mappings). **Without this entry the issuer has no application
+     or provider and `https://sso.${CLUSTER_DOMAIN}/application/o/<app>/...`
+     returns nothing.** Mirror an existing sibling entry (e.g. `airtrail-sso`,
+     `dawarich-sso`).
+   - Optional `middleware-<app>.yaml` under `.../authentik/config/` when a
+     Traefik forward-auth middleware is wanted.
+   Add each new file to its respective parent `kustomization.yaml`.
 3. Endpoints use `https://sso.${CLUSTER_DOMAIN}/application/o/<app>/...`.
 
 ## Flux inclusion (easy to forget)
 
-- Add the new app to its category parent `kustomization.yaml` under
-  `kubernetes/apps/apps/<category>/`.
-- Confirm `kubernetes/apps/production/kustomization.yaml` aggregates that
-  category; it reconciles via `ks/91-apps.yaml` (`apps-manifests`, `prune: true`).
+- **The authoritative aggregator is `kubernetes/apps/production/kustomization.yaml`,
+  which lists each app directory directly** (one `resources:` entry per app,
+  e.g. `- ../apps/utils/airtrail`). Add the new app dir there.
+- A category-level `kubernetes/apps/apps/<category>/kustomization.yaml` exists
+  only for a few categories (`external-proxy`, `immich`, `nextcloud`,
+  `paperless`); most categories have none. If the target category does have
+  one, wire it there too — but never assume file presence alone makes the app
+  active.
+- `kubernetes/apps/production/kustomization.yaml` reconciles via
+  `ks/91-apps.yaml` (`apps-manifests`, `prune: true`).
 - Storage-side changes reconcile via `ks/90-storage.yaml` (`apps-storage`,
   `prune: true`).
 - A new `ks/*.yaml` entry is NOT needed for a normal app — only infrastructure
@@ -141,8 +157,10 @@ kubectl kustomize --load-restrictor=LoadRestrictionsNone \
 
 # Repo-wide manifest validation + secret/pre-commit policy
 scripts/kubeconform.sh
-pre-commit run --files kubernetes/apps/apps/<category>/<app>/* \
-  kubernetes/apps/storage/pvcs/<domain>/<app>-pvc.yaml
+pre-commit run --files kubernetes/apps/apps/<category>/<app>/*
+# Only when a manually declared PVC was added:
+[ -f kubernetes/apps/storage/pvcs/<domain>/<app>-pvc.yaml ] && \
+  pre-commit run --files kubernetes/apps/storage/pvcs/<domain>/<app>-pvc.yaml
 ```
 
 `pre-commit` will auto-encrypt any new `*.sops.yaml` and stage it; review

@@ -41,8 +41,12 @@ Do not use for general PR review or for hand-rolled dependency changes.
    `matchPackageNames`, `matchPaths`, and `matchUpdateTypes`.
 3. Classify into one of:
    - **automerge-eligible**: minor/patch/digest of a stable image, no manual
-     gate matches, `minimumReleaseAge` satisfied.
-   - **manual**: major bump, 0.x current version, LiteLLM bump, or an explicit
+     gate matches, `minimumReleaseAge` satisfied. This **includes Kubernetes
+     0.x minor/patch/digest** (path `kubernetes/**`, `matchCurrentVersion:
+     /^0/`) — `renovate.json:137-147` sets `automerge: true` after 5 days
+     stability.
+   - **manual**: major bump of any kind (Kubernetes majors never automerge),
+     non-Kubernetes 0.x major bumps, LiteLLM bump, or any explicit
      `automerge: false` rule.
    - **blocked / wrong**: PR proposes a tag that violates an `allowedVersions`
      regex (e.g. non-semver for Jellyfin, wrong major line for Lidarr, `-rc`
