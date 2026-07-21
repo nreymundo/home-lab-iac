@@ -149,6 +149,13 @@ for template in packer/ubuntu-24.04-base packer/ubuntu-26.04-base packer/fedora-
 done
 ```
 
+For diff-scoped validation across all affected templates (the same script the workflow guard runs), use:
+
+```bash
+scripts/validate-packer.sh              # validate only templates touched by the current diff
+scripts/validate-packer.sh --all        # validate every template
+```
+
 ### Terraform
 
 ```bash
@@ -160,6 +167,15 @@ terraform -chdir="$ROOT" plan
 ```
 
 Set `ROOT` to each modified Terraform root. `plan` requires the configured backend and provider credentials.
+
+For diff-scoped validation across all affected roots (the same script the workflow guard runs), use:
+
+```bash
+scripts/validate-terraform.sh           # validate only roots touched by the current diff
+scripts/validate-terraform.sh --all     # validate every root
+```
+
+The manual per-root commands above remain useful when iterating on a single root or when `plan` is needed.
 
 ### Ansible
 

@@ -13,6 +13,11 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Keep changes narrowly scoped to the user's request.
 - Validate changes with the most direct evidence available for the kind of change you made.
 
+## Host Access
+- `~/.ssh/config` and any files it `Include`s is the source of truth for reaching lab hosts: host aliases, users, ports, and `ProxyJump` hops. Resolve SSH targets through it (e.g. `ssh k3s-node-01`) instead of guessing IPs, users, or ports.
+- Do not copy or hardcode connection details from there into repo files; reference hosts by their configured alias.
+- `IdentityFile` private keys are off-limits for reading, printing, or exfiltration, consistent with the global safety policy. The config file holds connection metadata only.
+
 ## jCodeMunch Exploration
 - When jCodeMunch MCP tools are available and this repository is indexed, prefer them for unfamiliar code exploration, symbol and text search, dependency/reference tracing, change-impact analysis, and task-context assembly.
 - Use native tools for known paths, complete reads of process-control files such as `AGENTS.md` and `README.md`, command output, test output, files outside the index, and pre-edit line-number verification.
