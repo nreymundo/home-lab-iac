@@ -26,6 +26,7 @@ spec:
             env:
               TZ: Europe/Berlin
               PAPERLESS_REDIS: redis://paperless-redis:6379
+              PAPERLESS_DBENGINE: postgresql
               PAPERLESS_DBHOST: paperless-pg-rw
               PAPERLESS_DBNAME: paperless
               PAPERLESS_DBUSER:
