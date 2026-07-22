@@ -98,6 +98,8 @@ spec:
             paths:
               - path: /_next/static
                 pathType: Prefix
+              - path: /api
+                pathType: Prefix
 
     # All the config files for Homepage can be specified under their relevant config block.
     config:
