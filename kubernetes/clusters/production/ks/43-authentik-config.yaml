@@ -13,6 +13,7 @@ spec:
   dependsOn:
     - name: cluster-identity
     - name: authentik-install
+    - name: traefik-config
   wait: true
   timeout: 10m
   decryption:

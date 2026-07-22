@@ -5,7 +5,9 @@ resources:
   - middlewares/default-headers.yaml
   - middlewares/nextcloud-office-headers.yaml
   - middlewares/rate-limit.yaml
+  - middlewares/authentik-rate-limit.yaml
   - middlewares/default-chain.yaml
+  - middlewares/authentik-chain.yaml
   - middlewares/nextcloud-office-chain.yaml
   - middlewares/gatekeeper-auth-chain.yaml
   - middlewares/frigate-auth-chain.yaml
