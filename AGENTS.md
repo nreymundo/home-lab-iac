@@ -28,6 +28,10 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Never commit plaintext secrets, private keys, or unencrypted Kubernetes Secret manifests.
 - Do not broaden a narrowly requested fix into adjacent cleanup.
 
+## Remote Host Access
+- Before assuming how to reach a host — alias, `ProxyJump` hop, `IdentityFile`, or port — check `~/.ssh/config`.
+- `~/.ssh/config` may `Include` other files (e.g. `~/.ssh/conf.d/*` or per-host config); check those too, not just the top-level file.
+
 ## Validation And Evidence
 - Do not present a config-only theory as a confirmed root cause when live evidence is available.
 - Before claiming a fix, use the most direct evidence available in the current environment.

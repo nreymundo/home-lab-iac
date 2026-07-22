@@ -1,5 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "default_agent": "generalist",
+  "subagent_depth": 1,
+  "instructions": ["AGENTS.md"],
   "mcp": {
     "jcodemunch": {
       "type": "local",
@@ -10,6 +13,38 @@
       ],
       "enabled": true,
       "timeout": 30000
+    }
+  },
+  "agent": {
+    "build": { "disable": true },
+    "general": { "disable": true }
+  },
+  "permission": {
+    "edit": { "*": "allow" },
+    "bash": {
+      "*": "allow",
+      "kubectl *": "ask",
+      "helm install *": "ask",
+      "helm upgrade *": "ask",
+      "helm uninstall *": "ask",
+      "helm rollback *": "ask",
+      "terraform apply*": "ask",
+      "terraform destroy*": "ask",
+      "terraform import*": "ask",
+      "terraform state*": "ask",
+      "tofu apply*": "ask",
+      "tofu destroy*": "ask",
+      "tofu import*": "ask",
+      "tofu state*": "ask",
+      "flux reconcile*": "ask",
+      "flux suspend*": "ask",
+      "flux resume*": "ask",
+      "flux bootstrap*": "ask",
+      "flux uninstall*": "ask",
+      "ansible-playbook *": "ask",
+      "ansible-galaxy*": "ask",
+      "k3d *": "ask",
+      "opencode debug config*": "deny"
     }
   }
 }
