@@ -67,10 +67,12 @@ spec:
               OAUTH_AUTO_REDIRECT: "true"
               # Permit linking an existing local account to an OIDC subject on
               # first SSO login when the Authentik email matches. Required here
-              # because signups/password auth are disabled above, so the only
-              # way to attach pre-existing accounts to SSO identities is via
-              # this documented Karakeep escape hatch. Safe because Authentik
-              # is the sole, locally-trusted OIDC provider for this cluster.
+              # because password auth is disabled above and signups are only
+              # temporarily open for the bootstrap first-login (see
+              # DISABLE_SIGNUPS), so the only way to attach pre-existing
+              # accounts to SSO identities is via this documented Karakeep
+              # escape hatch. Safe because Authentik is the sole,
+              # locally-trusted OIDC provider for this cluster.
               OAUTH_ALLOW_DANGEROUS_EMAIL_ACCOUNT_LINKING: "true"
               OAUTH_WELLKNOWN_URL: https://sso.${CLUSTER_DOMAIN}/application/o/karakeep/.well-known/openid-configuration
               OAUTH_SCOPE: openid email profile
@@ -221,8 +223,8 @@ spec:
         containers:
           chrome:
             image:
-              # renovate: datasource=docker depName=zenika-hub/alpine-chrome registryUrl=https://gcr.io
-              repository: gcr.io/zenika-hub/alpine-chrome
+              # renovate: datasource=docker depName=zenika/alpine-chrome registryUrl=https://docker.io
+              repository: docker.io/zenika/alpine-chrome
               tag: "124"
             # Pass flags as args so the image ENTRYPOINT (chromium-browser)
             # is preserved instead of being overwritten.
