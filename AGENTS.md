@@ -11,6 +11,9 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Prefer changing source-of-truth files over mutating live systems or generated artifacts.
 - Use the repo's GitOps workflow when a Kubernetes change can be expressed in git.
 - Keep changes narrowly scoped to the user's request.
+- Before proposing a new design, recovery workflow, or external research, inspect relevant in-repo sibling implementations first.
+- When a proven local pattern exists, adapt it directly; do not add abstractions, safeguards, or recovery procedures unless the existing pattern demonstrably cannot meet the requirement.
+- Keep investigation proportional: stop discovery once direct runtime evidence and an in-repo reference identify the minimal Git fix.
 - Validate changes with the most direct evidence available for the kind of change you made.
 
 ## jCodeMunch Exploration
