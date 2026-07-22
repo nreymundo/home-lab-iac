@@ -87,6 +87,17 @@ spec:
         # tls:
         #   - hosts:
         #       - *host
+      static:
+        enabled: true
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
+          traefik.ingress.kubernetes.io/router.priority: "100"
+        ingressClassName: traefik
+        hosts:
+          - host: start.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /_next/static
+                pathType: Prefix
 
     # All the config files for Homepage can be specified under their relevant config block.
     config:
