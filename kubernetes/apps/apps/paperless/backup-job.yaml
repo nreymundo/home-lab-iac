@@ -12,7 +12,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["list"]
+    verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["pods/exec"]
     verbs: ["create"]
@@ -37,7 +37,7 @@ metadata:
   name: paperless-backup
   namespace: paperless
   annotations:
-    checkov.io/skip1: CKV_K8S_38=Paperless has no supported external backup interface; this hardened non-root CronJob needs a projected token to locate the controller-managed pod and run the supported in-pod export. Role is namespace-scoped and limited to pods list and pods/exec create.
+    checkov.io/skip1: CKV_K8S_38=Paperless has no supported external backup interface; this hardened non-root CronJob needs a projected token to locate the controller-managed pod and run the supported in-pod export. Role is namespace-scoped and limited to pods get/list and pods/exec create.
     checkov.io/skip2: CKV_K8S_40=Kubectl job runs under explicit non-root UID 1001.
 spec:
   schedule: "0 3 */3 * *"
