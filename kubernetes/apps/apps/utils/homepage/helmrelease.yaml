@@ -69,24 +69,7 @@ spec:
             paths:
               - path: /
                 pathType: Prefix
-        # labels:
-        #   # This label will enable discover of this deployment in Homepage
-        #   gethomepage.dev/enabled: "true"
-        # annotations:
-        #   # These annotations will configure how this deployment is shown in Homepage
-        #   gethomepage.dev/name: "Homepage"
-        #   gethomepage.dev/description: "A modern, secure, highly customizable application dashboard."
-        #   gethomepage.dev/group: "A New Group"
-        #   gethomepage.dev/icon: "homepage.png"
-        # ingressClassName: "nginx"
-        # hosts:
-        #   - host: &host "homepage.local"
-        #     paths:
-        #       - path: /
-        #         pathType: Prefix
-        # tls:
-        #   - hosts:
-        #       - *host
+        # Homepage cards are defined statically under config.services below.
       static:
         enabled: true
         annotations:
@@ -176,19 +159,42 @@ spec:
 
       services:
         - Local Services:
-            - Proxmox:
-                icon: proxmox.png
-                description: "Proxmox Virtual Environment"
-                href: https://pve1.lan.${CLUSTER_DOMAIN}
-                # widget:
-                #   type: proxmox
-                #   url: https://pve1.lan.${CLUSTER_DOMAIN}
-                #   username: "api-ro@pam!homepage"
-                #   password: "{{HOMEPAGE_VAR_PROXMOX_API_KEY}}"
+            - Chatterbox:
+                icon: https://i.imgur.com/w9QDXK0.png
+                description: "Text-to-speech API"
+                href: https://chatterbox.lan.${CLUSTER_DOMAIN}
+            - ComfyUI:
+                icon: comfyui.png
+                description: "AI image generation workflow UI"
+                href: https://comfyui.lan.${CLUSTER_DOMAIN}
+            - EMQX:
+                icon: emqx.png
+                description: "MQTT broker"
+                href: https://emqx.lan.${CLUSTER_DOMAIN}
+            - Home Assistant:
+                icon: home-assistant.png
+                description: "Home automation server"
+                href: http://home.${CLUSTER_DOMAIN}
             - JetKVM:
                 icon: jetkvm.png
                 description: "IP KVM"
                 href: http://kvm.lan.${CLUSTER_DOMAIN}
+            - Kopia:
+                icon: kopia.png
+                description: "Backup software"
+                href: https://kopia.lan.${CLUSTER_DOMAIN}
+            - Llama Swap:
+                icon: ollama.png
+                description: "LLM model hot-swapping proxy"
+                href: https://llama.lan.${CLUSTER_DOMAIN}
+            - NetBird:
+                icon: netbird.png
+                description: "Zero-trust network access"
+                href: https://netbird.${CLUSTER_DOMAIN}
+            - Omada:
+                icon: omada.png
+                description: "TP-Link device manager"
+                href: https://omada.lan.${CLUSTER_DOMAIN}
             - OPNsense:
                 icon: opnsense.png
                 description: "Virtualized Firewall"
@@ -198,10 +204,6 @@ spec:
                 #   url: http://192.168.10.1
                 #   username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
                 #   password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
-            - NetBird:
-                icon: netbird.png
-                description: "Zero-trust network access"
-                href: https://netbird.${CLUSTER_DOMAIN}
             - Pi-hole:
                 icon: pi-hole.png
                 description: "DNS resolver and ad-blocker"
@@ -210,26 +212,15 @@ spec:
                 #   type: pihole
                 #   url: https://192.168.10.2
                 #   version: 6
-            - Omada:
-                icon: omada.png
-                description: "TP-Link device manager"
-                href: https://omada.lan.${CLUSTER_DOMAIN}
-            - Unraid:
-                icon: unraid.png
-                description: "Virtual NAS running in Proxmox"
-                href: http://unraid.lan.${CLUSTER_DOMAIN}
+            - Proxmox:
+                icon: proxmox.png
+                description: "Proxmox Virtual Environment"
+                href: https://pve1.lan.${CLUSTER_DOMAIN}
                 # widget:
-                #   type: unraid
-                #   url: http://192.168.10.4:8001
-                #   key: "{{HOMEPAGE_VAR_UNRAID_KEY}}"
-            - Syncthing:
-                icon: syncthing.png
-                description: "File synchronization"
-                href: https://syncthing.lan.${CLUSTER_DOMAIN}
-            - Kopia:
-                icon: kopia.png
-                description: "Backup software"
-                href: https://kopia.lan.${CLUSTER_DOMAIN}
+                #   type: proxmox
+                #   url: https://pve1.lan.${CLUSTER_DOMAIN}
+                #   username: "api-ro@pam!homepage"
+                #   password: "{{HOMEPAGE_VAR_PROXMOX_API_KEY}}"
             - Proxmox Backup Server:
                 icon: proxmox.png
                 description: "Backup server for Proxmox"
@@ -239,34 +230,195 @@ spec:
                 #   url: https://pbs.lan.${CLUSTER_DOMAIN}
                 #   username: "api-ro@pbs!homepage"
                 #   password: "{{HOMEPAGE_VAR_PBS_API_KEY}}"
-            - Home Assistant:
-                icon: home-assistant.png
-                description: "Home automation server"
-                href: http://home.${CLUSTER_DOMAIN}
+            - Syncthing:
+                icon: syncthing.png
+                description: "File synchronization"
+                href: https://syncthing.lan.${CLUSTER_DOMAIN}
+            - Unraid:
+                icon: unraid.png
+                description: "Virtual NAS running in Proxmox"
+                href: http://unraid.lan.${CLUSTER_DOMAIN}
+                # widget:
+                #   type: unraid
+                #   url: http://192.168.10.4:8001
+                #   key: "{{HOMEPAGE_VAR_UNRAID_KEY}}"
             - Zigbee2MQTT:
                 icon: zigbee2mqtt.png
                 description: "Zigbee to MQTT bridge"
                 href: https://z2m.lan.${CLUSTER_DOMAIN}
-            - EMQX:
-                icon: emqx.png
-                description: "MQTT broker"
-                href: https://emqx.lan.${CLUSTER_DOMAIN}
-            - OpenClaw:
-                icon: sh-openclaw.png
-                description: "OpenClaw dashboard"
-                href: https://openclaw.lan.${CLUSTER_DOMAIN}
-            - Llama Swap:
-                icon: ollama.png
-                description: "LLM model hot-swapping proxy"
-                href: https://llama.lan.${CLUSTER_DOMAIN}
-            - ComfyUI:
-                icon: comfyui.png
-                description: "AI image generation workflow UI"
-                href: https://comfyui.lan.${CLUSTER_DOMAIN}
-            - Chatterbox:
-                icon: https://i.imgur.com/w9QDXK0.png
-                description: "Text-to-speech API"
-                href: https://chatterbox.lan.${CLUSTER_DOMAIN}
+        - Kubernetes:
+            - AirTrail:
+                icon: air-trail.png
+                description: "Flight history tracker"
+                href: https://airtrail.lan.${CLUSTER_DOMAIN}
+            - Audiobookshelf:
+                icon: audiobookshelf.png
+                description: "Audiobook server"
+                href: https://audiobooks.lan.${CLUSTER_DOMAIN}
+            - Authentik:
+                icon: authentik.png
+                description: "SSO"
+                href: https://sso.${CLUSTER_DOMAIN}
+            - Bambuddy:
+                icon: bambu-lab.png
+                description: "Bambu Lab printer command center"
+                href: https://bambuddy.lan.${CLUSTER_DOMAIN}
+            - Bazarr:
+                icon: bazarr.png
+                description: "Subtitle management"
+                href: https://bazarr.lan.${CLUSTER_DOMAIN}
+            - Dawarich:
+                icon: dawarich.png
+                description: "Location history tracker"
+                href: https://dawarich.${CLUSTER_DOMAIN}
+            - Discord - Alternate:
+                icon: discord.png
+                description: "Web instance for Discord with Steam and Plex rich presence"
+                href: https://discord2.lan.${CLUSTER_DOMAIN}
+            - Discord - Main:
+                icon: discord.png
+                description: "Web instance for Discord with Steam and Plex rich presence"
+                href: https://discord1.lan.${CLUSTER_DOMAIN}
+            - Frigate:
+                icon: frigate.png
+                description: "NVR with AI detection"
+                href: https://frigate.lan.${CLUSTER_DOMAIN}
+            - Garage:
+                icon: garage.png
+                description: "Object store admin UI"
+                href: https://garage.lan.${CLUSTER_DOMAIN}
+            - Gitea:
+                icon: gitea.png
+                description: "Git service"
+                href: https://git.${CLUSTER_DOMAIN}
+            - Grafana:
+                icon: grafana.png
+                description: "Dashboards"
+                href: https://grafana.lan.${CLUSTER_DOMAIN}
+            - Harbor:
+                icon: harbor.png
+                description: "Container registry and proxy cache"
+                href: https://harbor.lan.${CLUSTER_DOMAIN}/
+            - Immich:
+                icon: immich.png
+                description: "Photo management and backup"
+                href: https://photos.${CLUSTER_DOMAIN}
+            - IT-Tools:
+                icon: it-tools.png
+                description: "Handy tools for developers"
+                href: https://tools.lan.${CLUSTER_DOMAIN}
+            - Jellyfin:
+                icon: jellyfin.png
+                description: "Media server"
+                href: https://jellyfin.lan.${CLUSTER_DOMAIN}
+            - Karakeep:
+                icon: karakeep.png
+                description: "Self-hosted bookmark manager"
+                href: https://keep.${CLUSTER_DOMAIN}
+            - Komga:
+                icon: komga.png
+                description: "Comics library"
+                href: https://comics.lan.${CLUSTER_DOMAIN}
+            - Lidarr:
+                icon: lidarr.png
+                description: "Music automation"
+                href: https://lidarr.lan.${CLUSTER_DOMAIN}
+            - Lidatube:
+                icon: "https://i.imgur.com/WLHbWAK.png"
+                description: "Lidarr YouTube downloader"
+                href: https://lidatube.lan.${CLUSTER_DOMAIN}
+            - LibreChat:
+                icon: librechat.png
+                description: "AI chat interface"
+                href: https://chat.lan.${CLUSTER_DOMAIN}
+            - LibreChat - Admin Panel:
+                icon: librechat.png
+                description: "LibreChat administration interface"
+                href: https://chat-admin.lan.${CLUSTER_DOMAIN}
+            - LiteLLM:
+                icon: litlellm.png
+                description: "LLM gateway"
+                href: https://litellm.lan.${CLUSTER_DOMAIN}/ui
+            - Longhorn:
+                icon: longhorn.png
+                description: "Storage management"
+                href: https://longhorn.lan.${CLUSTER_DOMAIN}
+            - n8n:
+                icon: n8n.png
+                description: "Workflow automation"
+                href: https://n8n.${CLUSTER_DOMAIN}
+            - Nextcloud:
+                icon: nextcloud.png
+                description: "File sync and share"
+                href: https://cloud.${CLUSTER_DOMAIN}
+            - Paperless:
+                icon: paperless-ngx.png
+                description: "Document management"
+                href: https://docs.lan.${CLUSTER_DOMAIN}
+            - Paperless AI:
+                icon: https://i.imgur.com/vFbypY5.png
+                description: "AI assistant for Paperless"
+                href: https://paperless-ai.lan.${CLUSTER_DOMAIN}
+            - Paperless GPT:
+                icon: https://i.imgur.com/mowFxHj.png
+                description: "AI tagging and OCR assistant"
+                href: https://paperless-gpt.lan.${CLUSTER_DOMAIN}
+            - Plex:
+                icon: plex.png
+                description: "Media server"
+                href: https://plex.lan.${CLUSTER_DOMAIN}
+            - Prometheus:
+                icon: prometheus.png
+                description: "Metrics"
+                href: https://prometheus.lan.${CLUSTER_DOMAIN}
+            - Prowlarr:
+                icon: prowlarr.png
+                description: "Indexer manager"
+                href: https://prowlarr.lan.${CLUSTER_DOMAIN}
+            - Radarr:
+                icon: radarr.png
+                description: "Movie automation"
+                href: https://radarr.lan.${CLUSTER_DOMAIN}
+            - SABnzbd:
+                icon: sabnzbd.png
+                description: "Usenet downloader"
+                href: https://sabnzbd.lan.${CLUSTER_DOMAIN}
+            - SearXNG:
+                icon: searxng.png
+                description: "Privacy-focused meta search"
+                href: https://search.lan.${CLUSTER_DOMAIN}
+            - Seerr:
+                icon: seerr.png
+                description: "Media request manager"
+                href: https://seerr.lan.${CLUSTER_DOMAIN}
+            - SillyTavern:
+                icon: "https://upload.wikimedia.org/wikipedia/commons/6/6b/SillyTavern_logo_%28dark_background%29.png"
+                description: "Chat interface for LLM roleplay"
+                href: https://tavern.lan.${CLUSTER_DOMAIN}
+            - Sonarr:
+                icon: sonarr.png
+                description: "TV automation"
+                href: https://sonarr.lan.${CLUSTER_DOMAIN}
+            - Tautulli:
+                icon: tautulli.png
+                description: "Plex monitoring"
+                href: https://tautulli.lan.${CLUSTER_DOMAIN}
+            - Tidarr:
+                icon: tidal.png
+                description: "Tidal music downloader"
+                href: https://tidarr.lan.${CLUSTER_DOMAIN}
+            - Traefik:
+                icon: traefik.png
+                description: "Ingress controller"
+                href: https://traefik.lan.${CLUSTER_DOMAIN}/dashboard/
+            - Vane:
+                icon: "https://i.imgur.com/9E2W5BY.png"
+                description: "AI search assistant"
+                href: https://vane.lan.${CLUSTER_DOMAIN}
+            - WatchState:
+                icon: https://assets.web.${CLUSTER_DOMAIN}/icons/watchstate.png
+                description: "Media watch state sync"
+                href: https://watchstate.lan.${CLUSTER_DOMAIN}
       widgets:
         # - resources:
         #     # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.
@@ -303,12 +455,10 @@ spec:
               memory: true
               showLabel: true
       kubernetes:
-        # change mode to 'cluster' to use RBAC service account
         mode: cluster
-        ingress: true
-        traefik: true
-        # Uncomment to enable gateway api HttpRoute discovery.
-        #gateway: true
+        ingress: false
+        traefik: false
+        gateway: false
       docker:
       settings:
 

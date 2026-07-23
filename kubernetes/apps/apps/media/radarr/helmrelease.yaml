@@ -41,11 +41,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: radarr.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: Radarr
-          gethomepage.dev/description: Movie automation
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: radarr.png
-          gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: "radarr"
           # gethomepage.dev/widget.url: "http://radarr.media.svc.cluster.local:7878"
           # gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_RADARR_KEY}}"}}'

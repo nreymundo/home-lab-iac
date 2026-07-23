@@ -325,11 +325,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: keep.${CLUSTER_DOMAIN}
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: Karakeep
-          gethomepage.dev/description: Self-hosted bookmark manager
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: karakeep.png
         hosts:
           - host: keep.${CLUSTER_DOMAIN}
             paths:

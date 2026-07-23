@@ -454,13 +454,6 @@ spec:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: chat.lan.${CLUSTER_DOMAIN}
           traefik.ingress.kubernetes.io/router.middlewares: ai-librechat-admin-oauth-sanitize@kubernetescrd
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: LibreChat
-          gethomepage.dev/description: AI chat interface
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: librechat.png
-          gethomepage.dev/href: https://chat.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/pod-selector: app.kubernetes.io/name=librechat,app.kubernetes.io/instance=librechat,app.kubernetes.io/controller=main
         hosts:
           - host: chat.lan.${CLUSTER_DOMAIN}
             paths:
@@ -471,13 +464,6 @@ spec:
       admin-panel:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: chat-admin.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: LibreChat - Admin Panel
-          gethomepage.dev/description: LibreChat administration interface
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: librechat.png
-          gethomepage.dev/href: https://chat-admin.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/pod-selector: app.kubernetes.io/name=librechat,app.kubernetes.io/instance=librechat,app.kubernetes.io/controller=admin-panel
         hosts:
           - host: chat-admin.lan.${CLUSTER_DOMAIN}
             paths:

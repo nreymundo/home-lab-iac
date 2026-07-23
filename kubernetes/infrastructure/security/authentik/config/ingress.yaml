@@ -7,11 +7,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-authentik-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     external-dns.alpha.kubernetes.io/hostname: sso.${CLUSTER_DOMAIN}
-    gethomepage.dev/name: Authentik
-    gethomepage.dev/description: SSO
-    gethomepage.dev/group: "Kubernetes"
-    gethomepage.dev/icon: authentik.png
-    gethomepage.dev/enabled: "true"
 spec:
   ingressClassName: traefik
   rules:

@@ -74,11 +74,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: comics.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: Komga
-          gethomepage.dev/description: Comics library
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: komga.png
-          gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: "komga"
           # gethomepage.dev/widget.url: "http://komga.media.svc.cluster.local:25600"
           # gethomepage.dev/widget.username: '{{"{{HOMEPAGE_VAR_DEFAULT_EMAIL}}"}}'

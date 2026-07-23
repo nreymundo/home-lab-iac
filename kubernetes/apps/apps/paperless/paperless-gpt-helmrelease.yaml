@@ -90,11 +90,6 @@ spec:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: paperless-gpt.lan.${CLUSTER_DOMAIN}
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: Paperless GPT
-          gethomepage.dev/description: AI tagging and OCR assistant
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: https://i.imgur.com/mowFxHj.png
         hosts:
           - host: paperless-gpt.lan.${CLUSTER_DOMAIN}
             paths:

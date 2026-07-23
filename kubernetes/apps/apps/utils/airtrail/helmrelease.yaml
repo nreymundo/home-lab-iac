@@ -119,11 +119,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: airtrail.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: AirTrail
-          gethomepage.dev/description: Flight history tracker
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: air-trail.png
         hosts:
           - host: airtrail.lan.${CLUSTER_DOMAIN}
             paths:

@@ -131,11 +131,6 @@ spec:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: jellyfin.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: Jellyfin
-          gethomepage.dev/description: Media server
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: jellyfin.png
-          gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: "jellyfin"
           # gethomepage.dev/widget.url: "http://jellyfin.media.svc.cluster.local:8096"
         hosts:

@@ -381,11 +381,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: dawarich.${CLUSTER_DOMAIN}
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: Dawarich
-          gethomepage.dev/description: Location history tracker
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: dawarich.png
         hosts:
           - host: dawarich.${CLUSTER_DOMAIN}
             paths:

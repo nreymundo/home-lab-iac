@@ -52,12 +52,6 @@ spec:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: tautulli.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: Tautulli
-          gethomepage.dev/description: Plex monitoring
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: tautulli.png
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/pod-selector: app.kubernetes.io/name=tautulli,app.kubernetes.io/instance=tautulli
         hosts:
           - host: tautulli.lan.${CLUSTER_DOMAIN}
             paths:

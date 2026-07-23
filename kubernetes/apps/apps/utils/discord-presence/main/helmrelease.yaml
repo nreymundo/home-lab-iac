@@ -186,11 +186,6 @@ spec:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-discord-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: discord1.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: Discord - Main
-          gethomepage.dev/description: Web instance for Discord with Steam and Plex rich presence
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: discord.png
         className: traefik
         hosts:
           - host: discord1.lan.${CLUSTER_DOMAIN}

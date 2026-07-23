@@ -42,11 +42,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: vane.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: Vane
-          gethomepage.dev/description: AI search assistant
-          gethomepage.dev/icon: "https://i.imgur.com/9E2W5BY.png"
-          gethomepage.dev/group: "Kubernetes"
         hosts:
           - host: vane.lan.${CLUSTER_DOMAIN}
             paths:

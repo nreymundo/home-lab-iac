@@ -38,11 +38,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: tools.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: IT-Tools
-          gethomepage.dev/description: Handy tools for developers
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: it-tools.png
         hosts:
           - host: tools.lan.${CLUSTER_DOMAIN}
             paths:

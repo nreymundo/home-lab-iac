@@ -124,11 +124,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: git.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: Gitea
-          gethomepage.dev/description: Git service
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: gitea.png
-          gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: "gitea"
           # gethomepage.dev/widget.url: "http://gitea.development.svc.cluster.local:3000"
           # gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_GITEA_KEY}}"}}'

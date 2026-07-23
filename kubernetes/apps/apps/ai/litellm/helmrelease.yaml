@@ -237,12 +237,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: litellm.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: LiteLLM
-          gethomepage.dev/description: LLM gateway
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: litlellm.png
-          gethomepage.dev/href: https://litellm.lan.${CLUSTER_DOMAIN}/ui
         hosts:
           - host: litellm.lan.${CLUSTER_DOMAIN}
             paths:

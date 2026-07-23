@@ -49,11 +49,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: lidatube.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: Lidatube
-          gethomepage.dev/description: Lidarr YouTube downloader
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: "https://i.imgur.com/WLHbWAK.png"
-          gethomepage.dev/enabled: "true"
         hosts:
           - host: lidatube.lan.${CLUSTER_DOMAIN}
             paths:

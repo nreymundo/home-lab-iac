@@ -79,11 +79,6 @@ spec:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: search.lan.${CLUSTER_DOMAIN}
           traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: SearXNG
-          gethomepage.dev/description: Privacy-focused meta search
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: searxng.png
         hosts:
           - host: search.lan.${CLUSTER_DOMAIN}
             paths:

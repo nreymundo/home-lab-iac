@@ -86,12 +86,6 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: watchstate.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: WatchState
-          gethomepage.dev/description: Media watch state sync
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: https://assets.web.${CLUSTER_DOMAIN}/icons/watchstate.png
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/pod-selector: app.kubernetes.io/name=watchstate,app.kubernetes.io/instance=watchstate,app.kubernetes.io/controller=main
         hosts:
           - host: watchstate.lan.${CLUSTER_DOMAIN}
             paths:

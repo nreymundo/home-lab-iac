@@ -186,11 +186,6 @@ spec:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-frigate-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: frigate.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: Frigate
-          gethomepage.dev/description: NVR with AI detection
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: frigate.png
-          gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: frigate
           # gethomepage.dev/widget.url: "https://frigate-main.security.svc.cluster.local:8971"
           # gethomepage.dev/widget.username: "homepage"

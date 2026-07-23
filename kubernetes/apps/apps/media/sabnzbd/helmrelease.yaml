@@ -79,11 +79,6 @@ spec:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: sabnzbd.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: SABnzbd
-          gethomepage.dev/description: Usenet downloader
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: sabnzbd.png
-          gethomepage.dev/enabled: "true"
           # gethomepage.dev/widget.type: "sabnzbd"
           # gethomepage.dev/widget.url: "http://sabnzbd.media.svc.cluster.local:8080"
           # gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_SABNZBD_KEY}}"}}'

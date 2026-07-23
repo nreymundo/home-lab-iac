@@ -36,13 +36,6 @@ spec:
         annotations:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           external-dns.alpha.kubernetes.io/hostname: harbor.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: Harbor
-          gethomepage.dev/description: Container registry and proxy cache
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: harbor.png
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/href: https://harbor.lan.${CLUSTER_DOMAIN}/
-          gethomepage.dev/pod-selector: app=harbor,component=core
 
     existingSecretAdminPassword: harbor-secrets
     existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD

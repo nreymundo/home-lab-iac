@@ -82,11 +82,6 @@ spec:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: plex.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/name: Plex
-          gethomepage.dev/description: Media server
-          gethomepage.dev/group: "Kubernetes"
-          gethomepage.dev/icon: plex.png
-          gethomepage.dev/enabled: "true"
         hosts:
           - host: plex.lan.${CLUSTER_DOMAIN}
             paths:
