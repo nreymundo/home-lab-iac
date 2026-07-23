@@ -37,7 +37,7 @@ metadata:
   name: plextraktsync-sync
   namespace: media
   annotations:
-    checkov.io/skip1: CKV_K8S_38=This job intentionally needs a token to run kubectl exec.
+    checkov.io/skip1: CKV_K8S_38=PlexTraktSync maintains upstream authentication in its long-running watcher; a standalone job sharing the PVC cannot reliably batch-sync after auth expiry. This hardened CronJob locates the active controller-managed pod and runs the batch sync in-process; its Role is namespace-scoped and limited to pods get/list and pods/exec create.
     checkov.io/skip2: CKV_K8S_40=Kubectl job runs under explicit non-root UID 1001.
 spec:
   schedule: "0 */12 * * *"
