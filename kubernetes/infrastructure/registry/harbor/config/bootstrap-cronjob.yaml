@@ -3,8 +3,6 @@ kind: CronJob
 metadata:
   name: harbor-bootstrap
   namespace: harbor
-  annotations:
-    checkov.io/skip1: CKV_K8S_35=Harbor bootstrap script consumes API credentials from environment variables.
 spec:
   schedule: "17 3 * * *"
   concurrencyPolicy: Forbid
@@ -43,38 +41,20 @@ spec:
                   value: http://harbor-harbor-core/api/v2.0
                 - name: HARBOR_USERNAME
                   value: admin
-                - name: HARBOR_PASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: harbor-secrets
-                      key: HARBOR_ADMIN_PASSWORD
                 - name: HARBOR_OIDC_ENDPOINT
                   value: https://sso.${CLUSTER_DOMAIN}/application/o/harbor/
-                - name: HARBOR_OIDC_CLIENT_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: harbor-sso-secret
-                      key: CLIENT_ID
-                - name: HARBOR_OIDC_CLIENT_SECRET
-                  valueFrom:
-                    secretKeyRef:
-                      name: harbor-sso-secret
-                      key: CLIENT_SECRET
-                - name: DOCKERHUB_USERNAME
-                  valueFrom:
-                    secretKeyRef:
-                      name: harbor-bootstrap-secret
-                      key: DOCKERHUB_USERNAME
-                      optional: true
-                - name: DOCKERHUB_TOKEN
-                  valueFrom:
-                    secretKeyRef:
-                      name: harbor-bootstrap-secret
-                      key: DOCKERHUB_TOKEN
-                      optional: true
               volumeMounts:
                 - name: script
                   mountPath: /scripts
+                  readOnly: true
+                - name: harbor-admin
+                  mountPath: /secrets/harbor
+                  readOnly: true
+                - name: harbor-oidc
+                  mountPath: /secrets/oidc
+                  readOnly: true
+                - name: dockerhub
+                  mountPath: /secrets/dockerhub
                   readOnly: true
                 - name: tmp
                   mountPath: /tmp
@@ -89,6 +69,34 @@ spec:
             - name: script
               configMap:
                 name: harbor-bootstrap
+            - name: harbor-admin
+              secret:
+                secretName: harbor-secrets
+                defaultMode: 288
+                items:
+                  - key: HARBOR_ADMIN_PASSWORD
+                    path: password
+            - name: harbor-oidc
+              secret:
+                secretName: harbor-sso-secret
+                defaultMode: 288
+                items:
+                  - key: CLIENT_ID
+                    path: client-id
+                  - key: CLIENT_SECRET
+                    path: client-secret
+            - name: dockerhub
+              secret:
+                secretName: harbor-bootstrap-secret
+                optional: true
+                defaultMode: 288
+                items:
+                  - key: DOCKERHUB_USERNAME
+                    path: username
+                    optional: true
+                  - key: DOCKERHUB_TOKEN
+                    path: token
+                    optional: true
             - name: tmp
               emptyDir:
                 sizeLimit: 64Mi
