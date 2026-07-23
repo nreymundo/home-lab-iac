@@ -195,6 +195,10 @@ spec:
                 icon: omada.png
                 description: "TP-Link device manager"
                 href: https://omada.lan.${CLUSTER_DOMAIN}
+            - OpenClaw:
+                icon: sh-openclaw.png
+                description: "OpenClaw dashboard"
+                href: https://openclaw.lan.${CLUSTER_DOMAIN}
             - OPNsense:
                 icon: opnsense.png
                 description: "Virtualized Firewall"
