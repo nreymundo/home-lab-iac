@@ -1,100 +1,51 @@
 # Decisions and Trade-offs
 
-This document records the durable rationale behind repository controls,
-accepted policy exceptions, and intentionally omitted automation. The source
-configuration remains authoritative: this document explains *why*, while the
-relevant workflow, hook, or manifest determines *how* a control is enforced.
+This is the short record of durable control and automation decisions. Source
+configuration remains authoritative; issues and PRs hold implementation evidence.
 
-Update this document when a control, exception, or automation boundary changes.
-Keep incident-specific evidence and implementation history in the related issue
-or pull request.
+## Controls
 
-## CI and local controls
+GitHub Actions runs on pull requests, `master` pushes, and manual dispatches.
+It runs the relevant hard-failing jobs based on changed paths.
 
-`CONTRIBUTING.md` is the command reference and `.pre-commit-config.yaml` is the
-authoritative local-hook configuration. GitHub Actions CI runs on pull requests,
-pushes to `master`, and manual dispatches. Its change detector runs the
-applicable jobs for changed paths; the jobs below are hard-failing when they run.
-
-| Control | Where it runs | Purpose and boundary |
+| Control | Enforcement | Purpose |
 | --- | --- | --- |
-| YAML syntax, whitespace, line endings, and large-file checks | Local pre-commit | Catch portable formatting and repository-hygiene failures before review. |
-| `yamllint` | Local pre-commit | Enforce hand-authored YAML style. Generated Flux bootstrap output and SOPS-encrypted manifests are excluded because they are not normal hand-authored YAML. |
-| `ansible-lint` | Local pre-commit for Ansible files | Validate Ansible roles, playbooks, and configuration using the repository Ansible configuration. |
-| Packer and Terraform formatting | Local pre-commit for their respective files | Keep HCL canonical and reduce review noise. |
-| Sensitive-file and plaintext Kubernetes Secret guards | Local pre-commit | Prevent private key material and unencrypted `kind: Secret` manifests from entering Git. Kubernetes secrets are committed as SOPS-encrypted manifests. |
-| SOPS auto-encryption | Local pre-commit for `*.sops.yaml` | Encrypt intended Kubernetes Secret manifests before they are committed. Inspect the resulting diff before committing. |
-| Rendered-manifest validation (`kubeconform`) | Local pre-commit and CI for Kubernetes-affecting changes | Render tracked Kustomizations and validate the resulting Kubernetes resources. This is static validation; it does not apply to a cluster. |
-| Trivy filesystem scan | Manual local hook and CI for infrastructure/security-relevant changes | Fail on HIGH or CRITICAL vulnerabilities and secrets, ignoring unfixed findings. Generated Flux bootstrap output and `.git` are excluded. |
-| Checkov IaC scan | Manual local hook and CI for Kubernetes, Terraform, or Checkov-policy changes | Enforce Terraform and Kubernetes policy checks using `.checkov.yaml`. |
-| Commit-message attribution guard | Commit-msg hook | Enforce the repository commit-message policy and forbid attribution trailers. |
+| Repository hygiene | Local pre-commit | Whitespace, line endings, YAML syntax, large files, and `yamllint`. |
+| Layer lint and formatting | Local pre-commit | `ansible-lint`, Packer formatting, and Terraform formatting. |
+| Secret guards | Local pre-commit | Block key material and plaintext Kubernetes Secrets; encrypt `*.sops.yaml`. |
+| Kubeconform | Local pre-commit and CI | Render and statically validate Kubernetes manifests. |
+| Trivy | Manual local hook and CI | Fail on HIGH/CRITICAL filesystem vulnerabilities and secrets. |
+| Checkov | Manual local hook and CI | Enforce Terraform and Kubernetes policy from `.checkov.yaml`. |
+| Commit messages | Commit-msg hook | Enforce the commit policy and block attribution trailers. |
 
-The slower Trivy and Checkov hooks are manual locally to keep normal commits
-responsive. CI is the shared enforcement point for those scans. CI intentionally
-does not replace layer-specific runtime validation or a reviewed live operation.
+`CONTRIBUTING.md`, `.pre-commit-config.yaml`, and `.github/workflows/ci.yml`
+are the command and configuration references.
 
-## Checkov policy exceptions
+## Checkov exceptions
 
-Checkov scans the `terraform/` and `kubernetes/` trees. Exceptions are narrow by
-default: resource-local annotations are preferred over global skips, and each
-exception must state its operational reason beside the resource.
+Prefer resource-local exceptions with an adjacent reason. Issue
+[#676](https://github.com/nreymundo/home-lab-iac/issues/676) contains the
+hardening history and validation evidence.
 
-### Global configuration boundaries
-
-| Boundary | Reason and compensating control | Revisit when |
+| Check or boundary | Reason | Revisit when |
 | --- | --- | --- |
-| `CKV_K8S_43` (image digest pinning) | The homelab accepts version-tag updates instead of digest pinning because digest-only Renovate updates create disproportionate churn. Images are pinned to a specific version, or to a SHA where that is more appropriate. | Image supply-chain requirements change, or digest-update automation becomes low-noise enough to adopt. |
-| `kubernetes/clusters/production/flux-system/` | Flux bootstrap output is generated and is not hand-edited. Its source and bootstrap process, rather than generated output, are the review boundary. | The bootstrap ownership model changes. |
-| SOPS-encrypted manifests | Checkov does not decrypt secret manifests during static scans. Secret handling is enforced by SOPS, the plaintext-Secret guard, and review of the consuming workload. | A safe, non-secret-leaking encrypted-manifest scanning workflow is adopted. |
+| `CKV_K8S_43` | Version tags avoid high-churn digest-only Renovate updates; use specific versions or SHAs. | Digest updates become low-noise or supply-chain requirements change. |
+| Generated Flux output and SOPS files | Generated output is not hand-edited; Checkov does not decrypt Secrets. | Ownership or safe encrypted-manifest scanning changes. |
+| `CKV_K8S_35`: Renovate and Immich auto-stack | Upstream jobs require environment credentials. | Native file-backed input is supported. |
+| `CKV_K8S_38`: Paperless and PlexTraktSync | Supported in-pod backup/sync requires narrowly scoped namespace `pods` read and `pods/exec` access. | A reliable external interface or independent authentication exists. |
+| `CKV_K8S_40` | Upstream UID `1000`, kubectl-job UID `1001`, and NFS UID/GID `99:100` are current compatibility contracts. | Image compatibility or NFS ownership/ACLs change. |
 
-### Resource-local exceptions
+## Terraform automation
 
-| Check | Scope | Why it is accepted | Revisit when |
-| --- | --- | --- | --- |
-| `CKV_K8S_35` (Secret values in environment variables) | Renovate repository token | Renovate expects repository token settings as environment variables. | Renovate supports an equally secure file-backed credential mechanism. |
-| `CKV_K8S_35` | Immich auto-stack API key | The upstream job expects its API key as an environment variable. | Immich provides supported file-backed credential input. |
-| `CKV_K8S_38` (service-account token) | Paperless backup CronJob | Paperless has no supported external backup interface. The hardened, non-root job needs a token to locate its controller-managed pod and run the supported in-pod export. Its Role is namespace-scoped and limited to `pods` `get`/`list` and `pods/exec` `create`. | Paperless gains a supported external backup interface. |
-| `CKV_K8S_38` | PlexTraktSync sync CronJob | The running watcher maintains renewable upstream authentication. A separate job sharing the PVC cannot reliably perform batch sync after authentication expires. Its Role is namespace-scoped and limited to `pods` `get`/`list` and `pods/exec` `create`. | PlexTraktSync supports reliable independent batch authentication. |
-| `CKV_K8S_40` (high UID) | Renovate and Immich auto-stack | The upstream images run as UID/GID `1000`; they are already non-root and otherwise hardened. | Upstream images demonstrate compatibility with a higher arbitrary UID. |
-| `CKV_K8S_40` | Paperless and PlexTraktSync kubectl jobs | The jobs run explicitly as non-root UID/GID `1001`; the values follow their current job contract. | The kubectl-exec job designs are retired or a compatible higher UID is demonstrated. |
-| `CKV_K8S_40` | n8n and Immich database backups | The NFS backup share relies on UID/GID `99:100` ownership mapping. Raising the UID in Kubernetes alone would break backup writes without improving isolation. | The NFS server-side ownership and ACL model is migrated together with the jobs. |
+Terraform uses Terraform Cloud workspaces. Atlantis is not deployed: in this
+public repository, exposing plan output and accepting Terraform interactions
+through PR comments is not worth the added credentialed webhook service and
+attack surface, even with strong controls. Reconsider only with a tightly
+controlled review surface, restricted ingress and credentials, strict allowlists,
+and explicit apply authorization.
 
-Issue [#676](https://github.com/nreymundo/home-lab-iac/issues/676) records the
-hardening work and live-validation evidence that reduced the earlier baseline.
+## Backups
 
-## Terraform pull-request automation
-
-### Decision: do not deploy Atlantis
-
-Terraform roots use Terraform Cloud workspaces for remote state and operations.
-Atlantis is intentionally not deployed for this public repository.
-
-Atlantis would add a long-lived service that receives Git hosting webhooks,
-holds infrastructure credentials, produces Terraform plan output, and accepts
-workflow interactions through pull-request comments. Even with repository
-allowlists, branch protection, and command requirements, exposing plans and an
-interactive comment-driven control surface in a public repository is not worth
-the additional risk or operational burden for this homelab.
-
-The current boundary is deliberate Terraform planning and application through
-the established Terraform Cloud workflow, with credentials remaining in the
-approved secret-management path. This favors a smaller credentialed attack
-surface over pull-request convenience.
-
-Reconsider Atlantis only if the collaboration benefit materially changes and a
-separate design demonstrates all of the following:
-
-- a private or otherwise tightly controlled review surface;
-- authenticated, restricted webhook ingress;
-- least-privileged, isolated Terraform credentials;
-- strict repository and command allowlists; and
-- explicit review and apply authorization rules.
-
-## Backup assurance
-
-Database backup jobs create PostgreSQL custom-format archives on the NFS backup
-share. A successful Job proves authentication and archive creation;
-`pg_restore --list` against a read-only NFS mount proves that the archive is
-readable without restoring it. Periodic restore drills into a disposable
-PostgreSQL instance remain the stronger test of recoverability and should be
-performed separately from production.
+A successful backup Job proves authentication and archive creation;
+`pg_restore --list` on a read-only NFS mount proves the archive is readable.
+Periodically restore into a disposable PostgreSQL instance to prove recovery.
