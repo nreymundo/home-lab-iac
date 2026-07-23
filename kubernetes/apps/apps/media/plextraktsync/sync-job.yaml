@@ -60,7 +60,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: runner
-              image: alpine/kubectl:1.35.1
+              image: alpine/kubectl:1.35.1@sha256:0829b6a99156e722033b3cadb441a3768ffb32a388f93695277740c81acd4a7c
               imagePullPolicy: Always
               securityContext:
                 allowPrivilegeEscalation: false

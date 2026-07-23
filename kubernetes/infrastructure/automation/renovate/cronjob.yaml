@@ -29,7 +29,7 @@ spec:
           containers:
             - name: renovate
               # renovate: datasource=docker depName=renovate/renovate registryUrl=https://docker.io
-              image: renovate/renovate:39.4.0
+              image: renovate/renovate:39.4.0@sha256:91dc45f9ebf49ff2f1401559c381c3fda842f6802c67a4912a5c8608360b64fa
               imagePullPolicy: Always
               securityContext:
                 allowPrivilegeEscalation: false

@@ -22,6 +22,20 @@
 
   "packageRules": [
     {
+      "description": "Pin images used by Checkov-scanned Kubernetes jobs",
+      "matchDatasources": ["docker"],
+      "matchPaths": [
+        "kubernetes/apps/apps/automation/n8n/db-backup.yaml",
+        "kubernetes/apps/apps/immich/auto-stack-cronjob.yaml",
+        "kubernetes/apps/apps/immich/db-backup.yaml",
+        "kubernetes/apps/apps/media/plextraktsync/sync-job.yaml",
+        "kubernetes/apps/apps/paperless/backup-job.yaml",
+        "kubernetes/infrastructure/automation/renovate/cronjob.yaml",
+        "kubernetes/infrastructure/registry/harbor/config/bootstrap-cronjob.yaml"
+      ],
+      "pinDigests": true
+    },
+    {
       "description": "Keep Jellyfin on stable semver tags",
       "matchDatasources": ["docker"],
       "matchDepNames": ["linuxserver/jellyfin"],
