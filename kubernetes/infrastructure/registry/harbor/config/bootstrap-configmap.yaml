@@ -16,11 +16,17 @@ data:
 
     api = os.environ.get("HARBOR_API", "http://harbor-harbor-core/api/v2.0").rstrip("/")
     username = os.environ.get("HARBOR_USERNAME", "admin")
-    password = os.environ["HARBOR_PASSWORD"]
-    gib = 1024 ** 3
+    def read_secret(path, default=""):
+        try:
+            with open(path, encoding="utf-8") as secret_file:
+                return secret_file.read().strip()
+        except FileNotFoundError:
+            return default
 
-    def env(name, default=""):
-        return os.environ.get(name, default).strip()
+    password = read_secret("/secrets/harbor/password")
+    if not password:
+        raise RuntimeError("Harbor admin password is unavailable")
+    gib = 1024 ** 3
 
     def auth_header():
         token = base64.b64encode(f"{username}:{password}".encode()).decode()
@@ -57,12 +63,12 @@ data:
         raise TimeoutError("Harbor did not become healthy")
 
     def configure_oidc():
-        client_id = env("HARBOR_OIDC_CLIENT_ID")
-        client_secret = env("HARBOR_OIDC_CLIENT_SECRET")
+        client_id = read_secret("/secrets/oidc/client-id")
+        client_secret = read_secret("/secrets/oidc/client-secret")
         if not client_id or not client_secret:
             raise RuntimeError("Harbor OIDC client secret is unavailable")
 
-        oidc_endpoint = env("HARBOR_OIDC_ENDPOINT")
+        oidc_endpoint = os.environ.get("HARBOR_OIDC_ENDPOINT", "").strip()
         payload = {
             "auth_mode": "oidc_auth",
             "primary_auth_mode": True,
@@ -305,8 +311,8 @@ data:
             "description": "Docker Hub proxy cache upstream",
             "type": "docker-hub",
             "url": "https://hub.docker.com",
-            "access_key": env("DOCKERHUB_USERNAME"),
-            "access_secret": env("DOCKERHUB_TOKEN"),
+            "access_key": read_secret("/secrets/dockerhub/username"),
+            "access_secret": read_secret("/secrets/dockerhub/token"),
             "storage_limit": 40 * gib,
         },
         {
