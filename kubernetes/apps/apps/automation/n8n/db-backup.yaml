@@ -4,8 +4,7 @@ metadata:
   name: n8n-db-backup
   namespace: automation
   annotations:
-    checkov.io/skip1: CKV_K8S_35=pg_dump consumes database credentials from libpq environment variables.
-    checkov.io/skip2: CKV_K8S_40=NFS backup path ownership requires the existing UID/GID mapping.
+    checkov.io/skip1: CKV_K8S_40=NFS backup path ownership requires the existing UID/GID mapping.
 spec:
   schedule: "0 2 * * *"
   successfulJobsHistoryLimit: 3
@@ -22,6 +21,49 @@ spec:
             fsGroup: 100
             seccompProfile:
               type: RuntimeDefault
+          initContainers:
+            - name: prepare-pgpass
+              image: postgres:18-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
+              imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  escape_pgpass() {
+                    sed -e 's/\\/\\\\/g' -e 's/:/\\:/g'
+                  }
+                  username="$(cat /credentials/username)"
+                  password="$(cat /credentials/password)"
+                  printf '%s:%s:%s:%s:%s\n' "$PGHOST" "$PGPORT" "$PGDATABASE" "$(printf '%s' "$username" | escape_pgpass)" "$(printf '%s' "$password" | escape_pgpass)" > /pgpass/.pgpass
+                  printf '%s' "$username" > /pgpass/username
+                  chmod 0600 /pgpass/.pgpass /pgpass/username
+              env:
+                - name: PGHOST
+                  value: "n8n-pg-rw.automation.svc.cluster.local"
+                - name: PGPORT
+                  value: "5432"
+                - name: PGDATABASE
+                  value: "n8n"
+              volumeMounts:
+                - name: db-credentials
+                  mountPath: /credentials
+                  readOnly: true
+                - name: pgpass
+                  mountPath: /pgpass
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  cpu: 50m
+                  memory: 64Mi
           containers:
             - name: backup
               image: postgres:18-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
@@ -41,7 +83,7 @@ spec:
                   BACKUP_FILE="$BACKUP_DIR/$APP_NAME-$(date +%Y%m%d-%H%M%S).dump"
                   mkdir -p "$BACKUP_DIR"
                   echo "Starting backup for $APP_NAME..."
-                  pg_dump -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -Fc -f "$BACKUP_FILE"
+                  pg_dump --no-password -h "$PGHOST" -p "$PGPORT" -U "$(cat /pgpass/username)" -d "$PGDATABASE" -Fc -f "$BACKUP_FILE"
                   echo "Backup created: $BACKUP_FILE"
                   find "$BACKUP_DIR" -name "*.dump" -mtime +14 -delete
                   echo "Cleaned up *.dump backups older than 14 days"
@@ -50,23 +92,20 @@ spec:
                   value: "n8n"
                 - name: PGHOST
                   value: "n8n-pg-rw.automation.svc.cluster.local"
-                - name: PGUSER
-                  valueFrom:
-                    secretKeyRef:
-                      name: "n8n-db-secrets"
-                      key: username
-                - name: PGPASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: "n8n-db-secrets"
-                      key: password
+                - name: PGPORT
+                  value: "5432"
                 - name: PGDATABASE
                   value: "n8n"
+                - name: PGPASSFILE
+                  value: /pgpass/.pgpass
               volumeMounts:
                 - name: backup
                   mountPath: /backup
                 - name: tmp
                   mountPath: /tmp
+                - name: pgpass
+                  mountPath: /pgpass
+                  readOnly: true
               resources:
                 requests:
                   cpu: 25m
@@ -82,3 +121,15 @@ spec:
             - name: tmp
               emptyDir:
                 sizeLimit: 64Mi
+            - name: db-credentials
+              secret:
+                secretName: n8n-db-secrets
+                defaultMode: 288
+                items:
+                  - key: username
+                    path: username
+                  - key: password
+                    path: password
+            - name: pgpass
+              emptyDir:
+                sizeLimit: 1Mi
