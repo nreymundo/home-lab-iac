@@ -7,6 +7,9 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Keep the commit subject limited to the requested change summary.
 - Do not add attribution to a person, tool, or AI assistant unless explicitly instructed.
 
+## Git Workflow
+- Before committing or pushing, verify `git status`, the current branch and upstream, and the intended commit target. Use a dedicated Git worktree when concurrent branch changes or isolated amendment work makes the active worktree ambiguous. Before amending or force-pushing, confirm the target is the branch tip and that no unrelated commits will be rewritten.
+
 ## What To Do
 - Prefer changing source-of-truth files over mutating live systems or generated artifacts.
 - Use the repo's GitOps workflow when a Kubernetes change can be expressed in git.

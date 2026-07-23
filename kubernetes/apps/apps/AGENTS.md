@@ -11,6 +11,7 @@ Read the repo root `AGENTS.md`, `kubernetes/AGENTS.md`, and `kubernetes/apps/AGE
 - Manually declared PVC catalogs stay in `kubernetes/apps/storage/`, while controller-managed storage such as `CNPG Cluster.spec.storage` remains workload-local unless a nearer child file documents an exception.
 - Shared defaults and shared ingress behavior often come from `kubernetes/components/`, so local app edits may have shared-component dependencies.
 - Homepage cards belong directly in `utils/homepage/helmrelease.yaml` under `config.services`; do not use Homepage discovery labels or annotations. For every new card, search https://github.com/homarr-labs/dashboard-icons for an appropriate icon first.
+- For Homepage catalog changes, compare the complete card-name set before and after the edit; do not rely on manual counts. Resolve every missing or unexpected card before committing.
 
 ## Local Anti-Patterns
 - Do not invent a new app scaffold when the existing category already shows a stable pattern.
