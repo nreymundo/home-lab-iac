@@ -5,6 +5,13 @@ directory:
 framework:
   - terraform
   - kubernetes
+skip-check:
+  # Image digests are intentionally not pinned: Renovate digest updates bypass
+  # At the moment this is a bit too much churn for a home lab, or overhead.
+  # Images are pinned to a specific verson, or a specific SHA when that's
+  # not possible or it is preferrable that way.
+  # Balancing convenience and security and all that.
+  - CKV_K8S_43
 skip-path:
   - kubernetes/clusters/production/flux-system/.*
   - .*\.sops\.ya?ml$

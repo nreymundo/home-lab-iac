@@ -38,8 +38,7 @@ metadata:
   namespace: media
   annotations:
     checkov.io/skip1: CKV_K8S_38=This job intentionally needs a token to run kubectl exec.
-    checkov.io/skip2: CKV_K8S_43=Kubectl tag intentionally matches the cluster Kubernetes version; digest pinning will be handled separately.
-    checkov.io/skip3: CKV_K8S_40=Kubectl job runs under explicit non-root UID 1001.
+    checkov.io/skip2: CKV_K8S_40=Kubectl job runs under explicit non-root UID 1001.
 spec:
   schedule: "0 */12 * * *"
   concurrencyPolicy: Forbid

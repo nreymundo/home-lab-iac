@@ -5,8 +5,7 @@ metadata:
   namespace: renovate
   annotations:
     checkov.io/skip1: CKV_K8S_35=Renovate expects repository token settings as environment variables.
-    checkov.io/skip2: CKV_K8S_43=Image tags are Renovate-managed; digest pinning will be handled separately.
-    checkov.io/skip3: CKV_K8S_40=Renovate image runs as UID 1000 by design.
+    checkov.io/skip2: CKV_K8S_40=Renovate image runs as UID 1000 by design.
 spec:
   schedule: "0 * * * *"
   concurrencyPolicy: Forbid
