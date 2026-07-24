@@ -26,6 +26,7 @@ resources:
   - 63-harbor-install.yaml
   - 64-harbor-config.yaml
   - 70-observability-kube-prometheus-stack-install.yaml
+  - 70-observability-kube-prometheus-stack-config.yaml
   - 71-observability-metrics-server-install.yaml
   - 72-observability-loki-install.yaml
   - 73-observability-alloy-syslog-install.yaml
