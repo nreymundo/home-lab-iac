@@ -42,7 +42,7 @@ spec:
         type: Recreate
       sidecar:
         dashboards:
-          enabled: false
+          enabled: true
         datasources:
           initDatasources: true
           skipReload: true
