@@ -6,5 +6,15 @@ metadata:
 spec:
   dnsZoneRef:
     name: k3s.netbird.internal
+  # renovate: datasource=docker depName=netbirdio/netbird registryUrl=https://ghcr.io
+  image: ghcr.io/netbirdio/netbird:0.75.0
   workloadOverride:
     replicas: 3
+    podTemplate:
+      spec:
+        containers:
+          - name: netbird
+            command:
+              - /bin/sh
+              - -ec
+              - exec env NB_LAZY_CONN=off /usr/local/bin/netbird-entrypoint.sh
