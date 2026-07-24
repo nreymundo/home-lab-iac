@@ -1,36 +1,16 @@
-# OpenCode Integration
+# OpenCode Resources
 
-This repository configures the project-scoped jCodeMunch MCP server in
-`.opencode/opencode.json`. OpenCode starts it only while working in this
-repository or one of its subdirectories.
+This repository keeps only project-specific OpenCode skills in
+`.opencode/skills/`. It does not provide a project OpenCode configuration,
+agents, commands, plugins, or MCP servers.
 
-## Prerequisite
+OpenCode loads the skills when working in this repository or one of its
+subdirectories. The active OpenCode installation supplies all other behavior,
+including models, permissions, agents, and optional integrations.
 
-Install [uv](https://docs.astral.sh/uv/) so `uvx` is available on `PATH`.
-The first OpenCode session that starts the MCP downloads the pinned
-`jcodemunch-mcp` version. Later sessions reuse uv's local package cache.
+## Updating Skills
 
-If `uv`, a compatible Python runtime, or network access for the first download
-is unavailable, OpenCode remains usable but jCodeMunch will be unavailable for
-that session.
-
-## Local Data
-
-jCodeMunch stores its index and cached source outside the repository at:
-
-```text
-${XDG_DATA_HOME:-$HOME/.local/share}/jcodemunch
-```
-
-The directory is local to each machine and is not version controlled. A fresh
-clone therefore needs to be indexed independently. Ask OpenCode to index the
-current project before using jCodeMunch exploration tools.
-
-The project configuration disables anonymous savings telemetry, remote AI
-summaries, cross-repository traversal, and persistent session statistics.
-
-## Updates
-
-The MCP version is intentionally pinned in `.opencode/opencode.json`. Update
-that pin deliberately after reviewing the jCodeMunch release and restart
-OpenCode for a configuration change to take effect.
+Add or update a skill as `.opencode/skills/<skill-name>/SKILL.md`. Each skill
+should describe when it applies and contain the repository-specific workflow it
+needs. Restart OpenCode after changing a skill so the updated instructions are
+loaded.
