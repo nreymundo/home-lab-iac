@@ -359,7 +359,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(increase(opencode_retry_count_total{project_name=~\"$project\"}[$__range]))",
+              "expr": "sum(increase(opencode_retry_count_total{project_name=~\"$project\"}[$__range])) or vector(0)",
               "instant": false,
               "legendFormat": "",
               "range": true,
@@ -1003,7 +1003,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "100 * sum(increase(opencode_tool_duration_milliseconds_count{project_name=~\"$project\", success=\"false\"}[$__range])) / clamp_min(sum(increase(opencode_tool_duration_milliseconds_count{project_name=~\"$project\"}[$__range])), 1)",
+              "expr": "100 * (sum(increase(opencode_tool_duration_milliseconds_count{project_name=~\"$project\", success=\"false\"}[$__range])) or vector(0)) / clamp_min((sum(increase(opencode_tool_duration_milliseconds_count{project_name=~\"$project\"}[$__range])) or vector(0)), 1)",
               "instant": false,
               "legendFormat": "",
               "range": true,
