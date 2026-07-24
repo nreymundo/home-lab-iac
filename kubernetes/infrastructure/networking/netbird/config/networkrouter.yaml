@@ -18,3 +18,6 @@ spec:
               - /bin/sh
               - -ec
               - exec env NB_LAZY_CONN=off /usr/local/bin/netbird-entrypoint.sh
+            env:
+              - name: NB_DISABLE_UPDATE_SETTINGS
+                value: "false"
