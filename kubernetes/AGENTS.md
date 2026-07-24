@@ -13,7 +13,7 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 - `*.sops.yaml` is the normal committed form for Kubernetes secrets in this repo.
 
 ## Kubernetes-Wide Anti-Patterns
-- Do not validate by applying live changes when `kubectl --dry-run=client`, `flux get`, or `flux reconcile` will answer the question safely.
+- Do not use live reconciliation as validation. Use `kubectl --dry-run=client` or `flux get` first; `flux reconcile` is a live mutation requiring explicit approval.
 - Do not hand-edit generated `flux-system` bootstrap output during routine changes.
 - Do not scatter new source definitions, secrets, or app wiring outside the subtree that already owns them.
 

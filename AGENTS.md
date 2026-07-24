@@ -16,8 +16,12 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Keep changes narrowly scoped to the user's request.
 - Before proposing a new design, recovery workflow, or external research, inspect relevant in-repo sibling implementations first.
 - When a proven local pattern exists, adapt it directly; do not add abstractions, safeguards, or recovery procedures unless the existing pattern demonstrably cannot meet the requirement.
-- Keep investigation proportional: stop discovery once direct runtime evidence and an in-repo reference identify the minimal Git fix.
+- Stop discovery only after direct evidence identifies the root cause and an in-repo reference identifies the minimal Git fix. A failing hop, symptom, or plausible configuration theory is not sufficient.
 - Validate changes with the most direct evidence available for the kind of change you made.
+
+## Change Discipline
+- For an unfamiliar configuration or integration change, finish evidence gathering and state the complete proposed source change, validation, and expected rollout before editing.
+- A request to explain, review, or pause supersedes earlier approval. Do not edit, commit, revert, or push until fresh approval is given.
 
 ## jCodeMunch Exploration
 - When jCodeMunch MCP tools are available and this repository is indexed, prefer them for unfamiliar code exploration, symbol and text search, dependency/reference tracing, change-impact analysis, and task-context assembly.
