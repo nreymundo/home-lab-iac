@@ -13,23 +13,23 @@ spec:
         containers:
           main:
             image:
-              # renovate: datasource=docker depName=heathcliff26/speedtest-exporter registryUrl=https://ghcr.io
-              repository: ghcr.io/heathcliff26/speedtest-exporter
-              tag: v1.6.2
-            args:
-              - -config
-              - /config/config.yaml
+              # renovate: datasource=docker depName=tzockt/speedtest-exporter registryUrl=https://ghcr.io
+              repository: ghcr.io/tzockt/speedtest-exporter
+              tag: 2.1.2
+            env:
+              SPEEDTEST_CACHE_DURATION: "3600"
+              SPEEDTEST_TIMEOUT: "90"
             ports:
               - name: metrics
-                containerPort: 8080
+                containerPort: 9798
             probes:
               liveness:
                 enabled: true
                 custom: true
                 spec:
                   httpGet:
-                    path: /metrics
-                    port: 8080
+                    path: /health
+                    port: 9798
                   initialDelaySeconds: 10
                   periodSeconds: 15
                   timeoutSeconds: 3
@@ -39,8 +39,8 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /metrics
-                    port: 8080
+                    path: /health
+                    port: 9798
                   initialDelaySeconds: 5
                   periodSeconds: 15
                   timeoutSeconds: 3
@@ -50,30 +50,22 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /metrics
-                    port: 8080
+                    path: /health
+                    port: 9798
                   initialDelaySeconds: 5
                   periodSeconds: 5
                   timeoutSeconds: 3
                   failureThreshold: 12
             resources:
               requests:
-                cpu: 50m
+                cpu: 250m
                 memory: 64Mi
               limits:
-                cpu: 200m
+                cpu: 1000m
                 memory: 128Mi
-    persistence:
-      config:
-        enabled: true
-        type: configMap
-        name: speedtest-exporter-config
-        globalMounts:
-          - path: /config
-            readOnly: true
     service:
       main:
         controller: main
         ports:
           metrics:
-            port: 8080
+            port: 9798

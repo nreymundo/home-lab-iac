@@ -4,5 +4,4 @@ components:
   - ../../../../components/bjw-s-defaults
 resources:
   - helmrelease.yaml
-  - speedtest-exporter-config.yaml
   - servicemonitor.yaml
