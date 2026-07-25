@@ -7,6 +7,7 @@ resources:
   - ../apps/external-proxy
   - ../apps/external-observability/opnsense-exporter
   - ../apps/external-observability/omada-exporter
+  - ../apps/external-observability/speedtest-exporter
   - ../apps/automation/n8n
   - ../apps/utils/homepage
   - ../apps/utils/bambuddy
