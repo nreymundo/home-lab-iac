@@ -103,12 +103,10 @@
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
     },
     {
-      "description": "Keep Immich images on exact release tags",
-      "matchDatasources": ["docker"],
-      "matchDepNames": [
-        "immich-app/immich-server",
-        "immich-app/immich-machine-learning"
-      ],
+      "description": "Keep both Immich images in sync with the immich-app/immich GitHub release",
+      "matchDatasources": ["github-releases"],
+      "matchDepNames": ["immich-app/immich"],
+      "matchPackageNames": ["immich-app/immich"],
       "groupName": "Immich",
       "versioning": "semver",
       "allowedVersions": "/^v\\d+\\.\\d+\\.\\d+$/"
