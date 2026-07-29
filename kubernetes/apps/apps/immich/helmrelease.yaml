@@ -19,9 +19,9 @@ spec:
         containers:
           server:
             image:
-              # renovate: datasource=docker depName=immich-app/immich-server registryUrl=https://ghcr.io
+              # renovate: datasource=github-releases depName=immich-app/immich
               repository: ghcr.io/immich-app/immich-server
-              tag: v3.0.3
+              tag: v3.1.0
             env:
               TZ: Europe/Berlin
               IMMICH_HELMET_FILE: true
@@ -86,9 +86,9 @@ spec:
         containers:
           machine-learning:
             image:
-              # renovate: datasource=docker depName=immich-app/immich-machine-learning registryUrl=https://ghcr.io
+              # renovate: datasource=github-releases depName=immich-app/immich
               repository: ghcr.io/immich-app/immich-machine-learning
-              tag: v3.0.3
+              tag: v3.1.0
             env:
               TZ: Europe/Berlin
               TRANSFORMERS_CACHE: /cache
