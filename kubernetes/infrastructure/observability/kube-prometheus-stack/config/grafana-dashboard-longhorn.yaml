@@ -196,7 +196,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "(count(longhorn_node_status{condition=\"schedulable\"}==1) or on() vector(0)) - (count(longhorn_node_status{condition=\"allowScheduling\"}==0) or on() vector(0))",
+              "expr": "count((longhorn_node_status{condition=\"schedulable\"} == 1) and on(node) (longhorn_node_status{condition=\"allowScheduling\"} == 1)) or on() vector(0)",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -845,9 +845,7 @@ data:
                   "type": "auto"
                 },
                 "footer": {
-                  "reducers": [
-                    "sum"
-                  ]
+                  "reducers": []
                 },
                 "inspect": false
               },
@@ -863,7 +861,81 @@ data:
                 ]
               },
               "unit": "bytes"
-            }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Capacity"
+                },
+                "properties": [
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": [
+                      "sum"
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Used"
+                },
+                "properties": [
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": [
+                      "sum"
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Reserved"
+                },
+                "properties": [
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": [
+                      "sum"
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Headroom"
+                },
+                "properties": [
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": [
+                      "sum"
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Used %"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percent"
+                  },
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": []
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 7,
@@ -1966,7 +2038,7 @@ data:
                   }
                 ]
               },
-              "unit": "milicpu"
+              "unit": "suffix:mCPU"
             }
           },
           "gridPos": {
@@ -2164,7 +2236,7 @@ data:
                   }
                 ]
               },
-              "unit": "milicpu"
+              "unit": "suffix:mCPU"
             }
           },
           "gridPos": {
@@ -2314,21 +2386,7 @@ data:
         "longhorn-prometheus"
       ],
       "templating": {
-        "list": [
-          {
-            "allowCustomValue": true,
-            "hide": 2,
-            "includeAll": false,
-            "label": "datasource",
-            "multi": false,
-            "name": "DS_PROMETHEUS",
-            "query": "prometheus",
-            "refresh": 1,
-            "regex": "",
-            "skipUrlSync": false,
-            "type": "datasource"
-          }
-        ]
+        "list": []
       },
       "time": {
         "from": "now-3h",

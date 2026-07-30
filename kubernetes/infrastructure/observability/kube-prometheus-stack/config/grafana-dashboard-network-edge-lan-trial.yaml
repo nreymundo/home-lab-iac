@@ -50,22 +50,37 @@ data:
           "description": "Default WAN availability from the OPNsense gateway status enum.",
           "fieldConfig": {
             "defaults": {
-              "decimals": 1,
+              "decimals": 0,
               "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
+                    "color": "red",
                     "value": 0
                   },
                   {
-                    "color": "red",
-                    "value": 80
+                    "color": "green",
+                    "value": 1
                   }
                 ]
               },
-              "unit": "short"
+              "unit": "none",
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "Down",
+                      "color": "red"
+                    },
+                    "1": {
+                      "text": "Up",
+                      "color": "green"
+                    }
+                  }
+                }
+              ]
             }
           },
           "gridPos": {
@@ -99,7 +114,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "min(opnsense_gateways_status{default_gateway=\"true\"} == 1) or on() vector(0)",
+              "expr": "min(opnsense_gateways_status{default_gateway=\"true\"}) or on() vector(0)",
               "instant": true,
               "legendFormat": "",
               "range": false,
@@ -447,22 +462,37 @@ data:
           "description": "Optional selected gateway gateway availability from the OPNsense status enum.",
           "fieldConfig": {
             "defaults": {
-              "decimals": 1,
+              "decimals": 0,
               "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
+                    "color": "red",
                     "value": 0
                   },
                   {
-                    "color": "red",
-                    "value": 80
+                    "color": "green",
+                    "value": 1
                   }
                 ]
               },
-              "unit": "short"
+              "unit": "none",
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "Down",
+                      "color": "red"
+                    },
+                    "1": {
+                      "text": "Up",
+                      "color": "green"
+                    }
+                  }
+                }
+              ]
             }
           },
           "gridPos": {
@@ -496,14 +526,14 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "min(opnsense_gateways_status{name=~\"$gateway\"} == 1) or on() vector(0)",
+              "expr": "min(opnsense_gateways_status{name=~\"$gateway\"}) or on() vector(0)",
               "instant": true,
               "legendFormat": "",
               "range": false,
               "refId": "A"
             }
           ],
-          "title": "VPN Out Availability",
+          "title": "Selected Gateway Availability",
           "type": "stat"
         },
         {
@@ -571,7 +601,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "VPN Out Loss",
+          "title": "Selected Gateway Loss",
           "type": "stat"
         },
         {
@@ -638,7 +668,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "VPN Out RTT",
+          "title": "Selected Gateway RTT",
           "type": "stat"
         },
         {
@@ -891,7 +921,7 @@ data:
               },
               "expr": "increase(opnsense_interfaces_received_bytes_total{interface=~\"$interface\"}[$__range])",
               "instant": true,
-              "legendFormat": "Download",
+              "legendFormat": "{{interface}} Download",
               "range": false,
               "refId": "A"
             },
@@ -902,12 +932,12 @@ data:
               },
               "expr": "increase(opnsense_interfaces_transmitted_bytes_total{interface=~\"$interface\"}[$__range])",
               "instant": true,
-              "legendFormat": "Upload",
+              "legendFormat": "{{interface}} Upload",
               "range": false,
               "refId": "B"
             }
           ],
-          "title": "WAN Data Transfer — selected range",
+          "title": "Selected Interface Data Transfer — selected range",
           "type": "stat"
         },
         {
@@ -1236,7 +1266,7 @@ data:
               },
               "expr": "8 * rate(opnsense_interfaces_received_bytes_total{interface=~\"$interface\"}[$__rate_interval])",
               "instant": false,
-              "legendFormat": "Download",
+              "legendFormat": "{{interface}} Download",
               "range": true,
               "refId": "A"
             },
@@ -1247,12 +1277,12 @@ data:
               },
               "expr": "8 * rate(opnsense_interfaces_transmitted_bytes_total{interface=~\"$interface\"}[$__rate_interval])",
               "instant": false,
-              "legendFormat": "Upload",
+              "legendFormat": "{{interface}} Upload",
               "range": true,
               "refId": "B"
             }
           ],
-          "title": "Default WAN Speed",
+          "title": "Selected Interface Speed",
           "type": "timeseries"
         },
         {
@@ -2465,8 +2495,58 @@ data:
                   }
                 ]
               },
-              "unit": "short"
-            }
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "RX Bps"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "Bps"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "TX Bps"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "Bps"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Input errors/s"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "pps"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Output errors/s"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "pps"
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 13,
@@ -2581,9 +2661,7 @@ data:
                 },
                 "filterable": true,
                 "footer": {
-                  "reducers": [
-                    "sum"
-                  ]
+                  "reducers": []
                 },
                 "inspect": false
               },
@@ -2598,8 +2676,92 @@ data:
                   }
                 ]
               },
-              "unit": "short"
-            }
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Available"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "none"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "0": {
+                            "text": "Down",
+                            "color": "red"
+                          },
+                          "1": {
+                            "text": "Up",
+                            "color": "green"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": []
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Loss %"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percent"
+                  },
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": []
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "RTT ms"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "ms"
+                  },
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": []
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Probe interval s"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "s"
+                  },
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": []
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 7,
@@ -2714,9 +2876,7 @@ data:
                 },
                 "filterable": true,
                 "footer": {
-                  "reducers": [
-                    "sum"
-                  ]
+                  "reducers": []
                 },
                 "inspect": false
               },
@@ -2731,8 +2891,92 @@ data:
                   }
                 ]
               },
-              "unit": "short"
-            }
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU %"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percent"
+                  },
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": []
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory %"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percent"
+                  },
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": []
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Uptime seconds"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "s"
+                  },
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": []
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Needs upgrade"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "none"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "0": {
+                            "text": "No",
+                            "color": "green"
+                          },
+                          "1": {
+                            "text": "Yes",
+                            "color": "orange"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.footer.reducers",
+                    "value": []
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 9,
