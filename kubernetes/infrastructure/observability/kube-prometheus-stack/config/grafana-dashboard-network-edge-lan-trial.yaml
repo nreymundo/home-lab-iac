@@ -182,7 +182,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "max((opnsense_gateways_loss_percentage >= 0) and on(name,address) (opnsense_gateways_status{default_gateway=\"true\"} == 1)) or on() vector(0)",
+              "expr": "max((opnsense_gateways_loss_percentage >= 0) and on(name,address) (opnsense_gateways_status{default_gateway=\"true\"} == 1))",
               "instant": true,
               "legendFormat": "",
               "range": false,
@@ -249,7 +249,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "max((opnsense_gateways_rtt_milliseconds >= 0) and on(name,address) (opnsense_gateways_status{default_gateway=\"true\"} == 1)) or on() vector(0)",
+              "expr": "max((opnsense_gateways_rtt_milliseconds >= 0) and on(name,address) (opnsense_gateways_status{default_gateway=\"true\"} == 1))",
               "instant": true,
               "legendFormat": "",
               "range": false,
@@ -594,7 +594,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "max(opnsense_gateways_loss_percentage{name=~\"$gateway\"} >= 0) or on() vector(0)",
+              "expr": "max(opnsense_gateways_loss_percentage{name=~\"$gateway\"} >= 0)",
               "instant": true,
               "legendFormat": "",
               "range": false,
@@ -661,7 +661,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "max(opnsense_gateways_rtt_milliseconds{name=~\"$gateway\"} >= 0) or on() vector(0)",
+              "expr": "max(opnsense_gateways_rtt_milliseconds{name=~\"$gateway\"} >= 0)",
               "instant": true,
               "legendFormat": "",
               "range": false,
@@ -856,7 +856,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "time() - node_boot_time_seconds{instance=~\"$opnsense_instance\"}",
+              "expr": "time() - node_boot_time_seconds{job=\"opnsense-builtin-metrics\",instance=~\"$opnsense_instance\"}",
               "instant": true,
               "legendFormat": "OPNsense",
               "range": false,
@@ -1655,7 +1655,7 @@ data:
               },
               "expr": "omada_client_signal_pct{site=~\"$site\"}",
               "instant": false,
-              "legendFormat": "{{client}} @ {{ap_name}}",
+              "legendFormat": "{{client}} ({{mac}}) @ {{ap_name}}",
               "range": true,
               "refId": "A"
             }
@@ -2112,7 +2112,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{instance=~\"$opnsense_instance\",mode=\"idle\"}[5m])))",
+              "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{job=\"opnsense-builtin-metrics\",instance=~\"$opnsense_instance\",mode=\"idle\"}[5m])))",
               "legendFormat": "CPU used",
               "refId": "A"
             }
@@ -2337,7 +2337,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * (1 - node_filesystem_avail_bytes{instance=~\"$opnsense_instance\",fstype=~\"ufs|msdosfs\"} / node_filesystem_size_bytes{instance=~\"$opnsense_instance\",fstype=~\"ufs|msdosfs\"})",
+              "expr": "100 * (1 - node_filesystem_avail_bytes{job=\"opnsense-builtin-metrics\",instance=~\"$opnsense_instance\",fstype=~\"ufs|msdosfs\"} / node_filesystem_size_bytes{job=\"opnsense-builtin-metrics\",instance=~\"$opnsense_instance\",fstype=~\"ufs|msdosfs\"})",
               "legendFormat": "{{mountpoint}}",
               "refId": "A"
             }
@@ -2443,7 +2443,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * (1 - (node_memory_free_bytes{instance=~\"$opnsense_instance\"} + node_memory_cache_bytes{instance=~\"$opnsense_instance\"} + node_memory_inactive_bytes{instance=~\"$opnsense_instance\"} + node_memory_laundry_bytes{instance=~\"$opnsense_instance\"}) / node_memory_size_bytes{instance=~\"$opnsense_instance\"})",
+              "expr": "100 * (1 - (node_memory_free_bytes{job=\"opnsense-builtin-metrics\",instance=~\"$opnsense_instance\"} + node_memory_cache_bytes{job=\"opnsense-builtin-metrics\",instance=~\"$opnsense_instance\"} + node_memory_inactive_bytes{job=\"opnsense-builtin-metrics\",instance=~\"$opnsense_instance\"} + node_memory_laundry_bytes{job=\"opnsense-builtin-metrics\",instance=~\"$opnsense_instance\"}) / node_memory_size_bytes{job=\"opnsense-builtin-metrics\",instance=~\"$opnsense_instance\"})",
               "legendFormat": "Memory used",
               "refId": "A"
             }
@@ -2997,7 +2997,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "omada_device_cpu_percentage{site=~\"$site\",device=~\"$device\"}",
+              "expr": "label_join(omada_device_cpu_percentage{site=~\"$site\",device=~\"$device\"}, \"device_identity\", \"/\", \"site\", \"mac\")",
               "format": "table",
               "instant": true,
               "legendFormat": "{{device}}",
@@ -3009,7 +3009,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "omada_device_mem_percentage{site=~\"$site\",device=~\"$device\"}",
+              "expr": "label_join(omada_device_mem_percentage{site=~\"$site\",device=~\"$device\"}, \"device_identity\", \"/\", \"site\", \"mac\")",
               "format": "table",
               "instant": true,
               "legendFormat": "{{device}}",
@@ -3021,7 +3021,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "omada_device_uptime_seconds{site=~\"$site\",device=~\"$device\"}",
+              "expr": "label_join(omada_device_uptime_seconds{site=~\"$site\",device=~\"$device\"}, \"device_identity\", \"/\", \"site\", \"mac\")",
               "format": "table",
               "instant": true,
               "legendFormat": "{{device}}",
@@ -3033,7 +3033,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "omada_device_need_upgrade{site=~\"$site\",device=~\"$device\"}",
+              "expr": "label_join(omada_device_need_upgrade{site=~\"$site\",device=~\"$device\"}, \"device_identity\", \"/\", \"site\", \"mac\")",
               "format": "table",
               "instant": true,
               "legendFormat": "{{device}}",
@@ -3046,7 +3046,7 @@ data:
             {
               "id": "joinByField",
               "options": {
-                "byField": "device",
+                "byField": "device_identity",
                 "mode": "outer"
               }
             },
@@ -3062,7 +3062,8 @@ data:
                   "job": true,
                   "namespace": true,
                   "pod": true,
-                  "service": true
+                  "service": true,
+                  "device_identity": true
                 },
                 "indexByName": {},
                 "renameByName": {
@@ -3232,13 +3233,13 @@ data:
               "type": "prometheus",
               "uid": "prometheus"
             },
-            "definition": "label_values(node_memory_laundry_bytes, instance)",
+            "definition": "label_values(node_boot_time_seconds{job=\"opnsense-builtin-metrics\"}, instance)",
             "hide": 0,
             "includeAll": true,
             "multi": false,
             "name": "opnsense_instance",
             "query": {
-              "query": "label_values(node_memory_laundry_bytes, instance)",
+              "query": "label_values(node_boot_time_seconds{job=\"opnsense-builtin-metrics\"}, instance)",
               "refId": "NetworkEdge-opnsense-instance"
             },
             "refresh": 1,
