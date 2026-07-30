@@ -138,7 +138,7 @@ data:
                 "type": "prometheus",
                 "uid": "$${datasource}"
               },
-              "expr": "max by (namespace, pod, node, pod_ip, host_ip, created_by_kind, created_by_name, priority_class, qos_class) (max by (namespace, pod, node, pod_ip, host_ip, created_by_kind, created_by_name, priority_class, uid) (kube_pod_info{namespace=\"$namespace\", pod=~\"$pod\"}) * on (namespace, pod, uid) group_left(qos_class) (max by (namespace, pod, uid, qos_class) (kube_pod_status_qos_class{namespace=\"$namespace\", pod=~\"$pod\"}) == 1))",
+              "expr": "max by (namespace, pod, node, pod_ip, host_ip, created_by_kind, created_by_name, priority_class, qos_class) (((max by (namespace, pod, node, pod_ip, host_ip, created_by_kind, created_by_name, priority_class, uid) (kube_pod_info{namespace=\"$namespace\", pod=~\"$pod\"}) * on (namespace, pod, uid) group_left(qos_class) (max by (namespace, pod, uid, qos_class) (kube_pod_status_qos_class{namespace=\"$namespace\", pod=~\"$pod\"}) == 1)) or (max by (namespace, pod, node, pod_ip, host_ip, created_by_kind, created_by_name, priority_class, uid) (kube_pod_info{namespace=\"$namespace\", pod=~\"$pod\"}) unless on (namespace, pod, uid) (max by (namespace, pod, uid, qos_class) (kube_pod_status_qos_class{namespace=\"$namespace\", pod=~\"$pod\"}) == 1))))",
               "format": "table",
               "instant": true,
               "legendFormat": "{{namespace}}/{{pod}}",
