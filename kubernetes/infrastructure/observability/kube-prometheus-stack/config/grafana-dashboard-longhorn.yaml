@@ -133,7 +133,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "avg(longhorn_node_count_total) OR on() vector(0)",
+              "expr": "avg(longhorn_node_count_total) or on() vector(0)",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -196,7 +196,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "(count(longhorn_node_status{condition=\"schedulable\"}==1) OR on() vector(0)) - (count(longhorn_node_status{condition=\"allowScheduling\"}==0) OR on() vector(0))",
+              "expr": "(count(longhorn_node_status{condition=\"schedulable\"}==1) or on() vector(0)) - (count(longhorn_node_status{condition=\"allowScheduling\"}==0) or on() vector(0))",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -259,7 +259,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "count(longhorn_node_status{condition=\"allowScheduling\"}==0) OR on() vector(0)",
+              "expr": "count(longhorn_node_status{condition=\"allowScheduling\"}==0) or on() vector(0)",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -322,7 +322,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "(avg(longhorn_node_count_total) OR on() vector(0)) - (count(longhorn_node_status{condition=\"ready\"}==1) OR on() vector(0))",
+              "expr": "(avg(longhorn_node_count_total) or on() vector(0)) - (count(longhorn_node_status{condition=\"ready\"}==1) or on() vector(0))",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -385,7 +385,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "count(longhorn_volume_state{state=\"attached\"} == 1) OR on() vector(0)",
+              "expr": "count(longhorn_volume_state{state=\"attached\"} == 1) or on() vector(0)",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -448,7 +448,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "count(longhorn_volume_state{state=\"detached\"} == 1) OR on() vector(0)",
+              "expr": "count(longhorn_volume_state{state=\"detached\"} == 1) or on() vector(0)",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -511,7 +511,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "count(longhorn_volume_robustness{state=\"degraded\"} == 1) OR on() vector(0)",
+              "expr": "count(longhorn_volume_robustness{state=\"degraded\"} == 1) or on() vector(0)",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -574,7 +574,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "count(longhorn_volume_robustness{state=\"faulted\"} == 1) OR on() vector(0)",
+              "expr": "count(longhorn_volume_robustness{state=\"faulted\"} == 1) or on() vector(0)",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -636,7 +636,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(longhorn_node_storage_capacity_bytes) OR on() vector(0)",
+              "expr": "sum(longhorn_node_storage_capacity_bytes) or on() vector(0)",
               "instant": true,
               "range": false,
               "refId": "A"
@@ -698,7 +698,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(longhorn_node_storage_usage_bytes) OR on() vector(0)",
+              "expr": "sum(longhorn_node_storage_usage_bytes) or on() vector(0)",
               "instant": true,
               "range": false,
               "refId": "A"
@@ -760,7 +760,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(longhorn_node_storage_reservation_bytes) OR on() vector(0)",
+              "expr": "sum(longhorn_node_storage_reservation_bytes) or on() vector(0)",
               "instant": true,
               "range": false,
               "refId": "A"
@@ -822,7 +822,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "(sum(longhorn_node_storage_capacity_bytes) - sum(longhorn_node_storage_usage_bytes) - sum(longhorn_node_storage_reservation_bytes)) OR on() vector(0)",
+              "expr": "(sum(longhorn_node_storage_capacity_bytes) - sum(longhorn_node_storage_usage_bytes) - sum(longhorn_node_storage_reservation_bytes)) or on() vector(0)",
               "instant": true,
               "range": false,
               "refId": "A"

@@ -143,7 +143,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "kube_pod_info{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"}",
+              "expr": "kube_pod_info{namespace=\"$namespace\", pod=~\"$pod\", }",
               "format": "table",
               "instant": true,
               "legendFormat": "{{namespace}}/{{pod}}",
@@ -155,7 +155,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "kube_pod_status_qos_class{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"} > 0",
+              "expr": "kube_pod_status_qos_class{namespace=\"$namespace\", pod=~\"$pod\", } > 0",
               "format": "table",
               "instant": true,
               "legendFormat": "{{namespace}}/{{pod}}",
@@ -255,7 +255,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "kube_pod_container_status_last_terminated_reason{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"}",
+              "expr": "kube_pod_container_status_last_terminated_reason{namespace=\"$namespace\", pod=~\"$pod\", }",
               "format": "table",
               "instant": true,
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}",
@@ -380,7 +380,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", cluster=\"$cluster\"}[$__rate_interval])) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1))",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", }[$__rate_interval])) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1))",
               "instant": true,
               "interval": "$resolution",
               "legendFormat": "Requests",
@@ -464,7 +464,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", cluster=\"$cluster\"}[$__rate_interval])) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1))",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", }[$__rate_interval])) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1))",
               "instant": true,
               "interval": "$resolution",
               "legendFormat": "Limits",
@@ -552,7 +552,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", cluster=\"$cluster\"}) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1))",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", }) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1))",
               "instant": true,
               "interval": "$resolution",
               "legendFormat": "Requests",
@@ -636,7 +636,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", cluster=\"$cluster\"}) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1)) ",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", }) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1)) ",
               "instant": true,
               "interval": "$resolution",
               "legendFormat": "Limits",
@@ -749,7 +749,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1)) by (namespace, pod, container)",
+              "expr": "sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1)) by (namespace, pod, container)",
               "format": "table",
               "instant": true,
               "interval": "",
@@ -764,7 +764,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1)) by (namespace, pod, container)",
+              "expr": "sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1)) by (namespace, pod, container)",
               "format": "table",
               "instant": true,
               "interval": "",
@@ -779,7 +779,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1)) by (namespace, pod, container)",
+              "expr": "sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1)) by (namespace, pod, container)",
               "format": "table",
               "instant": true,
               "interval": "",
@@ -793,7 +793,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1)) by (namespace, pod, container)",
+              "expr": "sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1)) by (namespace, pod, container)",
               "format": "table",
               "instant": true,
               "interval": "",
@@ -807,7 +807,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", container!=\"\", cluster=\"$cluster\"}[$__rate_interval])) by (namespace, pod, container)",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", container!=\"\", }[$__rate_interval])) by (namespace, pod, container)",
               "format": "table",
               "instant": true,
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}",
@@ -821,7 +821,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", container!=\"\", cluster=\"$cluster\"}) by (namespace, pod, container)",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", container!=\"\", }) by (namespace, pod, container)",
               "format": "table",
               "instant": true,
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}",
@@ -1030,7 +1030,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", cluster=\"$cluster\"}[$__rate_interval])) by (namespace, pod, container) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1)) by (namespace, pod, container)",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", }[$__rate_interval])) by (namespace, pod, container) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1)) by (namespace, pod, container)",
               "interval": "$resolution",
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}  REQUESTS / LIMITS",
               "range": true,
@@ -1042,7 +1042,7 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", cluster=\"$cluster\"}[$__rate_interval])) by (namespace, pod, container) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1)) by (namespace, pod, container)",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", }[$__rate_interval])) by (namespace, pod, container) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1)) by (namespace, pod, container)",
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}  REQUESTS / LIMITS",
               "range": true,
               "refId": "B"
@@ -1164,7 +1164,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", cluster=\"$cluster\"}) by (namespace, pod, container) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1)) by (namespace, pod, container)",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", }) by (namespace, pod, container) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1)) by (namespace, pod, container)",
               "interval": "",
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}  REQUESTS / LIMITS",
               "range": true,
@@ -1176,7 +1176,7 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", cluster=\"$cluster\"}) by (namespace, pod, container) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", cluster=\"$cluster\"} and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", cluster=\"$cluster\"} == 1)) by (namespace, pod, container)",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", }) by (namespace, pod, container) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\", job=~\"$job\", } and on(namespace, pod) max by (namespace, pod) (kube_pod_status_phase{phase=\"Running\", namespace=\"$namespace\", pod=~\"$pod\", job=~\"$job\", } == 1)) by (namespace, pod, container)",
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}  REQUESTS / LIMITS",
               "range": true,
               "refId": "B"
@@ -1306,7 +1306,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", container!=\"\", cluster=\"$cluster\"}[$__rate_interval])) by (namespace, pod, container)",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", container!=\"\", }[$__rate_interval])) by (namespace, pod, container)",
               "interval": "$resolution",
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}",
               "range": true,
@@ -1419,7 +1419,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", container!=\"\", cluster=\"$cluster\"}) by (namespace, pod, container)",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", container!=\"\", }) by (namespace, pod, container)",
               "interval": "",
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}",
               "range": true,
@@ -1534,7 +1534,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(rate(container_cpu_cfs_throttled_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", container!=\"\", cluster=\"$cluster\"}[$__rate_interval])) by (namespace, pod, container)",
+              "expr": "sum(rate(container_cpu_cfs_throttled_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", image!=\"\", container!=\"\", }[$__rate_interval])) by (namespace, pod, container)",
               "interval": "$resolution",
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}",
               "range": true,
@@ -1653,7 +1653,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(increase(container_oom_events_total{namespace=\"$namespace\", pod=~\"$pod\", container!=\"\", cluster=\"$cluster\"}[$__rate_interval])) by (namespace, pod, container) > 0",
+              "expr": "sum(increase(container_oom_events_total{namespace=\"$namespace\", pod=~\"$pod\", container!=\"\", }[$__rate_interval])) by (namespace, pod, container) > 0",
               "interval": "",
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}",
               "range": true,
@@ -1760,7 +1760,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"$namespace\", pod=~\"$pod\", container!=\"\", job=~\"$job\", cluster=\"$cluster\"}[$__rate_interval])) by (namespace, pod, container) > 0",
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"$namespace\", pod=~\"$pod\", container!=\"\", job=~\"$job\", }[$__rate_interval])) by (namespace, pod, container) > 0",
               "interval": "",
               "legendFormat": "{{namespace}}/{{pod}} · {{container}}",
               "range": true,
@@ -2195,7 +2195,7 @@ data:
                 "uid": "${datasource}"
               },
               "exemplar": true,
-              "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"}[$__rate_interval]))",
+              "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"$namespace\", pod=~\"$pod\", }[$__rate_interval]))",
               "interval": "$resolution",
               "legendFormat": "Received",
               "refId": "A"
@@ -2206,7 +2206,7 @@ data:
                 "uid": "${datasource}"
               },
               "exemplar": true,
-              "expr": "- sum(rate(container_network_transmit_bytes_total{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"}[$__rate_interval]))",
+              "expr": "- sum(rate(container_network_transmit_bytes_total{namespace=\"$namespace\", pod=~\"$pod\", }[$__rate_interval]))",
               "interval": "$resolution",
               "legendFormat": "Transmitted",
               "refId": "B"
@@ -2309,7 +2309,7 @@ data:
                 "uid": "${datasource}"
               },
               "exemplar": true,
-              "expr": "sum(rate(container_network_receive_packets_total{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"}[$__rate_interval]))",
+              "expr": "sum(rate(container_network_receive_packets_total{namespace=\"$namespace\", pod=~\"$pod\", }[$__rate_interval]))",
               "interval": "$resolution",
               "legendFormat": "Received",
               "refId": "A"
@@ -2320,7 +2320,7 @@ data:
                 "uid": "${datasource}"
               },
               "exemplar": true,
-              "expr": "- sum(rate(container_network_transmit_packets_total{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"}[$__rate_interval]))",
+              "expr": "- sum(rate(container_network_transmit_packets_total{namespace=\"$namespace\", pod=~\"$pod\", }[$__rate_interval]))",
               "interval": "$resolution",
               "legendFormat": "Transmitted",
               "refId": "B"
@@ -2423,7 +2423,7 @@ data:
                 "uid": "${datasource}"
               },
               "exemplar": true,
-              "expr": "sum(rate(container_network_receive_packets_dropped_total{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"}[$__rate_interval]))",
+              "expr": "sum(rate(container_network_receive_packets_dropped_total{namespace=\"$namespace\", pod=~\"$pod\", }[$__rate_interval]))",
               "interval": "$resolution",
               "legendFormat": "Received",
               "refId": "A"
@@ -2434,7 +2434,7 @@ data:
                 "uid": "${datasource}"
               },
               "exemplar": true,
-              "expr": "- sum(rate(container_network_transmit_packets_dropped_total{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"}[$__rate_interval]))",
+              "expr": "- sum(rate(container_network_transmit_packets_dropped_total{namespace=\"$namespace\", pod=~\"$pod\", }[$__rate_interval]))",
               "interval": "$resolution",
               "legendFormat": "Transmitted",
               "refId": "B"
@@ -2537,7 +2537,7 @@ data:
                 "uid": "${datasource}"
               },
               "exemplar": true,
-              "expr": "sum(rate(container_network_receive_errors_total{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"}[$__rate_interval]))",
+              "expr": "sum(rate(container_network_receive_errors_total{namespace=\"$namespace\", pod=~\"$pod\", }[$__rate_interval]))",
               "interval": "$resolution",
               "legendFormat": "Received",
               "refId": "A"
@@ -2548,7 +2548,7 @@ data:
                 "uid": "${datasource}"
               },
               "exemplar": true,
-              "expr": "- sum(rate(container_network_transmit_errors_total{namespace=\"$namespace\", pod=~\"$pod\", cluster=\"$cluster\"}[$__rate_interval]))",
+              "expr": "- sum(rate(container_network_transmit_errors_total{namespace=\"$namespace\", pod=~\"$pod\", }[$__rate_interval]))",
               "interval": "$resolution",
               "legendFormat": "Transmitted",
               "refId": "B"
@@ -2584,36 +2584,13 @@ data:
               "type": "prometheus",
               "uid": "${datasource}"
             },
-            "definition": "label_values(kube_node_info,cluster)",
-            "hide": 0,
-            "includeAll": false,
-            "multi": false,
-            "name": "cluster",
-            "query": {
-              "qryType": 1,
-              "query": "label_values(kube_node_info,cluster)",
-              "refId": "PrometheusVariableQueryEditor-VariableQuery"
-            },
-            "refresh": 1,
-            "regex": "",
-            "regexApplyTo": "value",
-            "skipUrlSync": false,
-            "sort": 1,
-            "type": "query"
-          },
-          {
-            "allowCustomValue": true,
-            "datasource": {
-              "type": "prometheus",
-              "uid": "${datasource}"
-            },
-            "definition": "label_values(kube_pod_info{cluster=\"$cluster\"}, namespace)",
+            "definition": "label_values(kube_pod_info{}, namespace)",
             "hide": 0,
             "includeAll": false,
             "multi": false,
             "name": "namespace",
             "query": {
-              "query": "label_values(kube_pod_info{cluster=\"$cluster\"}, namespace)",
+              "query": "label_values(kube_pod_info{}, namespace)",
               "refId": "Prometheus-namespace-Variable-Query"
             },
             "refresh": 1,
@@ -2630,13 +2607,13 @@ data:
               "type": "prometheus",
               "uid": "${datasource}"
             },
-            "definition": "label_values(kube_pod_info{namespace=\"$namespace\", cluster=\"$cluster\"}, pod)",
+            "definition": "label_values(kube_pod_info{namespace=\"$namespace\", }, pod)",
             "hide": 0,
             "includeAll": true,
             "multi": true,
             "name": "pod",
             "query": {
-              "query": "label_values(kube_pod_info{namespace=\"$namespace\", cluster=\"$cluster\"}, pod)",
+              "query": "label_values(kube_pod_info{namespace=\"$namespace\", }, pod)",
               "refId": "Prometheus-pod-Variable-Query"
             },
             "refresh": 2,
@@ -2663,14 +2640,14 @@ data:
               "type": "prometheus",
               "uid": "${datasource}"
             },
-            "definition": "label_values(kube_pod_info{namespace=\"$namespace\", cluster=\"$cluster\"},job)",
+            "definition": "label_values(kube_pod_info{namespace=\"$namespace\", },job)",
             "hide": 0,
             "includeAll": false,
             "multi": true,
             "name": "job",
             "query": {
               "qryType": 1,
-              "query": "label_values(kube_pod_info{namespace=\"$namespace\", cluster=\"$cluster\"},job)",
+              "query": "label_values(kube_pod_info{namespace=\"$namespace\", },job)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "refresh": 1,
