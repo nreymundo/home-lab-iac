@@ -31,7 +31,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "$${datasource}"
+              "uid": "prometheus"
             },
             "enable": true,
             "hide": false,
@@ -52,7 +52,7 @@ data:
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "$${datasource}"
+              "uid": "prometheus"
             },
             "enable": true,
             "hide": false,
