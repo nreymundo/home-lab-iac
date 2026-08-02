@@ -21,7 +21,7 @@ spec:
             image:
               # renovate: datasource=docker depName=maziggy/bambuddy registryUrl=https://ghcr.io
               repository: ghcr.io/maziggy/bambuddy
-              tag: 1.2.5.1
+              tag: 1.2.5.2
             env:
               TZ: Europe/Berlin
               PUID: "1000"
