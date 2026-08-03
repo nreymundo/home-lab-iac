@@ -1,0 +1,17 @@
+[Unit]
+Description=Chatterbox TTS container
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory={{ chatterbox_config_dir }}
+ExecStart=/usr/bin/docker compose -p {{ chatterbox_compose_project_name }} -f {{ chatterbox_compose_file }} up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -p {{ chatterbox_compose_project_name }} -f {{ chatterbox_compose_file }} down
+TimeoutStartSec=0
+TimeoutStopSec=120s
+
+[Install]
+WantedBy=multi-user.target

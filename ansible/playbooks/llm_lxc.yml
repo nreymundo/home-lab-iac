@@ -12,6 +12,8 @@
         - comfyui
     - whisper_runtime
     - llama_swap
+    - role: chatterbox
+      tags: [chatterbox]
 
 - name: Update llama.cpp from source
   hosts: llm_lxc

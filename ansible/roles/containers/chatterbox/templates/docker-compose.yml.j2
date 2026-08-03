@@ -1,0 +1,36 @@
+name: "{{ chatterbox_compose_project_name }}"
+
+services:
+  {{ chatterbox_compose_service_name }}:
+    image: "{{ chatterbox_image }}"
+    restart: {{ chatterbox_restart }}
+    security_opt:
+{% for opt in chatterbox_security_opt %}
+      - "{{ opt }}"
+{% endfor %}
+    group_add:
+{% for group in chatterbox_group_add %}
+      - "{{ group }}"
+{% endfor %}
+    devices:
+{% for device in chatterbox_devices %}
+      - "{{ device }}"
+{% endfor %}
+    ipc: {{ chatterbox_ipc }}
+    shm_size: {{ chatterbox_shm_size }}
+    ports:
+      - "{{ chatterbox_bind_address }}:{{ chatterbox_host_port }}:{{ chatterbox_container_port }}"
+    environment:
+{% for name, value in chatterbox_environment.items() %}
+      {{ name }}: "{{ value }}"
+{% endfor %}
+    volumes:
+      - "{{ chatterbox_config_file }}:{{ chatterbox_container_config_file }}:ro"
+      - "{{ chatterbox_voices_dir }}:{{ chatterbox_container_voices_dir }}:ro"
+      - "{{ chatterbox_reference_audio_dir }}:{{ chatterbox_container_reference_audio_dir }}:ro"
+      - "{{ chatterbox_outputs_dir }}:{{ chatterbox_container_outputs_dir }}"
+      - "{{ chatterbox_logs_dir }}:{{ chatterbox_container_logs_dir }}"
+      - "{{ chatterbox_hf_cache_volume_name }}:{{ chatterbox_container_hf_cache_dir }}"
+
+volumes:
+  {{ chatterbox_hf_cache_volume_name }}:

@@ -1,0 +1,103 @@
+---
+- name: Ensure Chatterbox container role supports this system
+  ansible.builtin.assert:
+    that:
+      - ansible_system == 'Linux'
+    fail_msg: "Chatterbox container role supports Linux only"
+
+- name: Verify Docker Compose is available
+  ansible.builtin.command: docker compose version
+  register: chatterbox_docker_compose_version
+  changed_when: false
+
+- name: Stat Chatterbox pre-provisioned data paths
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ chatterbox_required_data_paths }}"
+  register: chatterbox_data_path_stats
+  when: chatterbox_enabled | bool
+
+- name: Assert Chatterbox pre-provisioned data paths exist
+  ansible.builtin.assert:
+    that:
+      - (chatterbox_data_path_stats.results | rejectattr('stat.exists') | list | length) == 0
+    fail_msg: >-
+      Missing required Chatterbox pre-provisioned data path(s):
+      {{ chatterbox_data_path_stats.results | rejectattr('stat.exists') | map(attribute='item') | list | join(', ') }}.
+      The container mounts these host-side assets (config.yaml, voices,
+      reference_audio, outputs, logs); they are provisioned outside Ansible
+      and are not created or copied by this role.
+  when: chatterbox_enabled | bool
+
+- name: Ensure Chatterbox managed config directory exists
+  ansible.builtin.file:
+    path: "{{ chatterbox_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Render Chatterbox Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ chatterbox_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Chatterbox container
+
+- name: Validate Chatterbox compose file
+  ansible.builtin.command:
+    cmd: docker compose -f {{ chatterbox_compose_file }} config --quiet
+  changed_when: false
+  when:
+    - chatterbox_enabled | bool
+    - not ansible_check_mode
+
+- name: Pull Chatterbox image
+  ansible.builtin.command:
+    cmd: docker pull {{ chatterbox_image | quote }}
+  register: chatterbox_image_pull
+  changed_when: >-
+    'Downloaded newer image' in chatterbox_image_pull.stdout
+    or 'Pull complete' in chatterbox_image_pull.stdout
+    or 'Status: Downloaded' in chatterbox_image_pull.stdout
+  when:
+    - chatterbox_enabled | bool
+    - not ansible_check_mode
+
+- name: Recreate Chatterbox container when image updated
+  ansible.builtin.command:
+    cmd: >-
+      docker compose -p {{ chatterbox_compose_project_name }}
+      -f {{ chatterbox_compose_file }} up -d --remove-orphans
+  register: chatterbox_compose_up
+  changed_when: >-
+    'Created' in (chatterbox_compose_up.stdout ~ chatterbox_compose_up.stderr)
+    or 'Creating' in (chatterbox_compose_up.stdout ~ chatterbox_compose_up.stderr)
+  when:
+    - chatterbox_enabled | bool
+    - not ansible_check_mode
+    - chatterbox_image_pull.changed
+
+- name: Install Chatterbox systemd unit
+  ansible.builtin.template:
+    src: chatterbox-container.service.j2
+    dest: "/etc/systemd/system/{{ chatterbox_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload Chatterbox systemd
+    - Restart Chatterbox container
+
+- name: Flush Chatterbox handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Manage Chatterbox service
+  ansible.builtin.systemd_service:
+    name: "{{ chatterbox_service_name }}"
+    enabled: "{{ chatterbox_enabled | bool }}"
+    state: "{{ 'started' if chatterbox_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
