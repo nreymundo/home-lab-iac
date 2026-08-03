@@ -1,0 +1,13 @@
+---
+- name: Reload Chatterbox systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Restart Chatterbox container
+  ansible.builtin.systemd_service:
+    name: "{{ chatterbox_service_name }}"
+    state: restarted
+    daemon_reload: true
+  when:
+    - chatterbox_enabled | bool
+    - not ansible_check_mode

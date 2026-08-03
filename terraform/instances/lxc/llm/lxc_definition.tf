@@ -6,6 +6,7 @@ locals {
     vmid             = 400
     ip_address       = "192.168.10.70"
     ansible_user     = "root"
+    description      = "Docker workloads (ComfyUI and Chatterbox TTS), llama.cpp/ROCm, and Whisper"
     cpu_cores        = 12
     memory_mb        = 98304
     swap_mb          = 8192
@@ -26,6 +27,7 @@ locals {
       target_node  = local.llm.target_node
       vmid         = local.llm.vmid
       ansible_user = local.llm.ansible_user
+      description  = local.llm.description
 
       template_file_id = "unraid:vztmpl/fedora-44-cloud-amd64.tar.xz"
       os_type          = "fedora"
