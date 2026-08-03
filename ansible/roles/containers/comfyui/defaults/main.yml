@@ -6,7 +6,7 @@ comfyui_compose_project_name: comfyui
 comfyui_compose_service_name: comfyui
 comfyui_container_name: comfyui
 comfyui_image: >-
-  docker.io/kyuz0/amd-strix-halo-comfyui:latest@sha256:0066678ae9043f69a1c8c7699e70626ceffd35c1a8ca03227a05640ad0241ed2
+  docker.io/kyuz0/amd-strix-halo-comfyui:latest
 
 comfyui_base_dir: /opt/ai/containers/comfyui
 comfyui_models_dir: /opt/ai/models/comfyui
