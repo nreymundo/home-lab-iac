@@ -221,5 +221,9 @@ resource "proxmox_virtual_environment_container" "this" {
       condition     = !try(each.value.ssh_bootstrap.enabled, false) || var.ssh_bootstrap_cluster_ssh_host != null
       error_message = "ssh_bootstrap_cluster_ssh_host is required when any container enables ssh_bootstrap."
     }
+
+    ignore_changes = [
+      initialization[0].user_account,
+    ]
   }
 }
