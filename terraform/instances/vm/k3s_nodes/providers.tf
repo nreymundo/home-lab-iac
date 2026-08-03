@@ -13,18 +13,26 @@ terraform {
       version = "0.5.4-pre"
     }
   }
-  required_version = ">= 1.3"
+  required_version = ">= 1.10"
 
-  cloud {
-    organization = "home-lab-iac"
-    workspaces {
-      name = "k3s-nodes"
-    }
+  backend "s3" {
+    bucket = "terraform"
+    key    = "states/k3s-nodes/terraform.tfstate"
+
+    use_path_style = true
+    use_lockfile   = true
+
+    skip_credentials_validation = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_requesting_account_id  = true
   }
 }
 
 # Environment inputs:
 # - Provider auth/endpoint: PM_API_URL, PM_API_TOKEN_ID, PM_API_TOKEN_SECRET
+# - Backend (S3/Garage), env-sourced: AWS_ENDPOINT_URL_S3, AWS_REGION,
+#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 
 provider "proxmox" {
   pm_tls_insecure = true

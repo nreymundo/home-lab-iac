@@ -13,13 +13,17 @@ terraform {
       version = "0.5.4-pre"
     }
   }
-  required_version = ">= 1.3"
+  required_version = ">= 1.10"
 
-  cloud {
-    organization = "home-lab-iac"
-    workspaces {
-      name = "hetzner-servers"
-    }
+  backend "s3" {
+    bucket                      = "terraform"
+    key                         = "states/hetzner-servers/terraform.tfstate"
+    use_path_style              = true
+    use_lockfile                = true
+    skip_credentials_validation = true
+    skip_requesting_account_id  = true
+    skip_region_validation      = true
+    skip_metadata_api_check     = true
   }
 }
 

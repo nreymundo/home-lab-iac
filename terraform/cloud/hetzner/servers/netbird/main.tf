@@ -3,13 +3,17 @@ data "bitwarden-secrets_secret" "ssh_public_keys" {
 }
 
 data "terraform_remote_state" "firewall" {
-  backend = "remote"
+  backend = "s3"
 
   config = {
-    organization = "home-lab-iac"
-    workspaces = {
-      name = "hetzner-firewall"
-    }
+    bucket = "terraform"
+    key    = "states/hetzner-firewall/terraform.tfstate"
+
+    use_path_style              = true
+    skip_credentials_validation = true
+    skip_requesting_account_id  = true
+    skip_region_validation      = true
+    skip_metadata_api_check     = true
   }
 }
 
