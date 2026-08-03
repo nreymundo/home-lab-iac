@@ -78,3 +78,4 @@ chatterbox_environment:
   TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL: "1"
   TTS_BF16: "on"
   TTS_ENGINE_DEVICE: cuda
+  HF_TOKEN: "${HF_TOKEN:-}"
