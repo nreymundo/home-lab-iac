@@ -141,12 +141,11 @@ spec:
             resources:
               requests:
                 gpu.intel.com/i915: 1
-                cpu: 500m
-                memory: 1536Mi
+                cpu: 1
+                memory: 4Gi
               limits:
                 gpu.intel.com/i915: 1
-                cpu: 4
-                memory: 4Gi
+                memory: 5Gi
     service:
       main:
         controller: main

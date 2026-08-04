@@ -27,7 +27,6 @@ spec:
                 cpu: 10m
                 memory: 64Mi
               limits:
-                cpu: 50m
                 memory: 128Mi
             env:
               API_BASE_URL: "http://${GARAGE_S3_IP}:3903"

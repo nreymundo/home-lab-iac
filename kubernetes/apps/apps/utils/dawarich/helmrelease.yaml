@@ -157,10 +157,9 @@ spec:
                   failureThreshold: 30
             resources:
               requests:
-                cpu: 100m
-                memory: 1Gi
+                cpu: 25m
+                memory: 640Mi
               limits:
-                cpu: 2000m
                 memory: 4Gi
 
       sidekiq:
@@ -303,10 +302,9 @@ spec:
                   failureThreshold: 3
             resources:
               requests:
-                cpu: 100m
-                memory: 1Gi
+                cpu: 25m
+                memory: 448Mi
               limits:
-                cpu: 2000m
                 memory: 4Gi
 
       redis:
@@ -357,7 +355,6 @@ spec:
                 cpu: 50m
                 memory: 128Mi
               limits:
-                cpu: 500m
                 memory: 512Mi
 
     service:

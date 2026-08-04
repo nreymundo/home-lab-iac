@@ -149,7 +149,6 @@ spec:
                 cpu: 200m
                 memory: 512Mi
               limits:
-                cpu: 2000m
                 memory: 2Gi
 
       meilisearch:
@@ -232,7 +231,6 @@ spec:
                 cpu: 100m
                 memory: 256Mi
               limits:
-                cpu: 1000m
                 memory: 1Gi
 
       chrome:
@@ -298,10 +296,9 @@ spec:
                   failureThreshold: 30
             resources:
               requests:
-                cpu: 100m
-                memory: 256Mi
+                cpu: 25m
+                memory: 128Mi
               limits:
-                cpu: 1000m
                 memory: 4Gi
 
     service:

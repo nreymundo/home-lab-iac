@@ -77,7 +77,6 @@ spec:
                 cpu: 100m
                 memory: 250Mi
               limits:
-                cpu: 1000m
                 memory: 1Gi
             probes:
               liveness:
@@ -136,7 +135,6 @@ spec:
                 cpu: 100m
                 memory: 250Mi
               limits:
-                cpu: 1000m
                 memory: 1Gi
 
       # Redis
@@ -151,7 +149,6 @@ spec:
                 cpu: 50m
                 memory: 64Mi
               limits:
-                cpu: 100m
                 memory: 128Mi
 
     service:

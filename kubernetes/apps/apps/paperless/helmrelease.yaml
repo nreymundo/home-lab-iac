@@ -95,7 +95,6 @@ spec:
                 cpu: 100m
                 memory: 640Mi
               limits:
-                cpu: 2000m
                 memory: 2Gi
 
       # Redis broker
@@ -111,7 +110,6 @@ spec:
                 cpu: 25m
                 memory: 64Mi
               limits:
-                cpu: 250m
                 memory: 256Mi
 
       # Gotenberg document converter
@@ -131,7 +129,6 @@ spec:
                 cpu: 50m
                 memory: 128Mi
               limits:
-                cpu: 1000m
                 memory: 1Gi
 
       # Apache Tika
@@ -147,7 +144,6 @@ spec:
                 cpu: 50m
                 memory: 256Mi
               limits:
-                cpu: 1000m
                 memory: 1Gi
 
     service:

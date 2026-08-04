@@ -279,7 +279,6 @@ spec:
           cpu: 100m
           memory: 768Mi
         limits:
-          cpu: 500m
           memory: 1536Mi
       pdb:
         enabled: true
@@ -314,7 +313,6 @@ spec:
           cpu: 500m
           memory: 512Mi
         limits:
-          cpu: 1500m
           memory: 1536Mi
       startupProbe:
         initialDelaySeconds: 30

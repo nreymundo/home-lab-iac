@@ -139,7 +139,6 @@ spec:
                 cpu: 250m
                 memory: 1Gi
               limits:
-                cpu: 2
                 memory: 4Gi
 
       admin-panel:
@@ -169,7 +168,6 @@ spec:
                 cpu: 50m
                 memory: 128Mi
               limits:
-                cpu: 500m
                 memory: 512Mi
 
       mongodb:
@@ -225,7 +223,6 @@ spec:
                 cpu: 100m
                 memory: 512Mi
               limits:
-                cpu: 1
                 memory: 2Gi
 
       meilisearch:
@@ -309,7 +306,6 @@ spec:
                 cpu: 100m
                 memory: 512Mi
               limits:
-                cpu: 1
                 memory: 2Gi
 
       vectordb:
@@ -368,7 +364,6 @@ spec:
                 cpu: 100m
                 memory: 512Mi
               limits:
-                cpu: 1
                 memory: 2Gi
 
       rag-api:
@@ -414,7 +409,6 @@ spec:
                 cpu: 100m
                 memory: 512Mi
               limits:
-                cpu: 1
                 memory: 2Gi
 
     service:

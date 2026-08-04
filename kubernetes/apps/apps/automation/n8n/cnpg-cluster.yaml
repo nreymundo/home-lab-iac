@@ -11,6 +11,10 @@ spec:
       recurring-job.longhorn.io/backup-daily: enabled
       recurring-job.longhorn.io/backup-weekly: enabled
   instances: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
   monitoring:
     enablePodMonitor: true
   storage:

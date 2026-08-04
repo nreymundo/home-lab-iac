@@ -112,7 +112,6 @@ spec:
                 cpu: 100m
                 memory: 512Mi
               limits:
-                cpu: 2000m
                 memory: 2Gi
 
           drpp:
@@ -127,7 +126,6 @@ spec:
                 cpu: 50m
                 memory: 128Mi
               limits:
-                cpu: 200m
                 memory: 512Mi
 
           steam-presence:
@@ -168,7 +166,6 @@ spec:
                 cpu: 50m
                 memory: 128Mi
               limits:
-                cpu: 200m
                 memory: 512Mi
 
     service:
