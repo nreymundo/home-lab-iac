@@ -26,6 +26,8 @@ Important parameters:
 - `llm_runtime_cmake_hip_flags`
 - `llm_runtime_enable_rpc`
 - `llm_runtime_enable_unified_memory`
+- `llm_runtime_enable_ui`
+- `llm_runtime_use_prebuilt_ui`
 - `llm_runtime_force_rebuild`
 - `llm_runtime_extra_packages`
 - `llm_runtime_vram_estimator_url`
@@ -39,6 +41,14 @@ true. When both are enabled, `llama.cpp` is configured with both `GGML_HIP` and
 The current `llama.cpp` build always includes HIP/ROCm, so enabling it requires
 `llm_runtime_enable_rocm`; Vulkan support is added when
 `llm_runtime_enable_vulkan` is true.
+
+`llm_runtime_enable_ui` and `llm_runtime_use_prebuilt_ui` map to the upstream
+`LLAMA_BUILD_UI` and `LLAMA_USE_PREBUILT_UI` CMake flags. Both default to false
+even though upstream defaults them to ON: the prebuilt UI download has failed
+inside constrained LXCs and leaves stale assets under `build/tools/ui/dist` that
+abort `llama-ui-embed` on the next configure. When the UI is disabled and a
+rebuild is required, the role removes those stale generated UI asset directories
+before configuring so llama.cpp falls back to its no-UI build cleanly.
 
 The role writes `{{ llm_runtime_llama_marker_path }}` after a successful build.
 Changing the ROCm version, llama.cpp ref, build flags, or patch settings causes
