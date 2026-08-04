@@ -29,7 +29,7 @@ spec:
     clusterSecretsPermissions:
       allowAllSecrets: false
     operator:
-      replicaCount: 1
+      replicaCount: 0
       resources:
         requests:
           cpu: 50m
