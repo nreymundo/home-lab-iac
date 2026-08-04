@@ -10,5 +10,7 @@
   "amdgpu_targets": {{ llm_runtime_amdgpu_targets | to_json }},
   "build_type": {{ llm_runtime_build_type | to_json }},
   "enable_rpc": {{ llm_runtime_enable_rpc | bool | to_json }},
+  "enable_ui": {{ llm_runtime_enable_ui | bool | to_json }},
+  "use_prebuilt_ui": {{ llm_runtime_use_prebuilt_ui | bool | to_json }},
   "cmake_hip_flags": {{ llm_runtime_cmake_hip_flags | to_json }}
 }

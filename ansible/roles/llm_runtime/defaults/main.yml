@@ -78,6 +78,14 @@ llm_runtime_force_rebuild: false
 
 llm_runtime_enable_rpc: true
 llm_runtime_enable_unified_memory: true
+
+# The upstream llama.cpp embedded UI (LLAMA_BUILD_UI) and its prebuilt asset
+# download (LLAMA_USE_PREBUILT_UI) both default to ON. The prebuilt UI download
+# has failed in constrained LXCs and leaves stale assets under
+# build/tools/ui/dist that abort llama-ui-embed on the next configure. The role
+# disables both by default so llama.cpp falls back to its no-UI build.
+llm_runtime_enable_ui: false
+llm_runtime_use_prebuilt_ui: false
 llm_runtime_cmake_hip_flags: "--rocm-path={{ llm_runtime_rocm_path }} -mllvm --amdgpu-unroll-threshold-local=600"
 
 llm_runtime_install_vram_estimator: true

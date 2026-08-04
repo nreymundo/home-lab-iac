@@ -269,6 +269,19 @@
       }}
   when: llm_runtime_enable_llama | bool
 
+- name: Remove stale llama.cpp embedded UI assets when UI disabled
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ llm_runtime_llama_build_dir }}/tools/ui/dist"
+    - "{{ llm_runtime_llama_dir }}/tools/ui/dist"
+    - "{{ llm_runtime_llama_build_dir }}/tools/ui/.ui-stamp"
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
+    - not (llm_runtime_enable_ui | bool)
+
 - name: Configure llama.cpp ROCm/Vulkan build
   ansible.builtin.command: >-
     cmake -S . -B {{ llm_runtime_llama_build_dir | quote }}
@@ -278,6 +291,8 @@
     -DAMDGPU_TARGETS={{ llm_runtime_amdgpu_targets | quote }}
     -DCMAKE_BUILD_TYPE={{ llm_runtime_build_type | quote }}
     -DGGML_RPC={{ 'ON' if llm_runtime_enable_rpc | bool else 'OFF' }}
+    -DLLAMA_BUILD_UI={{ 'ON' if llm_runtime_enable_ui | bool else 'OFF' }}
+    -DLLAMA_USE_PREBUILT_UI={{ 'ON' if llm_runtime_use_prebuilt_ui | bool else 'OFF' }}
     -DROCM_PATH={{ llm_runtime_rocm_path | quote }}
     -DHIP_PATH={{ llm_runtime_rocm_path | quote }}
     -DHIP_PLATFORM=amd
