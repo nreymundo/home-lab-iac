@@ -78,13 +78,13 @@ pre-commit run ansible-lint --all-files
 pre-commit run terraform-fmt --all-files
 pre-commit run kubeconform --all-files
 pre-commit run trivy-fs --all-files --hook-stage manual
-pre-commit run checkov --all-files --hook-stage manual
+pre-commit run checkov --all-files
 
 # Update hooks to latest versions
 pre-commit autoupdate
 ```
 
-`trivy-fs` and `checkov` are manual local hooks because they are slower and need baseline tuning. CI runs both as hard-failing jobs; keep them non-required in branch protection until their baselines are tuned.
+`trivy-fs` is a manual local hook because it is slower and needs baseline tuning. Checkov runs for Kubernetes, Terraform, and `.checkov.yaml` changes; CI runs both as hard-failing jobs.
 
 The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` hook rather than through the normal file-based pre-commit scan.
 
