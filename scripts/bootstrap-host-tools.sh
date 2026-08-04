@@ -254,7 +254,7 @@ prepare_arch_package_plan() {
       append_unique PACMAN_PACKAGES_TO_INSTALL trivy
       ;;
     checkov)
-      append_unique MANUAL_TOOLS_TO_INSTALL checkov
+      append_unique PACMAN_PACKAGES_TO_INSTALL python-pipx
       ;;
     shellcheck)
       append_unique PACMAN_PACKAGES_TO_INSTALL shellcheck
@@ -492,6 +492,14 @@ install_missing_tools() {
       if [[ ${#PACMAN_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
         log_info "Installing missing pacman packages"
         sudo pacman -S --needed "${PACMAN_PACKAGES_TO_INSTALL[@]}"
+      fi
+
+      if [[ " ${MISSING_TOOLS[*]} " == *" checkov " ]]; then
+        export PATH="$HOME/.local/bin:$PATH"
+        if ! command_exists checkov; then
+          log_info "Installing Checkov with pipx"
+          pipx install checkov
+        fi
       fi
 
       if [[ ${#AUR_PACKAGES_TO_INSTALL[@]} -gt 0 ]]; then
