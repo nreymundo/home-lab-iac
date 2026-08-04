@@ -1,7 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - service-netbird.yaml
+  # NetBird is intentionally disabled; retain the service manifest for a
+  # future re-enable without exposing it through Traefik meanwhile.
+  # - service-netbird.yaml
   - middlewares/default-headers.yaml
   - middlewares/nextcloud-office-headers.yaml
   - middlewares/rate-limit.yaml
