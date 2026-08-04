@@ -33,7 +33,6 @@ spec:
                 cpu: 250m
                 memory: 512Mi
               limits:
-                cpu: 2
                 memory: 2Gi
             ports:
               - name: http
@@ -52,6 +51,10 @@ spec:
             ports:
               - name: https
                 containerPort: 443
+            resources:
+              requests:
+                cpu: 25m
+                memory: 512Mi
           log-tailer:
             image:
               # renovate: datasource=docker depName=library/busybox registryUrl=https://docker.io
@@ -66,7 +69,6 @@ spec:
                 cpu: 5m
                 memory: 16Mi
               limits:
-                cpu: 50m
                 memory: 32Mi
       valkey:
         containers:
@@ -87,7 +89,6 @@ spec:
                 cpu: 25m
                 memory: 64Mi
               limits:
-                cpu: 250m
                 memory: 256Mi
       clamav:
         containers:
@@ -101,7 +102,6 @@ spec:
                 cpu: 50m
                 memory: 768Mi
               limits:
-                cpu: 1000m
                 memory: 2Gi
     service:
       collabora:

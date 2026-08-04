@@ -36,7 +36,6 @@ spec:
                 cpu: 10m
                 memory: 32Mi
               limits:
-                cpu: 100m
                 memory: 64Mi
             command:
               - sh
@@ -118,7 +117,6 @@ spec:
                 memory: 1Gi
               limits:
                 gpu.intel.com/i915: 1
-                cpu: 2000m
                 memory: 4Gi
     service:
       main:

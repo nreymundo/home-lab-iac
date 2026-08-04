@@ -55,7 +55,6 @@ spec:
           cpu: 100m
           memory: 256Mi
         limits:
-          cpu: 500m
           memory: 512Mi
 
       # Startup probe: gives LAPI time to initialize before liveness checks begin
@@ -139,5 +138,4 @@ spec:
           cpu: 100m
           memory: 128Mi
         limits:
-          cpu: 500m
           memory: 256Mi

@@ -80,8 +80,8 @@ repos:
         name: Checkov IaC scan
         entry: checkov --config-file .checkov.yaml
         language: system
+        files: ^(kubernetes/|terraform/|\.checkov\.yaml$)
         pass_filenames: false
-        stages: [manual]
 
       # Auto-encrypt *.sops.yaml files if they are not already encrypted
       - id: sops-auto-encrypt

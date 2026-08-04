@@ -85,7 +85,6 @@ spec:
           cpu: 50m
           memory: 128Mi
         limits:
-          cpu: 200m
           memory: 512Mi
       persistence:
         enabled: true
@@ -148,9 +147,8 @@ spec:
         resources:
           requests:
             cpu: 500m
-            memory: 1Gi
+            memory: 2Gi
           limits:
-            cpu: 2000m
             memory: 3Gi
         retention: 30d
         retentionSize: 85GiB
@@ -176,7 +174,6 @@ spec:
             cpu: 50m
             memory: 64Mi
           limits:
-            cpu: 200m
             memory: 128Mi
         storage:
           volumeClaimTemplate:

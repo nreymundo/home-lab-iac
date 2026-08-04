@@ -84,7 +84,6 @@ spec:
           cpu: 50m
           memory: 128Mi
         limits:
-          cpu: 300m
           memory: 512Mi
 
     core:
@@ -95,7 +94,6 @@ spec:
           cpu: 100m
           memory: 512Mi
         limits:
-          cpu: 1000m
           memory: 1536Mi
 
     jobservice:
@@ -105,7 +103,6 @@ spec:
           cpu: 100m
           memory: 256Mi
         limits:
-          cpu: 1000m
           memory: 1024Mi
 
     registry:
@@ -119,7 +116,6 @@ spec:
             cpu: 100m
             memory: 256Mi
           limits:
-            cpu: 1000m
             memory: 1024Mi
       controller:
         resources:
@@ -127,7 +123,6 @@ spec:
             cpu: 50m
             memory: 128Mi
           limits:
-            cpu: 500m
             memory: 512Mi
 
     trivy:
@@ -137,7 +132,6 @@ spec:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: 1000m
           memory: 1536Mi
 
     database:
@@ -148,7 +142,6 @@ spec:
             cpu: 100m
             memory: 256Mi
           limits:
-            cpu: 1000m
             memory: 1024Mi
 
     redis:
@@ -159,7 +152,6 @@ spec:
             cpu: 50m
             memory: 128Mi
           limits:
-            cpu: 500m
             memory: 512Mi
 
     exporter:
@@ -168,5 +160,4 @@ spec:
           cpu: 50m
           memory: 128Mi
         limits:
-          cpu: 500m
           memory: 512Mi
