@@ -9,7 +9,7 @@ spec:
   # renovate: datasource=docker depName=netbirdio/netbird registryUrl=https://ghcr.io
   image: ghcr.io/netbirdio/netbird:0.75.0
   workloadOverride:
-    replicas: 0
+    replicas: 3
     podTemplate:
       spec:
         containers:
