@@ -80,13 +80,13 @@ spec:
               OAUTH_CLIENT_ID:
                 valueFrom:
                   secretKeyRef:
-                    name: karakeep-oidc-secrets
-                    key: OAUTH_CLIENT_ID
+                    name: karakeep-sso-secret
+                    key: CLIENT_ID
               OAUTH_CLIENT_SECRET:
                 valueFrom:
                   secretKeyRef:
-                    name: karakeep-oidc-secrets
-                    key: OAUTH_CLIENT_SECRET
+                    name: karakeep-sso-secret
+                    key: CLIENT_SECRET
               # --- AI via LiteLLM (enabled; virtual key in karakeep-ai-secrets) ---
               OPENAI_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
               OPENAI_API_KEY:

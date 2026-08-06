@@ -6,6 +6,5 @@ components:
 
 resources:
   - karakeep-secrets.sops.yaml
-  - karakeep-oidc-secrets.sops.yaml
   - karakeep-ai-secrets.sops.yaml
   - helmrelease.yaml

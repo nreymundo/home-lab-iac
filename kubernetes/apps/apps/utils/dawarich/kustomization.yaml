@@ -7,7 +7,6 @@ components:
 resources:
   - dawarich-db-secrets.sops.yaml
   - dawarich-secrets.sops.yaml
-  - dawarich-oidc-secrets.sops.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml
   - scrapeconfig.yaml

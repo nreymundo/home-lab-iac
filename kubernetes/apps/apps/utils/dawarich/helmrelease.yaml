@@ -105,13 +105,13 @@ spec:
               OIDC_CLIENT_ID:
                 valueFrom:
                   secretKeyRef:
-                    name: dawarich-oidc-secrets
-                    key: OIDC_CLIENT_ID
+                    name: dawarich-sso-secret
+                    key: CLIENT_ID
               OIDC_CLIENT_SECRET:
                 valueFrom:
                   secretKeyRef:
-                    name: dawarich-oidc-secrets
-                    key: OIDC_CLIENT_SECRET
+                    name: dawarich-sso-secret
+                    key: CLIENT_SECRET
               OIDC_ISSUER: https://sso.${CLUSTER_DOMAIN}/application/o/dawarich/
               OIDC_REDIRECT_URI: https://dawarich.${CLUSTER_DOMAIN}/users/auth/openid_connect/callback
               OIDC_PROVIDER_NAME: Authentik
@@ -256,13 +256,13 @@ spec:
               OIDC_CLIENT_ID:
                 valueFrom:
                   secretKeyRef:
-                    name: dawarich-oidc-secrets
-                    key: OIDC_CLIENT_ID
+                    name: dawarich-sso-secret
+                    key: CLIENT_ID
               OIDC_CLIENT_SECRET:
                 valueFrom:
                   secretKeyRef:
-                    name: dawarich-oidc-secrets
-                    key: OIDC_CLIENT_SECRET
+                    name: dawarich-sso-secret
+                    key: CLIENT_SECRET
               OIDC_ISSUER: https://sso.${CLUSTER_DOMAIN}/application/o/dawarich/
               OIDC_REDIRECT_URI: https://dawarich.${CLUSTER_DOMAIN}/users/auth/openid_connect/callback
               OIDC_PROVIDER_NAME: Authentik
