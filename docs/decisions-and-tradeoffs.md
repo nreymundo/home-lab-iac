@@ -32,7 +32,7 @@ hardening history and validation evidence.
 | `CKV_K8S_43` | Version tags avoid high-churn digest-only Renovate updates; use specific versions or SHAs. | Digest updates become low-noise or supply-chain requirements change. |
 | Generated Flux output and SOPS files | Generated output is not hand-edited; Checkov does not decrypt Secrets. | Ownership or safe encrypted-manifest scanning changes. |
 | `CKV_K8S_35`: Renovate and Immich auto-stack | Upstream jobs require environment credentials. | Native file-backed input is supported. |
-| `CKV_K8S_38`: Paperless and PlexTraktSync | Supported in-pod backup/sync requires narrowly scoped namespace `pods` read and `pods/exec` access. | A reliable external interface or independent authentication exists. |
+| `CKV_K8S_38`: Paperless | Supported in-pod backup/sync requires narrowly scoped namespace `pods` read and `pods/exec` access. | A reliable external interface or independent authentication exists. |
 | `CKV_K8S_40` | Upstream UID `1000`, kubectl-job UID `1001`, and NFS UID/GID `99:100` are current compatibility contracts. | Image compatibility or NFS ownership/ACLs change. |
 
 ## Terraform automation

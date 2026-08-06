@@ -9,7 +9,6 @@ resources:
   - lidatube-pvc.yaml
   - plex-pvc.yaml
   - plex-media-enrichment-pvc.yaml
-  - plextraktsync-pvc.yaml
   - prowlarr-pvc.yaml
   - radarr-pvc.yaml
   - sabnzbd-pvc.yaml
