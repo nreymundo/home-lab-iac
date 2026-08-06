@@ -1,7 +1,7 @@
 creation_rules:
   - path_regex: ^ansible/secrets/.*\.sops\.ya?ml$
     encrypted_regex: '.*'
-    age: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+    age: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
   - path_regex: .*\.sops\.ya?ml$
     encrypted_regex: '^(data|stringData)$'
-    age: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+    age: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h

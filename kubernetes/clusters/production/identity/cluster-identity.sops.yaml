@@ -31,13 +31,13 @@ sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBOY1lPRk5pS3VxTTk3WHAr
-            NUs1amdoRGdzeStlUmxlNjVRallXdm9RMTNnClBXc0tRZkZja25JYitPYUdTd2dB
-            dGZDQ3pPU2g2andXNlRRSWZDUGY0bUUKLS0tIG9udXVGNHJjTTl5V3p5b3ZjK0tR
-            Z053SWxTY0kwd29tT3NSVGpiRlBsbEkK2qqNboAUAzYi7pvdcfx2KCeFhV67/lLT
-            /82gsaaU4ULYIixl/HZKIv8m2VqKdF75AUPKRmFWhmGrsCzzPv1SpQ==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAxL204YWY5bkJTMFRzQVhY
+            TEZrWnJ4d1ZGNVhzbVM5NXh6WG9OR0l5Tno0CmxONTBzcEZONXRqWEZPdnVDM0Q3
+            VVBpVk5ZaXNTcmM2dVVQWWpDK0lPZnMKLS0tIGZTenNlTmFrdzI0bXJWaElydmtF
+            WnVCbDBtS2dIU2dFa0d1R2tPVS8zc0EKPL6EcrQrwD5MzihmTkwgNswgt9y/xiov
+            /NtUpDl3cY6+TmZt47pvMah+pkF8feVNuGvBdbkOA2F21R/g2DWj7w==
             -----END AGE ENCRYPTED FILE-----
-          recipient: age189vx0wdx4q2hjdzqm3j5yxjjupfun5y3a7ajj40t3cl6lttmz9wsv36vck
+          recipient: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
     encrypted_regex: ^(data|stringData)$
     lastmodified: "2026-06-27T13:22:58Z"
     mac: ENC[AES256_GCM,data:A5zEFFl60RofZVSgoXAvXpdcMUqq+UsPocwhZCq7BwL/BFfnocNbUNsBVNs3+dHl7pvYFxxVMwI0aeWezAfYG+wbIfvqMskQugfYXrjqR332ULjjAMdkenpLrHYYbih5YQMJWKqvqj+QVqtortUwfkmf1bnJqW6fKZq4Q2ORTB0=,iv:PiQTY4SzYiF9DKPYN8f+wydwEFe2j2Pax4TLHGWKebE=,tag:Vp/lXfOz2SjGddNaXgrcYg==,type:str]
