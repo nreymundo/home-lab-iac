@@ -87,20 +87,20 @@ spec:
                   fi
                   sleep 2
                 done
-                if [ -z "${AUTH_SOURCES}" ]; then
+                if [ -z "$AUTH_SOURCES" ]; then
                   echo "ERROR: unable to list Gitea OAuth sources" >&2
                   exit 1
                 fi
-                AUTH_ID=$(printf '%s\n' "${AUTH_SOURCES}" | awk 'tolower($0) ~ /authentik/ {print $1; exit}')
+                AUTH_ID=$(printf '%s\n' "$AUTH_SOURCES" | awk 'tolower($0) ~ /authentik/ {print $1; exit}')
 
-                if [ -n "${AUTH_ID}" ]; then
-                  echo "Updating OAuth source (id=${AUTH_ID})..."
+                if [ -n "$AUTH_ID" ]; then
+                  echo "Updating OAuth source (id=$AUTH_ID)..."
                   gitea admin auth update-oauth \
-                    --id "${AUTH_ID}" \
+                    --id "$AUTH_ID" \
                     --name "Authentik" \
                     --provider "openidConnect" \
-                    --key "${CLIENT_ID}" \
-                    --secret "${CLIENT_SECRET}" \
+                    --key "$CLIENT_ID" \
+                    --secret "$CLIENT_SECRET" \
                     --auto-discover-url "https://sso.${CLUSTER_DOMAIN}/application/o/gitea/.well-known/openid-configuration" \
                     --scopes "openid email profile gitea" \
                     --group-claim-name "gitea" \
@@ -113,8 +113,8 @@ spec:
                   gitea admin auth add-oauth \
                     --name "Authentik" \
                     --provider "openidConnect" \
-                    --key "${CLIENT_ID}" \
-                    --secret "${CLIENT_SECRET}" \
+                    --key "$CLIENT_ID" \
+                    --secret "$CLIENT_SECRET" \
                     --auto-discover-url "https://sso.${CLUSTER_DOMAIN}/application/o/gitea/.well-known/openid-configuration" \
                     --scopes "openid email profile gitea" \
                     --group-claim-name "gitea" \
