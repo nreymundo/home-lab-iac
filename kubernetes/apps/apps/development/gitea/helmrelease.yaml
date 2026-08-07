@@ -61,6 +61,7 @@ spec:
               - /bin/sh
               - -c
               - |
+                set -eu
                 echo "Waiting for Gitea to be ready..."
                 until curl -sf http://localhost:3000/api/v1/version > /dev/null 2>&1; do
                   sleep 5
@@ -79,7 +80,18 @@ spec:
                 # `command`, so `s6-setuidgid git` would drop to UID 1000 and be denied
                 # writes to /data (owned 99:100). Commands therefore run as the already
                 # non-root git identity (UID 99) instead of via s6-setuidgid.
-                AUTH_ID=$(gitea admin auth list 2>/dev/null | awk 'tolower($0) ~ /authentik/ {print $1; exit}')
+                AUTH_SOURCES=""
+                for _ in $(seq 1 30); do
+                  if AUTH_SOURCES=$(gitea admin auth list 2>/dev/null); then
+                    break
+                  fi
+                  sleep 2
+                done
+                if [ -z "${AUTH_SOURCES}" ]; then
+                  echo "ERROR: unable to list Gitea OAuth sources" >&2
+                  exit 1
+                fi
+                AUTH_ID=$(printf '%s\n' "${AUTH_SOURCES}" | awk 'tolower($0) ~ /authentik/ {print $1; exit}')
 
                 if [ -n "${AUTH_ID}" ]; then
                   echo "Updating OAuth source (id=${AUTH_ID})..."
