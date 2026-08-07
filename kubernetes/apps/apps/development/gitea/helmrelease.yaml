@@ -11,6 +11,8 @@ spec:
     fullnameOverride: gitea
     controllers:
       main:
+        annotations:
+          reloader.stakater.com/auto: "true"
         containers:
           main:
             image:
@@ -65,9 +67,35 @@ spec:
                 done
                 echo "Gitea is ready!"
 
-                # Check if auth source already exists
-                if gitea admin auth list 2>/dev/null | grep -qi "authentik"; then
-                  echo "OAuth source 'authentik' already configured, skipping..."
+                # Idempotent upsert: resolve the numeric ID of the existing Authentik
+                # source, then update it; otherwise create it.
+                #
+                # This sidecar already runs as the git user (UID/GID 99:100 via
+                # securityContext), matching the main container's runtime identity and
+                # the /data ownership, so gitea runs non-root (no "run as root"
+                # rejection) with full /data access. The image's static `git` account is
+                # UID 1000 and is only remapped to 99 by the s6 entrypoint at
+                # main-container startup; this sidecar overrides that entrypoint via
+                # `command`, so `s6-setuidgid git` would drop to UID 1000 and be denied
+                # writes to /data (owned 99:100). Commands therefore run as the already
+                # non-root git identity (UID 99) instead of via s6-setuidgid.
+                AUTH_ID=$(gitea admin auth list 2>/dev/null | awk 'tolower($0) ~ /authentik/ {print $1; exit}')
+
+                if [ -n "${AUTH_ID}" ]; then
+                  echo "Updating OAuth source (id=${AUTH_ID})..."
+                  gitea admin auth update-oauth \
+                    --id "${AUTH_ID}" \
+                    --name "Authentik" \
+                    --provider "openidConnect" \
+                    --key "${CLIENT_ID}" \
+                    --secret "${CLIENT_SECRET}" \
+                    --auto-discover-url "https://sso.${CLUSTER_DOMAIN}/application/o/gitea/.well-known/openid-configuration" \
+                    --scopes "openid email profile gitea" \
+                    --group-claim-name "gitea" \
+                    --admin-group "admin" \
+                    --skip-local-2fa \
+                    --icon-url "https://raw.githubusercontent.com/goauthentik/authentik/main/web/icons/icon.png"
+                  echo "OAuth source updated!"
                 else
                   echo "Adding OAuth source..."
                   gitea admin auth add-oauth \

@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nextcloud-oidc-reconcile
+  namespace: nextcloud
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: nextcloud-exec-into-pod
+  namespace: nextcloud
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nextcloud-exec-into-pod
+  namespace: nextcloud
+subjects:
+  - kind: ServiceAccount
+    name: nextcloud-oidc-reconcile
+    namespace: nextcloud
+roleRef:
+  kind: Role
+  name: nextcloud-exec-into-pod
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nextcloud-oidc-reconcile
+  namespace: nextcloud
+  annotations:
+    checkov.io/skip1: CKV_K8S_38=Nextcloud exposes no idempotent API to upsert the user_oidc provider; this hardened non-root CronJob needs a projected token to locate the controller-managed pod and exec the supported occ command. Role is namespace-scoped and limited to pods get/list and pods/exec create.
+    checkov.io/skip2: CKV_K8S_40=Kubectl job runs under explicit non-root UID 1001.
+spec:
+  schedule: "13 */6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 900
+      template:
+        spec:
+          serviceAccountName: nextcloud-oidc-reconcile
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            fsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: runner
+              image: alpine/kubectl:1.35.1@sha256:0829b6a99156e722033b3cadb441a3768ffb32a388f93695277740c81acd4a7c
+              imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+              command:
+                - /bin/sh
+                - -lc
+                - |
+                  set -euo pipefail
+                  NS=nextcloud
+                  SELECTOR='app.kubernetes.io/controller=main,app.kubernetes.io/instance=nextcloud,app.kubernetes.io/name=nextcloud'
+
+                  # Select a nextcloud main pod whose main container is ready,
+                  # retrying while the workload comes up.
+                  POD=""
+                  for _ in $(seq 1 30); do
+                    POD="$(kubectl -n "$NS" get pods -l "$SELECTOR" \
+                      -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{@.status.containerStatuses[?(@.name=="main")].ready}{"\n"}{end}' 2>/dev/null \
+                      | awk -F'\t' '$2=="true"{print $1; exit}' || true)"
+                    [ -n "$POD" ] && break
+                    sleep 5
+                  done
+
+                  if [ -z "$POD" ]; then
+                    echo "ERROR: no ready nextcloud main pod found with selector: $SELECTOR" >&2
+                    exit 1
+                  fi
+                  echo "Reconciling user_oidc provider via nextcloud pod: $POD"
+
+                  # Credentials are read from the mounted replicated secret and
+                  # only ever touch local variables; nothing is logged.
+                  CLIENT_ID="$(cat /secrets/sso/client-id)"
+                  CLIENT_SECRET="$(cat /secrets/sso/client-secret)"
+
+                  # Forward both values over stdin to the in-pod shell. The
+                  # secret is exported there and read by occ through
+                  # --clientsecret-env, so it never appears in argv or logs.
+                  printf '%s\n%s\n' "$CLIENT_ID" "$CLIENT_SECRET" \
+                    | kubectl -n "$NS" exec -i "$POD" -c main -- /bin/sh -c '
+                        set -eu
+                        read -r REMOTE_CLIENT_ID
+                        read -r CLIENT_SECRET
+                        export CLIENT_SECRET
+                        s6-setuidgid abc php /app/www/public/occ user_oidc:provider authentik \
+                          --clientid="$REMOTE_CLIENT_ID" \
+                          --clientsecret-env=CLIENT_SECRET \
+                          --discoveryuri="https://sso.${CLUSTER_DOMAIN}/application/o/nextcloud/" \
+                          --scope="openid profile email nextcloud"
+                      '
+              env:
+                - name: HOME
+                  value: /tmp
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 64Mi
+              volumeMounts:
+                - name: sso
+                  mountPath: /secrets/sso
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: sso
+              secret:
+                secretName: nextcloud-sso-secret
+                defaultMode: 288
+                items:
+                  - key: CLIENT_ID
+                    path: client-id
+                  - key: CLIENT_SECRET
+                    path: client-secret
+            - name: tmp
+              emptyDir:
+                sizeLimit: 64Mi

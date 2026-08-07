@@ -4,6 +4,7 @@ components:
   - ../../../components/bjw-s-defaults
   - ../../../components/ingress/traefik-base
 resources:
+  - oidc-reconcile-cronjob.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml
   - nextcloud-db-secrets.sops.yaml
