@@ -106,7 +106,7 @@ spec:
                     --group-claim-name "gitea" \
                     --admin-group "admin" \
                     --skip-local-2fa \
-                    --icon-url "https://raw.githubusercontent.com/goauthentik/authentik/main/web/icons/icon.png"
+                    --icon-url "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main/png/authentik.png"
                   echo "OAuth source updated!"
                 else
                   echo "Adding OAuth source..."
@@ -120,7 +120,7 @@ spec:
                     --group-claim-name "gitea" \
                     --admin-group "admin" \
                     --skip-local-2fa \
-                    --icon-url "https://raw.githubusercontent.com/goauthentik/authentik/main/web/icons/icon.png"
+                    --icon-url "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main/png/authentik.png"
                   echo "OAuth source configured!"
                 fi
 
