@@ -91,12 +91,6 @@
       - (k3s_iface | default('')) | length > 0
     fail_msg: "k3s_iface is empty; set it to the interface carrying k3s_node_ip"
 
-- name: Ensure Harbor registry mirror domain is set
-  ansible.builtin.assert:
-    that:
-      - (k3s_cluster_domain | default('')) | length > 0
-    fail_msg: "Set CLUSTER_DOMAIN in the shell environment before rendering Harbor registry mirrors"
-
 - name: Create K3s installation directory
   ansible.builtin.file:
     path: /usr/local/bin
@@ -122,6 +116,14 @@
     mode: "0644"
   become: true
   notify: Restart k3s
+
+- name: Remind operator to configure Docker Hub auth on every node
+  ansible.builtin.debug:
+    msg: >-
+      Registry mirrors applied without credentials. Configure Docker Hub
+      authentication manually on every node before pulling private or
+      rate-limited images. This role intentionally renders no credential
+      syntax or values.
 
 - name: Download K3s binary
   ansible.builtin.get_url:
@@ -161,7 +163,6 @@
           --write-kubeconfig-mode 644
           --tls-san {{ k3s_api_vip }}
           {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
-          {% if k3s_disable_default_registry_endpoint | bool %}--disable-default-registry-endpoint{% endif %}
           --disable traefik
           --disable metrics-server
           --disable servicelb
@@ -271,7 +272,6 @@
           --flannel-iface {{ k3s_iface }}
           --tls-san {{ k3s_api_vip }}
           {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
-          {% if k3s_disable_default_registry_endpoint | bool %}--disable-default-registry-endpoint{% endif %}
           --disable traefik
           --disable metrics-server
           --disable servicelb

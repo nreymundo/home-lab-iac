@@ -1,3 +1,8 @@
+{#
+  Renders registry mirrors only. Credentials (configs:/auth:) are intentionally
+  omitted; configure Docker Hub authentication manually on each node after the
+  role applies this file.
+#}
 mirrors:
 {% for registry, config in k3s_registry_mirrors.items() %}
   "{{ registry }}":

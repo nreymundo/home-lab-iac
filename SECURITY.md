@@ -43,6 +43,7 @@ Required ports between nodes:
 - `10250/tcp` - Kubelet
 - `2379-2380/tcp` - etcd (if HA)
 - `8472/udp` - Flannel VXLAN
+- `5001/tcp` - K3s embedded registry (peer image sharing)
 
 ---
 
