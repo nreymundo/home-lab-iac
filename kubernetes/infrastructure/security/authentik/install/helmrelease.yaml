@@ -217,6 +217,16 @@ spec:
             secretKeyRef:
               name: openclaw-gateway-secret
               key: OPENCLAW_GATEWAY_PASSWORD
+        - name: TAUTULLI_BASIC_AUTH_USER
+          valueFrom:
+            secretKeyRef:
+              name: tautulli-basic-auth-secret
+              key: USERNAME
+        - name: TAUTULLI_BASIC_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: tautulli-basic-auth-secret
+              key: PASSWORD
 
         # Blueprint variables
         - name: AK_BLUEPRINT_USERNAME
