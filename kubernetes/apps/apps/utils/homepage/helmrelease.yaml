@@ -241,7 +241,7 @@ spec:
             - Unraid:
                 icon: unraid.png
                 description: "Virtual NAS running in Proxmox"
-                href: https://unraid.lan.${CLUSTER_DOMAIN}/graphql/api/auth/oidc/authorize/authentik
+                href: https://unraid.lan.${CLUSTER_DOMAIN}/graphql/api/auth/oidc/authorize/authentik?state=homepage&redirect_uri=https%3A%2F%2Funraid.lan.${CLUSTER_DOMAIN}
                 # widget:
                 #   type: unraid
                 #   url: http://192.168.10.4:8001
