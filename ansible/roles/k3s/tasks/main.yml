@@ -107,23 +107,64 @@
     mode: "0755"
   become: true
 
+- name: Check for existing node-local registries config
+  ansible.builtin.stat:
+    path: /etc/rancher/k3s/registries.yaml
+  register: k3s_existing_registries_stat
+  become: true
+
+- name: Preserve existing node-local registries configs block
+  when: k3s_existing_registries_stat.stat.exists | bool
+  block:
+    - name: Read existing node-local registries config
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/registries.yaml
+      register: k3s_existing_registries_raw
+      become: true
+      no_log: true
+
+    - name: Parse and select preserved configs block
+      ansible.builtin.set_fact:
+        k3s_preserved_configs: >-
+          {{
+            (k3s_existing_registries_raw.content
+              | b64decode
+              | from_yaml
+              | default({}, true)).configs
+            | default({}, true)
+          }}
+      no_log: true
+
+  rescue:
+    - name: Fallback to mirrors-only on unreadable/empty/malformed registries.yaml
+      ansible.builtin.set_fact:
+        k3s_preserved_configs: {}
+      no_log: true
+
+- name: Default preserved configs to empty when no existing registries.yaml
+  ansible.builtin.set_fact:
+    k3s_preserved_configs: {}
+  no_log: true
+  when: not (k3s_existing_registries_stat.stat.exists | bool)
+
 - name: Configure K3s registry mirrors
   ansible.builtin.template:
     src: registries.yaml.j2
     dest: /etc/rancher/k3s/registries.yaml
     owner: root
     group: root
-    mode: "0644"
+    mode: "0600"
   become: true
+  diff: false
+  no_log: true
   notify: Restart k3s
 
-- name: Remind operator to configure Docker Hub auth on every node
+- name: Report registry config preservation
   ansible.builtin.debug:
     msg: >-
-      Registry mirrors applied without credentials. Configure Docker Hub
-      authentication manually on every node before pulling private or
-      rate-limited images. This role intentionally renders no credential
-      syntax or values.
+      Registry mirrors applied. Any existing node-local `configs:` block
+      (including manual Docker Hub auth) is retained through this render;
+      configure Docker Hub auth manually only on nodes where it is absent.
 
 - name: Download K3s binary
   ansible.builtin.get_url:

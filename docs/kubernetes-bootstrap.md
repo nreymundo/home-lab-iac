@@ -63,9 +63,9 @@ the standard K3s `configs.docker.io.auth` block in that node's
 
 - Do not commit credentials to this repository, and do not store them in SOPS or
   any other Git-tracked file.
-- The K3s role re-templates `/etc/rancher/k3s/registries.yaml` from
-  `k3s_registry_mirrors` on each playbook run, which overwrites a manually added
-  auth block. Re-apply per-node Docker Hub auth after every K3s re-run.
+- The K3s role preserves any existing node-local `configs:` block in
+  `/etc/rancher/k3s/registries.yaml` across runs, so the manual auth does not
+  need to be reapplied after each Ansible run.
 
 ## Flux Bring-Up Order
 
@@ -272,9 +272,6 @@ ssh k3s-node-01 'sudo k3s crictl pull ghcr.io/oras-project/oras:v1.2.3'
   a pull still fails, check upstream reachability and Docker Hub rate limits.
 - `docker.io` pulls hit rate limits (HTTP 429): apply per-node Docker Hub auth
   manually in `/etc/rancher/k3s/registries.yaml`; Ansible does not manage it.
-- Docker Hub auth disappears after a K3s playbook run: expected — the K3s role
-  re-templates `registries.yaml` from `k3s_registry_mirrors`; re-apply the manual
-  auth block.
 - CNPG restore cannot find backups: verify the target namespace has
   `cnpg-backup-s3`, and confirm `destinationPath` plus `serverName` match the
   original cluster.
