@@ -452,62 +452,6 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "gitadmin"]]
 
-  245-harbor-cleanup.yaml: |
-    # Stage 1 of the Harbor SSO removal. The original 245-harbor.yaml create
-    # blueprint was replaced by this cleanup blueprint so authentik reconciles
-    # the live Harbor objects to absent in a safe order: policy bindings first
-    # (their target !Find resolves against the still-present application), then
-    # the application, provider, scope mapping, and finally the groups.
-    #
-    # This cleanup blueprint carries no !Env HARBOR_* references and is
-    # self-contained, but the harbor-sso-secret, the HARBOR_CLIENT_ID /
-    # HARBOR_CLIENT_SECRET env vars in helmrelease.yaml, and the kustomization
-    # entry are intentionally KEPT in this stage so the create blueprint can be
-    # restored if cleanup fails to reconcile. They are removed in a follow-up
-    # commit (Stage 2) only after the live objects are confirmed gone.
-    version: 1
-    metadata:
-      name: harbor-sso-cleanup
-      labels:
-        blueprints.goauthentik.io/instantiate: "true"
-    entries:
-      - model: authentik_policies.policybinding
-        state: absent
-        identifiers:
-          target: !Find [authentik_core.application, [slug, "harbor"]]
-          order: 0
-
-      - model: authentik_policies.policybinding
-        state: absent
-        identifiers:
-          target: !Find [authentik_core.application, [slug, "harbor"]]
-          order: 1
-
-      - model: authentik_core.application
-        state: absent
-        identifiers:
-          slug: "harbor"
-
-      - model: authentik_providers_oauth2.oauth2provider
-        state: absent
-        identifiers:
-          name: "Harbor"
-
-      - model: authentik_providers_oauth2.scopemapping
-        state: absent
-        identifiers:
-          name: "Harbor Groups Scope"
-
-      - model: authentik_core.group
-        state: absent
-        identifiers:
-          name: "Harbor Admin"
-
-      - model: authentik_core.group
-        state: absent
-        identifiers:
-          name: "Harbor Users"
-
   250-paperless.yaml: |
     version: 1
     metadata:
@@ -1330,50 +1274,6 @@ data:
           order: 1
         attrs:
           group: !Find [authentik_core.group, [name, "LiteLLM Admin"]]
-
-  526-librechat-cleanup.yaml: |
-    version: 1
-    metadata:
-      name: librechat-sso-cleanup
-      labels:
-        blueprints.goauthentik.io/instantiate: "true"
-    entries:
-      - model: authentik_policies.policybinding
-        state: absent
-        identifiers:
-          target: !Find [authentik_core.application, [slug, "librechat"]]
-          order: 0
-
-      - model: authentik_policies.policybinding
-        state: absent
-        identifiers:
-          target: !Find [authentik_core.application, [slug, "librechat"]]
-          order: 1
-
-      - model: authentik_core.application
-        state: absent
-        identifiers:
-          slug: "librechat"
-
-      - model: authentik_providers_oauth2.oauth2provider
-        state: absent
-        identifiers:
-          name: "LibreChat"
-
-      - model: authentik_providers_oauth2.scopemapping
-        state: absent
-        identifiers:
-          name: "LibreChat Role Scope"
-
-      - model: authentik_core.group
-        state: absent
-        identifiers:
-          name: "librechat-user"
-
-      - model: authentik_core.group
-        state: absent
-        identifiers:
-          name: "librechat-admin"
 
   527-llama.yaml: |
     version: 1

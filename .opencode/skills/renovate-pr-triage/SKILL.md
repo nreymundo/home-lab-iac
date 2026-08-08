@@ -65,7 +65,6 @@ Stable-semver pinning (regex-enforced, a non-matching tag is a policy bug):
 - `library/alpine`, `library/busybox` — `^\d+\.\d+\.\d+$`
 - `apache/tika` — `^\d+\.\d+\.\d+\.\d+$`
 - `blakeblackshear/frigate` — `^\d+\.\d+\.\d+$`
-- `danny-avila/librechat-rag-api-dev-lite` — `^v\d+\.\d+\.\d+$` (semver)
 - `fscorrupt/posterizarr` — `^\d+\.\d+\.\d+$`
 - `immich-app/immich-server` + `immich-app/immich-machine-learning` — grouped as
   "Immich", `^v\d+\.\d+\.\d+$` (semver)
