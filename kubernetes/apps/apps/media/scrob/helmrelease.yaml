@@ -61,7 +61,7 @@ spec:
               OIDC_REDIRECT_URL: https://scrob.lan.${CLUSTER_DOMAIN}/oidc-callback
               OIDC_SCOPES: openid email profile
               OIDC_AUTO_CREATE_USERS: "true"
-              OIDC_DISABLE_PASSWORD_LOGIN: "false"
+              OIDC_DISABLE_PASSWORD_LOGIN: "true"
             ports:
               - name: http
                 containerPort: 7330
