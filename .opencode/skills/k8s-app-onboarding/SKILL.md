@@ -34,8 +34,11 @@ Ask only what is not obvious from the request:
 - app name (lowercase, DNS-safe)
 - category: an existing dir under `kubernetes/apps/apps/` (e.g. `ai`, `media`,
   `utils`, `storage`, `automation`, `development`)
-- image `repository` and `tag`, plus the registry that should be forced through
-  Harbor (docker.io, ghcr.io, lscr.io, quay.io, gitea)
+- image `repository` and `tag`, plus the upstream registry it comes from
+  (docker.io, ghcr.io, lscr.io, quay.io, gitea). Pulls resolve through the K3s
+  embedded registry peer cache, then direct
+  upstream. `docker.io` images may need per-node Docker Hub auth, which is a
+  manual post-Ansible step (see `docs/kubernetes-bootstrap.md`).
 - port + health/readiness path
 - persistence needs: none / existing shared PVC / new manually declared PVC /
   controller-managed (CNPG, Longhorn via spec)

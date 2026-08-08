@@ -19,61 +19,53 @@ Do not hand-edit generated Flux files under
 `kubernetes/clusters/production/flux-system` during a normal rebuild. The
 hand-maintained ordering layer is `kubernetes/clusters/production/ks`.
 
-## Initial Registry Bootstrap
+## Registry: Embedded Peer Sharing And Direct Upstream
 
-K3s normally forces configured registries through Harbor with
-`k3s_disable_default_registry_endpoint: true`. That is the desired steady state,
-but it will break first bootstrap if Harbor and its proxy-cache projects do not
-exist yet.
+Image pulls resolve in two layers:
 
-For a fresh cluster, first bring K3s up with direct upstream fallback enabled:
+1. **Embedded registry peer sharing** — every node runs the K3s embedded
+   registry (`--embedded-registry`, from `k3s_embedded_registry_enabled` in
+   `ansible/roles/k3s/defaults/main.yml`), which serves that node's locally
+   cached images to peer nodes. Peer pulls run over inter-node TCP `5001`; see
+   the firewall requirements in [SECURITY.md](../SECURITY.md).
+2. **Direct upstream fallback** — when no peer has the image, K3s pulls directly
+   from the upstream registry (for example `registry-1.docker.io`). The K3s role
+   does not pass `--disable-default-registry-endpoint`, so this fallback is on by
+   default with no extra configuration.
 
-```bash
-CLUSTER_DOMAIN=<domain> ansible-playbook ansible/playbooks/k3s_cluster.yml \
-  -e k3s_disable_default_registry_endpoint=false
-```
+### Bring-Up
 
-Then bootstrap Flux and let the production root reconcile.
-
-Wait for Harbor install and config to exist:
-
-```bash
-flux get kustomizations
-flux get helmrelease harbor -n flux-system
-kubectl get pods -n harbor
-```
-
-Harbor SSO will not work until Authentik is up and the Harbor OIDC application
-has been configured. During early bootstrap, use the Harbor admin credentials
-from `harbor-secrets` for validation and bootstrap jobs instead of relying on
-SSO.
-
-Harbor proxy-cache projects are created by `harbor-bootstrap`, which is a
-CronJob. On first bootstrap, run it once manually instead of waiting for the next
-scheduled run:
+The K3s playbook (`ansible/playbooks/k3s_cluster.yml`) enables the embedded
+registry by default (`k3s_embedded_registry_enabled: true`) and renders
+`/etc/rancher/k3s/registries.yaml` on each node. Direct upstream fallback is also
+on by default, so no extra vars are required:
 
 ```bash
-kubectl -n harbor create job --from=cronjob/harbor-bootstrap harbor-bootstrap-manual
-kubectl -n harbor logs job/harbor-bootstrap-manual
+ansible-playbook ansible/playbooks/k3s_cluster.yml
 ```
 
-Verify the proxy-cache projects exist before disabling upstream fallback again:
+Mirror configuration is the wildcard `k3s_registry_mirrors: { "*": {} }` in
+`ansible/roles/k3s/defaults/main.yml`, which lets the embedded registry intercept
+all pulls without forcing specific endpoints or rewrites, and lets any miss fall
+through to upstream. The K3s role no longer requires `CLUSTER_DOMAIN` for mirror
+rendering. After the run, confirm the rendered `/etc/rancher/k3s/registries.yaml`
+on a node shows only the wildcard mirror.
 
-- `dockerhub`
-- `ghcr`
-- `lscr`
-- `quay`
-- `gitea`
+### Docker Hub Node Authentication Is Manual
 
-After Harbor is working, re-run the K3s playbook normally so nodes return to the
-secure steady state where mirrored registries cannot bypass Harbor:
+Ansible intentionally renders no registry credentials — the K3s role prints a
+reminder to configure them (see the comment block in
+`ansible/roles/k3s/templates/registries.yaml.j2`). When direct upstream fallback
+pulls from `docker.io`, per-node Docker Hub authentication avoids anonymous rate
+limits. Configure it manually on each node after the K3s playbook runs, using
+the standard K3s `configs.docker.io.auth` block in that node's
+`/etc/rancher/k3s/registries.yaml`.
 
-```bash
-CLUSTER_DOMAIN=<domain> ansible-playbook ansible/playbooks/k3s_cluster.yml
-```
-
-Validate that each node's K3s service includes
-`--disable-default-registry-endpoint` and that a test image pulls through Harbor.
+- Do not commit credentials to this repository, and do not store them in SOPS or
+  any other Git-tracked file.
+- The K3s role preserves any existing node-local `configs:` block in
+  `/etc/rancher/k3s/registries.yaml` across runs, so the manual auth does not
+  need to be reapplied after each Ansible run.
 
 ## Flux Bring-Up Order
 
@@ -82,12 +74,15 @@ reconciliation entrypoints. The important logical order is:
 
 1. `cluster-identity`
 2. `infrastructure`
-3. networking, security, and automation controllers
+3. networking, security, and automation controllers (MetalLB, Traefik,
+   external-dns, cloudflared, kube-replicator, reloader, Authentik, CrowdSec,
+   cert-manager)
 4. `longhorn-install`
 5. `longhorn-config`
 6. `cnpg-install`
-7. `harbor-install`
-8. `harbor-config`
+7. observability (kube-prometheus-stack, metrics-server, Loki, Alloy, Tempo,
+   OpenTelemetry Collector)
+8. node feature discovery and device plugins
 9. `apps-storage`
 10. `apps-manifests`
 
@@ -260,23 +255,23 @@ kubectl get scheduledbackup -A
 kubectl get pods -A
 ```
 
-For registry validation after Harbor is ready:
+For registry validation (embedded peer sharing + direct upstream):
 
 ```bash
-kubectl -n harbor get pods
-kubectl -n harbor logs job/harbor-bootstrap-manual
+# Embedded registry flag present on each node's K3s unit
+ssh k3s-node-01 'systemctl cat k3s | grep -- --embedded-registry'
+# A pull resolves through peer cache or direct upstream
 ssh k3s-node-01 'sudo k3s crictl pull ghcr.io/oras-project/oras:v1.2.3'
 ```
 
 ## Troubleshooting
 
-- Image pulls fail before Harbor exists: re-run K3s with
-  `-e k3s_disable_default_registry_endpoint=false` until Harbor is bootstrapped.
-- Harbor exists but proxy-cache projects are missing: run `harbor-bootstrap`
-  manually from the CronJob.
-- Harbor proxy-cache gives manifest or blob errors for a large multi-arch image:
-  prewarm or repair Harbor by copying the exact platform manifest into
-  `harbor-harbor-registry.harbor.svc.cluster.local:5000/ghcr/<repo>:<tag>`.
+- Image pulls fail with no peer cache and no upstream: confirm the node's K3s
+  unit includes `--embedded-registry` and that inter-node TCP `5001` is reachable
+  so peers can share cached images. Direct upstream fallback is on by default; if
+  a pull still fails, check upstream reachability and Docker Hub rate limits.
+- `docker.io` pulls hit rate limits (HTTP 429): apply per-node Docker Hub auth
+  manually in `/etc/rancher/k3s/registries.yaml`; Ansible does not manage it.
 - CNPG restore cannot find backups: verify the target namespace has
   `cnpg-backup-s3`, and confirm `destinationPath` plus `serverName` match the
   original cluster.

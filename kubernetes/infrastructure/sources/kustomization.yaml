@@ -19,6 +19,5 @@ resources:
   - crowdsec.yaml
   - nfd.yaml
   - intel.yaml
-  - harbor.yaml
   - netbird.yaml
   - open-telemetry.yaml

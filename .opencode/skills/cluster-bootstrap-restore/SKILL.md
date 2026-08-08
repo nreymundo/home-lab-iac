@@ -2,14 +2,14 @@
 name: cluster-bootstrap-restore
 description: >-
   Guide cluster rebuild and recovery operations against this repo's
-  `docs/kubernetes-bootstrap.md` runbook: fresh cluster bootstrap, the Harbor
-  registry catch-22, Longhorn PVC restore (options A/B/C), CloudNativePG
+  `docs/kubernetes-bootstrap.md` runbook: fresh cluster bootstrap with the K3s
+  embedded registry (peer sharing plus direct upstream fallback), manual
+  per-node Docker Hub auth, Longhorn PVC restore (options A/B/C), CloudNativePG
   database restore and PITR, and Flux bring-up order. Use when the user says
   "rebuild the cluster from git", "restore a PVC", "restore a CNPG database",
-  "Harbor bootstrap", "image pulls failing because registry is not ready", or
-  "first-time bootstrap". Always distinguish Git changes from live/manual steps.
-  Do NOT use for routine workload changes or normal Flux reconciliation of
-  committed state.
+  "image pulls failing", or "first-time bootstrap". Always distinguish Git
+  changes from live/manual steps. Do NOT use for routine workload changes or
+  normal Flux reconciliation of committed state.
 ---
 
 # Cluster Bootstrap & Restore
@@ -21,7 +21,8 @@ scenario before emitting commands; do not paraphrase from memory.
 ## When to use
 
 - Fresh cluster rebuild from Git + backups.
-- Harbor not yet bootstrapped and image pulls are failing.
+- Image pulls failing: no peer cache, direct upstream disabled, or Docker Hub
+  rate limited.
 - Longhorn PVC restore (full rebuild, file-level copy, or replacing a damaged
   claim).
 - CloudNativePG database restore or point-in-time recovery.
@@ -47,36 +48,33 @@ live step.
 - Shared components: `kubernetes/components`
 - Runbook: `docs/kubernetes-bootstrap.md`
 
-## Scenario 1: Fresh cluster bootstrap (Harbor catch-22)
+## Scenario 1: Fresh cluster bootstrap (registry bring-up)
 
-K3s forces registries through Harbor (`k3s_disable_default_registry_endpoint:
-true`). That breaks first bootstrap until Harbor's proxy-cache projects exist.
+Each node runs the K3s embedded registry
+(`--embedded-registry`, from `k3s_embedded_registry_enabled` in
+`ansible/roles/k3s/defaults/main.yml`) and serves locally cached images to peers
+over inter-node TCP `5001`. Pulls that no peer can satisfy fall back directly to
+the upstream registry by default — the role no longer passes
+`--disable-default-registry-endpoint`, so no extra var is required.
 
 ```bash
-# 1. First K3s bring-up WITH upstream fallback
-CLUSTER_DOMAIN=<domain> ansible-playbook ansible/playbooks/k3s_cluster.yml \
-  -e k3s_disable_default_registry_endpoint=false
+# 1. K3s bring-up: embedded registry (default on) + direct upstream fallback
+ansible-playbook ansible/playbooks/k3s_cluster.yml
 
-# 2. Bootstrap Flux and let production root reconcile
+# 2. Bootstrap Flux and let the production root reconcile
 flux reconcile kustomization flux-system --with-source
 
-# 3. Wait for Harbor
-flux get kustomizations
-flux get helmrelease harbor -n flux-system
-kubectl get pods -n harbor
-
-# 4. Manually trigger the harbor-bootstrap CronJob once
-kubectl -n harbor create job --from=cronjob/harbor-bootstrap harbor-bootstrap-manual
-kubectl -n harbor logs job/harbor-bootstrap-manual
-
-# 5. Verify proxy-cache projects exist: dockerhub, ghcr, lscr, quay, gitea
-
-# 6. Re-run K3s normally to re-lock registry through Harbor
-CLUSTER_DOMAIN=<domain> ansible-playbook ansible/playbooks/k3s_cluster.yml
+# 3. Confirm nodes are up and pulls resolve
+kubectl get nodes
+ssh k3s-node-01 'systemctl cat k3s | grep -- --embedded-registry'
+ssh k3s-node-01 'sudo k3s crictl pull ghcr.io/oras-project/oras:v1.2.3'
 ```
 
-During early bootstrap, Harbor SSO is not yet usable; use the `harbor-secrets`
-admin credentials.
+Docker Hub node authentication is **manual** and not managed by Ansible. If
+`docker.io` pulls hit rate limits, add the standard K3s `configs.docker.io.auth`
+block to each node's `/etc/rancher/k3s/registries.yaml` by hand. Do not commit
+credentials. The role preserves any existing node-local `configs:` block across
+runs, so the auth does not need to be reapplied after each Ansible run.
 
 ## Scenario 2: Flux bring-up order
 
@@ -86,7 +84,8 @@ dependency graph. Logical order:
 
 1. `cluster-identity` → 2. `infrastructure` → 3. networking/security/automation
 → 4. `longhorn-install` → 5. `longhorn-config` → 6. `cnpg-install` →
-7. `harbor-install` → 8. `harbor-config` → 9. `apps-storage` → 10. `apps-manifests`.
+7. observability → 8. node feature discovery/device plugins → 9. `apps-storage`
+→ 10. `apps-manifests`.
 
 ```bash
 flux get kustomizations
@@ -173,21 +172,19 @@ kubectl get clusters -A
 kubectl get scheduledbackup -A
 kubectl get pods -A
 
-# Registry after Harbor
-kubectl -n harbor get pods
-kubectl -n harbor logs job/harbor-bootstrap-manual
+# Registry: embedded peer sharing + direct upstream
+ssh k3s-node-01 'systemctl cat k3s | grep -- --embedded-registry'
 ssh k3s-node-01 'sudo k3s crictl pull ghcr.io/oras-project/oras:v1.2.3'
 ```
 
 ## Troubleshooting (high-signal cases)
 
-- Image pulls fail before Harbor exists → re-run K3s with
-  `k3s_disable_default_registry_endpoint=false` until Harbor is bootstrapped.
-- Harbor exists but proxy-cache projects missing → run `harbor-bootstrap`
-  CronJob manually.
-- Large multi-arch image gives manifest/blob errors → prewarm or repair Harbor
-  by copying the exact platform manifest into
-  `harbor-harbor-registry.harbor.svc.cluster.local:5000/ghcr/<repo>:<tag>`.
+- Image pulls fail with no peer cache and no upstream → confirm the node's K3s
+  unit has `--embedded-registry` and inter-node TCP `5001` is reachable for peer
+  sharing. Direct upstream fallback is on by default; check upstream reachability
+  and Docker Hub rate limits if pulls still fail.
+- `docker.io` rate-limited (429) → apply per-node Docker Hub auth manually in
+  `/etc/rancher/k3s/registries.yaml`; Ansible does not manage it.
 - CNPG restore cannot find backups → verify target namespace has
   `cnpg-backup-s3`, and that `destinationPath` + `serverName` match the
   original cluster.

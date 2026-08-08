@@ -1,3 +1,12 @@
+{#
+  Renders the role-managed `mirrors:` block and re-emits any preserved
+  top-level `configs:` block (e.g. manually configured Docker Hub auth) that
+  task logic already extracted from the existing node-local registries.yaml.
+  The role never injects credentials of its own; preserved auth comes solely
+  from the existing node-local file. `configs:` is omitted entirely when the
+  preserved fact is empty. This template consumes variables only and performs
+  no parsing of node file content.
+#}
 mirrors:
 {% for registry, config in k3s_registry_mirrors.items() %}
   "{{ registry }}":
@@ -7,3 +16,7 @@ mirrors:
     {}
 {% endif %}
 {% endfor %}
+{% if k3s_preserved_configs is defined and k3s_preserved_configs and (k3s_preserved_configs | length > 0) %}
+configs:
+{{ k3s_preserved_configs | to_nice_yaml(indent=2) | indent(2, true) }}
+{% endif %}

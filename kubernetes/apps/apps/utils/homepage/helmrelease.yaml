@@ -299,10 +299,6 @@ spec:
                 icon: grafana.png
                 description: "Dashboards"
                 href: https://grafana.lan.${CLUSTER_DOMAIN}
-            - Harbor:
-                icon: harbor.png
-                description: "Container registry and proxy cache"
-                href: https://harbor.lan.${CLUSTER_DOMAIN}/
             - Immich:
                 icon: immich.png
                 description: "Photo management and backup"

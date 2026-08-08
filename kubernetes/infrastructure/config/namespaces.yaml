@@ -136,9 +136,4 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: harbor
----
-apiVersion: v1
-kind: Namespace
-metadata:
   name: netbird
