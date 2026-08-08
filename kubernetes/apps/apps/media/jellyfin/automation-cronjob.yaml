@@ -223,6 +223,38 @@ spec:
                           f"{filter_result['Admins']} administrators."
                       )
 
+                  webhook_settings = json.load(open("/config/webhook.json"))
+                  webhook_plugin = installed_plugins.get(webhook_settings.pop("pluginId"))
+                  if webhook_plugin is None:
+                      print("Webhook was installed; restart Jellyfin before configuring it.")
+                  else:
+                      webhook_configuration = request(
+                          "GET", f"/Plugins/{webhook_plugin['Id']}/Configuration"
+                      )
+                      # Reconcile GenericOptions to exactly the declared destinations while
+                      # preserving every other top-level Webhook plugin setting. Each URL is
+                      # read from /credentials via its declared credentialKey, never inline.
+                      desired_options = []
+                      for option in webhook_settings["GenericOptions"]:
+                          credential_key = option.pop("credentialKey")
+                          credential_path = os.path.join("/credentials", credential_key)
+                          if not os.path.exists(credential_path):
+                              raise SystemExit(
+                                  f"Webhook credential '{credential_key}' is unavailable."
+                              )
+                          desired = dict(option)
+                          desired["WebhookUri"] = open(
+                              credential_path, encoding="utf-8"
+                          ).read().strip()
+                          desired_options.append(desired)
+                      webhook_configuration["GenericOptions"] = desired_options
+                      request(
+                          "POST",
+                          f"/Plugins/{webhook_plugin['Id']}/Configuration",
+                          webhook_configuration,
+                      )
+                      print(f"Configured Webhook: {len(desired_options)} destination(s).")
+
                   libraries = json.load(open("/config/libraries.json"))
                   existing = {library["Name"]: library for library in request("GET", "/Library/VirtualFolders")}
                   for library in libraries:

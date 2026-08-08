@@ -46,6 +46,48 @@ data:
       "EnableAllFolders": false,
       "EnabledFolders": []
     }
+  webhook.json: |
+    {
+      "pluginId": "71552a5a5c5c4350a2aeebe451a30173",
+      "GenericOptions": [
+        {
+          "WebhookName": "WatchState Global Webhook",
+          "credentialKey": "watchstate-global-webhook-url",
+          "EnableMovies": true,
+          "EnableEpisodes": true,
+          "EnableSeries": false,
+          "EnableSeasons": false,
+          "EnableAlbums": false,
+          "EnableSongs": false,
+          "EnableVideos": false,
+          "EnableWebhook": true,
+          "SendAllProperties": true,
+          "SkipEmptyMessageBody": true,
+          "Template": "",
+          "TrimWhitespace": true,
+          "Fields": [],
+          "Headers": [{"Key": "Content-Type", "Value": "application/json"}],
+          "NotificationTypes": ["ItemAdded", "PlaybackStart", "PlaybackStop", "UserDataSaved"],
+          "UserFilter": ["d2e1d985c73e493cb95fd1dd1e33f69b", "ed446fed6b20403ab4f73de2be261b47"]
+        },
+        {
+          "WebhookName": "Scrob Webhook",
+          "credentialKey": "scrob-webhook-url",
+          "EnableMovies": true,
+          "EnableEpisodes": true,
+          "EnableSeries": false,
+          "EnableSeasons": false,
+          "EnableAlbums": false,
+          "EnableSongs": false,
+          "EnableVideos": false,
+          "EnableWebhook": true,
+          "SendAllProperties": true,
+          "Template": "",
+          "NotificationTypes": ["PlaybackStart", "PlaybackProgress", "PlaybackStop", "UserDataSaved", "ItemAdded", "ItemDeleted"],
+          "UserFilter": []
+        }
+      ]
+    }
   libraries.json: |
     [
       {"name":"Anime Movies","path":"/data/libraries/anime_movies","collectionType":"movies","profile":"anime_movie"},
