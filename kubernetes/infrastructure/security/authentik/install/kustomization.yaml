@@ -19,6 +19,7 @@ resources:
   - airtrail-sso-secret.sops.yaml
   - karakeep-sso-secret.sops.yaml
   - scrob-sso-secret.sops.yaml
+  - unraid-sso-secret.sops.yaml
   - nextcloud-sso-secret.sops.yaml
   - litellm-sso-secret.sops.yaml
   - librechat-sso-secret.sops.yaml
