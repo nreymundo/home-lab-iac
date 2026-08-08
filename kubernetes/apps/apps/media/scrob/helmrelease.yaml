@@ -28,7 +28,6 @@ spec:
               # renovate: datasource=docker depName=bellamy/scrob registryUrl=https://docker.io
               repository: docker.io/bellamy/scrob
               tag: 1.53.0
-              digest: sha256:aaebbbe88a2f93276314238885f749a7f21f30b7d6dcd758937d9147058779de
             env:
               TZ: Europe/Berlin
               PUID: "1000"
