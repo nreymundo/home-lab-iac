@@ -50,7 +50,7 @@ live step.
 
 ## Scenario 1: Fresh cluster bootstrap (registry bring-up)
 
-There is no Harbor proxy cache. Each node runs the K3s embedded registry
+Each node runs the K3s embedded registry
 (`--embedded-registry`, from `k3s_embedded_registry_enabled` in
 `ansible/roles/k3s/defaults/main.yml`) and serves locally cached images to peers
 over inter-node TCP `5001`. Pulls that no peer can satisfy fall back directly to

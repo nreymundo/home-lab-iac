@@ -35,8 +35,8 @@ Ask only what is not obvious from the request:
 - category: an existing dir under `kubernetes/apps/apps/` (e.g. `ai`, `media`,
   `utils`, `storage`, `automation`, `development`)
 - image `repository` and `tag`, plus the upstream registry it comes from
-  (docker.io, ghcr.io, lscr.io, quay.io, gitea). There is no Harbor proxy cache:
-  pulls resolve through the K3s embedded registry peer cache, then direct
+  (docker.io, ghcr.io, lscr.io, quay.io, gitea). Pulls resolve through the K3s
+  embedded registry peer cache, then direct
   upstream. `docker.io` images may need per-node Docker Hub auth, which is a
   manual post-Ansible step (see `docs/kubernetes-bootstrap.md`).
 - port + health/readiness path

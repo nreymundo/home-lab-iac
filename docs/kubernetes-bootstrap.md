@@ -21,8 +21,7 @@ hand-maintained ordering layer is `kubernetes/clusters/production/ks`.
 
 ## Registry: Embedded Peer Sharing And Direct Upstream
 
-This cluster does not route image pulls through a Harbor proxy cache. Pulls
-resolve in two layers:
+Image pulls resolve in two layers:
 
 1. **Embedded registry peer sharing** — every node runs the K3s embedded
    registry (`--embedded-registry`, from `k3s_embedded_registry_enabled` in
