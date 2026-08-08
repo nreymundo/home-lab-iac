@@ -187,10 +187,10 @@ spec:
                 icon: ollama.png
                 description: "LLM model hot-swapping proxy"
                 href: https://llama.lan.${CLUSTER_DOMAIN}
-            - NetBird:
-                icon: netbird.png
-                description: "Zero-trust network access"
-                href: https://netbird.${CLUSTER_DOMAIN}
+            # - NetBird:
+            #     icon: netbird.png
+            #     description: "Zero-trust network access"
+            #     href: https://netbird.${CLUSTER_DOMAIN}
             - Omada:
                 icon: omada.png
                 description: "TP-Link device manager"
