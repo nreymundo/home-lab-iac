@@ -357,13 +357,6 @@ data:
             "url": "https://docker.n8n.io",
             "storage_limit": 10 * gib,
         },
-        {
-            "name": "librechat",
-            "description": "LibreChat registry proxy cache upstream",
-            "type": "docker-registry",
-            "url": "https://registry.librechat.ai",
-            "storage_limit": 10 * gib,
-        },
     ]
 
     for spec in registries:
