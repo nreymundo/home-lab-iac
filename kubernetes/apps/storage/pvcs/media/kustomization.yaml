@@ -13,6 +13,7 @@ resources:
   - radarr-pvc.yaml
   - sabnzbd-pvc.yaml
   - seerr-pvc.yaml
+  - scrob-pvc.yaml
   - sonarr-pvc.yaml
   - tautulli-pvc.yaml
   - tidarr-pvc.yaml

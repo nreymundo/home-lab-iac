@@ -1,0 +1,135 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: scrob
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      # The upstream entrypoint starts as root to run init/chown on the data
+      # volume, then drops its own process privileges to PUID/PGID 1000. Do not
+      # impose a runAsNonRoot/runAsUser security context that would conflict
+      # with that root init phase; PUID/PGID below drive the in-container drop.
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+
+    controllers:
+      main:
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=bellamy/scrob registryUrl=https://docker.io
+              repository: docker.io/bellamy/scrob
+              tag: 1.53.0
+              digest: sha256:aaebbbe88a2f93276314238885f749a7f21f30b7d6dcd758937d9147058779de
+            env:
+              TZ: Europe/Berlin
+              PUID: "1000"
+              PGID: "1000"
+              SERVER_URL: https://scrob.lan.${CLUSTER_DOMAIN}
+              DATABASE_URL:
+                valueFrom:
+                  secretKeyRef:
+                    name: scrob-db-secrets
+                    key: DATABASE_URL
+              SECRET_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: scrob-secrets
+                    key: SECRET_KEY
+              OIDC_ENABLED: "true"
+              OIDC_PROVIDER_NAME: Authentik
+              OIDC_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: scrob-sso-secret
+                    key: CLIENT_ID
+              OIDC_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: scrob-sso-secret
+                    key: CLIENT_SECRET
+              OIDC_AUTH_URL: https://sso.${CLUSTER_DOMAIN}/application/o/authorize/
+              OIDC_TOKEN_URL: https://sso.${CLUSTER_DOMAIN}/application/o/token/
+              OIDC_USERINFO_URL: https://sso.${CLUSTER_DOMAIN}/application/o/userinfo/
+              OIDC_REDIRECT_URL: https://scrob.lan.${CLUSTER_DOMAIN}/oidc-callback
+              OIDC_SCOPES: openid email profile
+              OIDC_AUTO_CREATE_USERS: "true"
+              OIDC_DISABLE_PASSWORD_LOGIN: "false"
+            ports:
+              - name: http
+                containerPort: 7330
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/proxy/auth/has-users
+                    port: 7330
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/proxy/auth/has-users
+                    port: 7330
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/proxy/auth/has-users
+                    port: 7330
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 25m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 7330
+
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: scrob.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: scrob.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: scrob
+        globalMounts:
+          - path: /app/backend/data
