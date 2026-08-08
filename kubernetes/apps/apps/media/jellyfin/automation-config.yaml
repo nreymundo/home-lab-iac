@@ -71,7 +71,7 @@ data:
           "UserFilter": ["d2e1d985c73e493cb95fd1dd1e33f69b", "ed446fed6b20403ab4f73de2be261b47"]
         },
         {
-          "WebhookName": "Scrob Webhook",
+          "WebhookName": "Scrob Webhook - 1",
           "credentialKey": "scrob-webhook-url",
           "EnableMovies": true,
           "EnableEpisodes": true,
@@ -84,7 +84,7 @@ data:
           "SendAllProperties": true,
           "Template": "",
           "NotificationTypes": ["PlaybackStart", "PlaybackProgress", "PlaybackStop", "UserDataSaved", "ItemAdded", "ItemDeleted"],
-          "UserFilter": []
+          "UserFilter": ["d2e1d985c73e493cb95fd1dd1e33f69b"]
         }
       ]
     }
