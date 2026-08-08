@@ -1355,6 +1355,50 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "LiteLLM Admin"]]
 
+  526-librechat-cleanup.yaml: |
+    version: 1
+    metadata:
+      name: librechat-sso-cleanup
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      - model: authentik_policies.policybinding
+        state: absent
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "librechat"]]
+          order: 0
+
+      - model: authentik_policies.policybinding
+        state: absent
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "librechat"]]
+          order: 1
+
+      - model: authentik_core.application
+        state: absent
+        identifiers:
+          slug: "librechat"
+
+      - model: authentik_providers_oauth2.oauth2provider
+        state: absent
+        identifiers:
+          name: "LibreChat"
+
+      - model: authentik_providers_oauth2.scopemapping
+        state: absent
+        identifiers:
+          name: "LibreChat Role Scope"
+
+      - model: authentik_core.group
+        state: absent
+        identifiers:
+          name: "librechat-user"
+
+      - model: authentik_core.group
+        state: absent
+        identifiers:
+          name: "librechat-admin"
+
   527-llama.yaml: |
     version: 1
     metadata:

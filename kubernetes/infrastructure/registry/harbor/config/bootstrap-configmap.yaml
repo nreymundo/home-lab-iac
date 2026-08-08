@@ -27,14 +27,17 @@ data:
     if not password:
         raise RuntimeError("Harbor admin password is unavailable")
     gib = 1024 ** 3
+    resource_name_header = {"X-Is-Resource-Name": "true"}
 
     def auth_header():
         token = base64.b64encode(f"{username}:{password}".encode()).decode()
         return {"Authorization": f"Basic {token}"}
 
-    def request(method, path, body=None, ok=(200, 201, 202, 204, 409, 404)):
+    def request(method, path, body=None, ok=(200, 201, 202, 204, 409, 404), extra_headers=None):
         data = None
         headers = {"Accept": "application/json", **auth_header()}
+        if extra_headers:
+            headers.update(extra_headers)
         if body is not None:
             data = json.dumps(body).encode()
             headers["Content-Type"] = "application/json"
@@ -147,7 +150,7 @@ data:
 
     def get_project(name):
         encoded = urllib.parse.quote(name, safe="")
-        status, body, _ = request("GET", f"/projects/{encoded}?is_resource_name=true", ok=(200, 404))
+        status, body, _ = request("GET", f"/projects/{encoded}", ok=(200, 404), extra_headers=resource_name_header)
         return body if status == 200 else None
 
     def project_id(project):
@@ -176,9 +179,10 @@ data:
                 encoded = urllib.parse.quote(name, safe="")
                 request(
                     "PUT",
-                    f"/projects/{encoded}?is_resource_name=true",
+                    f"/projects/{encoded}",
                     {"metadata": {**metadata, **desired_metadata}},
                     ok=(200,),
+                    extra_headers=resource_name_header,
                 )
                 project = get_project(name)
                 print(f"configured proxy project metadata for {name}", flush=True)
@@ -257,6 +261,46 @@ data:
 
         request("POST", "/retentions", retention_policy(project), ok=(201,))
         print(f"created latest-5 retention for project {name}", flush=True)
+
+    def cleanup_librechat():
+        name = "librechat"
+        encoded = urllib.parse.quote(name, safe="")
+        project = get_project(name)
+        if project:
+            repo_names = []
+            page_number = 1
+            while True:
+                query = urllib.parse.urlencode({"page": page_number, "page_size": 100})
+                _, repos, _ = request(
+                    "GET",
+                    f"/projects/{encoded}/repositories?{query}",
+                    ok=(200,),
+                    extra_headers=resource_name_header,
+                )
+                repos = repos or []
+                for repo in repos:
+                    repo_name = repo.get("name")
+                    if repo_name:
+                        repo_names.append(repo_name)
+                if len(repos) < 100:
+                    break
+                page_number += 1
+            for repo_name in repo_names:
+                double_encoded = urllib.parse.quote(urllib.parse.quote(repo_name, safe=""), safe="")
+                request(
+                    "DELETE",
+                    f"/projects/{encoded}/repositories/{double_encoded}",
+                    ok=(200, 404),
+                    extra_headers=resource_name_header,
+                )
+            request("DELETE", f"/projects/{encoded}", ok=(200, 404), extra_headers=resource_name_header)
+            print("deleted decommissioned librechat proxy project", flush=True)
+
+        for registry in list_registries():
+            if registry.get("name") == name:
+                request("DELETE", f"/registries/{registry['id']}", ok=(200, 404))
+                print("deleted decommissioned librechat registry endpoint", flush=True)
+                break
 
     def gc_schedule():
         return {
@@ -364,6 +408,8 @@ data:
         project = ensure_proxy_project(spec["name"], registry_id, spec["storage_limit"])
         ensure_project_quota(project, spec["storage_limit"])
         ensure_retention_policy(project)
+
+    cleanup_librechat()
 
     ensure_gc_schedule()
 
