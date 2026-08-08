@@ -387,6 +387,10 @@ spec:
                 icon: sabnzbd.png
                 description: "Usenet downloader"
                 href: https://sabnzbd.lan.${CLUSTER_DOMAIN}
+            - Scrob:
+                icon: scrob.png
+                description: "Self-hosted media tracking"
+                href: https://scrob.lan.${CLUSTER_DOMAIN}
             - SearXNG:
                 icon: searxng.png
                 description: "Privacy-focused meta search"

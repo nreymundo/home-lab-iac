@@ -41,4 +41,5 @@ resources:
   - ../apps/media/plex-exporter
   - ../apps/media/tidarr
   - ../apps/media/seerr
+  - ../apps/media/scrob
   - ../apps/paperless
