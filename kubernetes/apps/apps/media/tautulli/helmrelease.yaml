@@ -50,7 +50,6 @@ spec:
       main:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
-          traefik.ingress.kubernetes.io/router.priority: "1000"
           external-dns.alpha.kubernetes.io/hostname: tautulli.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: tautulli.lan.${CLUSTER_DOMAIN}
