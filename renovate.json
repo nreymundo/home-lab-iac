@@ -83,17 +83,6 @@
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
     },
     {
-      "description": "Keep LibreChat RAG API on release semver tags",
-      "matchDatasources": ["docker"],
-      "matchDepNames": ["danny-avila/librechat-rag-api-dev-lite"],
-      "matchPackageNames": [
-        "danny-avila/librechat-rag-api-dev-lite",
-        "ghcr.io/danny-avila/librechat-rag-api-dev-lite"
-      ],
-      "versioning": "semver",
-      "allowedVersions": "/^v\\d+\\.\\d+\\.\\d+$/"
-    },
-    {
       "description": "Keep Posterizarr on released semver tags",
       "matchDatasources": ["docker"],
       "matchDepNames": ["fscorrupt/posterizarr"],
