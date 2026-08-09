@@ -1200,6 +1200,69 @@ data:
           is_superuser: false
           parent: null
 
+  263-home-assistant.yaml: |
+    version: 1
+    metadata:
+      name: home-assistant-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Home Assistant Users group
+      - model: authentik_core.group
+        state: present
+        id: home-assistant-users
+        identifiers:
+          name: "Home Assistant Users"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
+
+      # OAuth2/OIDC Provider for Home Assistant
+      - model: authentik_providers_oauth2.oauth2provider
+        id: home-assistant-provider
+        identifiers:
+          name: "Home Assistant"
+        attrs:
+          client_id: !Env HOME_ASSISTANT_CLIENT_ID
+          client_secret: !Env HOME_ASSISTANT_CLIENT_SECRET
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          jwt_algorithm: RS256
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
+          encryption_key: null
+          client_type: confidential
+          grant_types:
+            - authorization_code
+          client_authentication_method: client_secret_basic
+          redirect_uris:
+            - url: "https://home.${CLUSTER_DOMAIN}/auth/oidc/callback"
+              matching_mode: strict
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+
+      # Home Assistant Application
+      - model: authentik_core.application
+        id: home-assistant-application
+        identifiers:
+          slug: "home-assistant"
+        attrs:
+          name: "Home Assistant"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/home-assistant.svg"
+          provider: !KeyOf home-assistant-provider
+          group: "Local Services"
+
+      # Restrict access to Home Assistant Users
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !KeyOf home-assistant-application
+          order: 0
+        attrs:
+          group: !KeyOf home-assistant-users
+
   500-frigate.yaml: |
     version: 1
     metadata:
