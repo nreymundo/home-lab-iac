@@ -59,6 +59,25 @@ data:
           name: "Gatekeeper"
           provider: !KeyOf proxy-provider
 
+  105-shared-scopes.yaml: |
+    version: 1
+    metadata:
+      name: shared-scope-mappings
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Generic, cross-blueprint scope mappings shared by multiple applications.
+      - model: authentik_providers_oauth2.scopemapping
+        state: present
+        id: shared-email-verified-scope
+        identifiers:
+          name: "Email (verified)"
+        attrs:
+          scope_name: email
+          description: "Generic email scope mapping with verified flag"
+          expression: |
+            return {"email": request.user.email, "email_verified": True}
+
   110-proxy-scope-mapping.yaml: |
     version: 1
     metadata:
@@ -971,6 +990,64 @@ data:
           order: 0
         attrs:
           group: !Find [authentik_core.group, [name, "Unraid Users"]]
+
+  259-bambuddy.yaml: |
+    version: 1
+    metadata:
+      name: bambuddy-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Bambuddy Users group
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Bambuddy Users"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
+
+      # OAuth2 Provider for Bambuddy
+      - model: authentik_providers_oauth2.oauth2provider
+        id: bambuddy-provider
+        identifiers:
+          name: "Bambuddy"
+        attrs:
+          client_id: !Env BAMBUDDY_CLIENT_ID
+          client_secret: !Env BAMBUDDY_CLIENT_SECRET
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          encryption_key: null
+          client_type: confidential
+          grant_types:
+            - authorization_code
+          client_authentication_method: client_secret_post
+          redirect_uris:
+            - url: "https://bambuddy.lan.${CLUSTER_DOMAIN}/api/v1/auth/oidc/callback"
+              matching_mode: strict
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+            - !Find [authentik_providers_oauth2.scopemapping, [name, "Email (verified)"]]
+
+      # Bambuddy Application
+      - model: authentik_core.application
+        identifiers:
+          slug: "bambuddy"
+        attrs:
+          name: "Bambuddy"
+          provider: !KeyOf bambuddy-provider
+          group: "Utils"
+
+      # Restrict access to Bambuddy Users
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "bambuddy"]]
+          order: 0
+        attrs:
+          group: !Find [authentik_core.group, [name, "Bambuddy Users"]]
 
   260-jellyfin.yaml: |
     version: 1

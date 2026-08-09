@@ -17,6 +17,7 @@ resources:
   - paperless-sso-secret.sops.yaml
   - dawarich-sso-secret.sops.yaml
   - airtrail-sso-secret.sops.yaml
+  - bambuddy-sso-secret.sops.yaml
   - karakeep-sso-secret.sops.yaml
   - scrob-sso-secret.sops.yaml
   - unraid-sso-secret.sops.yaml
