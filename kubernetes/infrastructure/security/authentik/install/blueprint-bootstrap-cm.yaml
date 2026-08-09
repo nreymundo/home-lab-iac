@@ -1343,6 +1343,123 @@ data:
         attrs:
           group: !KeyOf proxmox-backup-admins
 
+  265-omada.yaml: |
+    version: 1
+    metadata:
+      name: omada-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Omada Admins group (members receive the Omada-admins entitlement)
+      - model: authentik_core.group
+        state: present
+        id: omada-admins
+        identifiers:
+          name: "omada-admins"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
+
+      # SAML property mapping: given name claim
+      - model: authentik_providers_saml.samlpropertymapping
+        id: omada-given-name-mapping
+        identifiers:
+          name: "Omada given name"
+        attrs:
+          saml_name: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"
+          expression: |
+            name = request.user.name or ""
+            parts = name.split()
+            if parts:
+                return parts[0]
+            return request.user.username
+
+      # SAML property mapping: surname claim
+      - model: authentik_providers_saml.samlpropertymapping
+        id: omada-surname-mapping
+        identifiers:
+          name: "Omada surname"
+        attrs:
+          saml_name: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"
+          expression: |
+            name = request.user.name or ""
+            parts = name.split()
+            if len(parts) >= 2:
+                return parts[-1]
+            return request.user.username
+
+      # SAML property mapping: username claim
+      - model: authentik_providers_saml.samlpropertymapping
+        id: omada-username-mapping
+        identifiers:
+          name: "Omada username"
+        attrs:
+          saml_name: "username"
+          expression: |
+            return request.user.username
+
+      # SAML property mapping: user group claim (first Omada- entitlement)
+      - model: authentik_providers_saml.samlpropertymapping
+        id: omada-usergroup-mapping
+        identifiers:
+          name: "Omada user group"
+        attrs:
+          saml_name: "usergroup_name"
+          expression: |
+            entitlements = request.user.app_entitlements(provider.application)
+            for entitlement in entitlements:
+                if entitlement.name.startswith("Omada-"):
+                    return entitlement.name
+            return ""
+
+      # SAML Provider for TP-Link Omada Controller
+      - model: authentik_providers_saml.samlprovider
+        id: omada-provider
+        identifiers:
+          name: "Omada Controller SAML"
+        attrs:
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          acs_url: "https://temp.temp"  # Stage 2: replace with ACS URL from Omada SAML connection details
+          audience: "https://temp.temp"  # Stage 2: replace with audience from Omada SAML connection details
+          issuer_override: ""
+          sp_binding: redirect
+          name_id_mapping: !Find [authentik_providers_saml.samlpropertymapping, [name, "authentik default SAML Mapping: UPN"]]
+          signing_kp: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
+          default_relay_state: ""  # Stage 2: replace with relay state from Omada SAML connection details
+          property_mappings:
+            - !KeyOf omada-given-name-mapping
+            - !KeyOf omada-surname-mapping
+            - !KeyOf omada-username-mapping
+            - !KeyOf omada-usergroup-mapping
+
+      # Omada Controller Application
+      - model: authentik_core.application
+        id: omada-application
+        identifiers:
+          slug: "omada"
+        attrs:
+          name: "Omada Controller"
+          provider: !KeyOf omada-provider
+          group: "Local Services"
+
+      # Application entitlement emitted to Omada as the user group claim
+      - model: authentik_core.applicationentitlement
+        id: omada-admin-entitlement
+        identifiers:
+          app: !KeyOf omada-application
+          name: Omada-admins
+
+      # Grant the Omada-admins entitlement to omada-admins members
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !KeyOf omada-admin-entitlement
+          order: 10
+        attrs:
+          group: !KeyOf omada-admins
+
   500-frigate.yaml: |
     version: 1
     metadata:
