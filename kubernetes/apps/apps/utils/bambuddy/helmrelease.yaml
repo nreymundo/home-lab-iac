@@ -37,7 +37,8 @@ spec:
               BAMBUDDY_OIDC_SCOPES: "openid email profile"
               BAMBUDDY_OIDC_ENABLED: "true"
               BAMBUDDY_OIDC_AUTO_LINK_EXISTING: "true"
-              BAMBUDDY_OIDC_AUTO_CREATE_USERS: "false"
+              BAMBUDDY_OIDC_AUTO_CREATE_USERS: "true"
+              BAMBUDDY_OIDC_AUTOLOGIN: "true"
               BAMBUDDY_OIDC_EMAIL_CLAIM: email
               BAMBUDDY_OIDC_REQUIRE_EMAIL_VERIFIED: "true"
               BAMBUDDY_OIDC_CLIENT_ID:
