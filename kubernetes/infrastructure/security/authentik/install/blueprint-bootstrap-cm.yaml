@@ -1207,17 +1207,27 @@ data:
       labels:
         blueprints.goauthentik.io/instantiate: "true"
     entries:
-      # Home Assistant Users group
+      # Home Assistant Admins group
       - model: authentik_core.group
         state: present
-        id: home-assistant-users
+        id: home-assistant-admins
         identifiers:
-          name: "Home Assistant Users"
+          name: "home-assistant-admins"
         attrs:
           is_superuser: false
           parent: null
           users:
             - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
+
+      # Home Assistant Users group
+      - model: authentik_core.group
+        state: present
+        id: home-assistant-users
+        identifiers:
+          name: "home-assistant-users"
+        attrs:
+          is_superuser: false
+          parent: null
 
       # OAuth2/OIDC Provider for Home Assistant
       - model: authentik_providers_oauth2.oauth2provider
@@ -1262,6 +1272,14 @@ data:
           order: 0
         attrs:
           group: !KeyOf home-assistant-users
+
+      # Restrict access to Home Assistant Admins
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !KeyOf home-assistant-application
+          order: 1
+        attrs:
+          group: !KeyOf home-assistant-admins
 
   500-frigate.yaml: |
     version: 1
