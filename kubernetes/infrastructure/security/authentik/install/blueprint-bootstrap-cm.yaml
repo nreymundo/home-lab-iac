@@ -1442,6 +1442,7 @@ data:
           slug: "omada"
         attrs:
           name: "Omada Controller"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/omada.svg"
           provider: !KeyOf omada-provider
           group: "Local Services"
 
