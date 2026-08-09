@@ -212,6 +212,16 @@ spec:
             secretKeyRef:
               name: proxmox-sso-secret
               key: CLIENT_SECRET
+        - name: HOME_ASSISTANT_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: home-assistant-sso-secret
+              key: CLIENT_ID
+        - name: HOME_ASSISTANT_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: home-assistant-sso-secret
+              key: CLIENT_SECRET
         - name: DISCORD_BASIC_AUTH
           valueFrom:
             secretKeyRef:
