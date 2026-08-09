@@ -1173,6 +1173,33 @@ data:
         attrs:
           group: !KeyOf proxmox-admins
 
+  262-opnsense.yaml: |
+    version: 1
+    metadata:
+      name: opnsense-groups
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # OPNsense Admins group (default user gets admin role)
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "OPNsense Admins"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
+
+      # OPNsense Users group
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "OPNsense Users"
+        attrs:
+          is_superuser: false
+          parent: null
+
   500-frigate.yaml: |
     version: 1
     metadata:
@@ -1879,8 +1906,8 @@ data:
           name: "LDAP"
           authorization_flow: !KeyOf ldap-authentication-flow
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
-          certificate: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
-          tls_server_name: "ak-outpost-ldap-outpost.authentik.svc.cluster.local"
+          certificate: !Find [authentik_crypto.certificatekeypair, [managed, "goauthentik.io/crypto/discovered/ldap-lan"]]
+          tls_server_name: "ldap.lan.${CLUSTER_DOMAIN}"
           mfa_support: false
           bind_mode: "direct"
           search_mode: "direct"
@@ -1915,7 +1942,29 @@ data:
             object_naming_template: "ak-outpost-%(name)s"
             kubernetes_namespace: authentik
             kubernetes_replicas: 1
-            kubernetes_service_type: ClusterIP
+            kubernetes_service_type: LoadBalancer
+            kubernetes_json_patches:
+              service:
+                # Static MetalLB address from the production L2 pool.
+                - op: add
+                  path: /spec/loadBalancerIP
+                  value: "${LDAP_LB_IP}"
+                # Restrict exposure to the OPNsense router only.
+                - op: add
+                  path: /spec/loadBalancerSourceRanges
+                  value:
+                    - "${OPNSENSE_IP}/32"
+                - op: add
+                  path: /spec/externalTrafficPolicy
+                  value: Local
+                # Ensure the annotations map exists before adding the
+                # ExternalDNS hostname used to publish ldap.lan.${CLUSTER_DOMAIN}.
+                - op: add
+                  path: /metadata/annotations
+                  value: {}
+                - op: add
+                  path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
+                  value: "ldap.lan.${CLUSTER_DOMAIN}"
 
   999-outpost.yaml: |
     version: 1

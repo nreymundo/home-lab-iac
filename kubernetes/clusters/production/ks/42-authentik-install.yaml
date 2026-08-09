@@ -13,6 +13,7 @@ spec:
   dependsOn:
     - name: cluster-identity
     - name: observability-kube-prometheus-stack-install
+    - name: cert-manager-config
   wait: true
   timeout: 35m
   decryption:
