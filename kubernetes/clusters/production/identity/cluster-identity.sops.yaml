@@ -27,6 +27,7 @@ data:
     BAMBUDDY_IP: ENC[AES256_GCM,data:J9dsd/0L9ZX7BuWIcw==,iv:gv1bbvhj42Nb9c+tVo7AXy/pWsaEZxsXVHjb06CQ/TU=,tag:Mf12ni++RYXJlIzvA7xhnA==,type:str]
     GARAGE_S3_IP: ENC[AES256_GCM,data:iqv9LTSyB6FlXG9tsQ==,iv:MblBb7RReTD+4Xvv8CMwqIRYnlT+ITg849coTKXuBxk=,tag:fo8WFLPcrUowcubtXAWv0A==,type:str]
     PHOTON_IP: ENC[AES256_GCM,data:4Oui5lf1Yx5s/NhXWQ==,iv:ZF9oR7dfhI3NdC8F99NcteET24qF+FTc6UU9GvqUp1k=,tag:DXOpK1DupIIntjnp7RsqPg==,type:str]
+    LDAP_LB_IP: ENC[AES256_GCM,data:fDBQ+3e/0UOT4gvGtxc=,iv:yxEHOTPOiucrcK9dVVZPPTYSb08I1LjvGGZnOvmlC7s=,tag:mNeGLabbOE30KuUffz+HRw==,type:str]
 sops:
     age:
         - enc: |
@@ -39,6 +40,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-06-27T13:22:58Z"
-    mac: ENC[AES256_GCM,data:A5zEFFl60RofZVSgoXAvXpdcMUqq+UsPocwhZCq7BwL/BFfnocNbUNsBVNs3+dHl7pvYFxxVMwI0aeWezAfYG+wbIfvqMskQugfYXrjqR332ULjjAMdkenpLrHYYbih5YQMJWKqvqj+QVqtortUwfkmf1bnJqW6fKZq4Q2ORTB0=,iv:PiQTY4SzYiF9DKPYN8f+wydwEFe2j2Pax4TLHGWKebE=,tag:Vp/lXfOz2SjGddNaXgrcYg==,type:str]
+    lastmodified: "2026-08-09T14:50:46Z"
+    mac: ENC[AES256_GCM,data:PxRBWSgznN75/cQKHaiq7eJ1Ewb82f+o9U4blpw7tPQBZV9ayFDGxsGUUuE5z2UBg75ahauQ7TuyA6HiKpu6OVL0yG+8ZElyOHAK3iD5fe9t5UBqSyEAnt70Ax2rql0w7/W9p9yq2fl3kxqF9mjmmkD9u0Kk72rmGXqlAwfK1Yk=,iv:dWo5E+3jolQ4mFX3rxw2iUFGYdGug7MiavWeTN9klMk=,tag:HnFyJTA2/bE07BtwXldKMw==,type:str]
     version: 3.13.1

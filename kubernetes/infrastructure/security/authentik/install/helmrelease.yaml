@@ -363,14 +363,25 @@ spec:
         timeoutSeconds: 10
         periodSeconds: 10
         failureThreshold: 6
-      extraVolumes:
+      volumes:
         - name: authentik-shm
           emptyDir:
             medium: Memory
             sizeLimit: 256Mi
-      extraVolumeMounts:
+        # wildcard-cluster-domain-tls is replicated into the authentik
+        # namespace by the mittwald secret replicator. Mounting it at
+        # /certs/ldap-lan exposes tls.crt/tls.key for Authentik certificate
+        # discovery as the managed goauthentik.io/crypto/discovered/ldap-lan
+        # keypair.
+        - name: ldap-lan-cert
+          secret:
+            secretName: wildcard-cluster-domain-tls
+      volumeMounts:
         - name: authentik-shm
           mountPath: /dev/shm
+        - name: ldap-lan-cert
+          mountPath: /certs/ldap-lan
+          readOnly: true
       pdb:
         enabled: true
         minAvailable: 1

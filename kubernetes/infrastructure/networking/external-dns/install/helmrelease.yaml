@@ -34,6 +34,7 @@ spec:
 
     sources:
       - ingress
+      - service
       - traefik-proxy
 
     policy: sync # WARNING: deletes any records within domainFilters
