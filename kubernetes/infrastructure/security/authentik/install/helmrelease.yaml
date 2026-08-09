@@ -212,6 +212,16 @@ spec:
             secretKeyRef:
               name: proxmox-sso-secret
               key: CLIENT_SECRET
+        - name: PBS_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: proxmox-backup-sso-secret
+              key: CLIENT_ID
+        - name: PBS_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: proxmox-backup-sso-secret
+              key: CLIENT_SECRET
         - name: HOME_ASSISTANT_CLIENT_ID
           valueFrom:
             secretKeyRef:
