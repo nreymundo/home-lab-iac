@@ -16,6 +16,8 @@ spec:
     controllers:
       main:
         strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
         containers:
           main:
             image:
@@ -27,7 +29,27 @@ spec:
               PUID: "1000"
               PGID: "1000"
               PORT: "8000"
+              APP_URL: https://bambuddy.lan.${CLUSTER_DOMAIN}
               VIRTUAL_PRINTER_PASV_ADDRESS: ${BAMBUDDY_IP}
+              # --- Auth: native OIDC against Authentik ---
+              BAMBUDDY_OIDC_NAME: Authentik
+              BAMBUDDY_OIDC_ISSUER_URL: https://sso.${CLUSTER_DOMAIN}/application/o/bambuddy/
+              BAMBUDDY_OIDC_SCOPES: "openid email profile"
+              BAMBUDDY_OIDC_ENABLED: "true"
+              BAMBUDDY_OIDC_AUTO_LINK_EXISTING: "true"
+              BAMBUDDY_OIDC_AUTO_CREATE_USERS: "false"
+              BAMBUDDY_OIDC_EMAIL_CLAIM: email
+              BAMBUDDY_OIDC_REQUIRE_EMAIL_VERIFIED: "true"
+              BAMBUDDY_OIDC_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: bambuddy-sso-secret
+                    key: CLIENT_ID
+              BAMBUDDY_OIDC_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: bambuddy-sso-secret
+                    key: CLIENT_SECRET
             securityContext:
               capabilities:
                 add:
