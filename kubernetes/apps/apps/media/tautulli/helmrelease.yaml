@@ -11,6 +11,8 @@ spec:
     controllers:
       main:
         strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
         containers:
           main:
             image:
@@ -31,6 +33,20 @@ spec:
                   secretKeyRef:
                     name: tautulli-secrets
                     key: RADARR_API_KEY
+              # Proxy-mode HTTP basic auth overrides. Tautulli reads these env
+              # vars before config.ini, so the PVC form-login state is preserved
+              # untouched and a revert restores the prior root routing/auth.
+              TAUTULLI_HTTP_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: tautulli-basic-auth-pbk-secret
+                    key: USERNAME
+              TAUTULLI_HTTP_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: tautulli-basic-auth-pbk-secret
+                    key: PBK
+              TAUTULLI_HTTP_BASIC_AUTH: "1"
             ports:
               - name: http
                 containerPort: 8181
@@ -47,17 +63,6 @@ spec:
           http:
             port: 8181
     ingress:
-      main:
-        annotations:
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
-          external-dns.alpha.kubernetes.io/hostname: tautulli.lan.${CLUSTER_DOMAIN}
-        hosts:
-          - host: tautulli.lan.${CLUSTER_DOMAIN}
-            paths:
-              - path: /
-                service:
-                  identifier: main
-                  port: http
       api:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
@@ -85,6 +90,7 @@ spec:
           - host: tautulli.lan.${CLUSTER_DOMAIN}
             paths:
               - path: /image
+                pathType: Exact
                 service:
                   identifier: main
                   port: http

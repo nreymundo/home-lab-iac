@@ -1513,7 +1513,7 @@ data:
       labels:
         blueprints.goauthentik.io/instantiate: "true"
     entries:
-      # Tautulli users group (bootstrap user is seeded with basic auth attrs)
+      # Tautulli users group
       - model: authentik_core.group
         state: present
         id: tautulli-users
@@ -1524,11 +1524,35 @@ data:
           parent: null
           users:
             - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
-          attributes:
-            tautulli_user: !Env TAUTULLI_BASIC_AUTH_USER
-            tautulli_password: !Env TAUTULLI_BASIC_AUTH_PASSWORD
 
-      # Tautulli Proxy Provider (genuine proxy mode with HTTP basic auth)
+      # Custom scope mapping that injects the HTTP basic auth Authorization
+      # header from server env at token issuance (mirrors Discord/Kopia/Llama behavior).
+      - model: authentik_providers_oauth2.scopemapping
+        state: present
+        id: tautulli-auth-mapping
+        identifiers:
+          name: "Tautulli Auth Mapping"
+        attrs:
+          scope_name: tautulli-auth
+          description: "Injects HTTP basic auth header for Tautulli proxy"
+          expression: |
+            import os
+            import base64
+            user = os.environ.get("TAUTULLI_BASIC_AUTH_USER", "")
+            password = os.environ.get("TAUTULLI_BASIC_AUTH_PASSWORD", "")
+            headers = {}
+            if user and password:
+                token = base64.b64encode((user + ":" + password).encode()).decode()
+                headers["Authorization"] = "Basic " + token
+            return {
+                "ak_proxy": {
+                    "user_attributes": {
+                        "additionalHeaders": headers
+                    }
+                }
+            }
+
+      # Tautulli Proxy Provider (genuine proxy mode)
       - model: authentik_providers_proxy.proxyprovider
         id: tautulli-provider
         identifiers:
@@ -1540,13 +1564,14 @@ data:
           external_host: "https://tautulli.lan.${CLUSTER_DOMAIN}"
           internal_host: "http://tautulli.media.svc.cluster.local:8181"
           internal_host_ssl_validation: true
-          basic_auth_enabled: true
-          basic_auth_user_attribute: tautulli_user
-          basic_auth_password_attribute: tautulli_password
+          basic_auth_enabled: false
+          basic_auth_user_attribute: ""
+          basic_auth_password_attribute: ""
           access_token_validity: "hours=24"
           refresh_token_validity: "days=30"
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, "ak-proxy"]]
+            - !Find [authentik_providers_oauth2.scopemapping, [name, "Tautulli Auth Mapping"]]
 
       # Tautulli Application
       - model: authentik_core.application
@@ -1736,6 +1761,7 @@ data:
             - !Find [authentik_providers_proxy.proxyprovider, [name, "Kopia"]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, "Llama"]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, "OpenClaw"]]
+            - !Find [authentik_providers_proxy.proxyprovider, [name, "Tautulli"]]
           config:
             authentik_host: "http://authentik-server.authentik.svc.cluster.local"
             authentik_host_browser: "https://sso.${CLUSTER_DOMAIN}"
