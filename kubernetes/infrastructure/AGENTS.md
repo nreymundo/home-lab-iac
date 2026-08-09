@@ -11,6 +11,7 @@ Read the repo root `AGENTS.md` and `kubernetes/AGENTS.md` first. This file only 
 - Service-scoped secrets belong beside the service and are usually committed as SOPS-encrypted manifests.
 - Treat generated or vendor-like chart content as external input; this repo should keep manifests, values, and wiring, not vendored chart payloads.
 - `kubernetes/infrastructure/kustomization.yaml` is not the full service aggregation layer; most service reconciliation is wired through `kubernetes/clusters/production/ks/*.yaml`, so ordering and inclusion changes often need edits there too.
+- When adding an Authentik application blueprint, search https://github.com/homarr-labs/dashboard-icons for a precise SVG match first, then assign the full `svg/<asset>.svg` raw GitHub URL via `attrs.icon`; do not substitute a related product or vendor icon when no precise match exists.
 
 ## Local Anti-Patterns
 - Do not duplicate shared source definitions inside service folders when `sources/` already owns them.

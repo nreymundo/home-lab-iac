@@ -57,7 +57,9 @@ data:
           slug: "gatekeeper"
         attrs:
           name: "Gatekeeper"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/authentik.svg"
           provider: !KeyOf proxy-provider
+          group: "Kubernetes"
 
   105-shared-scopes.yaml: |
     version: 1
@@ -165,8 +167,9 @@ data:
           slug: "netbird"
         attrs:
           name: "NetBird"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/netbird.svg"
           provider: !KeyOf netbird-provider
-          group: "Infrastructure"
+          group: "Local Services"
 
       - model: authentik_policies.policybinding
         identifiers:
@@ -233,8 +236,9 @@ data:
           slug: "grafana"
         attrs:
           name: "Grafana"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/grafana.svg"
           provider: !KeyOf grafana-provider
-          group: "Observability"
+          group: "Kubernetes"
 
   220-audiobookshelf.yaml: |
     version: 1
@@ -283,8 +287,9 @@ data:
           slug: "audiobookshelf"
         attrs:
           name: "Audiobookshelf"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/audiobookshelf.svg"
           provider: !KeyOf audiobookshelf-provider
-          group: "Media"
+          group: "Kubernetes"
 
       - model: authentik_policies.policybinding
         identifiers:
@@ -337,8 +342,9 @@ data:
           slug: "komga"
         attrs:
           name: "Komga"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/komga.svg"
           provider: !KeyOf komga-provider
-          group: "Media"
+          group: "Kubernetes"
 
       - model: authentik_policies.policybinding
         identifiers:
@@ -419,8 +425,9 @@ data:
           slug: "gitea"
         attrs:
           name: "Gitea"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/gitea.svg"
           provider: !KeyOf gitea-provider
-          group: "Development"
+          group: "Kubernetes"
 
       # Restrict access to gituser group members
       - model: authentik_policies.policybinding
@@ -483,8 +490,9 @@ data:
           slug: "paperless"
         attrs:
           name: "Paperless"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/paperless-ngx.svg"
           provider: !KeyOf paperless-provider
-          group: "Utils"
+          group: "Kubernetes"
 
       # Restrict access to Paperless Users
       - model: authentik_policies.policybinding
@@ -568,8 +576,9 @@ data:
           slug: "immich"
         attrs:
           name: "Immich"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/immich.svg"
           provider: !KeyOf immich-provider
-          group: "Media"
+          group: "Kubernetes"
           meta_launch_url: "https://photos.${CLUSTER_DOMAIN}/auth/login?autoLaunch=1"
 
       # Allow Immich Users
@@ -635,8 +644,9 @@ data:
           slug: "dawarich"
         attrs:
           name: "Dawarich"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/dawarich.svg"
           provider: !KeyOf dawarich-provider
-          group: "Utils"
+          group: "Kubernetes"
 
       # Restrict access to Dawarich Users
       - model: authentik_policies.policybinding
@@ -693,8 +703,9 @@ data:
           slug: "airtrail"
         attrs:
           name: "AirTrail"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/air-trail.svg"
           provider: !KeyOf airtrail-provider
-          group: "Utils"
+          group: "Kubernetes"
 
       # Restrict access to AirTrail Users
       - model: authentik_policies.policybinding
@@ -806,8 +817,9 @@ data:
           slug: "nextcloud"
         attrs:
           name: "Nextcloud"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/nextcloud.svg"
           provider: !KeyOf nextcloud-provider
-          group: "Utils"
+          group: "Kubernetes"
           meta_launch_url: "https://cloud.${CLUSTER_DOMAIN}"
 
       # Allow Nextcloud Users
@@ -875,8 +887,9 @@ data:
           slug: "karakeep"
         attrs:
           name: "Karakeep"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/karakeep.svg"
           provider: !KeyOf karakeep-provider
-          group: "Utils"
+          group: "Kubernetes"
 
       # Restrict access to Karakeep Users
       - model: authentik_policies.policybinding
@@ -922,8 +935,9 @@ data:
           slug: "scrob"
         attrs:
           name: "Scrob"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/scrob.svg"
           provider: !KeyOf scrob-provider
-          group: "Media"
+          group: "Kubernetes"
 
       # Restrict access to existing Media group (no admin mapping; Scrob has no OIDC group admin support)
       - model: authentik_policies.policybinding
@@ -980,8 +994,9 @@ data:
           slug: "unraid"
         attrs:
           name: "Unraid"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/unraid.svg"
           provider: !KeyOf unraid-provider
-          group: "Storage"
+          group: "Local Services"
 
       # Restrict access to Unraid Users
       - model: authentik_policies.policybinding
@@ -1040,8 +1055,9 @@ data:
           slug: "bambuddy"
         attrs:
           name: "Bambuddy"
+          icon: "https://assets.web.${CLUSTER_DOMAIN}/icons/bambuddy.svg"
           provider: !KeyOf bambuddy-provider
-          group: "Utils"
+          group: "Kubernetes"
 
       # Restrict access to Bambuddy Users
       - model: authentik_policies.policybinding
@@ -1157,8 +1173,9 @@ data:
           slug: "frigate"
         attrs:
           name: "Frigate"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/frigate.svg"
           provider: !KeyOf frigate-provider
-          group: "Security"
+          group: "Kubernetes"
 
       # Restrict access to Frigate Admins
       - model: authentik_policies.policybinding
@@ -1255,8 +1272,9 @@ data:
           slug: "discord-main"
         attrs:
           name: "Discord Main"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/discord.svg"
           provider: !KeyOf discord-main-provider
-          group: "Utils"
+          group: "Kubernetes"
 
       # Discord Alternate Application
       - model: authentik_core.application
@@ -1264,8 +1282,9 @@ data:
           slug: "discord-alternate"
         attrs:
           name: "Discord Alternate"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/discord.svg"
           provider: !KeyOf discord-alternate-provider
-          group: "Utils"
+          group: "Kubernetes"
 
       # Restrict Discord Main to Discord Users group
       - model: authentik_policies.policybinding
@@ -1346,8 +1365,9 @@ data:
           slug: "kopia"
         attrs:
           name: "Kopia"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/kopia.svg"
           provider: !KeyOf kopia-provider
-          group: "Storage"
+          group: "Local Services"
 
       # Restrict Kopia to Kopia Users group
       - model: authentik_policies.policybinding
@@ -1424,8 +1444,9 @@ data:
           slug: "litellm"
         attrs:
           name: "LiteLLM"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/litlellm.svg"
           provider: !KeyOf litellm-provider
-          group: "AI"
+          group: "Kubernetes"
           meta_launch_url: "https://litellm.lan.${CLUSTER_DOMAIN}/ui"
 
       - model: authentik_policies.policybinding
@@ -1505,8 +1526,9 @@ data:
           slug: "llama"
         attrs:
           name: "Llama"
+          icon: "https://assets.web.${CLUSTER_DOMAIN}/icons/ollama.svg"
           provider: !KeyOf llama-provider
-          group: "AI"
+          group: "Local Services"
 
       # Restrict Llama to Llama Users group
       - model: authentik_policies.policybinding
@@ -1575,8 +1597,9 @@ data:
           slug: "openclaw"
         attrs:
           name: "OpenClaw"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/openclaw.svg"
           provider: !KeyOf openclaw-provider
-          group: "AI"
+          group: "Local Services"
 
       - model: authentik_policies.policybinding
         identifiers:
@@ -1658,8 +1681,9 @@ data:
           slug: "tautulli"
         attrs:
           name: "Tautulli"
+          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/tautulli.svg"
           provider: !KeyOf tautulli-provider
-          group: "Media"
+          group: "Kubernetes"
 
       # Restrict access to Tautulli users
       - model: authentik_policies.policybinding
@@ -1793,7 +1817,7 @@ data:
         attrs:
           name: "LDAP"
           provider: !KeyOf ldap-provider
-          group: "Security"
+          group: "Kubernetes"
           policy_engine_mode: "any"
 
       # LDAP outpost
