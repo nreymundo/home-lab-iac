@@ -220,13 +220,13 @@ spec:
         - name: TAUTULLI_BASIC_AUTH_USER
           valueFrom:
             secretKeyRef:
-              name: tautulli-basic-auth-secret
+              name: tautulli-basic-auth-pbk-secret
               key: USERNAME
         - name: TAUTULLI_BASIC_AUTH_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: tautulli-basic-auth-secret
-              key: PASSWORD
+              name: tautulli-basic-auth-pbk-secret
+              key: PBK
 
         # Blueprint variables
         - name: AK_BLUEPRINT_USERNAME
@@ -284,6 +284,8 @@ spec:
 
     server:
       replicas: 2
+      deploymentAnnotations:
+        secret.reloader.stakater.com/reload: tautulli-basic-auth-pbk-secret
       resources:
         requests:
           cpu: 100m
@@ -318,6 +320,8 @@ spec:
 
     worker:
       replicas: 2
+      deploymentAnnotations:
+        secret.reloader.stakater.com/reload: tautulli-basic-auth-pbk-secret
       resources:
         requests:
           cpu: 500m
