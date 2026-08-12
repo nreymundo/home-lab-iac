@@ -14,12 +14,6 @@ autoinstall:
     layout: us
   timezone: Europe/Berlin
 
-  network:
-    version: 2
-    ethernets:
-      ens18:
-        dhcp4: true
-
   storage:
     layout:
       name: lvm
@@ -53,5 +47,8 @@ autoinstall:
     - curtin in-target --target=/target -- systemctl enable qemu-guest-agent  # enable qga
     - curtin in-target --target=/target -- sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config  # enforce key-only
     - curtin in-target --target=/target -- sed -i 's/^PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config  # enforce key-only
+
+    - curtin in-target --target=/target -- sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/ s/"$/ net.ifnames=0"/' /etc/default/grub  # use eth0 for cloned guests while preserving existing kernel args
+    - curtin in-target --target=/target -- update-grub  # apply the updated kernel command line
 
   shutdown: reboot

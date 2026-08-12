@@ -46,9 +46,3 @@ variable "http_directory" {
   default     = "http"
   description = "Directory served by Packer's HTTP server for autoinstall seed files."
 }
-
-variable "ssh_private_key_file" {
-  type        = string
-  default     = "${env("HOME")}/.ssh/id_ed25519"
-  description = "Private SSH key used by Packer to connect to the guest."
-}
