@@ -232,6 +232,16 @@ spec:
             secretKeyRef:
               name: home-assistant-sso-secret
               key: CLIENT_SECRET
+        - name: HERMES_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: hermes-sso-secret
+              key: CLIENT_ID
+        - name: HERMES_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: hermes-sso-secret
+              key: CLIENT_SECRET
         - name: DISCORD_BASIC_AUTH
           valueFrom:
             secretKeyRef:

@@ -171,6 +171,10 @@ spec:
                 icon: emqx.png
                 description: "MQTT broker"
                 href: https://emqx.lan.${CLUSTER_DOMAIN}
+            - Hermes:
+                icon: https://assets.web.${CLUSTER_DOMAIN}/icons/hermes.svg
+                description: "Hermes dashboard"
+                href: https://hermes.lan.${CLUSTER_DOMAIN}
             - Home Assistant:
                 icon: home-assistant.png
                 description: "Home automation server"
