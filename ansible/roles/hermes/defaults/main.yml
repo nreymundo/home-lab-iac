@@ -1,0 +1,33 @@
+---
+# Hermes application and VM operator user.
+hermes_user_name: hermes
+hermes_user_state: present
+hermes_user_home: "/home/{{ hermes_user_name }}"
+hermes_user_shell: /bin/bash
+hermes_xdg_directories:
+  - Desktop
+  - Documents
+  - Downloads
+  - Music
+  - Pictures
+  - Public
+  - Templates
+  - Videos
+
+# NOPASSWD sudoers file granting the hermes operator deliberate full VM control.
+hermes_sudoers_file: /etc/sudoers.d/hermes
+hermes_sudoers_file_mode: "0440"
+
+# Minimal prerequisites for the official native installer.
+hermes_prerequisite_packages:
+  - git
+  - curl
+  - ca-certificates
+
+# Official installer and pinned checkout. The installer URL is upstream-hosted
+# and mutable; the installer pins the resulting checkout to this commit.
+hermes_installer_url: https://hermes-agent.nousresearch.com/install.sh
+hermes_install_commit: 3c27eb6234bf91b8ceee9e9071591b31e9b148cb
+hermes_native_home: "{{ hermes_user_home }}/.hermes"
+hermes_checkout_path: "{{ hermes_native_home }}/hermes-agent"
+hermes_binary_path: "{{ hermes_user_home }}/.local/bin/hermes"

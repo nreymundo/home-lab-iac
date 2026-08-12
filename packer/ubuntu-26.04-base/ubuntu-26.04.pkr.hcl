@@ -24,10 +24,11 @@ locals {
   network_bridge       = "vmbr0"
   network_firewall     = false
   cloud_init_storage   = "ssd-zfs"
-  boot_wait            = "10s"
+  boot_wait            = "30s"
+  boot_key_interval    = "100ms"
   boot_command = [
     "<wait>c<wait>",
-    "linux /casper/vmlinuz autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---",
+    "linux /casper/vmlinuz autoinstall ip=dhcp ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---",
     "<enter><wait>",
     "initrd /casper/initrd",
     "<enter><wait>",
@@ -36,6 +37,7 @@ locals {
   ssh_timeout            = "20m"
   ssh_handshake_attempts = 100
   http_directory         = "${path.root}/${var.http_directory}"
+  http_port              = 18080
 
   # VM ID calculation: Ubuntu base (9010) + node number
   distro_base_id = 9010
@@ -86,14 +88,18 @@ source "proxmox-iso" "ubuntu-base-pve1" {
     iso_file = "${var.iso_storage_pool}:iso/${var.iso_name}"
     unmount  = true
   }
-  boot_wait              = local.boot_wait
-  boot_command           = local.boot_command
-  ssh_username           = "ubuntu"
-  ssh_private_key_file   = var.ssh_private_key_file
-  ssh_timeout            = local.ssh_timeout
-  ssh_handshake_attempts = local.ssh_handshake_attempts
-  http_directory         = local.http_directory
-  qemu_agent             = true
+  boot_wait                    = local.boot_wait
+  boot_key_interval            = local.boot_key_interval
+  boot_command                 = local.boot_command
+  ssh_username                 = "ubuntu"
+  ssh_agent_auth               = true
+  ssh_disable_agent_forwarding = true
+  ssh_timeout                  = local.ssh_timeout
+  ssh_handshake_attempts       = local.ssh_handshake_attempts
+  http_directory               = local.http_directory
+  http_port_min                = local.http_port
+  http_port_max                = local.http_port
+  qemu_agent                   = true
 }
 
 # ------------------------------------------------------------------------------
@@ -138,14 +144,18 @@ source "proxmox-iso" "ubuntu-base-pve2" {
     iso_file = "${var.iso_storage_pool}:iso/${var.iso_name}"
     unmount  = true
   }
-  boot_wait              = local.boot_wait
-  boot_command           = local.boot_command
-  ssh_username           = "ubuntu"
-  ssh_private_key_file   = var.ssh_private_key_file
-  ssh_timeout            = local.ssh_timeout
-  ssh_handshake_attempts = local.ssh_handshake_attempts
-  http_directory         = local.http_directory
-  qemu_agent             = true
+  boot_wait                    = local.boot_wait
+  boot_key_interval            = local.boot_key_interval
+  boot_command                 = local.boot_command
+  ssh_username                 = "ubuntu"
+  ssh_agent_auth               = true
+  ssh_disable_agent_forwarding = true
+  ssh_timeout                  = local.ssh_timeout
+  ssh_handshake_attempts       = local.ssh_handshake_attempts
+  http_directory               = local.http_directory
+  http_port_min                = local.http_port
+  http_port_max                = local.http_port
+  qemu_agent                   = true
 }
 
 
@@ -191,14 +201,18 @@ source "proxmox-iso" "ubuntu-base-pve3" {
     iso_file = "${var.iso_storage_pool}:iso/${var.iso_name}"
     unmount  = true
   }
-  boot_wait              = local.boot_wait
-  boot_command           = local.boot_command
-  ssh_username           = "ubuntu"
-  ssh_private_key_file   = var.ssh_private_key_file
-  ssh_timeout            = local.ssh_timeout
-  ssh_handshake_attempts = local.ssh_handshake_attempts
-  http_directory         = local.http_directory
-  qemu_agent             = true
+  boot_wait                    = local.boot_wait
+  boot_key_interval            = local.boot_key_interval
+  boot_command                 = local.boot_command
+  ssh_username                 = "ubuntu"
+  ssh_agent_auth               = true
+  ssh_disable_agent_forwarding = true
+  ssh_timeout                  = local.ssh_timeout
+  ssh_handshake_attempts       = local.ssh_handshake_attempts
+  http_directory               = local.http_directory
+  http_port_min                = local.http_port
+  http_port_max                = local.http_port
+  qemu_agent                   = true
 }
 
 

@@ -16,7 +16,6 @@ resources:
   - middlewares/discord-auth-chain.yaml
   - middlewares/kopia-auth-chain.yaml
   - middlewares/llama-auth-chain.yaml
-  - middlewares/openclaw-auth-chain.yaml
   - middlewares/opencode-buffering.yaml
   - middlewares/opencode-streaming-headers.yaml
   - middlewares/opencode-chain.yaml
