@@ -1,0 +1,40 @@
+---
+# Hand-maintained group variables for Hermes VMs.
+# The hermes_vms inventory group and its hosts are Terraform-generated output;
+# this file only supplies Ansible-side configuration and must not define hosts.
+
+# Docker: enabled, targeting the hermes login user.
+docker_install_enabled: true
+docker_users:
+  - hermes
+
+# Homebrew: install for the hermes login user without installing formulae.
+homebrew_install_enabled: true
+homebrew_user: hermes
+homebrew_brew_packages: []
+
+# UFW: default deny inbound, allow outbound, permit SSH plus authenticated
+# Hermes API and dashboard access from every known LAN subnet. No platform
+# webhook listener is enabled yet.
+ufw_install_enabled: true
+ufw_enabled: true
+ufw_allow_ssh: true
+ufw_default_incoming_policy: deny
+ufw_default_outgoing_policy: allow
+ufw_inbound_rules:
+  - port: "8642"
+    proto: tcp
+    from_ip: 192.168.0.0/16
+    comment: Hermes API from 192.168 LANs
+  - port: "8642"
+    proto: tcp
+    from_ip: 10.1.40.0/24
+    comment: Hermes API from 10.1.40 LAN
+  - port: "9119"
+    proto: tcp
+    from_ip: 192.168.0.0/16
+    comment: Hermes dashboard from 192.168 LANs
+  - port: "9119"
+    proto: tcp
+    from_ip: 10.1.40.0/24
+    comment: Hermes dashboard from 10.1.40 LAN
