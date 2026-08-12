@@ -17,7 +17,7 @@ spec:
             image:
               # renovate: datasource=docker depName=berriai/litellm registryUrl=https://ghcr.io
               repository: ghcr.io/berriai/litellm
-              tag: v1.93.0
+              tag: v1.96.2
             command:
               - /bin/sh
               - -lc
@@ -85,7 +85,7 @@ spec:
             image:
               # renovate: datasource=docker depName=berriai/litellm registryUrl=https://ghcr.io
               repository: ghcr.io/berriai/litellm
-              tag: v1.93.0
+              tag: v1.96.2
             env:
               TZ: Europe/Berlin
               PYTHONPATH: /opt/headroom:/etc/litellm
@@ -292,9 +292,6 @@ spec:
                 readOnly: true
               - path: /etc/litellm/vllm_model_discovery.py
                 subPath: vllm_model_discovery.py
-                readOnly: true
-              - path: /etc/litellm/chatgpt_responses_streaming_patch.py
-                subPath: chatgpt_responses_streaming_patch.py
                 readOnly: true
               - path: /etc/litellm/chatgpt_codex_catalog.py
                 subPath: chatgpt_codex_catalog.py
