@@ -17,7 +17,7 @@ terraform {
 
   backend "s3" {
     bucket                      = "terraform"
-    key                         = "states/openclaw-vm/terraform.tfstate"
+    key                         = "states/hermes-vm/terraform.tfstate"
     use_path_style              = true
     use_lockfile                = true
     skip_credentials_validation = true

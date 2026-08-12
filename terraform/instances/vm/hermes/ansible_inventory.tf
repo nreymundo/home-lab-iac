@@ -1,5 +1,5 @@
 resource "local_file" "ansible_inventory" {
-  filename = abspath("${path.module}/../../../../ansible/inventories/openclaw.yml")
+  filename = abspath("${path.module}/../../../../ansible/inventories/hermes.yml")
 
   content = join("", [
     "---\n",
@@ -8,7 +8,7 @@ resource "local_file" "ansible_inventory" {
     yamlencode({
       all = {
         children = {
-          openclaw_vms = {
+          hermes_vms = {
             hosts = {
               (module.proxmox_vms.vms[0].name) = {
                 ansible_host = module.proxmox_vms.vms[0].ip_address
