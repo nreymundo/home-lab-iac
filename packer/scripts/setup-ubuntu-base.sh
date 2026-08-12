@@ -71,6 +71,8 @@ echo "==> 6. Cleanup"
 apt-get autoremove -y
 apt-get clean
 rm -rf /var/lib/apt/lists/*
+# Force the first package task on a clone to refresh the deleted APT indexes.
+rm -f /var/lib/apt/periodic/update-success-stamp
 rm -rf /tmp/*
 rm -rf /var/tmp/*
 
