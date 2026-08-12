@@ -1879,6 +1879,17 @@ data:
       labels:
         blueprints.goauthentik.io/instantiate: "true"
     entries:
+      # Hermes Users group
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "Hermes Users"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
+
       # OAuth2/OIDC Provider for Hermes Remote
       - model: authentik_providers_oauth2.oauth2provider
         id: hermes-provider
@@ -1913,6 +1924,14 @@ data:
           icon: https://assets.web.${CLUSTER_DOMAIN}/icons/hermes.svg
           provider: !KeyOf hermes-provider
           group: "Local Services"
+
+      # Restrict access to Hermes Users
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "hermes"]]
+          order: 0
+        attrs:
+          group: !Find [authentik_core.group, [name, "Hermes Users"]]
 
   900-ldap.yaml: |
     version: 1
