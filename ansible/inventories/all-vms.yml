@@ -4,5 +4,4 @@ all:
     all_vms:
       children:
         hermes_vms: {}
-        openclaw_vms: {}
         k3s_nodes: {}
