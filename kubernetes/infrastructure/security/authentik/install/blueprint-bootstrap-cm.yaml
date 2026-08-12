@@ -1787,76 +1787,6 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Llama Users"]]
 
-  530-openclaw.yaml: |
-    version: 1
-    metadata:
-      name: openclaw-sso
-      labels:
-        blueprints.goauthentik.io/instantiate: "true"
-    entries:
-      - model: authentik_core.group
-        state: present
-        identifiers:
-          name: "OpenClaw"
-        attrs:
-          is_superuser: false
-          parent: null
-          users:
-            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
-
-      - model: authentik_providers_oauth2.scopemapping
-        state: present
-        id: openclaw-gateway-password-mapping
-        identifiers:
-          name: "OpenClaw Gateway Password Mapping"
-        attrs:
-          scope_name: openclaw-gateway-password
-          description: "Injects the OpenClaw gateway password header"
-          expression: |
-            import os
-            gateway_password = os.environ.get("OPENCLAW_GATEWAY_PASSWORD", "")
-            headers = {}
-            if gateway_password:
-                headers["X-Gateway-Password"] = gateway_password
-            return {
-                "ak_proxy": {
-                    "user_attributes": {
-                        "additionalHeaders": headers
-                    }
-                }
-            }
-
-      - model: authentik_providers_proxy.proxyprovider
-        id: openclaw-provider
-        identifiers:
-          name: "OpenClaw"
-        attrs:
-          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
-          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
-          mode: forward_single
-          external_host: "https://openclaw.lan.${CLUSTER_DOMAIN}"
-          access_token_validity: "hours=24"
-          refresh_token_validity: "days=30"
-          property_mappings:
-            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, "ak-proxy"]]
-            - !KeyOf openclaw-gateway-password-mapping
-
-      - model: authentik_core.application
-        identifiers:
-          slug: "openclaw"
-        attrs:
-          name: "OpenClaw"
-          icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/openclaw.svg"
-          provider: !KeyOf openclaw-provider
-          group: "Local Services"
-
-      - model: authentik_policies.policybinding
-        identifiers:
-          target: !Find [authentik_core.application, [slug, "openclaw"]]
-          order: 0
-        attrs:
-          group: !Find [authentik_core.group, [name, "OpenClaw"]]
-
   540-tautulli.yaml: |
     version: 1
     metadata:
@@ -2134,7 +2064,6 @@ data:
             - !Find [authentik_providers_proxy.proxyprovider, [name, "Discord Alternate"]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, "Kopia"]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, "Llama"]]
-            - !Find [authentik_providers_proxy.proxyprovider, [name, "OpenClaw"]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, "Tautulli"]]
           config:
             authentik_host: "http://authentik-server.authentik.svc.cluster.local"

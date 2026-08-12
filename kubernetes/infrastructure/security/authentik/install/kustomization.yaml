@@ -31,5 +31,4 @@ resources:
   - kopia-auth-secret.sops.yaml
   - llama-auth-secret.sops.yaml
   - frigate-proxy-secret.sops.yaml
-  - openclaw-gateway-secret.sops.yaml
   - tautulli-basic-auth-pbk-secret.sops.yaml
