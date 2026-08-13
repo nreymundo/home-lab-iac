@@ -19,6 +19,7 @@ spec:
             env:
               TZ: Europe/Berlin
               HINDSIGHT_ENABLE_API: "true"
+              HINDSIGHT_API_WORKER_ENABLED: "false"
               HINDSIGHT_ENABLE_CP: "false"
               HINDSIGHT_API_DATABASE_URL:
                 valueFrom:
@@ -69,7 +70,7 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /health/live
+                    path: /health
                     port: 8888
                   initialDelaySeconds: 30
                   periodSeconds: 15
@@ -91,7 +92,7 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /health/live
+                    path: /health
                     port: 8888
                   periodSeconds: 5
                   timeoutSeconds: 5
@@ -141,7 +142,7 @@ spec:
               HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
               HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
               HINDSIGHT_API_WORKER_ID: hindsight-worker-1
-              HINDSIGHT_API_WORKER_MAX_SLOTS: "1"
+              HINDSIGHT_API_WORKER_MAX_SLOTS: "4"
               HINDSIGHT_API_WORKER_POLL_INTERVAL_MS: "500"
               HINDSIGHT_API_WORKER_MAX_RETRIES: "3"
               HINDSIGHT_API_LLM_API_KEY:
