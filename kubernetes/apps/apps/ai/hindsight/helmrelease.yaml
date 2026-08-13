@@ -48,18 +48,18 @@ spec:
               HINDSIGHT_API_LLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
-                    name: litellm-secrets
-                    key: LITELLM_MASTER_KEY
+                    name: hindsight-secrets
+                    key: LITELLM_API_KEY
               HINDSIGHT_API_EMBEDDINGS_LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
-                    name: litellm-secrets
-                    key: LITELLM_MASTER_KEY
+                    name: hindsight-secrets
+                    key: LITELLM_API_KEY
               HINDSIGHT_API_RERANKER_LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
-                    name: litellm-secrets
-                    key: LITELLM_MASTER_KEY
+                    name: hindsight-secrets
+                    key: LITELLM_API_KEY
             ports:
               - name: http
                 containerPort: 8888
@@ -147,18 +147,18 @@ spec:
               HINDSIGHT_API_LLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
-                    name: litellm-secrets
-                    key: LITELLM_MASTER_KEY
+                    name: hindsight-secrets
+                    key: LITELLM_API_KEY
               HINDSIGHT_API_EMBEDDINGS_LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
-                    name: litellm-secrets
-                    key: LITELLM_MASTER_KEY
+                    name: hindsight-secrets
+                    key: LITELLM_API_KEY
               HINDSIGHT_API_RERANKER_LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
-                    name: litellm-secrets
-                    key: LITELLM_MASTER_KEY
+                    name: hindsight-secrets
+                    key: LITELLM_API_KEY
             ports:
               - name: http
                 containerPort: 8889
@@ -281,11 +281,6 @@ spec:
       control-plane:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: hindsight.lan.${CLUSTER_DOMAIN}
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: Hindsight
-          gethomepage.dev/description: Agent memory dashboard
-          gethomepage.dev/group: AI
-          gethomepage.dev/icon: hindsight.png
         hosts:
           - host: hindsight.lan.${CLUSTER_DOMAIN}
             paths:

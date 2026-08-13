@@ -6,4 +6,5 @@ components:
 resources:
   - cnpg-cluster.yaml
   - hindsight-db-secrets.sops.yaml
+  - hindsight-secrets.sops.yaml
   - helmrelease.yaml
