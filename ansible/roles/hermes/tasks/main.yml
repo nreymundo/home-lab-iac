@@ -8,28 +8,13 @@
     fail_msg: "Hermes role currently supports only Debian-family hosts"
     quiet: true
 
-- name: Validate Hermes role inputs
-  ansible.builtin.assert:
-    that:
-      - hermes_user_name | length > 0
-      - hermes_user_home | length > 0
-      - hermes_user_shell | length > 0
-      - hermes_sudoers_file | length > 0
-      - hermes_prerequisite_packages | length > 0
-      - hermes_installer_url == 'https://hermes-agent.nousresearch.com/install.sh'
-      - hermes_install_commit == '3c27eb6234bf91b8ceee9e9071591b31e9b148cb'
-      - hermes_native_home == hermes_user_home + '/.hermes'
-      - hermes_checkout_path == hermes_native_home + '/hermes-agent'
-      - hermes_binary_path == hermes_user_home + '/.local/bin/hermes'
-    fail_msg: "Hermes role inputs must retain the approved native installation settings"
-    quiet: true
-
 - name: Install native Hermes installer prerequisites
   ansible.builtin.apt:
     name: "{{ hermes_prerequisite_packages }}"
     state: present
     update_cache: true
     cache_valid_time: 3600
+  notify: Restart Hermes gateway
 
 - name: Ensure hermes user exists
   ansible.builtin.user:
@@ -77,48 +62,19 @@
     path: "{{ hermes_binary_path }}"
   register: hermes_binary_stat
 
-- name: Read the commit of an existing native Hermes checkout
-  ansible.builtin.command:
-    argv:
-      - git
-      - -C
-      - "{{ hermes_checkout_path }}"
-      - rev-parse
-      - --verify
-      - HEAD
-  become: true
-  become_user: "{{ hermes_user_name }}"
-  environment:
-    HOME: "{{ hermes_user_home }}"
-  register: hermes_existing_commit
-  changed_when: false
-  failed_when: false
-  when: hermes_checkout_stat.stat.exists
-
-- name: Refuse an existing native Hermes checkout at another commit
-  ansible.builtin.assert:
-    that:
-      - not hermes_checkout_stat.stat.exists or
-        (hermes_existing_commit.rc | default(1) == 0 and
-        hermes_existing_commit.stdout | default('') | trim == hermes_install_commit)
-    fail_msg: >-
-      Existing Hermes git checkout at {{ hermes_checkout_path }} is not the approved
-      git commit {{ hermes_install_commit }}; refusing to change it.
-    quiet: true
-
-- name: Refuse an unverified native Hermes binary
+- name: Refuse an orphan native Hermes binary
   ansible.builtin.assert:
     that:
       - hermes_checkout_stat.stat.exists or not hermes_binary_stat.stat.exists
     fail_msg: >-
-      Hermes binary {{ hermes_binary_path }} exists without its git checkout at
-      {{ hermes_checkout_path }}; refusing to replace an unverified native install.
+      Hermes binary {{ hermes_binary_path }} exists without its native checkout at
+      {{ hermes_checkout_path }}; refusing to replace an existing native install.
     quiet: true
 
-- name: Install native Hermes with the official pinned installer
+- name: Install native Hermes with the official installer
   ansible.builtin.shell: |
     set -o pipefail
-    curl -fsSL {{ hermes_installer_url }} | bash -s -- --commit {{ hermes_install_commit }} --skip-setup --non-interactive
+    curl -fsSL {{ hermes_installer_url }} | bash -s -- --skip-setup --non-interactive
   register: hermes_install_run
   changed_when: hermes_install_run.rc == 0
   args:
@@ -130,39 +86,89 @@
   when:
     - not ansible_check_mode
     - not hermes_binary_stat.stat.exists
-
-- name: Verify native Hermes checkout commit
-  ansible.builtin.command:
-    argv:
-      - git
-      - -C
-      - "{{ hermes_checkout_path }}"
-      - rev-parse
-      - --verify
-      - HEAD
-  become: true
-  become_user: "{{ hermes_user_name }}"
-  environment:
-    HOME: "{{ hermes_user_home }}"
-  register: hermes_verified_commit
-  changed_when: false
-  failed_when: false
-  when: not ansible_check_mode
+    - not hermes_checkout_stat.stat.exists
+  notify:
+    - Restart Hermes gateway
+    - Restart Hermes dashboard
 
 - name: Recheck native Hermes binary after installation
   ansible.builtin.stat:
     path: "{{ hermes_binary_path }}"
   register: hermes_verified_binary
-  when: not ansible_check_mode
+  when:
+    - not ansible_check_mode
+    - hermes_install_run is changed
+    - not hermes_checkout_stat.stat.exists
 
-- name: Verify native Hermes installation is complete and pinned
+- name: Verify native Hermes binary exists after fresh installation
   ansible.builtin.assert:
     that:
-      - hermes_verified_commit.rc == 0
-      - hermes_verified_commit.stdout | trim == hermes_install_commit
       - hermes_verified_binary.stat.exists
     fail_msg: >-
-      Native Hermes installation is incomplete or is not git commit
-      {{ hermes_install_commit }} at {{ hermes_checkout_path }}.
+      Native Hermes installation did not create the expected binary at
+      {{ hermes_binary_path }}.
     quiet: true
+  when:
+    - not ansible_check_mode
+    - hermes_install_run is changed
+    - not hermes_checkout_stat.stat.exists
+
+- name: Mark native Hermes installation as verified
+  ansible.builtin.set_fact:
+    hermes_install_verified: true
+  when: not ansible_check_mode
+
+- name: Install Hermes gateway systemd unit
+  ansible.builtin.template:
+    src: hermes-gateway.service.j2
+    dest: "/etc/systemd/system/{{ hermes_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Hermes gateway
+
+- name: Enable and start Hermes gateway service
+  ansible.builtin.systemd_service:
+    name: "{{ hermes_service_name }}"
+    state: "{{ hermes_service_state }}"
+    enabled: "{{ hermes_service_enabled }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Inspect legacy Hermes serve systemd unit
+  ansible.builtin.stat:
+    path: /etc/systemd/system/hermes-serve.service
+  register: hermes_legacy_serve_unit
+
+- name: Stop and disable legacy Hermes serve service
+  ansible.builtin.systemd_service:
+    name: hermes-serve
+    state: stopped
+    enabled: false
+    daemon_reload: true
+  when:
+    - not ansible_check_mode
+    - hermes_legacy_serve_unit.stat.exists
+
+- name: Remove legacy Hermes serve systemd unit
+  ansible.builtin.file:
+    path: /etc/systemd/system/hermes-serve.service
+    state: absent
+  when: hermes_legacy_serve_unit.stat.exists
+
+- name: Install Hermes dashboard systemd unit
+  ansible.builtin.template:
+    src: hermes-dashboard.service.j2
+    dest: "/etc/systemd/system/{{ hermes_dashboard_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Hermes dashboard
+
+- name: Enable and start Hermes dashboard service
+  ansible.builtin.systemd_service:
+    name: "{{ hermes_dashboard_service_name }}"
+    state: "{{ hermes_dashboard_service_state }}"
+    enabled: "{{ hermes_dashboard_service_enabled }}"
+    daemon_reload: true
   when: not ansible_check_mode
