@@ -280,9 +280,7 @@ spec:
                 service:
                   identifier: api
                   port: api
-      control-plane:
-        enabled: true
-        className: traefik
+      main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: hindsight.lan.${CLUSTER_DOMAIN}
         hosts:
