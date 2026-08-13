@@ -10,6 +10,7 @@ hermes_xdg_directories:
   - Downloads
   - Music
   - Pictures
+  - Projects
   - Public
   - Templates
   - Videos
@@ -24,10 +25,22 @@ hermes_prerequisite_packages:
   - curl
   - ca-certificates
 
-# Official installer and pinned checkout. The installer URL is upstream-hosted
-# and mutable; the installer pins the resulting checkout to this commit.
+# Official installer. Fresh installations use the upstream default branch at
+# install time.
 hermes_installer_url: https://hermes-agent.nousresearch.com/install.sh
-hermes_install_commit: 3c27eb6234bf91b8ceee9e9071591b31e9b148cb
 hermes_native_home: "{{ hermes_user_home }}/.hermes"
 hermes_checkout_path: "{{ hermes_native_home }}/hermes-agent"
 hermes_binary_path: "{{ hermes_user_home }}/.local/bin/hermes"
+hermes_environment_file: "{{ hermes_native_home }}/.env"
+
+# System-level gateway service.
+hermes_service_name: hermes-gateway
+hermes_service_enabled: true
+hermes_service_state: started
+
+# System-level Hermes dashboard service.
+hermes_dashboard_service_name: hermes-dashboard
+hermes_dashboard_service_enabled: true
+hermes_dashboard_service_state: started
+hermes_dashboard_host: 0.0.0.0
+hermes_dashboard_port: 9119

@@ -1,0 +1,18 @@
+[Unit]
+Description=Hermes dashboard
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User={{ hermes_user_name }}
+Group={{ hermes_user_name }}
+Environment=HOME={{ hermes_user_home }}
+Environment=HERMES_HOME={{ hermes_native_home }}
+EnvironmentFile=-{{ hermes_environment_file }}
+ExecStart={{ hermes_binary_path }} dashboard --host {{ hermes_dashboard_host }} --port {{ hermes_dashboard_port }} --no-open
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

@@ -85,3 +85,8 @@ local
 
 # Local agent planning artifacts
 .sisyphus/
+
+# BEGIN oh-my-opencode-slim worktrees
+.slim/worktrees/
+.slim/worktrees.json
+# END oh-my-opencode-slim worktrees
