@@ -299,6 +299,10 @@ spec:
                 icon: grafana.png
                 description: "Dashboards"
                 href: https://grafana.lan.${CLUSTER_DOMAIN}
+            - Hindsight:
+                icon: hindsight.png
+                description: "Agent memory dashboard"
+                href: https://hindsight.lan.${CLUSTER_DOMAIN}
             - Immich:
                 icon: immich.png
                 description: "Photo management and backup"
