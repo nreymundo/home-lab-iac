@@ -28,6 +28,7 @@ resources:
   - ../apps/media/prowlarr
   - ../apps/development/gitea
   - ../apps/ai/sillytavern
+  - ../apps/ai/hindsight
   - ../apps/ai/vane
   - ../apps/ai/litellm
   - ../apps/security/frigate

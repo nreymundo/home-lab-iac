@@ -1,0 +1,295 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: hindsight
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      api:
+        containers:
+          api:
+            image:
+              # renovate: datasource=docker depName=vectorize-io/hindsight-api registryUrl=https://ghcr.io
+              repository: ghcr.io/vectorize-io/hindsight-api
+              tag: 0.9.0-slim
+            env:
+              TZ: Europe/Berlin
+              HINDSIGHT_ENABLE_API: "true"
+              HINDSIGHT_ENABLE_CP: "false"
+              HINDSIGHT_API_DATABASE_URL:
+                valueFrom:
+                  secretKeyRef:
+                    name: hindsight-db-secrets
+                    key: DATABASE_URL
+              HINDSIGHT_API_RUN_MIGRATIONS_ON_STARTUP: "true"
+              HINDSIGHT_API_DATABASE_BACKEND: postgresql
+              HINDSIGHT_API_VECTOR_EXTENSION: vchord
+              HINDSIGHT_API_LLM_PROVIDER: openai
+              HINDSIGHT_API_LLM_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
+              HINDSIGHT_API_LLM_MODEL: zai-coding/glm-5-turbo
+              HINDSIGHT_API_LLM_STRICT_SCHEMA: "false"
+              HINDSIGHT_API_LLM_EXTRA_BODY: '{"allowed_openai_params":["response_format","tools","tool_choice"]}'
+              HINDSIGHT_API_LLM_MAX_CONCURRENT: "1"
+              HINDSIGHT_API_RETAIN_LLM_MAX_CONCURRENT: "1"
+              HINDSIGHT_API_REFLECT_LLM_MAX_CONCURRENT: "1"
+              HINDSIGHT_API_CONSOLIDATION_LLM_MAX_CONCURRENT: "1"
+              HINDSIGHT_API_EMBEDDINGS_PROVIDER: litellm
+              HINDSIGHT_API_EMBEDDINGS_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000
+              HINDSIGHT_API_EMBEDDINGS_LITELLM_MODEL: local/embedding
+              HINDSIGHT_API_RERANKER_PROVIDER: litellm
+              HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000
+              HINDSIGHT_API_RERANKER_LITELLM_MODEL: local/rerank
+              HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
+              HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
+              HINDSIGHT_API_LLM_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm-secrets
+                    key: LITELLM_MASTER_KEY
+              HINDSIGHT_API_EMBEDDINGS_LITELLM_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm-secrets
+                    key: LITELLM_MASTER_KEY
+              HINDSIGHT_API_RERANKER_LITELLM_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm-secrets
+                    key: LITELLM_MASTER_KEY
+            ports:
+              - name: http
+                containerPort: 8888
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health/live
+                    port: 8888
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8888
+                  initialDelaySeconds: 15
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health/live
+                    port: 8888
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 1Gi
+
+      worker:
+        replicas: 1
+        containers:
+          worker:
+            image:
+              # renovate: datasource=docker depName=vectorize-io/hindsight-api registryUrl=https://ghcr.io
+              repository: ghcr.io/vectorize-io/hindsight-api
+              tag: 0.9.0-slim
+            command:
+              - hindsight-worker
+            env:
+              TZ: Europe/Berlin
+              HINDSIGHT_API_DATABASE_URL:
+                valueFrom:
+                  secretKeyRef:
+                    name: hindsight-db-secrets
+                    key: DATABASE_URL
+              HINDSIGHT_API_RUN_MIGRATIONS_ON_STARTUP: "false"
+              HINDSIGHT_API_DATABASE_BACKEND: postgresql
+              HINDSIGHT_API_VECTOR_EXTENSION: vchord
+              HINDSIGHT_API_LLM_PROVIDER: openai
+              HINDSIGHT_API_LLM_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
+              HINDSIGHT_API_LLM_MODEL: zai-coding/glm-5-turbo
+              HINDSIGHT_API_LLM_STRICT_SCHEMA: "false"
+              HINDSIGHT_API_LLM_EXTRA_BODY: '{"allowed_openai_params":["response_format","tools","tool_choice"]}'
+              HINDSIGHT_API_LLM_MAX_CONCURRENT: "1"
+              HINDSIGHT_API_RETAIN_LLM_MAX_CONCURRENT: "1"
+              HINDSIGHT_API_REFLECT_LLM_MAX_CONCURRENT: "1"
+              HINDSIGHT_API_CONSOLIDATION_LLM_MAX_CONCURRENT: "1"
+              HINDSIGHT_API_EMBEDDINGS_PROVIDER: litellm
+              HINDSIGHT_API_EMBEDDINGS_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000
+              HINDSIGHT_API_EMBEDDINGS_LITELLM_MODEL: local/embedding
+              HINDSIGHT_API_RERANKER_PROVIDER: litellm
+              HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000
+              HINDSIGHT_API_RERANKER_LITELLM_MODEL: local/rerank
+              HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
+              HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
+              HINDSIGHT_API_WORKER_ID: hindsight-worker-1
+              HINDSIGHT_API_WORKER_MAX_SLOTS: "1"
+              HINDSIGHT_API_WORKER_POLL_INTERVAL_MS: "500"
+              HINDSIGHT_API_WORKER_MAX_RETRIES: "3"
+              HINDSIGHT_API_LLM_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm-secrets
+                    key: LITELLM_MASTER_KEY
+              HINDSIGHT_API_EMBEDDINGS_LITELLM_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm-secrets
+                    key: LITELLM_MASTER_KEY
+              HINDSIGHT_API_RERANKER_LITELLM_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm-secrets
+                    key: LITELLM_MASTER_KEY
+            ports:
+              - name: http
+                containerPort: 8889
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8889
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8889
+                  initialDelaySeconds: 15
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8889
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 1Gi
+
+      control-plane:
+        containers:
+          control-plane:
+            image:
+              # renovate: datasource=docker depName=vectorize-io/hindsight-control-plane registryUrl=https://ghcr.io
+              repository: ghcr.io/vectorize-io/hindsight-control-plane
+              tag: 0.9.0
+            env:
+              TZ: Europe/Berlin
+              HINDSIGHT_ENABLE_API: "false"
+              HINDSIGHT_ENABLE_CP: "true"
+              HINDSIGHT_CP_PORT: "9999"
+              HINDSIGHT_CP_DATAPLANE_API_URL: http://hindsight-api:8888
+            ports:
+              - name: http
+                containerPort: 9999
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 9999
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 9999
+                  initialDelaySeconds: 15
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 9999
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+
+    service:
+      api:
+        controller: api
+        ports:
+          api:
+            port: 8888
+      control-plane:
+        controller: control-plane
+        ports:
+          http:
+            port: 9999
+
+    ingress:
+      api:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: hindsight-api.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: hindsight-api.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: api
+                  port: api
+      control-plane:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: hindsight.lan.${CLUSTER_DOMAIN}
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Hindsight
+          gethomepage.dev/description: Agent memory dashboard
+          gethomepage.dev/group: AI
+          gethomepage.dev/icon: hindsight.png
+        hosts:
+          - host: hindsight.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: control-plane
+                  port: http
