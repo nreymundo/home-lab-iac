@@ -269,6 +269,8 @@ spec:
 
     ingress:
       api:
+        enabled: true
+        className: traefik
         annotations:
           external-dns.alpha.kubernetes.io/hostname: hindsight-api.lan.${CLUSTER_DOMAIN}
         hosts:
@@ -279,6 +281,8 @@ spec:
                   identifier: api
                   port: api
       control-plane:
+        enabled: true
+        className: traefik
         annotations:
           external-dns.alpha.kubernetes.io/hostname: hindsight.lan.${CLUSTER_DOMAIN}
         hosts:
