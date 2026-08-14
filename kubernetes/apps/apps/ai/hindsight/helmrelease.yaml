@@ -15,7 +15,7 @@ spec:
             image:
               # renovate: datasource=docker depName=vectorize-io/hindsight-api registryUrl=https://ghcr.io
               repository: ghcr.io/vectorize-io/hindsight-api
-              tag: 0.9.0-slim
+              tag: 0.9.1-slim
             env:
               TZ: Europe/Berlin
               HINDSIGHT_ENABLE_API: "true"
@@ -112,7 +112,7 @@ spec:
             image:
               # renovate: datasource=docker depName=vectorize-io/hindsight-api registryUrl=https://ghcr.io
               repository: ghcr.io/vectorize-io/hindsight-api
-              tag: 0.9.0-slim
+              tag: 0.9.1-slim
             command:
               - hindsight-worker
             env:
