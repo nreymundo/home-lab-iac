@@ -963,7 +963,7 @@ data:
           slug: "homepage"
         attrs:
           name: "Homepage"
-          icon: "https://assets.web.lainternetdelpantano.${CLUSTER_DOMAIN}/icons/homepage.svg"
+          icon: "https://assets.web.${CLUSTER_DOMAIN}/icons/homepage.svg"
           provider: !KeyOf homepage-provider
           group: "Kubernetes"
 
