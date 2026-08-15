@@ -1169,6 +1169,8 @@ data:
         attrs:
           is_superuser: false
           parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_USER2_USERNAME]]
 
   261-proxmox.yaml: |
     version: 1
