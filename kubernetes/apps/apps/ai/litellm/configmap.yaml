@@ -17,9 +17,15 @@ data:
           max_input_tokens: 372000
         litellm_params:
           model: chatgpt/gpt-5.6-terra
-          # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
-          input_cost_per_token: 0.0000025
-          output_cost_per_token: 0.000015
+          # OpenAI API Standard pricing, in USD/token.
+          input_cost_per_token: 0.000002
+          output_cost_per_token: 0.000012
+          cache_read_input_token_cost: 0.0000002
+          cache_creation_input_token_cost: 0.0000025
+          input_cost_per_token_above_272k_tokens: 0.000004
+          cache_read_input_token_cost_above_272k_tokens: 0.0000004
+          cache_creation_input_token_cost_above_272k_tokens: 0.000005
+          output_cost_per_token_above_272k_tokens: 0.000018
 
       - model_name: openai/gpt-5.6-sol
         model_info:
@@ -27,9 +33,15 @@ data:
           max_input_tokens: 372000
         litellm_params:
           model: chatgpt/gpt-5.6-sol
-          # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
+          # OpenAI API Standard pricing, in USD/token.
           input_cost_per_token: 0.000005
           output_cost_per_token: 0.00003
+          cache_read_input_token_cost: 0.0000005
+          cache_creation_input_token_cost: 0.00000625
+          input_cost_per_token_above_272k_tokens: 0.00001
+          cache_read_input_token_cost_above_272k_tokens: 0.000001
+          cache_creation_input_token_cost_above_272k_tokens: 0.0000125
+          output_cost_per_token_above_272k_tokens: 0.000045
 
       - model_name: openai/gpt-5.6-luna
         model_info:
@@ -37,9 +49,15 @@ data:
           max_input_tokens: 372000
         litellm_params:
           model: chatgpt/gpt-5.6-luna
-          # Synthetic OpenAI API-equivalent Standard pricing, in USD/token.
-          input_cost_per_token: 0.000001
-          output_cost_per_token: 0.000006
+          # OpenAI API Standard pricing, in USD/token.
+          input_cost_per_token: 0.0000002
+          output_cost_per_token: 0.0000012
+          cache_read_input_token_cost: 0.00000002
+          cache_creation_input_token_cost: 0.00000025
+          input_cost_per_token_above_272k_tokens: 0.0000004
+          cache_read_input_token_cost_above_272k_tokens: 0.00000004
+          cache_creation_input_token_cost_above_272k_tokens: 0.0000005
+          output_cost_per_token_above_272k_tokens: 0.0000018
 
       - model_name: openai/gpt-5.5
         model_info:
@@ -127,6 +145,29 @@ data:
           input_cost_per_token: 0.0
           output_cost_per_token: 0.0
 
+      - model_name: zai-coding/glm-5.3
+        model_info:
+          mode: chat
+          max_input_tokens: 1000000
+          max_output_tokens: 128000
+          supports_function_calling: true
+          supports_reasoning: true
+          reasoning_options:
+            - type: effort
+              values:
+                - low
+                - high
+                - max
+          default_reasoning_effort: max
+          supports_tool_choice: true
+        litellm_params:
+          model: zai/glm-5.3
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          tags:
+            - zai
+            - coding-plan
+
       - model_name: zai-coding/glm-5.2
         model_info:
           mode: chat
@@ -145,8 +186,9 @@ data:
           model: zai/glm-5.2
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
-          input_cost_per_token: 0.0000012
-          output_cost_per_token: 0.0000041
+          input_cost_per_token: 0.0000014
+          cache_read_input_token_cost: 0.00000026
+          output_cost_per_token: 0.0000044
           tags:
             - zai
             - coding-plan
@@ -166,27 +208,8 @@ data:
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
           input_cost_per_token: 0.0000014
+          cache_read_input_token_cost: 0.00000026
           output_cost_per_token: 0.0000044
-          tags:
-            - zai
-            - coding-plan
-
-      - model_name: zai-coding/glm-5
-        model_info:
-          mode: chat
-          max_input_tokens: 200000
-          max_output_tokens: 128000
-          supports_function_calling: true
-          supports_reasoning: true
-          reasoning_options:
-            - type: toggle
-          supports_tool_choice: true
-        litellm_params:
-          model: zai/glm-5
-          custom_llm_provider: zai
-          litellm_credential_name: zai-coding
-          input_cost_per_token: 0.000001
-          output_cost_per_token: 0.0000032
           tags:
             - zai
             - coding-plan
@@ -206,33 +229,11 @@ data:
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
           input_cost_per_token: 0.0000012
+          cache_read_input_token_cost: 0.00000024
           output_cost_per_token: 0.000004
           tags:
             - zai
             - coding-plan
-
-      - model_name: zai-coding/glm-5v-turbo
-        model_info:
-          mode: chat
-          max_input_tokens: 200000
-          max_output_tokens: 128000
-          supports_function_calling: true
-          supports_image_input: true
-          supports_reasoning: true
-          reasoning_options:
-            - type: toggle
-          supports_tool_choice: true
-          supports_vision: true
-        litellm_params:
-          model: zai/glm-5v-turbo
-          custom_llm_provider: zai
-          litellm_credential_name: zai-coding
-          input_cost_per_token: 0.0000012
-          output_cost_per_token: 0.000004
-          tags:
-            - zai
-            - coding-plan
-            - vision
 
       - model_name: zai-coding/glm-4.7
         model_info:
@@ -249,27 +250,8 @@ data:
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
           input_cost_per_token: 0.0000006
+          cache_read_input_token_cost: 0.00000011
           output_cost_per_token: 0.0000022
-          tags:
-            - zai
-            - coding-plan
-
-      - model_name: zai-coding/glm-4.5-air
-        model_info:
-          mode: chat
-          max_input_tokens: 128000
-          max_output_tokens: 96000
-          supports_function_calling: true
-          supports_reasoning: true
-          reasoning_options:
-            - type: toggle
-          supports_tool_choice: true
-        litellm_params:
-          model: zai/glm-4.5-air
-          custom_llm_provider: zai
-          litellm_credential_name: zai-coding
-          input_cost_per_token: 0.0000002
-          output_cost_per_token: 0.0000011
           tags:
             - zai
             - coding-plan
@@ -665,6 +647,12 @@ data:
             "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
             "input_cost_per_token": 0.000005,
             "output_cost_per_token": 0.00003,
+            "cache_read_input_token_cost": 0.0000005,
+            "cache_creation_input_token_cost": 0.00000625,
+            "input_cost_per_token_above_272k_tokens": 0.00001,
+            "cache_read_input_token_cost_above_272k_tokens": 0.000001,
+            "cache_creation_input_token_cost_above_272k_tokens": 0.0000125,
+            "output_cost_per_token_above_272k_tokens": 0.000045,
         },
         "gpt-5.6-terra": {
             "display_name": "GPT-5.6-Terra",
@@ -688,8 +676,14 @@ data:
             "additional_speed_tiers": ["fast"],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
             "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
-            "input_cost_per_token": 0.0000025,
-            "output_cost_per_token": 0.000015,
+            "input_cost_per_token": 0.000002,
+            "output_cost_per_token": 0.000012,
+            "cache_read_input_token_cost": 0.0000002,
+            "cache_creation_input_token_cost": 0.0000025,
+            "input_cost_per_token_above_272k_tokens": 0.000004,
+            "cache_read_input_token_cost_above_272k_tokens": 0.0000004,
+            "cache_creation_input_token_cost_above_272k_tokens": 0.000005,
+            "output_cost_per_token_above_272k_tokens": 0.000018,
         },
         "gpt-5.6-luna": {
             "display_name": "GPT-5.6-Luna",
@@ -713,8 +707,14 @@ data:
             "additional_speed_tiers": ["fast"],
             "truncation_policy": {"mode": "tokens", "limit": 10000},
             "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
-            "input_cost_per_token": 0.000001,
-            "output_cost_per_token": 0.000006,
+            "input_cost_per_token": 0.0000002,
+            "output_cost_per_token": 0.0000012,
+            "cache_read_input_token_cost": 0.00000002,
+            "cache_creation_input_token_cost": 0.00000025,
+            "input_cost_per_token_above_272k_tokens": 0.0000004,
+            "cache_read_input_token_cost_above_272k_tokens": 0.00000004,
+            "cache_creation_input_token_cost_above_272k_tokens": 0.0000005,
+            "output_cost_per_token_above_272k_tokens": 0.0000018,
         },
         "gpt-5.5": {
             "display_name": "GPT-5.5",
@@ -925,11 +925,19 @@ data:
 
 
     ZAI_CODING_MODELS = {
+        "glm-5.3": {
+            "context_window": 1000000,
+            "max_output_tokens": 128000,
+            "reasoning_options": [{"type": "effort", "values": ["low", "high", "max"]}],
+            "default_reasoning_effort": "max",
+            "source": "https://docs.z.ai/guides/llm/glm-5.3",
+        },
         "glm-5.2": {
             "context_window": 1000000,
             "max_output_tokens": 131072,
-            "input_cost_per_token": 0.0000012,
-            "output_cost_per_token": 0.0000041,
+            "input_cost_per_token": 0.0000014,
+            "cache_read_input_token_cost": 0.00000026,
+            "output_cost_per_token": 0.0000044,
             "reasoning_options": [{"type": "effort", "values": ["high", "max"]}],
             "default_reasoning_effort": "high",
             "source": "https://openrouter.ai/z-ai/glm-5.2/api",
@@ -938,38 +946,22 @@ data:
             "context_window": 200000,
             "max_output_tokens": 128000,
             "input_cost_per_token": 0.0000014,
+            "cache_read_input_token_cost": 0.00000026,
             "output_cost_per_token": 0.0000044,
-        },
-        "glm-5": {
-            "context_window": 200000,
-            "max_output_tokens": 128000,
-            "input_cost_per_token": 0.000001,
-            "output_cost_per_token": 0.0000032,
         },
         "glm-5-turbo": {
             "context_window": 200000,
             "max_output_tokens": 128000,
             "input_cost_per_token": 0.0000012,
+            "cache_read_input_token_cost": 0.00000024,
             "output_cost_per_token": 0.000004,
-        },
-        "glm-5v-turbo": {
-            "context_window": 200000,
-            "max_output_tokens": 128000,
-            "input_cost_per_token": 0.0000012,
-            "output_cost_per_token": 0.000004,
-            "supports_vision": True,
         },
         "glm-4.7": {
             "context_window": 200000,
             "max_output_tokens": 128000,
             "input_cost_per_token": 0.0000006,
+            "cache_read_input_token_cost": 0.00000011,
             "output_cost_per_token": 0.0000022,
-        },
-        "glm-4.5-air": {
-            "context_window": 128000,
-            "max_output_tokens": 96000,
-            "input_cost_per_token": 0.0000002,
-            "output_cost_per_token": 0.0000011,
         },
     }
 
@@ -992,10 +984,15 @@ data:
             "reasoning_options": deepcopy(
                 info.get("reasoning_options", [{"type": "toggle"}])
             ),
-            "input_cost_per_token": info["input_cost_per_token"],
-            "output_cost_per_token": info["output_cost_per_token"],
             "source": info.get("source", "https://docs.z.ai/guides/overview/pricing"),
         }
+        for key in (
+            "input_cost_per_token",
+            "cache_read_input_token_cost",
+            "output_cost_per_token",
+        ):
+            if key in info:
+                metadata[key] = info[key]
         if "default_reasoning_effort" in info:
             metadata["default_reasoning_effort"] = info["default_reasoning_effort"]
         if supports_vision:
@@ -1038,14 +1035,14 @@ data:
 
         def get_supported_openai_params(self, model):
             supported_params = list(original_get_supported_openai_params(self, model))
-            # Z.AI GLM models support native `thinking`, and GLM-5.2 also
-            # accepts OpenAI-style `reasoning_effort` values `high` and `max`.
+            # Z.AI GLM models support native `thinking`, and GLM-5.2/5.3 also
+            # accept OpenAI-style `reasoning_effort` values.
             # OpenAI-compatible clients may also send max_completion_tokens;
             # Z.AI accepts it, but LiteLLM's ZAI provider does not list it by default.
             slug = _zai_coding_slug(model)
             if slug is not None:
                 params = ["thinking", "max_completion_tokens", "extra_body"]
-                if slug == "glm-5.2":
+                if slug in {"glm-5.2", "glm-5.3"}:
                     params.append("reasoning_effort")
                 for param in params:
                     if param not in supported_params:
