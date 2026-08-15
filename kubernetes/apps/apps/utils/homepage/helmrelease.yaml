@@ -300,7 +300,7 @@ spec:
                 description: "Dashboards"
                 href: https://grafana.lan.${CLUSTER_DOMAIN}
             - Hindsight:
-                icon: hindsight.png
+                icon: https://assets.web.${CLUSTER_DOMAIN}/icons/hindsight.png
                 description: "Agent memory dashboard"
                 href: https://hindsight.lan.${CLUSTER_DOMAIN}
             - Immich:
