@@ -13,7 +13,7 @@ All the other `.md` files in this repository are either fully written by LLMs or
 
 * Ansible to provision and configure systems. Mainly VMs, Proxmox hosts and other servers, single board computers and things like that. It also provisions my k3s cluster.
 * Packer creates base images that I then upload to Proxmox so I can spin up VMs based on them.
-* Terraform to create the VMs that I then use for my k3s node. Will eventually add my Cloudflare settings here.
+* Terraform to create the VMs and LXC containers that run my infrastructure, plus cloud infrastructure. I may eventually add my Cloudflare settings here.
 * The Kubernetes folder uses Flux for GitOps and Renovate to keep things up to date.
 * Bunch of pre-commit hooks to try not to push _that_ much broken crap.
 
