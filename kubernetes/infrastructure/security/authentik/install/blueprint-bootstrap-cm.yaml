@@ -25,7 +25,22 @@ data:
           attributes:
             avatar: !Env AK_BLUEPRINT_USER_AVATAR
 
-      # 2. Ensure user is in the "authentik Admins" group
+      # 2. Create the additional user
+      - model: authentik_core.user
+        state: present
+        identifiers:
+          username: !Env AK_USER2_USERNAME
+        attrs:
+          name: !Env AK_USER2_NAME
+          email: !Env AK_USER2_EMAIL
+          is_active: true
+          is_superuser: false
+          type: internal
+          password: !Env AK_USER2_PASSWORD
+          attributes:
+            avatar: !Env AK_USER2_AVATAR
+
+      # 3. Ensure user is in the "authentik Admins" group
       - model: authentik_core.group
         identifiers:
           name: "authentik Admins"
@@ -1228,6 +1243,8 @@ data:
         attrs:
           is_superuser: false
           parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_USER2_USERNAME]]
 
       # OAuth2/OIDC Provider for Home Assistant
       - model: authentik_providers_oauth2.oauth2provider
