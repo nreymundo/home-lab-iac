@@ -61,7 +61,6 @@ spec:
       main:
         enabled: true
         annotations:
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: start.lan.${CLUSTER_DOMAIN}
         ingressClassName: traefik
         hosts:
@@ -508,6 +507,24 @@ spec:
     # F) - name: TZ
     #      value: '{{ .Release.Name }}'
     env:
+      - name: HOMEPAGE_AUTH_ENABLED
+        value: "true"
+      - name: HOMEPAGE_EXTERNAL_URL
+        value: "https://start.lan.${CLUSTER_DOMAIN}"
+      - name: HOMEPAGE_OIDC_ISSUER
+        value: "https://sso.${CLUSTER_DOMAIN}/application/o/homepage/"
+      - name: HOMEPAGE_OIDC_NAME
+        value: "Authentik"
+      - name: HOMEPAGE_OIDC_CLIENT_ID
+        valueFrom:
+          secretKeyRef:
+            name: homepage-sso-secret
+            key: CLIENT_ID
+      - name: HOMEPAGE_OIDC_CLIENT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: homepage-sso-secret
+            key: CLIENT_SECRET
       - name: HOMEPAGE_ALLOWED_HOSTS
         # This value must be set
         # ref: https://gethomepage.dev/installation/#homepage_allowed_hosts
