@@ -186,6 +186,11 @@ and bind the group to the Authentik application with an ordered
 application slug. Do not rely on a role claim, a Homepage card, or an app-side
 group check as the only Authentik admission control.
 
+Treat a blueprint group's `attrs.users` as the complete desired membership:
+reapplying the blueprint replaces that list rather than appending to it. Include
+every intended member in the blueprint and do not assume an out-of-band group
+addition will survive reconciliation.
+
 ### Dangerous email-account linking
 
 Search the workload configuration for account-linking and auto-provisioning
