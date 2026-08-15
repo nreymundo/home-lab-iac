@@ -17,11 +17,14 @@ Read the repo root `AGENTS.md`, `kubernetes/AGENTS.md`, and `kubernetes/apps/AGE
 - Do not invent a new app scaffold when the existing category already shows a stable pattern.
 - When a user names a reference workload, read it before further planning or research.
 - For shared app dependencies (Meilisearch, browsers, OIDC, PVC helpers), search sibling workloads and copy the established HelmRelease pattern before designing a new one.
+- For native Authentik OIDC, the Authentik `<app>-sso-secret` is the source of the client credentials and must be replicated into the workload namespace. Consume that replica directly with `secretKeyRef`; do not duplicate OAuth client credentials in a workload-local SOPS Secret. A local Secret may retain only app-owned values such as a session-signing secret.
+- Decide native OIDC versus Traefik forward-auth from the app's actual capability. A proxy-only app uses the established Gatekeeper middleware chain and does not automatically need an Authentik native provider, `<app>-sso-secret`, or client credentials; add those only when the app also performs its own OIDC flow.
 - Do not escalate a local, rebuildable component failure into a PVC deletion, migration, or multi-phase recovery plan when an existing Git-managed app pattern already handles it.
 - For a scoped repair, make the smallest source-of-truth change, run the direct validation, and deliver; avoid speculative hardening or unrelated redesign.
 - Do not put manually declared PVC definitions here when the persistence belongs in `kubernetes/apps/storage/`.
 - Do not overlook sibling resources or Kustomize behavior such as `cnpg-cluster.yaml`, backup jobs, extra HelmReleases, app variants, components, patches, generators, and namespace transforms.
 - Do not assume `external-proxy/` follows the normal HelmRelease-heavy pattern; it is intentionally higher-variance and more direct-YAML-oriented.
+- For either authentication mode, verify the owning app Kustomization and the production aggregator; file presence alone does not activate a workload or ingress.
 
 ## Validation
 ```bash

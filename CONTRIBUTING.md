@@ -120,7 +120,10 @@ The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` 
 - Follow naming convention: `<app-name>.lan.${CLUSTER_DOMAIN}`
 - Add Longhorn backup labels via `storage/backup-policy` component or manually
 - Include `kustomization.yaml` in app directories
-- Add Homepage annotations for dashboard integration
+- The common workload shape is an `app-template` `helmrelease.yaml` plus `kustomization.yaml`, with optional secrets and workload-local resources. `external-proxy/` is an intentional exception that uses direct Service, Endpoints, and Ingress YAML; other apps may also have variants or extra resources.
+- Homepage cards are declared under `config.services` in `kubernetes/apps/apps/utils/homepage/helmrelease.yaml`; do not add Homepage discovery annotations to individual workloads.
+- Reuse the shared Helm/OCI source catalog in `kubernetes/infrastructure/sources/` instead of duplicating source definitions in app directories.
+- Deployable workloads live under `kubernetes/apps/apps/`; manually declared PVCs live under `kubernetes/apps/storage/`, while controller-managed storage remains with its workload. Include app changes in `kubernetes/apps/production/kustomization.yaml` and storage changes in `kubernetes/apps/storage/production/kustomization.yaml`.
 
 ---
 
@@ -129,11 +132,19 @@ The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` 
 | Directory | Purpose | Notes |
 |-----------|---------|-------|
 | `packer/<template-name>/` | VM template definitions | One folder per template |
+| `packer/scripts/` | Shared Packer helpers | Used by one or more template roots |
+| `terraform/modules/` | Reusable Terraform modules | Shared Proxmox and cloud building blocks |
 | `terraform/instances/vm/<instance>/` | Terraform VM instance roots | Concrete VM deployments using shared modules |
 | `terraform/instances/lxc/<instance>/` | Terraform LXC instance roots | Concrete container deployments using shared modules |
+| `terraform/cloud/<provider>/.../` | Terraform cloud infrastructure roots | Concrete cloud deployments using shared modules |
 | `ansible/roles/<role>/` | Reusable Ansible roles | Standard role structure |
-| `kubernetes/apps/apps/<category>/<app>/` | Application deployments | HelmRelease + kustomization |
+| `kubernetes/apps/apps/<category>/<app>/` | Application deployments | HelmRelease + kustomization, with exceptions such as `external-proxy/` |
+| `kubernetes/apps/storage/` | Application persistence | Manually declared PVC catalogs, split from workload manifests |
+| `kubernetes/apps/production/` | Production workload inclusion | Aggregates active application directories |
+| `kubernetes/components/` | Shared Kustomize components | Reusable defaults, ingress, storage, and config fragments |
 | `kubernetes/infrastructure/<category>/` | Cluster infrastructure | Core services |
+| `kubernetes/clusters/production/ks/` | Production reconciliation ordering | Numbered Flux Kustomizations; `90-storage.yaml` precedes `91-apps.yaml` |
+| `scripts/` | Repository helper scripts | Bootstrap and validation entrypoints |
 
 ---
 
@@ -142,12 +153,13 @@ The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` 
 ### Packer
 
 ```bash
-for template in packer/ubuntu-24.04-base packer/ubuntu-26.04-base packer/fedora-43-server; do
-  packer init "$template"
-  packer fmt -check -recursive "$template"
-  packer validate "$template"
-done
+TEMPLATE=packer/<changed-template>
+packer init "$TEMPLATE"
+packer fmt -check -recursive "$TEMPLATE"
+packer validate "$TEMPLATE"
 ```
+
+Set `TEMPLATE` to each modified Packer template root and repeat the commands. If a template has a `build.sh` wrapper that prepares generated inputs, use that workflow as part of the build rather than bypassing it.
 
 ### Terraform
 
@@ -172,14 +184,26 @@ ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/<playbook>
 
 ### Kubernetes
 
+#### Safe local validation
+
 ```bash
-# Render a Kustomize path, then dry-run its rendered resources
-kubectl kustomize <path> | kubectl apply --dry-run=client -f -
+# Render a Kustomize path, then dry-run its rendered resources. The load
+# restrictor is required for this repository's shared component references.
+kubectl kustomize --load-restrictor=LoadRestrictionsNone <path> | kubectl apply --dry-run=client -f -
 
 # Validate all rendered Kustomizations
 scripts/kubeconform.sh
 
-# Intentional live reconciliation of committed state
+# Read-only inspection of current Flux state
+flux get all -A
+flux get helmreleases -A
+```
+
+#### Intentional live reconciliation
+
+The following command changes live cluster state; it is not local validation and should only be run when a live reconciliation is explicitly intended and approved:
+
+```bash
 flux reconcile kustomization flux-system --with-source
 ```
 

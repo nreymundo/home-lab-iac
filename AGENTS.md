@@ -16,6 +16,9 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Keep changes narrowly scoped to the user's request.
 - Before proposing a new design, recovery workflow, or external research, inspect relevant in-repo sibling implementations first.
 - When a proven local pattern exists, adapt it directly; do not add abstractions, safeguards, or recovery procedures unless the existing pattern demonstrably cannot meet the requirement.
+- For an integration that crosses manifests or namespaces, trace the complete proven contract before editing: source/provider, namespace delivery mechanism, and consumer. Do not replace a shared-secret replication pattern with copied workload-local credentials.
+- For a parameterized URL, hostname, or ingress value, copy the complete matching sibling expression. Do not infer where a variable belongs from a rendered hostname.
+- Keep secret ownership in its source-of-truth layer: workload-local app values under `kubernetes/apps/apps/`, shared service values under `kubernetes/infrastructure/`, cluster identity under `kubernetes/clusters/production/`, and Ansible-only values under `ansible/secrets/`. Do not cross those boundaries because the files share SOPS syntax.
 - Stop discovery only after direct evidence identifies the root cause and an in-repo reference identifies the minimal Git fix. A failing hop, symptom, or plausible configuration theory is not sufficient.
 - Validate changes with the most direct evidence available for the kind of change you made.
 
@@ -33,6 +36,8 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Do not patch, apply, edit, scale, or restart Kubernetes resources directly when the repo can express the change.
 - Do not edit generated artifacts as if they were normal source files.
 - Never commit plaintext secrets, private keys, or unencrypted Kubernetes Secret manifests.
+- Do not patch a `*.sops.yaml` document directly, including its unencrypted metadata. Use SOPS to re-encrypt the complete document after a change, then verify it with `sops --decrypt`; the SOPS MAC covers the whole document.
+- Treat Age recipient or `.sops.yaml` rule changes as high-risk key-management work with no routine undocumented procedure; do not make them during ordinary secret creation, editing, or rotation.
 - Do not broaden a narrowly requested fix into adjacent cleanup.
 
 ## Remote Host Access
