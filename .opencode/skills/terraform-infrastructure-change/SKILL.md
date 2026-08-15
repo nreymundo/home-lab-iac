@@ -121,8 +121,9 @@ packer validate "$TEMPLATE"
 `apply` need the configured backend and provider credentials and are live ops
 — call them out explicitly and confirm before running.
 
-Pre-commit will run `terraform-fmt`. No CI workflow is present in this checkout,
-so local validation is the gate.
+Pre-commit runs `terraform-fmt`. CI runs Checkov and Trivy for `terraform/`
+changes, but it does not run Terraform `fmt`, `validate`, or `plan`; those
+Terraform-specific checks remain local validation requirements.
 
 ## Anti-patterns
 
