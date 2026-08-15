@@ -142,6 +142,16 @@ spec:
             secretKeyRef:
               name: karakeep-sso-secret
               key: CLIENT_SECRET
+        - name: HOMEPAGE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: homepage-sso-secret
+              key: CLIENT_ID
+        - name: HOMEPAGE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: homepage-sso-secret
+              key: CLIENT_SECRET
         - name: NEXTCLOUD_CLIENT_ID
           valueFrom:
             secretKeyRef:
