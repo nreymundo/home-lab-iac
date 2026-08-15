@@ -38,6 +38,20 @@ spec:
           http:
             port: 3000
     ingress:
+      api:
+        enabled: true
+        className: traefik
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+          traefik.ingress.kubernetes.io/router.priority: "100"
+        hosts:
+          - host: vane.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /api
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: vane.lan.${CLUSTER_DOMAIN}
