@@ -8,9 +8,11 @@ Type=simple
 User={{ hermes_user_name }}
 Group={{ hermes_user_name }}
 Environment=HOME={{ hermes_user_home }}
-Environment=HERMES_HOME={{ hermes_native_home }}
-EnvironmentFile=-{{ hermes_environment_file }}
-ExecStart={{ hermes_binary_path }} gateway run
+Environment=HERMES_HOME={{ hermes_gateway_home }}
+{% if hermes_gateway_environment_file -%}
+EnvironmentFile=-{{ hermes_gateway_environment_file }}
+{% endif -%}
+ExecStart={{ hermes_binary_path }}{% if hermes_gateway_profile_name %} --profile {{ hermes_gateway_profile_name }}{% endif %} gateway run
 Restart=on-failure
 RestartSec=5s
 
