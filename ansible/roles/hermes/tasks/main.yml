@@ -135,6 +135,117 @@
     daemon_reload: true
   when: not ansible_check_mode
 
+- name: Inspect named Hermes profiles directory
+  ansible.builtin.stat:
+    path: "{{ hermes_profiles_path }}"
+  register: hermes_profiles_directory
+
+- name: Find named Hermes profiles
+  ansible.builtin.find:
+    paths: "{{ hermes_profiles_path }}"
+    file_type: directory
+    recurse: false
+  register: hermes_profile_directories
+  when: hermes_profiles_directory.stat.isdir | default(false)
+
+- name: Gather named Hermes gateway service facts
+  ansible.builtin.service_facts:
+  when: hermes_profiles_directory.stat.isdir | default(false)
+
+- name: Install named Hermes gateway systemd units
+  ansible.builtin.template:
+    src: hermes-gateway.service.j2
+    dest: >-
+      /etc/systemd/system/{{ hermes_profile_gateway_service_prefix }}{{ item.path | basename }}.service
+    owner: root
+    group: root
+    mode: "0644"
+  vars:
+    hermes_gateway_home: "{{ item.path }}"
+    hermes_gateway_environment_file: ""
+    hermes_gateway_profile_name: "{{ item.path | basename }}"
+  loop: "{{ hermes_profile_directories.files | default([]) }}"
+  register: hermes_profile_gateway_units
+  loop_control:
+    label: "{{ item.path | basename }}"
+  when: hermes_profiles_directory.stat.isdir | default(false)
+
+- name: Disable named Hermes gateway services at boot
+  ansible.builtin.systemd_service:
+    name: "{{ hermes_profile_gateway_service_prefix }}{{ item.path | basename }}"
+    enabled: false
+    daemon_reload: true
+  loop: "{{ hermes_profile_directories.files | default([]) }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  when:
+    - not ansible_check_mode
+    - hermes_profiles_directory.stat.isdir | default(false)
+
+- name: Restart changed running named Hermes gateway services
+  ansible.builtin.systemd_service:
+    name: "{{ hermes_profile_gateway_service_prefix }}{{ item.item.path | basename }}"
+    state: restarted
+    daemon_reload: true
+  loop: "{{ hermes_profile_gateway_units.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.path | basename }}"
+  when:
+    - not ansible_check_mode
+    - item.changed
+    - >-
+      (ansible_facts.services | default({})).get(
+      hermes_profile_gateway_service_prefix ~ (item.item.path | basename) ~ '.service', {}
+      ).state | default('stopped') == 'running'
+
+- name: Find installed named Hermes gateway systemd units
+  ansible.builtin.find:
+    paths: /etc/systemd/system
+    patterns: "{{ hermes_profile_gateway_service_prefix }}*.service"
+    file_type: file
+    recurse: false
+  register: hermes_profile_gateway_unit_files
+
+- name: Record active Hermes profile names
+  ansible.builtin.set_fact:
+    hermes_profile_names: >-
+      {{ hermes_profile_directories.files | default([]) | map(attribute='path') | map('basename') | list }}
+
+- name: Stop and disable stale named Hermes gateway services
+  ansible.builtin.systemd_service:
+    name: "{{ item.path | basename }}"
+    state: stopped
+    enabled: false
+  loop: "{{ hermes_profile_gateway_unit_files.files | default([]) }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  when:
+    - not ansible_check_mode
+    - >-
+      (item.path | basename
+      | regex_replace('^' ~ hermes_profile_gateway_service_prefix, '')
+      | regex_replace('\.service$', '')) not in hermes_profile_names
+
+- name: Remove stale named Hermes gateway systemd units
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ hermes_profile_gateway_unit_files.files | default([]) }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  register: hermes_stale_profile_gateway_unit_removal
+  when: >-
+    (item.path | basename
+    | regex_replace('^' ~ hermes_profile_gateway_service_prefix, '')
+    | regex_replace('\.service$', '')) not in hermes_profile_names
+
+- name: Reload systemd after pruning stale named Hermes gateway units
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when:
+    - not ansible_check_mode
+    - hermes_stale_profile_gateway_unit_removal is changed
+
 - name: Inspect legacy Hermes serve systemd unit
   ansible.builtin.stat:
     path: /etc/systemd/system/hermes-serve.service
