@@ -148,6 +148,10 @@
   register: hermes_profile_directories
   when: hermes_profiles_directory.stat.isdir | default(false)
 
+- name: Gather named Hermes gateway service facts
+  ansible.builtin.service_facts:
+  when: hermes_profiles_directory.stat.isdir | default(false)
+
 - name: Install named Hermes gateway systemd units
   ansible.builtin.template:
     src: hermes-gateway.service.j2
@@ -161,6 +165,7 @@
     hermes_gateway_environment_file: ""
     hermes_gateway_profile_name: "{{ item.path | basename }}"
   loop: "{{ hermes_profile_directories.files | default([]) }}"
+  register: hermes_profile_gateway_units
   loop_control:
     label: "{{ item.path | basename }}"
   when: hermes_profiles_directory.stat.isdir | default(false)
@@ -176,6 +181,22 @@
   when:
     - not ansible_check_mode
     - hermes_profiles_directory.stat.isdir | default(false)
+
+- name: Restart changed running named Hermes gateway services
+  ansible.builtin.systemd_service:
+    name: "{{ hermes_profile_gateway_service_prefix }}{{ item.item.path | basename }}"
+    state: restarted
+    daemon_reload: true
+  loop: "{{ hermes_profile_gateway_units.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.path | basename }}"
+  when:
+    - not ansible_check_mode
+    - item.changed
+    - >-
+      (ansible_facts.services | default({})).get(
+      hermes_profile_gateway_service_prefix ~ (item.item.path | basename) ~ '.service', {}
+      ).state | default('stopped') == 'running'
 
 - name: Find installed named Hermes gateway systemd units
   ansible.builtin.find:
