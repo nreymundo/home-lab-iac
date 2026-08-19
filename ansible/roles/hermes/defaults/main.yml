@@ -38,6 +38,18 @@ hermes_service_name: hermes-gateway
 hermes_service_enabled: true
 hermes_service_state: started
 
+# Reusable gateway unit template inputs; named-profile units override these
+# per profile with the profile HERMES_HOME, no environment file, and the
+# profile name. The default unit renders the values above.
+hermes_gateway_home: "{{ hermes_native_home }}"
+hermes_gateway_environment_file: "{{ hermes_environment_file }}"
+hermes_gateway_profile_name: ""
+
+# Named gateway profiles: one per direct child directory of this path, each
+# rendered as a disabled hermes-gateway-<profile>.service unit.
+hermes_profiles_path: "{{ hermes_native_home }}/profiles"
+hermes_profile_gateway_service_prefix: "{{ hermes_service_name }}-"
+
 # System-level Hermes dashboard service.
 hermes_dashboard_service_name: hermes-dashboard
 hermes_dashboard_service_enabled: true
