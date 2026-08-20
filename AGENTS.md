@@ -26,6 +26,11 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - For an unfamiliar configuration or integration change, finish evidence gathering and state the complete proposed source change, validation, and expected rollout before editing.
 - A request to explain, review, or pause supersedes earlier approval. Do not edit, commit, revert, or push until fresh approval is given.
 
+## Editor Schema Metadata
+- For new or materially modified declarative configuration, add appropriate editor schema metadata when the format has a maintained schema mechanism and the metadata is useful.
+- Do not mass-annotate files, annotate SOPS-encrypted files, or treat editor metadata as a replacement for validation.
+- Terraform and Packer HCL, and Ansible YAML, use their native language servers and linters rather than YAML schema comments. Kubernetes-specific guidance lives in `kubernetes/AGENTS.md`.
+
 ## jCodeMunch Exploration
 - When jCodeMunch MCP tools are available and this repository is indexed, prefer them for unfamiliar code exploration, symbol and text search, dependency/reference tracing, change-impact analysis, and task-context assembly.
 - Use native tools for known paths, complete reads of process-control files such as `AGENTS.md` and `README.md`, command output, test output, files outside the index, and pre-edit line-number verification.
