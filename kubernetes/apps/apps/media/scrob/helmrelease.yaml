@@ -27,7 +27,7 @@ spec:
             image:
               # renovate: datasource=docker depName=bellamy/scrob registryUrl=https://docker.io
               repository: docker.io/bellamy/scrob
-              tag: 1.59.0
+              tag: 1.59.1
             env:
               TZ: Europe/Berlin
               PUID: "1000"
