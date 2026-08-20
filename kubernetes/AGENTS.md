@@ -12,6 +12,11 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 - Shared Helm/OCI source definitions belong in `kubernetes/infrastructure/sources/` unless a child subtree documents a real exception.
 - `*.sops.yaml` is the normal committed form for Kubernetes secrets in this repo.
 
+## Editor Schema Metadata
+- For new or materially modified custom-resource manifests, add a maintained `yaml-language-server` schema directive when one is available.
+- Schema directives are editor-only aids; they do not replace repo validation (`kubectl kustomize` dry-run, kubeconform).
+- Do not blanket-annotate manifests or pin static lists of remote schema URLs; omit the directive when no maintained schema exists.
+
 ## Kubernetes-Wide Anti-Patterns
 - Do not use live reconciliation as validation. Use `kubectl --dry-run=client` or `flux get` first; `flux reconcile` is a live mutation requiring explicit approval.
 - Do not hand-edit generated `flux-system` bootstrap output during routine changes.
