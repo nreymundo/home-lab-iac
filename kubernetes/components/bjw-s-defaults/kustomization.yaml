@@ -14,7 +14,7 @@ patches:
       - op: add
         path: /spec/chart/spec/version
         # renovate: datasource=helm depName=app-template registryUrl=https://bjw-s-labs.github.io/helm-charts/
-        value: "5.0.1"
+        value: "5.1.0"
       - op: add
         path: /spec/chart/spec/sourceRef
         value:
