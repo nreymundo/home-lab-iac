@@ -29,6 +29,9 @@ ssh_hardening_sshd_settings:
   PermitRootLogin: "prohibit-password"
   PasswordAuthentication: "no"
 
+# pmxcfs owns root's cluster-authorized keys; do not replace them with admin keys.
+ssh_hardening_authorized_keys: []
+
 # Kernel parameters applied to all Proxmox hosts.
 proxmox_kernel_params_base_add:
   - "pcie_aspm=force"
