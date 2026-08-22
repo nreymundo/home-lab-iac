@@ -6,7 +6,7 @@ Unattended-Upgrade::Origins-Pattern {
         // This will follow the migration of a release through different archives
         // (e.g. from testing to stable)
         "origin=Debian,codename=${distro_codename},label=Debian";
-        "origin=Debian,codename=${distro_codename},label=Debian-Security";
+        "origin=Debian,codename=${distro_codename}-security,label=Debian-Security";
         "origin=Raspbian,codename=${distro_codename},label=Raspbian";
         "origin=Raspberry Pi Foundation,codename=${distro_codename},label=Raspberry Pi Foundation";
 
