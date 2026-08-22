@@ -202,7 +202,7 @@ resource "proxmox_virtual_environment_container" "this" {
       BOOTSTRAP_ENABLED = tostring(try(each.value.ssh_bootstrap.enabled, false))
       CLUSTER_SSH_HOST  = coalesce(var.ssh_bootstrap_cluster_ssh_host, "")
       CONNECT_TIMEOUT   = tostring(try(each.value.ssh_bootstrap.connect_timeout, 5))
-      IP_ADDRESS        = coalesce(try(each.value.ip_address, null), "")
+      IP_ADDRESS        = try(each.value.ip_address, null) == null ? "" : each.value.ip_address
       NODE_SSH_USER     = var.ssh_bootstrap_node_ssh_user
       PACKAGE_MANAGER   = try(each.value.ssh_bootstrap.package_manager, "dnf")
       PACKAGES          = join(" ", try(each.value.ssh_bootstrap.packages, []))
