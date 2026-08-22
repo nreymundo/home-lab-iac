@@ -1,0 +1,20 @@
+---
+# Target deployment constants (EMQX unified edition).
+# The pinned emqx_version and emqx_deb_checksum are defined in ansible/playbooks/emqx_lxc.yml.
+emqx_package: emqx-enterprise
+emqx_service_name: emqx
+
+# Supported host platform for the official .deb artifacts.
+emqx_supported_distribution: Debian
+emqx_supported_distribution_release: trixie
+emqx_supported_architecture: x86_64
+emqx_deb_distro: debian13
+emqx_deb_arch: amd64
+
+# Official EMQX Enterprise .deb download, derived from the pinned version.
+emqx_deb_filename: "{{ emqx_package }}-{{ emqx_version }}-{{ emqx_deb_distro }}-{{ emqx_deb_arch }}.deb"
+emqx_deb_url: "https://www.emqx.com/en/downloads/enterprise/{{ emqx_version }}/{{ emqx_deb_filename }}"
+emqx_deb_path: "/var/tmp/emqx/{{ emqx_deb_filename }}"
+
+emqx_service_enabled: true
+emqx_service_state: started

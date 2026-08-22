@@ -1,0 +1,11 @@
+---
+- name: Provision EMQX LXC containers
+  hosts: emqx_lxc
+  become: true
+  vars:
+    emqx_version: "6.2.2"
+    emqx_deb_checksum: "sha256:f6c4c86e3e0b922c80200e6918352904f1f669efbed4c6de8fd98fad7652cea6"
+  roles:
+    - lxc_hardening
+    - lxc_bootstrap
+    - emqx

@@ -1,0 +1,105 @@
+---
+- name: Assert EMQX role preconditions
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == emqx_supported_distribution
+      - ansible_distribution_release == emqx_supported_distribution_release
+      - ansible_architecture == emqx_supported_architecture
+      - emqx_version is defined
+      - emqx_version | length > 0
+      - emqx_deb_checksum is defined
+      - emqx_deb_checksum is match('^sha256:[0-9a-f]{64}$')
+    fail_msg: >-
+      EMQX requires Debian {{ emqx_supported_distribution_release }} on
+      {{ emqx_supported_architecture }} with a pinned version and SHA-256 checksum.
+    quiet: true
+
+- name: Create EMQX package download directory
+  ansible.builtin.file:
+    path: "{{ emqx_deb_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download pinned EMQX package
+  ansible.builtin.get_url:
+    url: "{{ emqx_deb_url }}"
+    dest: "{{ emqx_deb_path }}"
+    checksum: "{{ emqx_deb_checksum }}"
+    mode: "0644"
+
+- name: Inspect downloaded EMQX package metadata
+  ansible.builtin.command:
+    argv:
+      - dpkg-deb
+      - --field
+      - "{{ emqx_deb_path }}"
+      - Package
+      - Version
+      - Architecture
+  register: emqx_deb_fields
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Verify downloaded EMQX package metadata
+  ansible.builtin.assert:
+    that:
+      - "('Package: ' ~ emqx_package) in emqx_deb_fields.stdout_lines"
+      - "('Version: ' ~ emqx_version) in emqx_deb_fields.stdout_lines"
+      - "('Architecture: ' ~ emqx_deb_arch) in emqx_deb_fields.stdout_lines"
+    fail_msg: "Downloaded EMQX package does not match the requested package, version, and architecture."
+    quiet: true
+  when: not ansible_check_mode
+
+- name: Install pinned EMQX package from local deb
+  ansible.builtin.apt:
+    deb: "{{ emqx_deb_path }}"
+    state: present
+  when: not ansible_check_mode
+
+- name: Validate EMQX configuration
+  ansible.builtin.command:
+    cmd: emqx check_config
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Enable and start EMQX service
+  ansible.builtin.systemd_service:
+    name: "{{ emqx_service_name }}"
+    state: "{{ emqx_service_state }}"
+    enabled: "{{ emqx_service_enabled }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Verify running EMQX node status
+  ansible.builtin.command:
+    cmd: emqx ctl status
+  register: emqx_status
+  changed_when: false
+  until:
+    - emqx_status.rc == 0
+    - "'is started' in emqx_status.stdout"
+  retries: 12
+  delay: 5
+  when: not ansible_check_mode
+
+- name: Verify running EMQX version
+  ansible.builtin.assert:
+    that:
+      - "(' ' ~ emqx_version ~ ' ') in emqx_status.stdout"
+    fail_msg: "EMQX did not start at the requested version."
+    quiet: true
+  when: not ansible_check_mode
+
+- name: Wait for EMQX MQTT listener
+  ansible.builtin.wait_for:
+    port: 1883
+    timeout: 60
+  when: not ansible_check_mode
+
+- name: Wait for EMQX dashboard listener
+  ansible.builtin.wait_for:
+    port: 18083
+    timeout: 60
+  when: not ansible_check_mode
