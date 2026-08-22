@@ -1,19 +1,20 @@
 ---
-emqx_version: "5.8.9"
-emqx_package: emqx
+# Target deployment constants (EMQX unified edition).
+# The pinned emqx_version and emqx_deb_checksum are defined in ansible/playbooks/emqx_lxc.yml.
+emqx_package: emqx-enterprise
+emqx_service_name: emqx
 
-emqx_gpg_key_url: https://packages.emqx.com/emqx/emqx/gpgkey
-emqx_keyring_path: /etc/apt/keyrings/emqx_emqx-archive-keyring.gpg
-emqx_repo_source_path: /etc/apt/sources.list.d/emqx_emqx.list
-emqx_repo_url: https://packages.emqx.com/emqx/emqx/debian
-emqx_repo_suite: trixie
-emqx_repo_component: main
+# Supported host platform for the official .deb artifacts.
+emqx_supported_distribution: Debian
+emqx_supported_distribution_release: trixie
+emqx_supported_architecture: x86_64
+emqx_deb_distro: debian13
+emqx_deb_arch: amd64
 
-emqx_prerequisite_packages:
-  - ca-certificates
-  - curl
-  - debian-archive-keyring
-  - gnupg
+# Official EMQX Enterprise .deb download, derived from the pinned version.
+emqx_deb_filename: "{{ emqx_package }}-{{ emqx_version }}-{{ emqx_deb_distro }}-{{ emqx_deb_arch }}.deb"
+emqx_deb_url: "https://www.emqx.com/en/downloads/enterprise/{{ emqx_version }}/{{ emqx_deb_filename }}"
+emqx_deb_path: "/var/tmp/emqx/{{ emqx_deb_filename }}"
 
 emqx_service_enabled: true
 emqx_service_state: started
