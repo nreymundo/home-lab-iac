@@ -1,0 +1,8 @@
+---
+- name: Provision EMQX LXC containers
+  hosts: emqx_lxc
+  become: true
+  roles:
+    - lxc_hardening
+    - lxc_bootstrap
+    - emqx
