@@ -1,3 +1,11 @@
+{% if lxc_bootstrap_enable_unattended_upgrades | bool %}
+APT::Periodic::Enable "1";
 APT::Periodic::Update-Package-Lists "1";
 APT::Periodic::Unattended-Upgrade "1";
 APT::Periodic::AutocleanInterval "7";
+{% else %}
+APT::Periodic::Enable "0";
+APT::Periodic::Update-Package-Lists "0";
+APT::Periodic::Unattended-Upgrade "0";
+APT::Periodic::AutocleanInterval "0";
+{% endif %}
