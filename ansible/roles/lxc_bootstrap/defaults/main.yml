@@ -1,6 +1,12 @@
 ---
 lxc_bootstrap_run_upgrade: true
 
+# Scheduled automatic updates: Debian/Ubuntu via unattended-upgrades,
+# Fedora/RedHat via the dnf-automatic timer.
+lxc_bootstrap_enable_unattended_upgrades: true
+lxc_bootstrap_unattended_upgrades_auto_reboot: true
+lxc_bootstrap_unattended_upgrades_reboot_time: "06:00"
+
 lxc_bootstrap_packages_common:
   - bash-completion
   - ca-certificates
