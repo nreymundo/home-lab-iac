@@ -6,9 +6,9 @@ terraform {
       source  = "bpg/proxmox"
       version = "~> 0.106"
     }
-    bitwarden-secrets = {
-      source  = "bitwarden/bitwarden-secrets"
-      version = "0.5.4-pre"
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.3"
     }
   }
 }

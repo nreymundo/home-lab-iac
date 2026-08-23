@@ -17,7 +17,7 @@ See [docs/SECRETS_MANAGEMENT.md](docs/SECRETS_MANAGEMENT.md) for detailed setup.
 | Component | Method |
 |-----------|--------|
 | Packer | 1Password CLI (`op`) via `generate-autoinstall.sh` |
-| Terraform | `bitwarden-secrets` provider |
+| Terraform | 1Password CLI (`op`) via `hashicorp/external` data source |
 | Kubernetes | SOPS (AGE-encrypted `*.sops.yaml` files in Git) |
 
 ---
@@ -105,7 +105,7 @@ If you discover a security vulnerability:
 
 ### For Secrets
 
-1. Rotate Bitwarden access tokens periodically
+1. Rotate 1Password access when accounts or integrations change
 2. Use separate machine accounts for different environments
-3. Audit secret access via Bitwarden logs
+3. Audit secret access via 1Password account activity
 4. Never store secrets in plain text or commit to Git

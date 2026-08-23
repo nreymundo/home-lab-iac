@@ -1,5 +1,8 @@
-data "bitwarden-secrets_secret" "ssh_public_keys" {
-  id = local.ssh_public_keys_secret_id
+data "external" "ssh_public_keys" {
+  program = ["${path.module}/../../../../scripts/fetch-ssh-public-keys.sh"]
+  query = {
+    tag = "terraform"
+  }
 }
 
 data "terraform_remote_state" "firewall" {

@@ -1,10 +1,3 @@
-variable "ssh_public_keys_secret_id" {
-  type        = string
-  description = "Bitwarden Secrets Manager secret ID containing newline-delimited SSH public keys. Set to null to disable."
-  default     = "9b5f1231-f792-4e85-96f1-b3c60002f839"
-  nullable    = true
-}
-
 variable "ssh_public_keys" {
   type        = list(string)
   description = "Additional SSH public keys to add to all VMs."

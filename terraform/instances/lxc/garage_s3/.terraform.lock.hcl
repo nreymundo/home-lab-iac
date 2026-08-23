@@ -1,20 +1,6 @@
 # This file is maintained automatically by "terraform init".
 # Manual edits may be lost in future updates.
 
-provider "registry.terraform.io/bitwarden/bitwarden-secrets" {
-  version     = "0.5.4-pre"
-  constraints = "0.5.4-pre"
-  hashes = [
-    "h1:HMoyWqwfjb6F/1aPwQzRmjaFmLGXdKHXitzw3KpjOOU=",
-    "zh:107186c3cbaf5334cdd606b78b4c16a95f810a978cb8b2ecd20f6a5b2afe86d9",
-    "zh:16b8c5d1939688eaac622c2eb77b7acdcec5d386a9e52248e4b1fea54a8a3492",
-    "zh:3afddcb4556d5523713763ce8e1f9cb1902c939d11c1842da6ddad7822835c0f",
-    "zh:641ac3674168711892ffad5ef49b29ef600e391c29941f1cdd2bb25bf5cf5240",
-    "zh:b08dde9f716bd80c1041cba1223cd2ca669ef7b4ff5df1e6012818ab24c99a8f",
-    "zh:f809ab383cca0a5f83072981c64208cbd7fa67e986a86ee02dd2c82333221e32",
-  ]
-}
-
 provider "registry.terraform.io/bpg/proxmox" {
   version     = "0.110.0"
   constraints = "~> 0.106"
@@ -34,6 +20,27 @@ provider "registry.terraform.io/bpg/proxmox" {
     "zh:f26e0763dbe6a6b2195c94b44696f2110f7f55433dc142839be16b9697fa5597",
     "zh:f3e30cce3165227f3417ab4497af873bae2a459be1adbb6196595ee1ca8ad6ae",
     "zh:f4b2edd80b4c34917942401f9e4e7fb1cc5b803e7a12dc1dba7bbf834a5c7eb0",
+  ]
+}
+
+provider "registry.terraform.io/hashicorp/external" {
+  version     = "2.4.1"
+  constraints = "~> 2.3"
+  hashes = [
+    "h1:VpNKqlWiwV5e6jgspQ0OqqC1hHZ6uiOzM7/irRAmj4o=",
+    "zh:4729bb3f5a6162c6662e51ddd6fce39206632c98109db9969fba65fd063da1af",
+    "zh:4be9471fcf2dfc72bb70a91f526e3c6e35f5f9f656b2ee6eebcb8acdeeecfb48",
+    "zh:526625afb495fb01e3cf48cc4bd974340ac0b7c6fe5f1a6daac5f8aed3836f9e",
+    "zh:6c1287366f8841288108cda7801092940c0dc80a5bad28bf012825c921bcc5ef",
+    "zh:707b2aa4f93a0d8682e81890bfaa5c7199f3e6d2fdbafbf4f89996cb7f0e291e",
+    "zh:78d5eefdd9e494defcb3c68d282b8f96630502cac21d1ea161f53cfe9bb483b3",
+    "zh:7fb382f0b266e98d5c78a39426b063aefffce566f12b19fd722a93e8127108af",
+    "zh:89092c1ab478457266ca4c064c4ee77225a2de01a37a1a15c542f978e3db8a32",
+    "zh:b066a49f3fe3ff49427f2b93b919c7c34ed01236fd594283cb1baf1521566464",
+    "zh:d5d66dd91f7a58e397e10360f45a92a1a3a66388a67036e30b426b873f58667c",
+    "zh:df2479f69e15843dc1671127018b7fcc1a0ddc8f93afb61e730c1ad5c3e365e8",
+    "zh:f1881dec0cd543bc351299a5bc08743716b7eed1043a43da4347fd42b1cc0563",
+    "zh:fe03df7ead78b43137ef9d805ae638daa86516345d3c44e81a2944d3d256e587",
   ]
 }
 
