@@ -49,6 +49,23 @@
     - ssh_hardening_authorized_keys_1password_vault is not none
     - ssh_hardening_authorized_keys_1password_tag is not none
 
+- name: Require authorized SSH keys from 1Password
+  ansible.builtin.assert:
+    that:
+      - >-
+        (ssh_hardening_authorized_key_items.stdout | from_json | length) > 0
+    fail_msg: >-
+      No SSH Key items matched the configured 1Password vault and tag.
+  delegate_to: localhost
+  become: false
+  run_once: true
+  changed_when: false
+  check_mode: false
+  when:
+    - ssh_hardening_authorized_keys is none
+    - ssh_hardening_authorized_keys_1password_vault is not none
+    - ssh_hardening_authorized_keys_1password_tag is not none
+
 - name: Resolve effective SSH hardening inputs
   ansible.builtin.set_fact:
     ssh_hardening_user_effective: >-
