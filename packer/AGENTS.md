@@ -10,7 +10,7 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 ## Source Of Truth Boundaries
 - Hand-authored template definitions live in each template root; generated autoinstall or helper-produced inputs are workflow artifacts, not ad hoc edit targets.
 - If a template-local `build.sh` prepares generated inputs first, treat that wrapper as part of the intended source-of-truth workflow rather than an optional convenience script.
-- Secrets and SSH material belong in environment variables, Bitwarden-backed flows, or helper scripts, not inline Packer config.
+- Secrets and SSH material belong in environment variables, secret-manager-backed helper flows (1Password CLI or Bitwarden Secrets Manager), or helper scripts, not inline Packer config.
 
 ## Local Anti-Patterns
 - Do not hardcode secrets, tokens, or private keys into template files.
