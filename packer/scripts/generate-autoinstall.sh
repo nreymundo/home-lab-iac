@@ -24,8 +24,8 @@ else
     exit 1
 fi
 
-# Fetch SSH keys from Bitwarden
-echo "==> Fetching SSH keys from Bitwarden..."
+# Fetch SSH keys from 1Password
+echo "==> Fetching SSH keys from 1Password..."
 SSH_KEYS=$("$SCRIPT_DIR/fetch-ssh-keys.sh" "$FORMAT")
 
 if [[ -z "$SSH_KEYS" ]]; then

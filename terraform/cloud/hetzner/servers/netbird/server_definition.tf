@@ -1,6 +1,4 @@
 locals {
-  ssh_public_keys_secret_id = "9b5f1231-f792-4e85-96f1-b3c60002f839"
-
   default_ansible_connection = {
     user = "netbird"
     port = 2222
@@ -27,8 +25,8 @@ locals {
   ssh_public_keys = compact([
     for line in split(
       "\n",
-      replace(trimspace(data.bitwarden-secrets_secret.ssh_public_keys.value), "\r\n", "\n")
-    ) : nonsensitive(trimspace(line))
+      replace(trimspace(data.external.ssh_public_keys.result.keys), "\r\n", "\n")
+    ) : trimspace(line)
   ])
 
   # Module-level baseline for generated cloud-init. Individual VM definitions can

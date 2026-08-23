@@ -15,7 +15,7 @@ readonly REQUIRED_TOOLS=(
   helm
   flux
   ansible-playbook
-  bws
+  op
   jq
   yq
   kubeconform
@@ -246,8 +246,8 @@ prepare_arch_package_plan() {
     flux)
       append_unique PACMAN_PACKAGES_TO_INSTALL fluxcd
       ;;
-    bws)
-      append_unique AUR_PACKAGES_TO_INSTALL bws-bin
+    op)
+      append_unique PACMAN_PACKAGES_TO_INSTALL 1password-cli
       ;;
     jq)
       append_unique PACMAN_PACKAGES_TO_INSTALL jq
@@ -331,7 +331,7 @@ prepare_ubuntu_package_plan() {
     terraform)
       append_unique SNAP_CLASSIC_PACKAGES_TO_INSTALL terraform
       ;;
-    packer|bws)
+    packer|op)
       append_unique MANUAL_TOOLS_TO_INSTALL "$tool"
       ;;
     *)
@@ -378,8 +378,8 @@ print_manual_install_hint() {
     packer)
       printf '    - packer: install manually from the HashiCorp package repository or release artifact.\n' >&2
       ;;
-    bws)
-      printf '    - bws: install the Bitwarden Secrets Manager CLI from the vendor-provided binary or package.\n' >&2
+    op)
+      printf '    - op: install the 1Password CLI from https://www.1password.dev/cli/get-started/ and place it on PATH.\n' >&2
       ;;
     checkov)
       printf '    - checkov: install with `pipx install checkov`, or another isolated Python package method that puts `checkov` on PATH.\n' >&2

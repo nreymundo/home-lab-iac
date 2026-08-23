@@ -8,10 +8,6 @@ terraform {
       source  = "bpg/proxmox"
       version = "~> 0.106"
     }
-    bitwarden-secrets = {
-      source  = "bitwarden/bitwarden-secrets"
-      version = "0.5.4-pre"
-    }
   }
   required_version = ">= 1.4"
 
@@ -31,12 +27,4 @@ terraform {
 
 provider "proxmox" {
   insecure = true
-}
-
-# Environment inputs:
-# - Provider auth/endpoint: BW_ORGANIZATION_ID, BW_ACCESS_TOKEN
-
-provider "bitwarden-secrets" {
-  api_url      = "https://api.bitwarden.com"
-  identity_url = "https://identity.bitwarden.com"
 }

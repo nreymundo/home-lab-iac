@@ -1,13 +1,16 @@
-data "bitwarden-secrets_secret" "ssh_public_keys" {
-  id = local.hetzner_ssh_keys.public_keys_secret_id
+data "external" "ssh_public_keys" {
+  program = ["${path.module}/../../../scripts/fetch-ssh-public-keys.sh"]
+  query = {
+    tag = "terraform"
+  }
 }
 
 locals {
   ssh_public_keys_list = compact([
     for line in split(
       "\n",
-      replace(trimspace(data.bitwarden-secrets_secret.ssh_public_keys.value), "\r\n", "\n")
-    ) : nonsensitive(trimspace(line))
+      replace(trimspace(data.external.ssh_public_keys.result.keys), "\r\n", "\n")
+    ) : trimspace(line)
   ])
 
   ssh_public_keys = [

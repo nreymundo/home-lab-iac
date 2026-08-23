@@ -12,7 +12,7 @@ shift
 
 cd "$template_dir"
 
-echo "==> Pre-build: Generating user-data with SSH keys from Bitwarden..."
+echo "==> Pre-build: Generating user-data with SSH keys from 1Password..."
 "$script_dir/generate-autoinstall.sh" http/user-data.template http/user-data
 
 echo "==> Running Packer build..."

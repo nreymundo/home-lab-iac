@@ -4,14 +4,14 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4 |
-| <a name="requirement_bitwarden-secrets"></a> [bitwarden-secrets](#requirement\_bitwarden-secrets) | 0.5.4-pre |
+| <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3 |
 | <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | ~> 0.106 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_bitwarden-secrets"></a> [bitwarden-secrets](#provider\_bitwarden-secrets) | 0.5.4-pre |
+| <a name="provider_external"></a> [external](#provider\_external) | ~> 2.3 |
 | <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | ~> 0.106 |
 
 ## Modules
@@ -24,7 +24,7 @@ No modules.
 |------|------|
 | [proxmox_download_file.lxc_image](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/download_file) | resource |
 | [proxmox_virtual_environment_container.this](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_container) | resource |
-| [bitwarden-secrets_secret.ssh_public_keys](https://registry.terraform.io/providers/bitwarden/bitwarden-secrets/0.5.4-pre/docs/data-sources/secret) | data source |
+| [external_external.ssh_public_keys](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 
@@ -34,7 +34,6 @@ No modules.
 | <a name="input_ssh_bootstrap_cluster_ssh_host"></a> [ssh\_bootstrap\_cluster\_ssh\_host](#input\_ssh\_bootstrap\_cluster\_ssh\_host) | SSH target for any Proxmox cluster node used to resolve target\_node IPs and bootstrap SSH inside LXCs. Required when any container enables ssh\_bootstrap. | `string` | `null` | no |
 | <a name="input_ssh_bootstrap_node_ssh_user"></a> [ssh\_bootstrap\_node\_ssh\_user](#input\_ssh\_bootstrap\_node\_ssh\_user) | SSH user used when connecting to the resolved target\_node IP for pct exec. | `string` | `"root"` | no |
 | <a name="input_ssh_public_keys"></a> [ssh\_public\_keys](#input\_ssh\_public\_keys) | Additional SSH public keys to add to all containers. | `list(string)` | `[]` | no |
-| <a name="input_ssh_public_keys_secret_id"></a> [ssh\_public\_keys\_secret\_id](#input\_ssh\_public\_keys\_secret\_id) | Bitwarden Secrets Manager secret ID containing newline-delimited SSH public keys. Set to null to disable. | `string` | `"9b5f1231-f792-4e85-96f1-b3c60002f839"` | no |
 
 ## Outputs
 

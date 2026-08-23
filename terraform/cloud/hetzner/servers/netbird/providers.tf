@@ -8,9 +8,9 @@ terraform {
       source  = "hetznercloud/hcloud"
       version = "~> 1.61"
     }
-    bitwarden-secrets = {
-      source  = "bitwarden/bitwarden-secrets"
-      version = "0.5.4-pre"
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.3"
     }
   }
   required_version = ">= 1.10"
@@ -31,11 +31,3 @@ terraform {
 # - Provider auth: HCLOUD_TOKEN
 
 provider "hcloud" {}
-
-# Environment inputs:
-# - Provider auth/endpoint: BW_ORGANIZATION_ID, BW_ACCESS_TOKEN
-
-provider "bitwarden-secrets" {
-  api_url      = "https://api.bitwarden.com"
-  identity_url = "https://identity.bitwarden.com"
-}

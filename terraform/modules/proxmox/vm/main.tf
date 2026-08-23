@@ -1,19 +1,17 @@
-data "bitwarden-secrets_secret" "ssh_public_keys" {
-  count = var.ssh_public_keys_secret_id == null ? 0 : 1
-
-  id = var.ssh_public_keys_secret_id
+data "external" "ssh_public_keys" {
+  program = ["${path.module}/../../../scripts/fetch-ssh-public-keys.sh"]
+  query = {
+    tag = "terraform"
+  }
 }
 
 locals {
-  bitwarden_ssh_public_keys = var.ssh_public_keys_secret_id == null ? [] : compact(
-    split(
-      "\n",
-      replace(trimspace(data.bitwarden-secrets_secret.ssh_public_keys[0].value), "\r\n", "\n")
-    )
+  onepassword_ssh_public_keys = compact(
+    split("\n", data.external.ssh_public_keys.result.keys)
   )
 
   ssh_public_keys_list = distinct(concat(
-    local.bitwarden_ssh_public_keys,
+    local.onepassword_ssh_public_keys,
     var.ssh_public_keys
   ))
 

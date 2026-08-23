@@ -4,11 +4,11 @@ Security practices and policies for the home-lab-iac repository.
 
 ## Secrets Management
 
-All sensitive data is managed through **Bitwarden Secrets Manager**:
+Sensitive data is managed per component through dedicated secret stores:
 
 - **Never commit secrets** to the repository
 - Use environment variables for local development
-- Secrets are injected at runtime via Bitwarden integrations
+- Secrets are injected at runtime via each component's secret integration
 
 See [docs/SECRETS_MANAGEMENT.md](docs/SECRETS_MANAGEMENT.md) for detailed setup.
 
@@ -16,8 +16,8 @@ See [docs/SECRETS_MANAGEMENT.md](docs/SECRETS_MANAGEMENT.md) for detailed setup.
 
 | Component | Method |
 |-----------|--------|
-| Packer | `bws` CLI via `generate-autoinstall.sh` |
-| Terraform | `bitwarden-secrets` provider |
+| Packer | 1Password CLI (`op`) via `generate-autoinstall.sh` |
+| Terraform | 1Password CLI (`op`) via `hashicorp/external` data source |
 | Kubernetes | SOPS (AGE-encrypted `*.sops.yaml` files in Git) |
 
 ---
@@ -105,7 +105,7 @@ If you discover a security vulnerability:
 
 ### For Secrets
 
-1. Rotate Bitwarden access tokens periodically
+1. Rotate 1Password access when accounts or integrations change
 2. Use separate machine accounts for different environments
-3. Audit secret access via Bitwarden logs
+3. Audit secret access via 1Password account activity
 4. Never store secrets in plain text or commit to Git
