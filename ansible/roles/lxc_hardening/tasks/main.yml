@@ -11,7 +11,7 @@
       {{
         lxc_hardening_authorized_keys
         if lxc_hardening_authorized_keys is not none
-        else (ssh_hardening_authorized_keys | default([]))
+        else (ssh_hardening_authorized_keys | default(none))
       }}
 
 - name: Apply LXC SSH hardening
