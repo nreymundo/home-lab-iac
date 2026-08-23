@@ -47,3 +47,120 @@
     name: "{{ lxc_bootstrap_packages_effective }}"
     state: present
   when: ansible_os_family == 'RedHat'
+
+# Scheduled automatic updates: Debian/Ubuntu via unattended-upgrades,
+# Fedora/RedHat via the dnf-automatic timer.
+- name: Install Debian/Ubuntu unattended-upgrades package
+  ansible.builtin.apt:
+    name:
+      - unattended-upgrades
+    state: present
+  when:
+    - ansible_os_family == 'Debian'
+    - lxc_bootstrap_enable_unattended_upgrades | bool
+
+- name: Configure Debian/Ubuntu unattended-upgrades origins and blacklist
+  ansible.builtin.template:
+    src: 50unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - ansible_os_family == 'Debian'
+    - lxc_bootstrap_enable_unattended_upgrades | bool
+
+- name: Configure Debian/Ubuntu APT periodic upgrade frequency
+  ansible.builtin.template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+  when: ansible_os_family == 'Debian'
+
+- name: Enable Debian/Ubuntu unattended-upgrades service
+  ansible.builtin.systemd:
+    name: unattended-upgrades
+    state: started
+    enabled: true
+  when:
+    - ansible_os_family == 'Debian'
+    - lxc_bootstrap_enable_unattended_upgrades | bool
+    - not ansible_check_mode
+
+- name: Install Fedora/RedHat dnf-automatic package
+  ansible.builtin.dnf:
+    name: dnf-automatic
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - lxc_bootstrap_enable_unattended_upgrades | bool
+
+- name: Configure Fedora/RedHat dnf-automatic
+  ansible.builtin.template:
+    src: dnf-automatic.conf.j2
+    dest: /etc/dnf/automatic.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - ansible_os_family == 'RedHat'
+    - lxc_bootstrap_enable_unattended_upgrades | bool
+
+- name: Ensure Fedora/RedHat dnf-automatic timer override directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/dnf-automatic.timer.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when:
+    - ansible_os_family == 'RedHat'
+    - lxc_bootstrap_enable_unattended_upgrades | bool
+
+- name: Configure Fedora/RedHat dnf-automatic timer schedule
+  ansible.builtin.template:
+    src: dnf-automatic-timer-override.conf.j2
+    dest: /etc/systemd/system/dnf-automatic.timer.d/override.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - ansible_os_family == 'RedHat'
+    - lxc_bootstrap_enable_unattended_upgrades | bool
+
+- name: Enable Fedora/RedHat dnf-automatic timer
+  ansible.builtin.systemd:
+    name: dnf-automatic.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when:
+    - ansible_os_family == 'RedHat'
+    - lxc_bootstrap_enable_unattended_upgrades | bool
+    - not ansible_check_mode
+
+- name: Gather service facts for automatic updates disable handling
+  ansible.builtin.service_facts:
+  when: not lxc_bootstrap_enable_unattended_upgrades | bool
+
+- name: Disable Debian/Ubuntu unattended-upgrades service
+  ansible.builtin.systemd:
+    name: unattended-upgrades
+    state: stopped
+    enabled: false
+  when:
+    - ansible_os_family == 'Debian'
+    - not lxc_bootstrap_enable_unattended_upgrades | bool
+    - "'unattended-upgrades.service' in ansible_facts.services"
+
+- name: Disable Fedora/RedHat dnf-automatic timer
+  ansible.builtin.systemd:
+    name: dnf-automatic.timer
+    enabled: false
+    state: stopped
+  when:
+    - ansible_os_family == 'RedHat'
+    - not lxc_bootstrap_enable_unattended_upgrades | bool
+    - "'dnf-automatic.service' in ansible_facts.services or 'dnf5-automatic.service' in ansible_facts.services"

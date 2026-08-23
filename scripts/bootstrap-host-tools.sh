@@ -25,6 +25,12 @@ readonly REQUIRED_TOOLS=(
   shfmt
 )
 
+# External Ansible collections used by tracked Ansible YAML in this repository.
+readonly REQUIRED_COLLECTIONS=(
+  ansible.posix
+  community.general
+)
+
 readonly ARCH_DISTRO_TOKENS=(
   arch
   archlinux
@@ -69,6 +75,8 @@ Notes:
   - git and bash are assumed to already be installed.
   - Missing package-manager-backed packages are installed in one command when possible.
   - Ubuntu may use apt, Homebrew, and snap before falling back to manual steps.
+  - --install also installs the required Ansible collections via ansible-galaxy,
+    using ansible/ansible.cfg so configured collection paths apply.
 EOF
 }
 
@@ -542,6 +550,16 @@ install_missing_tools() {
   esac
 }
 
+install_ansible_collections() {
+  command_exists ansible-galaxy || die "ansible-galaxy is required to install Ansible collections."
+
+  log_info "Installing required Ansible collections: ${REQUIRED_COLLECTIONS[*]}"
+  (
+    cd "$REPO_ROOT"
+    ANSIBLE_CONFIG="$REPO_ROOT/ansible/ansible.cfg" ansible-galaxy collection install "${REQUIRED_COLLECTIONS[@]}"
+  )
+}
+
 initialize_pre_commit_hooks() {
   log_info "Initializing pre-commit hooks from repo root"
   (
@@ -558,6 +576,7 @@ main() {
 
   if [[ ${#MISSING_TOOLS[@]} -eq 0 ]]; then
     if [[ "$MODE" == "install" ]]; then
+      install_ansible_collections
       initialize_pre_commit_hooks
     fi
 
@@ -573,6 +592,7 @@ main() {
     print_tool_report
 
     if [[ ${#MISSING_TOOLS[@]} -eq 0 ]]; then
+      install_ansible_collections
       initialize_pre_commit_hooks
       log_info "All required host tools are now installed."
       exit 0
