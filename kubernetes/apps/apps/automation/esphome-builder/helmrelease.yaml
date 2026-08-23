@@ -1,0 +1,105 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: esphome-builder
+  namespace: automation
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        strategy: Recreate
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=esphome/esphome registryUrl=https://ghcr.io
+              repository: ghcr.io/esphome/esphome
+              tag: 2026.8.0
+            args:
+              - dashboard
+              - --remote-build-only
+              - --remote-build-host
+              - 0.0.0.0
+              - --remote-build-port
+              - "6055"
+              - --allow-pairing-source
+              - ${HOME_ASSISTANT_IP}
+              - /config
+            env:
+              ESPHOME_DATA_DIR: /data
+            ports:
+              - name: peer-link
+                containerPort: 6055
+                protocol: TCP
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: peer-link
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: peer-link
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: peer-link
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                  failureThreshold: 24
+            resources:
+              requests:
+                cpu: 1
+                memory: 1Gi
+              limits:
+                memory: 4Gi
+    service:
+      loadbalancer:
+        controller: main
+        type: LoadBalancer
+        loadBalancerIP: ${ESPHOME_BUILDER_LB_IP}
+        externalTrafficPolicy: Local
+        loadBalancerSourceRanges:
+          - ${HOME_ASSISTANT_IP}/32
+        ports:
+          peer-link:
+            port: 6055
+            targetPort: peer-link
+            protocol: TCP
+    persistence:
+      config:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: esphome-builder-config
+        globalMounts:
+          - path: /config
+      data:
+        enabled: true
+        type: emptyDir
+        sizeLimit: 2Gi
+        globalMounts:
+          - path: /data
+      cache:
+        enabled: true
+        type: emptyDir
+        sizeLimit: 6Gi
+        globalMounts:
+          - path: /cache
