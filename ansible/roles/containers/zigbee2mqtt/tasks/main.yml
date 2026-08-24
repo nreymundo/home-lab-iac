@@ -1,0 +1,93 @@
+---
+- name: Ensure Zigbee2MQTT container role supports this system
+  ansible.builtin.assert:
+    that:
+      - ansible_system == 'Linux'
+    fail_msg: "Zigbee2MQTT container role supports Linux only"
+
+- name: Ensure Zigbee2MQTT persistent directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  loop:
+    - "{{ zigbee2mqtt_base_dir }}"
+    - "{{ zigbee2mqtt_data_dir }}"
+
+- name: Verify Docker Compose is available
+  ansible.builtin.command:
+    cmd: docker compose version
+  register: zigbee2mqtt_docker_compose_version
+  changed_when: false
+
+- name: Pull Zigbee2MQTT image
+  ansible.builtin.command:
+    cmd: docker pull {{ zigbee2mqtt_image | quote }}
+  register: zigbee2mqtt_image_pull
+  changed_when: >-
+    'Downloaded newer image' in zigbee2mqtt_image_pull.stdout
+    or 'Pull complete' in zigbee2mqtt_image_pull.stdout
+    or 'Status: Downloaded' in zigbee2mqtt_image_pull.stdout
+  when:
+    - zigbee2mqtt_enabled | bool
+    - not ansible_check_mode
+  notify: Restart Zigbee2MQTT container
+
+- name: Render Zigbee2MQTT Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ zigbee2mqtt_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Zigbee2MQTT container
+
+- name: Validate Zigbee2MQTT compose file
+  ansible.builtin.command:
+    cmd: docker compose -f {{ zigbee2mqtt_compose_file }} config --quiet
+  changed_when: false
+  when:
+    - zigbee2mqtt_enabled | bool
+    - not ansible_check_mode
+
+- name: Install Zigbee2MQTT systemd unit
+  ansible.builtin.template:
+    src: zigbee2mqtt-container.service.j2
+    dest: "/etc/systemd/system/{{ zigbee2mqtt_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload Zigbee2MQTT systemd
+    - Restart Zigbee2MQTT container
+
+- name: Flush Zigbee2MQTT handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Manage Zigbee2MQTT service
+  ansible.builtin.systemd_service:
+    name: "{{ zigbee2mqtt_service_name }}"
+    enabled: "{{ zigbee2mqtt_enabled | bool }}"
+    state: "{{ 'started' if zigbee2mqtt_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Validate Zigbee2MQTT health endpoint
+  ansible.builtin.uri:
+    url: "{{ zigbee2mqtt_health_url }}"
+    status_code: 200
+    return_content: true
+  register: zigbee2mqtt_health
+  until: zigbee2mqtt_health.status == 200
+  retries: "{{ zigbee2mqtt_health_retries }}"
+  delay: "{{ zigbee2mqtt_health_delay }}"
+  when:
+    - zigbee2mqtt_enabled | bool
+    - zigbee2mqtt_validate_health | bool
+    - not ansible_check_mode
+
+- name: Report Zigbee2MQTT endpoint
+  ansible.builtin.debug:
+    msg: "Zigbee2MQTT will listen on http://{{ ansible_host | default(inventory_hostname) }}:{{ zigbee2mqtt_host_port }}"

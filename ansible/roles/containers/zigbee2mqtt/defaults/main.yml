@@ -1,0 +1,36 @@
+---
+zigbee2mqtt_enabled: true
+
+zigbee2mqtt_service_name: zigbee2mqtt-container
+zigbee2mqtt_compose_project_name: zigbee2mqtt
+zigbee2mqtt_compose_service_name: zigbee2mqtt
+zigbee2mqtt_container_name: zigbee2mqtt
+
+# Official image on the dev release channel, matching the deployment on the
+# source LXC. Each playbook run pulls the tag and recreates the container when
+# it finds a newer image or a changed Compose definition.
+zigbee2mqtt_image: ghcr.io/koenkk/zigbee2mqtt:latest-dev
+
+# Managed compose rendered by this role. Only data/ persists application state;
+# the role ships no configuration.yaml or credentials in Git.
+zigbee2mqtt_base_dir: /opt/zigbee2mqtt
+zigbee2mqtt_data_dir: "{{ zigbee2mqtt_base_dir }}/data"
+zigbee2mqtt_compose_file: "{{ zigbee2mqtt_base_dir }}/docker-compose.yml"
+
+# Container-side mount target expected by the official image.
+zigbee2mqtt_container_data_dir: /app/data
+
+# Frontend bind. The LXC keeps the migrated IP 192.168.20.4, so the
+# Kubernetes external-proxy endpoints keep pointing at this port.
+zigbee2mqtt_bind_address: "0.0.0.0"
+zigbee2mqtt_host_port: 8080
+zigbee2mqtt_container_port: 8080
+
+zigbee2mqtt_restart: unless-stopped
+zigbee2mqtt_timezone: Europe/Berlin
+
+# Opt-in post-start check of the local frontend.
+zigbee2mqtt_validate_health: false
+zigbee2mqtt_health_url: "http://127.0.0.1:{{ zigbee2mqtt_host_port }}"
+zigbee2mqtt_health_retries: 12
+zigbee2mqtt_health_delay: 10

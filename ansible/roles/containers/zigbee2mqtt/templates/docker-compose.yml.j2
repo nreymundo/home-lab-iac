@@ -1,0 +1,13 @@
+name: "{{ zigbee2mqtt_compose_project_name }}"
+
+services:
+  {{ zigbee2mqtt_compose_service_name }}:
+    image: "{{ zigbee2mqtt_image }}"
+    container_name: "{{ zigbee2mqtt_container_name }}"
+    restart: {{ zigbee2mqtt_restart }}
+    ports:
+      - "{{ zigbee2mqtt_bind_address }}:{{ zigbee2mqtt_host_port }}:{{ zigbee2mqtt_container_port }}"
+    environment:
+      TZ: "{{ zigbee2mqtt_timezone }}"
+    volumes:
+      - "{{ zigbee2mqtt_data_dir }}:{{ zigbee2mqtt_container_data_dir }}"
