@@ -1,0 +1,17 @@
+[Unit]
+Description=Zigbee2MQTT container
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory={{ zigbee2mqtt_base_dir }}
+ExecStart=/usr/bin/docker compose -p {{ zigbee2mqtt_compose_project_name }} -f {{ zigbee2mqtt_compose_file }} up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -p {{ zigbee2mqtt_compose_project_name }} -f {{ zigbee2mqtt_compose_file }} down
+TimeoutStartSec=0
+TimeoutStopSec=120s
+
+[Install]
+WantedBy=multi-user.target

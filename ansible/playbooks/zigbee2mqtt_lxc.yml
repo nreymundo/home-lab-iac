@@ -1,0 +1,9 @@
+---
+- name: Provision Zigbee2MQTT LXC containers
+  hosts: zigbee2mqtt_lxc
+  become: true
+  roles:
+    - lxc_hardening
+    - lxc_bootstrap
+    - docker
+    - zigbee2mqtt
