@@ -211,7 +211,7 @@ spec:
             image:
               # renovate: datasource=docker depName=vectorize-io/hindsight-control-plane registryUrl=https://ghcr.io
               repository: ghcr.io/vectorize-io/hindsight-control-plane
-              tag: 0.9.1
+              tag: 0.9.2
             env:
               TZ: Europe/Berlin
               HINDSIGHT_ENABLE_API: "false"
