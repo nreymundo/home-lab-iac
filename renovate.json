@@ -34,6 +34,15 @@
       "pinDigests": true
     },
     {
+      "description": "Keep LinuxServer images on short semver tags",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "/^linuxserver\\//",
+        "/^lscr\\.io\\/linuxserver\\//"
+      ],
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
       "description": "Keep Jellyfin on stable semver tags",
       "matchDatasources": ["docker"],
       "matchDepNames": ["linuxserver/jellyfin"],
