@@ -18,3 +18,4 @@ resources:
   - comfyui.yaml
   - chatterbox.yaml
   - syncthing.yaml
+  - dev.yaml

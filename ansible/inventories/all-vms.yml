@@ -3,5 +3,6 @@ all:
   children:
     all_vms:
       children:
+        development_vms: {}
         hermes_vms: {}
         k3s_nodes: {}

@@ -1,0 +1,25 @@
+---
+- name: Assert development workstation preconditions
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == 'Debian'
+      - ansible_distribution == 'Ubuntu'
+      - ansible_distribution_release is defined
+      - ansible_distribution_release | length > 0
+    fail_msg: >-
+      development_workstation supports Ubuntu hosts only and needs a
+      distribution release for the HashiCorp APT repository suite.
+    quiet: true
+
+# The dev account is created by Terraform cloud-init; the role only
+# configures it and never creates users or credentials.
+- name: Gather development user account
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ development_workstation_user }}"
+
+- name: Configure development user facts
+  ansible.builtin.set_fact:
+    development_workstation_user_home: "{{ ansible_facts.getent_passwd[development_workstation_user][4] }}"
+    development_workstation_user_group: "{{ ansible_facts.getent_passwd[development_workstation_user][2] }}"
+    development_workstation_user_uid: "{{ ansible_facts.getent_passwd[development_workstation_user][1] }}"

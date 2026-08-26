@@ -1,0 +1,57 @@
+---
+# Hand-maintained group variables for development VMs.
+# The development_vms inventory group and its hosts are Terraform-generated
+# output (ansible/inventories/development.yml); this file only supplies
+# Ansible-side configuration and must not define hosts.
+
+# The dev login user is created by Terraform cloud-init.
+common_user: dev
+
+# Docker: enabled, targeting the Terraform-created dev login user.
+docker_install_enabled: true
+docker_users:
+  - dev
+
+# Node.js runtime: user-scoped npm prefix and linger stay at the role's
+# normal behavior. OpenCode comes from the npm registry (which provides
+# tarball integrity verification) instead of the upstream installer,
+# which ships no checksum artifacts. Unversioned so user- and
+# package-manager-driven updates survive Ansible reruns.
+nodejs_runtime_user: dev
+nodejs_runtime_configure_user_npm: true
+nodejs_runtime_enable_user_linger: true
+nodejs_runtime_global_npm_packages:
+  - opencode-ai
+
+# UFW: default deny inbound, allow outbound, permit SSH, expose code-server
+# only to the K3s pod network, and allow Syncthing sync/discovery on the LAN.
+ufw_install_enabled: true
+ufw_enabled: true
+ufw_allow_ssh: true
+ufw_default_incoming_policy: deny
+ufw_default_outgoing_policy: allow
+ufw_inbound_rules:
+  - port: "8080"
+    proto: tcp
+    from_ip: 192.168.10.50
+    comment: code-server from k3s-node-01
+  - port: "8080"
+    proto: tcp
+    from_ip: 192.168.10.51
+    comment: code-server from k3s-node-02
+  - port: "8080"
+    proto: tcp
+    from_ip: 192.168.10.52
+    comment: code-server from k3s-node-03
+  - port: "22000"
+    proto: tcp
+    from_ip: 192.168.0.0/16
+    comment: Syncthing sync from the lab LAN
+  - port: "22000"
+    proto: udp
+    from_ip: 192.168.0.0/16
+    comment: Syncthing QUIC sync from the lab LAN
+  - port: "21027"
+    proto: udp
+    from_ip: 192.168.0.0/16
+    comment: Syncthing local discovery from the lab LAN

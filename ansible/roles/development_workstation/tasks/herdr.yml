@@ -1,0 +1,83 @@
+---
+# Herdr for the Terraform-created dev account, installed from the official
+# herdr.dev latest.json manifest. Herdr updates itself in place with
+# `herdr update`, so the role only performs the initial install: once the
+# binary exists, this file changes nothing. The manifest is fetched to the
+# root-owned staging directory and parsed with Ansible; the binary is
+# downloaded with its published SHA-256. No curl|shell pipelines.
+
+- name: Check for an existing Herdr installation
+  ansible.builtin.stat:
+    path: "{{ development_workstation_herdr_binary }}"
+  register: development_workstation_herdr_existing
+
+- name: Install Herdr for the development user
+  when: not development_workstation_herdr_existing.stat.exists
+  block:
+    - name: Assert a Herdr release exists for this architecture
+      ansible.builtin.assert:
+        that:
+          - ansible_architecture in development_workstation_herdr_asset_map
+        fail_msg: >-
+          ansible_architecture '{{ ansible_architecture }}' has no Herdr
+          linux release asset; supported architectures are x86_64 and
+          aarch64.
+        quiet: true
+
+    - name: Create the development user local bin directory
+      ansible.builtin.file:
+        path: "{{ development_workstation_user_home }}/.local/bin"
+        state: directory
+        owner: "{{ development_workstation_user }}"
+        group: "{{ development_workstation_user_group }}"
+        mode: "0755"
+
+    - name: Download the Herdr latest release manifest
+      ansible.builtin.get_url:
+        url: "{{ development_workstation_herdr_manifest_url }}"
+        dest: "{{ development_workstation_download_dir }}/herdr-latest.json"
+        mode: "0644"
+
+    - name: Install the Herdr release for this architecture
+      when: not ansible_check_mode
+      block:
+        - name: Read the Herdr latest release manifest
+          ansible.builtin.slurp:
+            src: "{{ development_workstation_download_dir }}/herdr-latest.json"
+          register: development_workstation_herdr_manifest_raw
+
+        - name: Parse the Herdr latest release manifest
+          ansible.builtin.set_fact:
+            development_workstation_herdr_manifest: "{{ development_workstation_herdr_manifest_raw.content | b64decode | from_json }}"
+
+        - name: Assert the manifest publishes the matching Herdr asset
+          ansible.builtin.assert:
+            that:
+              - development_workstation_herdr_asset_key in development_workstation_herdr_manifest.assets
+              - development_workstation_herdr_asset_key in development_workstation_herdr_manifest.sha256
+            fail_msg: >-
+              The Herdr latest.json manifest has no
+              {{ development_workstation_herdr_asset_key }} entry in both
+              assets and sha256.
+            quiet: true
+
+        - name: Resolve the Herdr release asset for this architecture
+          ansible.builtin.set_fact:
+            development_workstation_herdr_binary_url: "{{ development_workstation_herdr_manifest.assets[development_workstation_herdr_asset_key] }}"
+            development_workstation_herdr_checksum: "sha256:{{ development_workstation_herdr_manifest.sha256[development_workstation_herdr_asset_key] }}"
+
+        - name: Download the Herdr release binary
+          ansible.builtin.get_url:
+            url: "{{ development_workstation_herdr_binary_url }}"
+            dest: "{{ development_workstation_download_dir }}/{{ development_workstation_herdr_binary_url | basename }}"
+            checksum: "{{ development_workstation_herdr_checksum }}"
+            mode: "0644"
+
+        - name: Install Herdr binary into the development user local bin
+          ansible.builtin.copy:
+            src: "{{ development_workstation_download_dir }}/{{ development_workstation_herdr_binary_url | basename }}"
+            dest: "{{ development_workstation_herdr_binary }}"
+            remote_src: true
+            owner: "{{ development_workstation_user }}"
+            group: "{{ development_workstation_user_group }}"
+            mode: "0755"

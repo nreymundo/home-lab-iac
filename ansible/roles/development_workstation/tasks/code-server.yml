@@ -1,0 +1,46 @@
+---
+# code-server, pinned to an exact release .deb and exposed on TCP 8080.
+# UFW rules (group_vars) restrict the port to the 10.42.0.0/16 network.
+
+- name: Download pinned code-server package
+  ansible.builtin.get_url:
+    url: "{{ development_workstation_code_server_deb_url }}"
+    dest: "{{ development_workstation_download_dir }}/{{ development_workstation_code_server_deb_url | basename }}"
+    checksum: "{{ development_workstation_code_server_checksum }}"
+    mode: "0644"
+
+- name: Install pinned code-server package
+  ansible.builtin.apt:
+    deb: "{{ development_workstation_download_dir }}/{{ development_workstation_code_server_deb_url | basename }}"
+    state: present
+  when: not ansible_check_mode
+  notify: Restart code-server
+
+- name: Ensure code-server configuration directory exists
+  ansible.builtin.file:
+    path: "{{ development_workstation_user_home }}/.config/code-server"
+    state: directory
+    owner: "{{ development_workstation_user }}"
+    group: "{{ development_workstation_user_group }}"
+    mode: "0700"
+
+- name: Configure code-server for the development user
+  ansible.builtin.copy:
+    content: |
+      bind-addr: {{ development_workstation_code_server_bind_addr }}
+      auth: none
+      cert: false
+      disable-telemetry: true
+    dest: "{{ development_workstation_user_home }}/.config/code-server/config.yaml"
+    owner: "{{ development_workstation_user }}"
+    group: "{{ development_workstation_user_group }}"
+    mode: "0600"
+  notify: Restart code-server
+
+- name: Enable code-server systemd unit for the development user
+  ansible.builtin.systemd_service:
+    name: "{{ development_workstation_code_server_service }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: not ansible_check_mode

@@ -1,0 +1,12 @@
+---
+- name: Provision development workstations
+  hosts: development_vms
+  become: true
+  roles:
+    - common
+    - ssh_hardening
+    - disk_expand
+    - ufw
+    - docker
+    - nodejs_runtime
+    - development_workstation
