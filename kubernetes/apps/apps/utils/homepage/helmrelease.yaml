@@ -162,6 +162,10 @@ spec:
                 icon: https://i.imgur.com/w9QDXK0.png
                 description: "Text-to-speech API"
                 href: https://chatterbox.lan.${CLUSTER_DOMAIN}
+            - Code Server:
+                icon: code-server.png
+                description: "Development VM IDE"
+                href: https://dev.lan.${CLUSTER_DOMAIN}
             - ComfyUI:
                 icon: comfyui.png
                 description: "AI image generation workflow UI"

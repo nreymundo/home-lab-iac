@@ -1,0 +1,166 @@
+---
+# Official signed APT repositories, following the repo keyring/copy pattern:
+# ASCII key fetched with get_url, dearmored into /etc/apt/keyrings, and a
+# signed-by sources entry written via copy.
+
+- name: Create keyrings directory for development tool repositories
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+# --- HashiCorp (Terraform, Packer) ---------------------------------------
+
+- name: Download HashiCorp GPG key
+  ansible.builtin.get_url:
+    url: "{{ development_workstation_hashicorp_key_url }}"
+    dest: /tmp/development_workstation_hashicorp.asc
+    mode: "0644"
+    force: true
+
+- name: Convert HashiCorp GPG key to dearmor format
+  ansible.builtin.command:
+    cmd: >-
+      gpg --dearmor -o {{ development_workstation_hashicorp_keyring }}
+      /tmp/development_workstation_hashicorp.asc
+    creates: "{{ development_workstation_hashicorp_keyring }}"
+
+- name: Add HashiCorp APT repository
+  ansible.builtin.copy:
+    content: |
+      deb [signed-by={{ development_workstation_hashicorp_keyring }}] {{ development_workstation_hashicorp_repo_url }} {{ ansible_distribution_release }} main
+    dest: "{{ development_workstation_hashicorp_list }}"
+    mode: "0644"
+  notify: Update development workstation apt cache
+
+# --- 1Password CLI --------------------------------------------------------
+
+- name: Download 1Password GPG key
+  ansible.builtin.get_url:
+    url: "{{ development_workstation_onepassword_key_url }}"
+    dest: /tmp/development_workstation_onepassword.asc
+    mode: "0644"
+    force: true
+
+- name: Convert 1Password GPG key to dearmor format
+  ansible.builtin.command:
+    cmd: >-
+      gpg --dearmor -o {{ development_workstation_onepassword_keyring }}
+      /tmp/development_workstation_onepassword.asc
+    creates: "{{ development_workstation_onepassword_keyring }}"
+
+- name: Add 1Password APT repository
+  ansible.builtin.copy:
+    content: |
+      deb [arch={{ development_workstation_onepassword_arch }} signed-by={{ development_workstation_onepassword_keyring }}] {{ development_workstation_onepassword_repo_url }} stable main
+    dest: "{{ development_workstation_onepassword_list }}"
+    mode: "0644"
+  notify: Update development workstation apt cache
+
+# --- kubectl (official pkgs.k8s.io track) ---------------------------------
+
+- name: Download Kubernetes GPG key
+  ansible.builtin.get_url:
+    url: "{{ development_workstation_kubectl_key_url }}"
+    dest: /tmp/development_workstation_kubernetes.asc
+    mode: "0644"
+    force: true
+
+- name: Convert Kubernetes GPG key to dearmor format
+  ansible.builtin.command:
+    cmd: >-
+      gpg --dearmor -o {{ development_workstation_kubectl_keyring }}
+      /tmp/development_workstation_kubernetes.asc
+    creates: "{{ development_workstation_kubectl_keyring }}"
+
+- name: Add Kubernetes APT repository
+  ansible.builtin.copy:
+    content: |
+      deb [signed-by={{ development_workstation_kubectl_keyring }}] {{ development_workstation_kubectl_repo_url }} /
+    dest: "{{ development_workstation_kubectl_list }}"
+    mode: "0644"
+  notify: Update development workstation apt cache
+
+# --- Trivy -----------------------------------------------------------------
+
+- name: Download Trivy GPG key
+  ansible.builtin.get_url:
+    url: "{{ development_workstation_trivy_key_url }}"
+    dest: /tmp/development_workstation_trivy.asc
+    mode: "0644"
+    force: true
+
+- name: Convert Trivy GPG key to dearmor format
+  ansible.builtin.command:
+    cmd: >-
+      gpg --dearmor -o {{ development_workstation_trivy_keyring }}
+      /tmp/development_workstation_trivy.asc
+    creates: "{{ development_workstation_trivy_keyring }}"
+
+- name: Add Trivy APT repository
+  ansible.builtin.copy:
+    content: |
+      deb [signed-by={{ development_workstation_trivy_keyring }}] {{ development_workstation_trivy_repo_url }} generic main
+    dest: "{{ development_workstation_trivy_list }}"
+    mode: "0644"
+  notify: Update development workstation apt cache
+
+# --- GitHub CLI --------------------------------------------------------------
+# Like Syncthing, the GitHub CLI archive keyring is already a binary
+# keyring, so it is stored directly as the signed-by keyring without an
+# intermediate download and dearmor step.
+
+- name: Store GitHub CLI archive keyring directly
+  ansible.builtin.get_url:
+    url: "{{ development_workstation_gh_key_url }}"
+    dest: "{{ development_workstation_gh_keyring }}"
+    mode: "0644"
+
+- name: Add GitHub CLI APT repository
+  ansible.builtin.copy:
+    content: |
+      deb [arch={{ development_workstation_gh_arch }} signed-by={{ development_workstation_gh_keyring }}] {{ development_workstation_gh_repo_url }} stable main
+    dest: "{{ development_workstation_gh_list }}"
+    mode: "0644"
+  notify: Update development workstation apt cache
+
+# --- Syncthing --------------------------------------------------------------
+# Unlike the vendors above, the Syncthing release key is already a binary
+# keyring, so it is stored directly as the signed-by keyring without an
+# intermediate download and dearmor step. The preference pins the official
+# origin above the distribution's syncthing package.
+
+- name: Store Syncthing release keyring directly
+  ansible.builtin.get_url:
+    url: "{{ development_workstation_syncthing_key_url }}"
+    dest: "{{ development_workstation_syncthing_keyring }}"
+    mode: "0644"
+
+- name: Add Syncthing APT repository
+  ansible.builtin.copy:
+    content: |
+      deb [signed-by={{ development_workstation_syncthing_keyring }}] {{ development_workstation_syncthing_repo_url }} {{ development_workstation_syncthing_suite }} {{ development_workstation_syncthing_component }}
+    dest: "{{ development_workstation_syncthing_list }}"
+    mode: "0644"
+  notify: Update development workstation apt cache
+
+- name: Pin Syncthing repository origin
+  ansible.builtin.copy:
+    content: |
+      Package: *
+      Pin: origin {{ development_workstation_syncthing_pin_origin }}
+      Pin-Priority: {{ development_workstation_syncthing_pin_priority }}
+    dest: "{{ development_workstation_syncthing_preference_path }}"
+    mode: "0644"
+
+# --- Install packages from the repositories -------------------------------
+
+- name: Refresh apt cache after adding development repositories
+  ansible.builtin.meta: flush_handlers
+
+- name: Install development tools from official APT repositories
+  ansible.builtin.apt:
+    name: "{{ development_workstation_repo_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600

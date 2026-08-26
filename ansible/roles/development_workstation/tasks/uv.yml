@@ -1,0 +1,54 @@
+---
+# uv and uvx (uvx ships with uv) for the Terraform-created dev account,
+# bootstrapped from Astral's official standalone installer. The installer
+# script is downloaded with get_url to the root-owned staging directory
+# and then executed as the dev user; no curl|shell pipelines. The role
+# only performs the initial install when the uv binary is absent: once
+# installed, uv owns its own upgrades via `uv self update`. UV_NO_MODIFY_PATH
+# keeps the installer out of shell rc files; dev-tools.yml already manages
+# ~/.local/bin on the dev user's PATH.
+
+- name: Check for an existing uv installation
+  ansible.builtin.stat:
+    path: "{{ development_workstation_uv_binary }}"
+  register: development_workstation_uv_existing
+
+- name: Install uv for the development user
+  when: not development_workstation_uv_existing.stat.exists
+  block:
+    - name: Create the development user local bin directory
+      ansible.builtin.file:
+        path: "{{ development_workstation_user_home }}/.local/bin"
+        state: directory
+        owner: "{{ development_workstation_user }}"
+        group: "{{ development_workstation_user_group }}"
+        mode: "0755"
+
+    - name: Download the uv standalone installer
+      ansible.builtin.get_url:
+        url: "{{ development_workstation_uv_installer_url }}"
+        dest: "{{ development_workstation_download_dir }}/uv-install.sh"
+        mode: "0644"
+
+    - name: Run the installer for the development user
+      when: not ansible_check_mode
+      block:
+        - name: Execute the uv standalone installer as the development user
+          ansible.builtin.command:
+            argv:
+              - /bin/sh
+              - "{{ development_workstation_download_dir }}/uv-install.sh"
+          environment:
+            UV_NO_MODIFY_PATH: "1"
+          become: true
+          become_user: "{{ development_workstation_user }}"
+          changed_when: true
+
+        - name: Verify uvx was installed alongside uv
+          ansible.builtin.command:
+            argv:
+              - "{{ development_workstation_uvx_binary }}"
+              - --version
+          become: true
+          become_user: "{{ development_workstation_user }}"
+          changed_when: false

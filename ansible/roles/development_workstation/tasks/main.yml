@@ -1,0 +1,29 @@
+---
+# development_workstation role entrypoint.
+
+- name: Run development workstation preflight tasks
+  ansible.builtin.include_tasks: preflight.yml
+
+- name: Install baseline development packages
+  ansible.builtin.include_tasks: packages.yml
+
+- name: Add official signed APT repositories
+  ansible.builtin.include_tasks: repositories.yml
+
+- name: Install pinned upstream tool releases
+  ansible.builtin.include_tasks: binaries.yml
+
+- name: Install and configure code-server
+  ansible.builtin.include_tasks: code-server.yml
+
+- name: Enable Syncthing for the development user
+  ansible.builtin.include_tasks: syncthing.yml
+
+- name: Install user-scoped development tooling
+  ansible.builtin.include_tasks: dev-tools.yml
+
+- name: Install Herdr for the development user
+  ansible.builtin.include_tasks: herdr.yml
+
+- name: Install uv and uvx for the development user
+  ansible.builtin.include_tasks: uv.yml

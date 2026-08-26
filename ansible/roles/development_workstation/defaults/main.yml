@@ -1,0 +1,185 @@
+---
+# development_workstation role defaults.
+#
+# The login user is created by Terraform cloud-init; this role configures
+# tooling for that account and never creates users or credentials.
+
+development_workstation_user: dev
+
+# Baseline apt packages. Ubuntu's "yq" package is intentionally excluded:
+# it is a different project. The mikefarah/yq binary is pinned below.
+development_workstation_baseline_packages:
+  - ansible
+  - ansible-lint
+  - ca-certificates
+  - cifs-utils
+  - curl
+  - git
+  - gnupg
+  - jq
+  - pipx
+  - pre-commit
+  - python3-pip
+  - python3-venv
+  - ripgrep
+  - shellcheck
+  - shfmt
+  - tar
+  - unzip
+
+# Root-owned staging directory for integrity-checked downloads.
+development_workstation_download_dir: /var/tmp/development_workstation
+
+# --- Official signed APT repositories -------------------------------------
+
+# HashiCorp (Terraform, Packer). The suite tracks the running Ubuntu release.
+development_workstation_hashicorp_key_url: https://apt.releases.hashicorp.com/gpg
+development_workstation_hashicorp_keyring: /etc/apt/keyrings/hashicorp-archive-keyring.gpg
+development_workstation_hashicorp_repo_url: https://apt.releases.hashicorp.com
+development_workstation_hashicorp_list: /etc/apt/sources.list.d/hashicorp.list
+
+# 1Password CLI. The repository path is architecture-keyed.
+development_workstation_onepassword_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+development_workstation_onepassword_key_url: https://downloads.1password.com/linux/keys/1password.asc
+development_workstation_onepassword_repo_url: "https://downloads.1password.com/linux/debian/{{ development_workstation_onepassword_arch }}"
+development_workstation_onepassword_keyring: /etc/apt/keyrings/1password-archive-keyring.gpg
+development_workstation_onepassword_list: /etc/apt/sources.list.d/1password.list
+
+# kubectl from the official pkgs.k8s.io repository, pinned to the v1.36
+# track so the client stays within one minor of the live v1.35 cluster.
+development_workstation_kubectl_track: v1.36
+development_workstation_kubectl_key_url: "https://pkgs.k8s.io/core:/stable:/{{ development_workstation_kubectl_track }}/deb/Release.key"
+development_workstation_kubectl_repo_url: "https://pkgs.k8s.io/core:/stable:/{{ development_workstation_kubectl_track }}/deb/"
+development_workstation_kubectl_keyring: /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+development_workstation_kubectl_list: /etc/apt/sources.list.d/kubernetes.list
+
+# Trivy from the official generic apt repository.
+development_workstation_trivy_key_url: https://aquasecurity.github.io/trivy-repo/deb/public.key
+development_workstation_trivy_repo_url: https://aquasecurity.github.io/trivy-repo/deb
+development_workstation_trivy_keyring: /etc/apt/keyrings/trivy-archive-keyring.gpg
+development_workstation_trivy_list: /etc/apt/sources.list.d/trivy.list
+
+# GitHub CLI from the official cli.github.com repository. The archive
+# keyring is already binary and is stored directly, without dearmor.
+development_workstation_gh_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+development_workstation_gh_key_url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+development_workstation_gh_keyring: /etc/apt/keyrings/githubcli-archive-keyring.gpg
+development_workstation_gh_repo_url: https://cli.github.com/packages
+development_workstation_gh_list: /etc/apt/sources.list.d/github-cli.list
+
+# Syncthing from the official signed apt.syncthing.net stable-v2
+# repository. The release key is already a binary keyring and is stored
+# directly, without dearmor. The apt preference keeps the official origin
+# preferred over the distribution package of the same name.
+development_workstation_syncthing_key_url: https://syncthing.net/release-key.gpg
+development_workstation_syncthing_keyring: /etc/apt/keyrings/syncthing-archive-keyring.gpg
+development_workstation_syncthing_repo_url: https://apt.syncthing.net/
+development_workstation_syncthing_suite: syncthing
+development_workstation_syncthing_component: stable-v2
+development_workstation_syncthing_list: /etc/apt/sources.list.d/syncthing.list
+development_workstation_syncthing_preference_path: /etc/apt/preferences.d/syncthing
+development_workstation_syncthing_pin_origin: apt.syncthing.net
+development_workstation_syncthing_pin_priority: 990
+
+# Packages delivered by the signed repositories above.
+development_workstation_repo_packages:
+  - 1password-cli
+  - gh
+  - kubectl
+  - packer
+  - syncthing
+  - terraform
+  - trivy
+
+# --- Pinned upstream releases ---------------------------------------------
+
+# Flux
+development_workstation_flux_version: "2.9.4"
+development_workstation_flux_release_base: https://github.com/fluxcd/flux2/releases/download
+development_workstation_flux_asset: "flux_{{ development_workstation_flux_version }}_linux_amd64.tar.gz"
+development_workstation_flux_archive_url: "{{ development_workstation_flux_release_base }}/v{{ development_workstation_flux_version }}/{{ development_workstation_flux_asset }}"
+development_workstation_flux_checksum: "sha256:c2c397a52930f52d2005c01d276116b059d062de379386d58e98115380a766a2"
+development_workstation_flux_binary: /usr/local/bin/flux
+
+# Helm, verified against the official sha256sum asset.
+development_workstation_helm_version: "4.2.4"
+development_workstation_helm_release_base: https://get.helm.sh
+development_workstation_helm_asset: "helm-v{{ development_workstation_helm_version }}-linux-amd64.tar.gz"
+development_workstation_helm_archive_url: "{{ development_workstation_helm_release_base }}/{{ development_workstation_helm_asset }}"
+development_workstation_helm_checksum_url: "{{ development_workstation_helm_archive_url }}.sha256sum"
+development_workstation_helm_binary: /usr/local/bin/helm
+
+# SOPS official .deb package (installs /usr/bin/sops, tracked by dpkg).
+development_workstation_sops_version: "3.13.3"
+development_workstation_sops_release_base: https://github.com/getsops/sops/releases/download
+development_workstation_sops_asset: "sops_{{ development_workstation_sops_version }}_amd64.deb"
+development_workstation_sops_deb_url: "{{ development_workstation_sops_release_base }}/v{{ development_workstation_sops_version }}/{{ development_workstation_sops_asset }}"
+development_workstation_sops_checksum: "sha256:927c45f2ccb5b1c9acb1e80c7befaea0672c721fd3f222697a51e0a7081e3f3b"
+
+# kubeconform
+development_workstation_kubeconform_version: "0.8.0"
+development_workstation_kubeconform_release_base: https://github.com/yannh/kubeconform/releases/download
+development_workstation_kubeconform_asset: kubeconform-linux-amd64.tar.gz
+development_workstation_kubeconform_archive_url: "{{ development_workstation_kubeconform_release_base }}/v{{ development_workstation_kubeconform_version }}/{{ development_workstation_kubeconform_asset }}"
+development_workstation_kubeconform_checksum: "sha256:9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883"
+development_workstation_kubeconform_binary: /usr/local/bin/kubeconform
+
+# mikefarah/yq, verified against the official release checksums asset.
+development_workstation_yq_version: "4.53.6"
+development_workstation_yq_release_base: https://github.com/mikefarah/yq/releases/download
+development_workstation_yq_asset: yq_linux_amd64
+development_workstation_yq_binary_url: "{{ development_workstation_yq_release_base }}/v{{ development_workstation_yq_version }}/{{ development_workstation_yq_asset }}"
+development_workstation_yq_checksums_url: "{{ development_workstation_yq_release_base }}/v{{ development_workstation_yq_version }}/checksums"
+development_workstation_yq_binary: /usr/local/bin/yq
+
+# code-server, installed from the official release .deb via apt.
+development_workstation_code_server_version: "4.134.0"
+development_workstation_code_server_release_base: https://github.com/coder/code-server/releases/download
+development_workstation_code_server_asset: "code-server_{{ development_workstation_code_server_version }}_amd64.deb"
+development_workstation_code_server_deb_url: "{{ development_workstation_code_server_release_base }}/v{{ development_workstation_code_server_version }}/{{ development_workstation_code_server_asset }}"
+development_workstation_code_server_checksum: "sha256:1788343b0719bafb40a2e1e6c0ec2fd3f307c6b32bb93b79a7adcfa9aa3d909c"
+development_workstation_code_server_service: "code-server@{{ development_workstation_user }}"
+development_workstation_code_server_bind_addr: "0.0.0.0:8080"
+
+# --- User-scoped tooling ---------------------------------------------------
+
+# Syncthing runs as the dev user's systemd user service; the packaged
+# system template unit (syncthing@) is deliberately not used.
+development_workstation_syncthing_service: syncthing
+
+# Checkov, installed with pipx for the dev user.
+development_workstation_checkov_package: checkov
+
+# Pinned Ansible collections installed into the dev user's default
+# collection path (~/.ansible/collections).
+development_workstation_collections:
+  - name: ansible.posix
+    version: "2.2.2"
+  - name: community.general
+    version: "13.3.0"
+
+# Herdr, installed into the dev user's ~/.local/bin from the official
+# herdr.dev latest.json release manifest. Herdr updates itself in place
+# with `herdr update`, so the role only performs the initial install
+# when the binary is absent and never manages or overwrites an existing
+# installation afterwards.
+development_workstation_herdr_manifest_url: https://herdr.dev/latest.json
+
+# Map of supported ansible_architecture values to the matching linux
+# asset key in the latest.json manifest (assets/<key> holds the binary
+# URL, sha256/<key> holds its checksum). Architectures not listed here
+# fail the role.
+development_workstation_herdr_asset_map:
+  x86_64: linux-x86_64
+  aarch64: linux-aarch64
+
+development_workstation_herdr_asset_key: "{{ development_workstation_herdr_asset_map[ansible_architecture] }}"
+development_workstation_herdr_binary: "{{ development_workstation_user_home }}/.local/bin/herdr"
+
+# uv and uvx (uvx ships with uv), bootstrapped for the dev user with
+# Astral's official standalone installer. The role only performs the
+# initial install when the uv binary is absent; later upgrades stay with
+# `uv self update`.
+development_workstation_uv_installer_url: https://astral.sh/uv/install.sh
+development_workstation_uv_binary: "{{ development_workstation_user_home }}/.local/bin/uv"
+development_workstation_uvx_binary: "{{ development_workstation_user_home }}/.local/bin/uvx"
