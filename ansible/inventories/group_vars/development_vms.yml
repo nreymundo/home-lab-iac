@@ -33,8 +33,8 @@ ufw_default_outgoing_policy: allow
 ufw_inbound_rules:
   - port: "8080"
     proto: tcp
-    from_ip: 10.42.0.0/16
-    comment: code-server from the 10.42 lab network only
+    from_ip: 192.168.10.0/24
+    comment: code-server from the K3s/LAN subnet
   - port: "22000"
     proto: tcp
     from_ip: 192.168.0.0/16
