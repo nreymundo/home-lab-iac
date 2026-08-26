@@ -171,6 +171,37 @@ data:
             - zai
             - coding-plan
 
+      - model_name: zai-coding/glm-5.3-flash
+        model_info:
+          mode: chat
+          max_input_tokens: 1048576
+          max_output_tokens: 131072
+          supports_function_calling: true
+          supports_reasoning: true
+          reasoning_options:
+            - type: effort
+              values:
+                - low
+                - high
+                - max
+          default_reasoning_effort: max
+          supports_tool_choice: true
+          input_modalities:
+            - text
+            - image
+          supports_image_input: true
+          supports_vision: true
+        litellm_params:
+          model: zai/glm-5.3-flash
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          input_cost_per_token: 0.000000075
+          cache_read_input_token_cost: 0.000000015
+          output_cost_per_token: 0.00000025
+          tags:
+            - zai
+            - coding-plan
+
       - model_name: zai-coding/glm-5.2
         model_info:
           mode: chat
@@ -948,6 +979,17 @@ data:
             "default_reasoning_effort": "max",
             "source": "https://openrouter.ai/z-ai/glm-5.3/api",
         },
+        "glm-5.3-flash": {
+            "context_window": 1048576,
+            "max_output_tokens": 131072,
+            "input_cost_per_token": 0.000000075,
+            "cache_read_input_token_cost": 0.000000015,
+            "output_cost_per_token": 0.00000025,
+            "reasoning_options": [{"type": "effort", "values": ["low", "high", "max"]}],
+            "default_reasoning_effort": "max",
+            "supports_vision": True,
+            "source": "https://openrouter.ai/z-ai/glm-5.3-flash/api",
+        },
         "glm-5.2": {
             "context_window": 1000000,
             "max_output_tokens": 131072,
@@ -1051,14 +1093,14 @@ data:
 
         def get_supported_openai_params(self, model):
             supported_params = list(original_get_supported_openai_params(self, model))
-            # Z.AI GLM models support native `thinking`, and GLM-5.2/5.3 also
-            # accept OpenAI-style `reasoning_effort` values.
+            # Z.AI GLM models support native `thinking`, and GLM-5.2/5.3/5.3-Flash
+            # also accept OpenAI-style `reasoning_effort` values.
             # OpenAI-compatible clients may also send max_completion_tokens;
             # Z.AI accepts it, but LiteLLM's ZAI provider does not list it by default.
             slug = _zai_coding_slug(model)
             if slug is not None:
                 params = ["thinking", "max_completion_tokens", "extra_body"]
-                if slug in {"glm-5.2", "glm-5.3"}:
+                if slug in {"glm-5.2", "glm-5.3", "glm-5.3-flash"}:
                     params.append("reasoning_effort")
                 for param in params:
                     if param not in supported_params:
