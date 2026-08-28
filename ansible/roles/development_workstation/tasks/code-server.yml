@@ -2,29 +2,6 @@
 # code-server is provided by the Homebrew role and runs as the dev user's
 # systemd user service. The dev user's lingering user manager is enabled by
 # syncthing.yml, which runs before this file.
-# Hosts carrying the legacy pinned .deb installation are migrated: the
-# packaged system template unit is stopped and disabled while its unit
-# file still exists, the package is removed, and the dev user's
-# configuration is preserved.
-
-- name: Check for the legacy code-server system unit
-  ansible.builtin.stat:
-    path: /usr/lib/systemd/system/code-server@.service
-  register: development_workstation_legacy_code_server_unit
-
-- name: Stop and disable the legacy code-server system service
-  ansible.builtin.systemd_service:
-    name: "code-server@{{ development_workstation_user }}"
-    state: stopped
-    enabled: false
-  when:
-    - development_workstation_legacy_code_server_unit.stat.exists
-    - not ansible_check_mode
-
-- name: Remove the legacy code-server apt package
-  ansible.builtin.apt:
-    name: code-server
-    state: absent
 
 - name: Ensure code-server configuration directory exists
   ansible.builtin.file:

@@ -28,7 +28,7 @@ development_workstation_baseline_packages:
   - tar
   - unzip
 
-# Root-owned staging directory for the unpinned Herdr and uv bootstrappers.
+# Root-owned staging directory for Herdr and uv bootstrappers.
 development_workstation_download_dir: /var/tmp/development_workstation
 
 # --- Official signed APT repositories -------------------------------------
@@ -85,9 +85,8 @@ development_workstation_repo_packages:
 
 # --- User-scoped tooling ---------------------------------------------------
 
-# code-server is provided by the Homebrew role (homebrew_prefix) and runs
-# as the dev user's systemd user service; the legacy pinned .deb install
-# and its system template unit (code-server@) are migrated away.
+# code-server is provided by the Homebrew role and runs as the dev user's
+# systemd user service.
 development_workstation_code_server_binary: "{{ homebrew_prefix }}/bin/code-server"
 development_workstation_code_server_service: code-server
 development_workstation_code_server_bind_addr: "0.0.0.0:8080"

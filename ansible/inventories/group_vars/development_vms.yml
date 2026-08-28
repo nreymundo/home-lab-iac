@@ -7,11 +7,7 @@
 # The dev login user is created by Terraform cloud-init.
 common_user: dev
 
-# Homebrew: enabled for the dev login user (homebrew_user follows
-# common_user). The Kubernetes and infrastructure toolchain ships as
-# unpinned formulae so brew upgrades track upstream releases; this
-# replaces the role's pinned upstream binaries and the signed
-# pkgs.k8s.io kubectl APT repository.
+# Homebrew manages the development CLI tools for the dev login user.
 homebrew_install_enabled: true
 homebrew_brew_packages:
   - code-server
