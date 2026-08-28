@@ -33,6 +33,32 @@
     - ufw_install_enabled | bool
     - ufw_allow_ssh | bool
 
+- name: Require UFW installation for Mosh rules
+  ansible.builtin.assert:
+    that:
+      - ufw_install_enabled | bool
+    fail_msg: "ufw_allow_mosh requires ufw_install_enabled to be true"
+    quiet: true
+  when: ufw_allow_mosh | bool
+
+- name: Validate UFW is installed for Mosh rules
+  ansible.builtin.command:
+    cmd: ufw --version
+  changed_when: false
+  when:
+    - ufw_install_enabled | bool
+    - ufw_allow_mosh | bool
+
+- name: Allow inbound Mosh
+  community.general.ufw:
+    rule: allow
+    port: "60000:61000"
+    proto: udp
+    comment: Mosh
+  when:
+    - ufw_install_enabled | bool
+    - ufw_allow_mosh | bool
+
 - name: Apply additional inbound UFW rules
   community.general.ufw:
     rule: "{{ item.rule | default('allow') }}"

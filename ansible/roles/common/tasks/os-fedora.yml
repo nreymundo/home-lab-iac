@@ -27,6 +27,12 @@
     state: present
   when: common_extra_packages | default([]) | length > 0
 
+- name: Install Mosh
+  ansible.builtin.dnf:
+    name: mosh
+    state: present
+  when: common_enable_mosh | bool
+
 # NTP via Chrony
 - name: Ensure chrony is installed
   ansible.builtin.dnf:

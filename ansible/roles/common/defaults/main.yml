@@ -12,6 +12,9 @@ common_fstrim_timer_schedule: "04:00:00"
 
 common_extra_packages: []
 
+# Install the Mosh server package via the OS-native package manager.
+common_enable_mosh: true
+
 common_manage_journald: false
 common_journald_storage: persistent
 common_journald_compress: true

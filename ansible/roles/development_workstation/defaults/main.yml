@@ -17,7 +17,6 @@ development_workstation_baseline_packages:
   - git
   - gnupg
   - jq
-  - mosh
   - pipx
   - pre-commit
   - python3-pip

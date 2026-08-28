@@ -20,6 +20,12 @@
     state: present
   when: common_extra_packages | default([]) | length > 0
 
+- name: Install Mosh
+  ansible.builtin.apt:
+    name: mosh
+    state: present
+  when: common_enable_mosh | bool
+
 - name: Ensure systemd-timesyncd is installed
   ansible.builtin.apt:
     name: systemd-timesyncd

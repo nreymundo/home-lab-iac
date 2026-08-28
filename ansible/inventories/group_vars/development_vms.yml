@@ -34,8 +34,9 @@ nodejs_runtime_enable_user_linger: true
 nodejs_runtime_global_npm_packages:
   - opencode-ai
 
-# UFW: default deny inbound, allow outbound, permit SSH, expose code-server
-# only to the K3s pod network, and allow Syncthing sync/discovery on the LAN.
+# UFW: default deny inbound, allow outbound, permit SSH and Mosh, expose
+# code-server only to the K3s pod network, and allow Syncthing sync/discovery
+# on the LAN.
 ufw_install_enabled: true
 ufw_enabled: true
 ufw_allow_ssh: true
@@ -66,6 +67,3 @@ ufw_inbound_rules:
     proto: udp
     from_ip: 192.168.0.0/16
     comment: Syncthing local discovery from the lab LAN
-  - port: "60000:61000"
-    proto: udp
-    comment: Mosh
