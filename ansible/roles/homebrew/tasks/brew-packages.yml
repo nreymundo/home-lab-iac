@@ -1,4 +1,18 @@
 ---
+- name: Check for Homebrew executable
+  ansible.builtin.stat:
+    path: "{{ homebrew_prefix }}/bin/brew"
+  register: homebrew_brew_binary
+  changed_when: false
+
+- name: Report Homebrew package installation would run
+  ansible.builtin.debug:
+    msg: "Homebrew packages would be installed after Homebrew is bootstrapped"
+  when:
+    - homebrew_brew_packages | default([]) | length > 0
+    - ansible_check_mode
+    - not homebrew_brew_binary.stat.exists
+
 - name: Install requested Homebrew packages
   community.general.homebrew:
     name: "{{ homebrew_brew_packages }}"
@@ -8,4 +22,6 @@
   become_user: "{{ homebrew_user }}"
   environment:
     HOME: "{{ getent_passwd[homebrew_user][4] }}"
-  when: homebrew_brew_packages | default([]) | length > 0
+  when:
+    - homebrew_brew_packages | default([]) | length > 0
+    - not ansible_check_mode or homebrew_brew_binary.stat.exists
