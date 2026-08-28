@@ -7,7 +7,7 @@
 development_workstation_user: dev
 
 # Baseline apt packages. Ubuntu's "yq" package is intentionally excluded:
-# it is a different project. The mikefarah/yq binary is pinned below.
+# it is a different project from mikefarah/yq.
 development_workstation_baseline_packages:
   - ansible
   - ansible-lint
@@ -17,6 +17,7 @@ development_workstation_baseline_packages:
   - git
   - gnupg
   - jq
+  - mosh
   - pipx
   - pre-commit
   - python3-pip
@@ -27,7 +28,7 @@ development_workstation_baseline_packages:
   - tar
   - unzip
 
-# Root-owned staging directory for integrity-checked downloads.
+# Root-owned staging directory for the unpinned Herdr and uv bootstrappers.
 development_workstation_download_dir: /var/tmp/development_workstation
 
 # --- Official signed APT repositories -------------------------------------
@@ -44,14 +45,6 @@ development_workstation_onepassword_key_url: https://downloads.1password.com/lin
 development_workstation_onepassword_repo_url: "https://downloads.1password.com/linux/debian/{{ development_workstation_onepassword_arch }}"
 development_workstation_onepassword_keyring: /etc/apt/keyrings/1password-archive-keyring.gpg
 development_workstation_onepassword_list: /etc/apt/sources.list.d/1password.list
-
-# kubectl from the official pkgs.k8s.io repository, pinned to the v1.36
-# track so the client stays within one minor of the live v1.35 cluster.
-development_workstation_kubectl_track: v1.36
-development_workstation_kubectl_key_url: "https://pkgs.k8s.io/core:/stable:/{{ development_workstation_kubectl_track }}/deb/Release.key"
-development_workstation_kubectl_repo_url: "https://pkgs.k8s.io/core:/stable:/{{ development_workstation_kubectl_track }}/deb/"
-development_workstation_kubectl_keyring: /etc/apt/keyrings/kubernetes-archive-keyring.gpg
-development_workstation_kubectl_list: /etc/apt/sources.list.d/kubernetes.list
 
 # Trivy from the official generic apt repository.
 development_workstation_trivy_key_url: https://aquasecurity.github.io/trivy-repo/deb/public.key
@@ -85,63 +78,19 @@ development_workstation_syncthing_pin_priority: 990
 development_workstation_repo_packages:
   - 1password-cli
   - gh
-  - kubectl
   - packer
   - syncthing
   - terraform
   - trivy
 
-# --- Pinned upstream releases ---------------------------------------------
-
-# Flux
-development_workstation_flux_version: "2.9.4"
-development_workstation_flux_release_base: https://github.com/fluxcd/flux2/releases/download
-development_workstation_flux_asset: "flux_{{ development_workstation_flux_version }}_linux_amd64.tar.gz"
-development_workstation_flux_archive_url: "{{ development_workstation_flux_release_base }}/v{{ development_workstation_flux_version }}/{{ development_workstation_flux_asset }}"
-development_workstation_flux_checksum: "sha256:c2c397a52930f52d2005c01d276116b059d062de379386d58e98115380a766a2"
-development_workstation_flux_binary: /usr/local/bin/flux
-
-# Helm, verified against the official sha256sum asset.
-development_workstation_helm_version: "4.2.4"
-development_workstation_helm_release_base: https://get.helm.sh
-development_workstation_helm_asset: "helm-v{{ development_workstation_helm_version }}-linux-amd64.tar.gz"
-development_workstation_helm_archive_url: "{{ development_workstation_helm_release_base }}/{{ development_workstation_helm_asset }}"
-development_workstation_helm_checksum_url: "{{ development_workstation_helm_archive_url }}.sha256sum"
-development_workstation_helm_binary: /usr/local/bin/helm
-
-# SOPS official .deb package (installs /usr/bin/sops, tracked by dpkg).
-development_workstation_sops_version: "3.13.3"
-development_workstation_sops_release_base: https://github.com/getsops/sops/releases/download
-development_workstation_sops_asset: "sops_{{ development_workstation_sops_version }}_amd64.deb"
-development_workstation_sops_deb_url: "{{ development_workstation_sops_release_base }}/v{{ development_workstation_sops_version }}/{{ development_workstation_sops_asset }}"
-development_workstation_sops_checksum: "sha256:927c45f2ccb5b1c9acb1e80c7befaea0672c721fd3f222697a51e0a7081e3f3b"
-
-# kubeconform
-development_workstation_kubeconform_version: "0.8.0"
-development_workstation_kubeconform_release_base: https://github.com/yannh/kubeconform/releases/download
-development_workstation_kubeconform_asset: kubeconform-linux-amd64.tar.gz
-development_workstation_kubeconform_archive_url: "{{ development_workstation_kubeconform_release_base }}/v{{ development_workstation_kubeconform_version }}/{{ development_workstation_kubeconform_asset }}"
-development_workstation_kubeconform_checksum: "sha256:9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883"
-development_workstation_kubeconform_binary: /usr/local/bin/kubeconform
-
-# mikefarah/yq, verified against the official release checksums asset.
-development_workstation_yq_version: "4.53.6"
-development_workstation_yq_release_base: https://github.com/mikefarah/yq/releases/download
-development_workstation_yq_asset: yq_linux_amd64
-development_workstation_yq_binary_url: "{{ development_workstation_yq_release_base }}/v{{ development_workstation_yq_version }}/{{ development_workstation_yq_asset }}"
-development_workstation_yq_checksums_url: "{{ development_workstation_yq_release_base }}/v{{ development_workstation_yq_version }}/checksums"
-development_workstation_yq_binary: /usr/local/bin/yq
-
-# code-server, installed from the official release .deb via apt.
-development_workstation_code_server_version: "4.134.0"
-development_workstation_code_server_release_base: https://github.com/coder/code-server/releases/download
-development_workstation_code_server_asset: "code-server_{{ development_workstation_code_server_version }}_amd64.deb"
-development_workstation_code_server_deb_url: "{{ development_workstation_code_server_release_base }}/v{{ development_workstation_code_server_version }}/{{ development_workstation_code_server_asset }}"
-development_workstation_code_server_checksum: "sha256:1788343b0719bafb40a2e1e6c0ec2fd3f307c6b32bb93b79a7adcfa9aa3d909c"
-development_workstation_code_server_service: "code-server@{{ development_workstation_user }}"
-development_workstation_code_server_bind_addr: "0.0.0.0:8080"
-
 # --- User-scoped tooling ---------------------------------------------------
+
+# code-server is provided by the Homebrew role (homebrew_prefix) and runs
+# as the dev user's systemd user service; the legacy pinned .deb install
+# and its system template unit (code-server@) are migrated away.
+development_workstation_code_server_binary: "{{ homebrew_prefix }}/bin/code-server"
+development_workstation_code_server_service: code-server
+development_workstation_code_server_bind_addr: "0.0.0.0:8080"
 
 # Syncthing runs as the dev user's systemd user service; the packaged
 # system template unit (syncthing@) is deliberately not used.
@@ -150,13 +99,11 @@ development_workstation_syncthing_service: syncthing
 # Checkov, installed with pipx for the dev user.
 development_workstation_checkov_package: checkov
 
-# Pinned Ansible collections installed into the dev user's default
-# collection path (~/.ansible/collections).
+# Ansible collections, installed by name without version pins into the
+# dev user's default collection path (~/.ansible/collections).
 development_workstation_collections:
-  - name: ansible.posix
-    version: "2.2.2"
-  - name: community.general
-    version: "13.3.0"
+  - ansible.posix
+  - community.general
 
 # Herdr, installed into the dev user's ~/.local/bin from the official
 # herdr.dev latest.json release manifest. Herdr updates itself in place

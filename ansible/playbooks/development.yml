@@ -5,6 +5,7 @@
   roles:
     - common
     - ssh_hardening
+    - homebrew
     - disk_expand
     - ufw
     - docker

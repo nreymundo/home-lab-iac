@@ -24,6 +24,14 @@
         group: "{{ development_workstation_user_group }}"
         mode: "0755"
 
+    - name: Create the development tool staging directory
+      ansible.builtin.file:
+        path: "{{ development_workstation_download_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
     - name: Download the uv standalone installer
       ansible.builtin.get_url:
         url: "{{ development_workstation_uv_installer_url }}"

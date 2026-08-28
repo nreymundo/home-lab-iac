@@ -21,14 +21,14 @@
     mode: "0644"
     line: 'export PATH="$HOME/.local/bin:$PATH"'
 
-- name: Install pinned Ansible collections for the development user
+- name: Install Ansible collections for the development user
   ansible.builtin.command:
     argv:
       - ansible-galaxy
       - collection
       - install
-      - "{{ item.name }}:=={{ item.version }}"
-    creates: "{{ development_workstation_user_home }}/.ansible/collections/ansible_collections/{{ item.name.split('.')[0] }}/{{ item.name.split('.')[1] }}"
+      - "{{ item }}"
+    creates: "{{ development_workstation_user_home }}/.ansible/collections/ansible_collections/{{ item.split('.')[0] }}/{{ item.split('.')[1] }}"
   loop: "{{ development_workstation_collections }}"
   become: true
   become_user: "{{ development_workstation_user }}"
