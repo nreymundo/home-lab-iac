@@ -16,9 +16,19 @@ See [docs/SECRETS_MANAGEMENT.md](docs/SECRETS_MANAGEMENT.md) for detailed setup.
 
 | Component | Method |
 |-----------|--------|
+| Ansible | 1Password CLI (`op`) in the `ssh_hardening` role |
 | Packer | 1Password CLI (`op`) via `generate-autoinstall.sh` |
 | Terraform | 1Password CLI (`op`) via `hashicorp/external` data source |
 | Kubernetes | SOPS (AGE-encrypted `*.sops.yaml` files in Git) |
+
+### 1Password CLI for Infrastructure Automation
+
+Ansible, Packer, and Terraform use the `op` CLI with a read-only service
+account. The local runtime environment must provide
+`OP_SERVICE_ACCOUNT_TOKEN` and `IAC_1PASSWORD_VAULT_ID`; neither belongs in
+the repository. The vault ID is explicitly passed to every SSH-key lookup, and
+the existing `ansible`, `packer`, and `terraform` tags limit each tool's key
+selection within that vault.
 
 ---
 
