@@ -1,4 +1,20 @@
 ---
+- name: Require 1Password service account credentials for SSH key discovery
+  ansible.builtin.assert:
+    that:
+      - lookup('ansible.builtin.env', 'OP_SERVICE_ACCOUNT_TOKEN') | length > 0
+      - lookup('ansible.builtin.env', 'IAC_1PASSWORD_VAULT_ID') | length > 0
+    fail_msg: >-
+      ssh_hardening_authorized_keys is not set; export nonempty
+      OP_SERVICE_ACCOUNT_TOKEN and IAC_1PASSWORD_VAULT_ID environment
+      variables to discover authorized SSH keys from 1Password.
+  delegate_to: localhost
+  become: false
+  run_once: true
+  changed_when: false
+  check_mode: false
+  when: ssh_hardening_authorized_keys is none
+
 - name: List authorized SSH key items from 1Password
   ansible.builtin.command:
     argv:
@@ -6,7 +22,7 @@
       - item
       - list
       - --vault
-      - "{{ ssh_hardening_authorized_keys_1password_vault }}"
+      - "{{ lookup('ansible.builtin.env', 'IAC_1PASSWORD_VAULT_ID') }}"
       - --categories
       - "SSH Key"
       - --tags
@@ -22,7 +38,7 @@
   no_log: true
   when:
     - ssh_hardening_authorized_keys is none
-    - ssh_hardening_authorized_keys_1password_vault is not none
+    - lookup('ansible.builtin.env', 'IAC_1PASSWORD_VAULT_ID') | length > 0
     - ssh_hardening_authorized_keys_1password_tag is not none
 
 - name: Read authorized SSH keys from 1Password
@@ -30,7 +46,7 @@
     argv:
       - op
       - read
-      - "op://{{ ssh_hardening_authorized_keys_1password_vault }}/{{ item.id }}/public key"
+      - "op://{{ lookup('ansible.builtin.env', 'IAC_1PASSWORD_VAULT_ID') }}/{{ item.id }}/public key"
   loop: >-
     {{
       (ssh_hardening_authorized_key_items | default({'stdout': '[]'})).stdout
@@ -46,7 +62,7 @@
   no_log: true
   when:
     - ssh_hardening_authorized_keys is none
-    - ssh_hardening_authorized_keys_1password_vault is not none
+    - lookup('ansible.builtin.env', 'IAC_1PASSWORD_VAULT_ID') | length > 0
     - ssh_hardening_authorized_keys_1password_tag is not none
 
 - name: Require authorized SSH keys from 1Password
@@ -63,7 +79,7 @@
   check_mode: false
   when:
     - ssh_hardening_authorized_keys is none
-    - ssh_hardening_authorized_keys_1password_vault is not none
+    - lookup('ansible.builtin.env', 'IAC_1PASSWORD_VAULT_ID') | length > 0
     - ssh_hardening_authorized_keys_1password_tag is not none
 
 - name: Resolve effective SSH hardening inputs
@@ -82,7 +98,7 @@
           | reject('equalto', '')
           | list
           if (
-            ssh_hardening_authorized_keys_1password_vault is not none
+            lookup('ansible.builtin.env', 'IAC_1PASSWORD_VAULT_ID') | length > 0
             and ssh_hardening_authorized_keys_1password_tag is not none
           )
           else (common_authorized_keys | default([]))

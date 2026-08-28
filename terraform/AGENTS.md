@@ -28,5 +28,5 @@ terraform -chdir="$ROOT" plan
 ```
 
 - Set `ROOT` to each modified root module, including cloud roots. `plan` requires the configured backend and provider credentials.
-- The 1Password-backed external data source needs an authenticated `op` CLI and `jq` on PATH for anything that reads data sources; scope or constrain lookups with `OP_SSH_KEYS_VAULT_ID` and `OP_ACCOUNT` when needed.
+- The 1Password-backed external data source needs `op` CLI and `jq` on PATH for anything that reads data sources; it requires `OP_SERVICE_ACCOUNT_TOKEN` and scopes all list/read lookups to `IAC_1PASSWORD_VAULT_ID`.
 - After changing Terraform that feeds Ansible, inspect the generated inventory diff and any host labels, users, or topology assumptions consumed downstream.

@@ -1,7 +1,6 @@
 ---
 ssh_hardening_user:
 ssh_hardening_authorized_keys:
-ssh_hardening_authorized_keys_1password_vault:
 ssh_hardening_authorized_keys_1password_tag:
 ssh_hardening_enable_hushlogin:
 ssh_hardening_sshd_settings:

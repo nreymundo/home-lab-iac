@@ -1,6 +1,5 @@
 ---
 # Shared settings for all managed hosts.
-ssh_hardening_authorized_keys_1password_vault: "rpx5om7wm7nhkoq7jsuo6n7gwm"
 ssh_hardening_authorized_keys_1password_tag: "ansible"
 
 common_timezone: "Europe/Berlin"

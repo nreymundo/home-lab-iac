@@ -3,12 +3,13 @@ set -euo pipefail
 
 # Fetch SSH public keys from 1Password
 # Usage: fetch-ssh-keys.sh [cloudinit|kickstart]
-# Requires: 1Password CLI (op) with an authenticated session or desktop app
-# integration, plus jq. Optionally set OP_ACCOUNT to pick a specific account.
+# Requires: 1Password CLI (op) authenticated with a service account token
+# (OP_SERVICE_ACCOUNT_TOKEN), the target vault ID (IAC_1PASSWORD_VAULT_ID),
+# and jq. The token is consumed from the environment by op and is never
+# printed or logged.
 
 FORMAT="${1:-cloudinit}"
 
-readonly OP_VAULT_ID="rpx5om7wm7nhkoq7jsuo6n7gwm"
 readonly OP_ITEM_CATEGORY="SSH Key"
 readonly OP_ITEM_TAG="packer"
 
@@ -26,22 +27,35 @@ if ! command -v jq &>/dev/null; then
 	exit 1
 fi
 
+# Require service account token and vault ID before any op call
+if [[ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
+	echo "ERROR: OP_SERVICE_ACCOUNT_TOKEN is not set" >&2
+	echo "Provide a 1Password service account token in the environment" >&2
+	exit 1
+fi
+
+if [[ -z "${IAC_1PASSWORD_VAULT_ID:-}" ]]; then
+	echo "ERROR: IAC_1PASSWORD_VAULT_ID is not set" >&2
+	echo "Provide the 1Password vault ID in the environment" >&2
+	exit 1
+fi
+
 # List SSH key items tagged for Packer, sorted by item ID for a stable key order
-if ! ITEM_IDS=$(op item list --vault "$OP_VAULT_ID" --categories "$OP_ITEM_CATEGORY" --tags "$OP_ITEM_TAG" --format json |
+if ! ITEM_IDS=$(op item list --vault "$IAC_1PASSWORD_VAULT_ID" --categories "$OP_ITEM_CATEGORY" --tags "$OP_ITEM_TAG" --format json |
 	jq -r 'sort_by(.id) | .[].id'); then
 	echo "ERROR: Failed to list 1Password SSH key items (check 'op' authentication)" >&2
 	exit 1
 fi
 
 if [[ -z "$ITEM_IDS" ]]; then
-	echo "ERROR: No 1Password SSH key items tagged '$OP_ITEM_TAG' found in vault $OP_VAULT_ID" >&2
+	echo "ERROR: No 1Password SSH key items tagged '$OP_ITEM_TAG' found in vault $IAC_1PASSWORD_VAULT_ID" >&2
 	exit 1
 fi
 
 # Fetch the public key of each matching item
 KEYS_RAW=""
 while IFS= read -r item_id; do
-	if ! key=$(op read "op://$OP_VAULT_ID/$item_id/public key"); then
+	if ! key=$(op read "op://$IAC_1PASSWORD_VAULT_ID/$item_id/public key"); then
 		echo "ERROR: Failed to read public key for 1Password item $item_id" >&2
 		exit 1
 	fi
