@@ -348,6 +348,7 @@ data:
         local/document-analysis: hosted_vllm/unsloth/gemma-4-26b-a4b-it-qat-doc
         local/document-best: hosted_vllm/unsloth/gemma-4-31b-it-qat-doc-best
         local/reasoning-max-context: hosted_vllm/unsloth/gemma-4-26b-a4b-it-qat-reasoning-max-context
+        local/coder: hosted_vllm/unsloth-qwen3.8-27b
 
   cache_bypass.py: |
     import json
