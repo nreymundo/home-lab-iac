@@ -5,6 +5,43 @@
       - ansible_system == 'Linux'
     fail_msg: "llama_swap currently supports Linux containers only"
 
+- name: Resolve latest llama-swap release metadata from GitHub
+  ansible.builtin.uri:
+    url: "{{ llama_swap_release_api_url }}"
+    headers:
+      Accept: application/vnd.github+json
+      X-GitHub-Api-Version: "2022-11-28"
+    status_code: 200
+    validate_certs: true
+  check_mode: false
+  register: llama_swap_release
+
+- name: Select llama-swap Linux amd64 release asset
+  ansible.builtin.set_fact:
+    llama_swap_release_assets: >-
+      {{ llama_swap_release.json.assets | default([]) | selectattr('name', 'match', llama_swap_asset_pattern) | list }}
+
+- name: Assert llama-swap release asset resolved uniquely
+  ansible.builtin.assert:
+    that:
+      - llama_swap_release.json.tag_name | default('') | length > 0
+      - llama_swap_release_assets | length == 1
+      - (llama_swap_release_assets[0].digest | default('')) is match('^sha256:[0-9a-f]{64}$')
+    fail_msg: >-
+      Expected exactly one llama-swap release asset matching {{ llama_swap_asset_pattern }} with a
+      sha256 digest from {{ llama_swap_release_api_url }}, got
+      {{ llama_swap_release_assets | length }} matching asset(s) for tag
+      {{ llama_swap_release.json.tag_name | default('<none>') }}
+
+- name: Set llama-swap latest release facts
+  ansible.builtin.set_fact:
+    llama_swap_latest_tag: "{{ llama_swap_release.json.tag_name }}"
+    llama_swap_archive_name: "{{ llama_swap_release_assets[0].name }}"
+    llama_swap_archive_url: "{{ llama_swap_release_assets[0].browser_download_url }}"
+    llama_swap_archive_checksum: "{{ llama_swap_release_assets[0].digest }}"
+    llama_swap_release_dir: "{{ llama_swap_install_dir }}/releases/{{ llama_swap_release.json.tag_name }}"
+    llama_swap_archive_path: "{{ llama_swap_install_dir }}/{{ llama_swap_release_assets[0].name }}"
+
 - name: Ensure llama-swap directories exist
   ansible.builtin.file:
     path: "{{ item.path }}"
@@ -50,6 +87,35 @@
     mode: "0755"
     remote_src: true
   notify: Restart llama-swap
+
+- name: Find stale llama-swap release directories
+  ansible.builtin.find:
+    paths: "{{ llama_swap_install_dir }}/releases"
+    file_type: directory
+    recurse: false
+  register: llama_swap_release_dirs
+
+- name: Remove stale llama-swap release directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ llama_swap_release_dirs.files | default([]) | map(attribute='path') | list }}"
+  when: item != llama_swap_release_dir
+
+- name: Find stale llama-swap release archives
+  ansible.builtin.find:
+    paths: "{{ llama_swap_install_dir }}"
+    patterns: "llama-swap_*.tar.gz"
+    file_type: file
+    recurse: false
+  register: llama_swap_release_archives
+
+- name: Remove stale llama-swap release archives
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ llama_swap_release_archives.files | default([]) | map(attribute='path') | list }}"
+  when: item != llama_swap_archive_path
 
 - name: Check llama-swap config
   ansible.builtin.stat:

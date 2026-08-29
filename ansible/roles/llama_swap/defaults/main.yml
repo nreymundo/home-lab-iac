@@ -1,16 +1,10 @@
 ---
 llama_swap_enabled: true
 
-llama_swap_version: "246"
-llama_swap_tag: "v{{ llama_swap_version }}"
-llama_swap_archive_name: "llama-swap_{{ llama_swap_version }}_linux_amd64.tar.gz"
-llama_swap_archive_url: >-
-  https://github.com/mostlygeek/llama-swap/releases/download/{{ llama_swap_tag }}/{{ llama_swap_archive_name }}
-llama_swap_archive_checksum: "sha256:92ea5c37f66a7ed31bd83ffb1b1b46b7f033881f742fead6c6e64a6601013352"
+llama_swap_release_api_url: https://api.github.com/repos/mostlygeek/llama-swap/releases/latest
+llama_swap_asset_pattern: '^llama-swap_[0-9]+_linux_amd64\.tar\.gz$'
 
 llama_swap_install_dir: /opt/llama-swap
-llama_swap_release_dir: "{{ llama_swap_install_dir }}/releases/{{ llama_swap_tag }}"
-llama_swap_archive_path: "{{ llama_swap_install_dir }}/{{ llama_swap_archive_name }}"
 llama_swap_bin_path: /usr/local/bin/llama-swap
 llama_swap_config_dir: /etc/llama-swap
 llama_swap_config_path: "{{ llama_swap_config_dir }}/config.yaml"
