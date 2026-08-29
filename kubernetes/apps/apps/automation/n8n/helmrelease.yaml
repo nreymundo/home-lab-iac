@@ -66,6 +66,11 @@ spec:
                   secretKeyRef:
                     name: n8n-secrets
                     key: N8N_ENCRYPTION_KEY
+              HERMES_WEBHOOK_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: n8n-secrets
+                    key: HERMES_WEBHOOK_SECRET
               N8N_PORT: 5678
               WEBHOOK_URL: "https://n8n.${CLUSTER_DOMAIN}"
               N8N_EDITOR_BASE_URL: "https://n8n.${CLUSTER_DOMAIN}"
@@ -130,6 +135,11 @@ spec:
                   secretKeyRef:
                     name: n8n-secrets
                     key: N8N_ENCRYPTION_KEY
+              HERMES_WEBHOOK_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: n8n-secrets
+                    key: HERMES_WEBHOOK_SECRET
             resources:
               requests:
                 cpu: 100m
