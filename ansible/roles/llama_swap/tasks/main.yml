@@ -88,6 +88,35 @@
     remote_src: true
   notify: Restart llama-swap
 
+- name: Find stale llama-swap release directories
+  ansible.builtin.find:
+    paths: "{{ llama_swap_install_dir }}/releases"
+    file_type: directory
+    recurse: false
+  register: llama_swap_release_dirs
+
+- name: Remove stale llama-swap release directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ llama_swap_release_dirs.files | default([]) | map(attribute='path') | list }}"
+  when: item != llama_swap_release_dir
+
+- name: Find stale llama-swap release archives
+  ansible.builtin.find:
+    paths: "{{ llama_swap_install_dir }}"
+    patterns: "llama-swap_*.tar.gz"
+    file_type: file
+    recurse: false
+  register: llama_swap_release_archives
+
+- name: Remove stale llama-swap release archives
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ llama_swap_release_archives.files | default([]) | map(attribute='path') | list }}"
+  when: item != llama_swap_archive_path
+
 - name: Check llama-swap config
   ansible.builtin.stat:
     path: "{{ llama_swap_config_path }}"
