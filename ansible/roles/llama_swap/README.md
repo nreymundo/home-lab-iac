@@ -1,16 +1,22 @@
 # llama-swap Role
 
-Installs `llama-swap` from the upstream release binary and runs it as a systemd
-service in LLM LXCs.
+Installs the newest stable `llama-swap` release from upstream GitHub and runs
+it as a systemd service in LLM LXCs.
 
 The role exposes one public OpenAI-compatible endpoint with `llama-swap` and
 lets it start `llama-server` backends on dynamic localhost ports.
 
+Every run resolves the latest stable release via the GitHub releases API
+(`llama_swap_release_api_url`), selects the Linux amd64 asset matching
+`llama_swap_asset_pattern`, and verifies the archive download against the
+release asset's published sha256 digest. New upstream releases are picked up
+automatically on the next run; when the latest tag, published digest, and local
+artifacts are unchanged, the role neither redownloads nor reinstalls.
+
 Important parameters:
 
-- `llama_swap_version`
-- `llama_swap_archive_url`
-- `llama_swap_archive_checksum`
+- `llama_swap_release_api_url`
+- `llama_swap_asset_pattern`
 - `llama_swap_environment`
 - `llama_swap_listen`
 - `llama_swap_start_port`
