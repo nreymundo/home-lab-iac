@@ -7,6 +7,12 @@
 - name: Restart code-server
   ansible.builtin.systemd_service:
     name: "{{ development_workstation_code_server_service }}"
+    scope: user
     state: restarted
     daemon_reload: true
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ development_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ development_workstation_user_uid }}/bus"
+  become: true
+  become_user: "{{ development_workstation_user }}"
   when: not ansible_check_mode

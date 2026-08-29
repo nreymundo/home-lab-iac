@@ -12,6 +12,9 @@ ufw_default_outgoing_policy: allow
 # Convenience toggle for inbound SSH access.
 ufw_allow_ssh: false
 
+# Convenience toggle for inbound Mosh (UDP 60000:61000) access.
+ufw_allow_mosh: true
+
 # Additional inbound rules.
 # Example:
 # ufw_inbound_rules:

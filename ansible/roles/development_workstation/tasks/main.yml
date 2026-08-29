@@ -10,14 +10,11 @@
 - name: Add official signed APT repositories
   ansible.builtin.include_tasks: repositories.yml
 
-- name: Install pinned upstream tool releases
-  ansible.builtin.include_tasks: binaries.yml
+- name: Enable Syncthing for the development user
+  ansible.builtin.include_tasks: syncthing.yml
 
 - name: Install and configure code-server
   ansible.builtin.include_tasks: code-server.yml
-
-- name: Enable Syncthing for the development user
-  ansible.builtin.include_tasks: syncthing.yml
 
 - name: Install user-scoped development tooling
   ansible.builtin.include_tasks: dev-tools.yml

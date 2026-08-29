@@ -7,6 +7,17 @@
 # The dev login user is created by Terraform cloud-init.
 common_user: dev
 
+# Homebrew manages the development CLI tools for the dev login user.
+homebrew_install_enabled: true
+homebrew_brew_packages:
+  - code-server
+  - fluxcd
+  - helm
+  - kubeconform
+  - kubernetes-cli
+  - sops
+  - yq
+
 # Docker: enabled, targeting the Terraform-created dev login user.
 docker_install_enabled: true
 docker_users:
@@ -23,8 +34,9 @@ nodejs_runtime_enable_user_linger: true
 nodejs_runtime_global_npm_packages:
   - opencode-ai
 
-# UFW: default deny inbound, allow outbound, permit SSH, expose code-server
-# only to the K3s pod network, and allow Syncthing sync/discovery on the LAN.
+# UFW: default deny inbound, allow outbound, permit SSH and Mosh, expose
+# code-server only to the K3s pod network, and allow Syncthing sync/discovery
+# on the LAN.
 ufw_install_enabled: true
 ufw_enabled: true
 ufw_allow_ssh: true

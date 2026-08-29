@@ -1,20 +1,7 @@
 ---
-# code-server, pinned to an exact release .deb and exposed on TCP 8080.
-# UFW rules (group_vars) restrict the port to the 10.42.0.0/16 network.
-
-- name: Download pinned code-server package
-  ansible.builtin.get_url:
-    url: "{{ development_workstation_code_server_deb_url }}"
-    dest: "{{ development_workstation_download_dir }}/{{ development_workstation_code_server_deb_url | basename }}"
-    checksum: "{{ development_workstation_code_server_checksum }}"
-    mode: "0644"
-
-- name: Install pinned code-server package
-  ansible.builtin.apt:
-    deb: "{{ development_workstation_download_dir }}/{{ development_workstation_code_server_deb_url | basename }}"
-    state: present
-  when: not ansible_check_mode
-  notify: Restart code-server
+# code-server is provided by the Homebrew role and runs as the dev user's
+# systemd user service. The dev user's lingering user manager is enabled by
+# syncthing.yml, which runs before this file.
 
 - name: Ensure code-server configuration directory exists
   ansible.builtin.file:
@@ -37,10 +24,44 @@
     mode: "0600"
   notify: Restart code-server
 
-- name: Enable code-server systemd unit for the development user
+- name: Ensure code-server user systemd directory exists
+  ansible.builtin.file:
+    path: "{{ development_workstation_user_home }}/.config/systemd/user"
+    state: directory
+    owner: "{{ development_workstation_user }}"
+    group: "{{ development_workstation_user_group }}"
+    mode: "0755"
+
+- name: Install code-server user systemd unit
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=code-server
+      After=network.target
+
+      [Service]
+      Type=exec
+      ExecStart={{ development_workstation_code_server_binary }}
+      Restart=always
+
+      [Install]
+      WantedBy=default.target
+    dest: "{{ development_workstation_user_home }}/.config/systemd/user/code-server.service"
+    owner: "{{ development_workstation_user }}"
+    group: "{{ development_workstation_user_group }}"
+    mode: "0644"
+  notify: Restart code-server
+
+- name: Enable and start code-server user service for the development user
   ansible.builtin.systemd_service:
     name: "{{ development_workstation_code_server_service }}"
-    enabled: true
+    scope: user
     state: started
+    enabled: true
     daemon_reload: true
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ development_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ development_workstation_user_uid }}/bus"
+  become: true
+  become_user: "{{ development_workstation_user }}"
   when: not ansible_check_mode

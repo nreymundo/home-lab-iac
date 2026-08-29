@@ -57,30 +57,6 @@
     mode: "0644"
   notify: Update development workstation apt cache
 
-# --- kubectl (official pkgs.k8s.io track) ---------------------------------
-
-- name: Download Kubernetes GPG key
-  ansible.builtin.get_url:
-    url: "{{ development_workstation_kubectl_key_url }}"
-    dest: /tmp/development_workstation_kubernetes.asc
-    mode: "0644"
-    force: true
-
-- name: Convert Kubernetes GPG key to dearmor format
-  ansible.builtin.command:
-    cmd: >-
-      gpg --dearmor -o {{ development_workstation_kubectl_keyring }}
-      /tmp/development_workstation_kubernetes.asc
-    creates: "{{ development_workstation_kubectl_keyring }}"
-
-- name: Add Kubernetes APT repository
-  ansible.builtin.copy:
-    content: |
-      deb [signed-by={{ development_workstation_kubectl_keyring }}] {{ development_workstation_kubectl_repo_url }} /
-    dest: "{{ development_workstation_kubectl_list }}"
-    mode: "0644"
-  notify: Update development workstation apt cache
-
 # --- Trivy -----------------------------------------------------------------
 
 - name: Download Trivy GPG key
