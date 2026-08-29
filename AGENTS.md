@@ -49,6 +49,17 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Before assuming how to reach a host — alias, `ProxyJump` hop, `IdentityFile`, or port — check `~/.ssh/config`.
 - `~/.ssh/config` may `Include` other files (e.g. `~/.ssh/conf.d/*` or per-host config); check those too, not just the top-level file.
 
+## Accepted Design Choices (for reviewers)
+
+These patterns are deliberate. Do not flag them as findings without new, specific evidence:
+
+- **Privileged containers inside isolated VMs.** Sandbox/DinD-style runners may run privileged when the VM itself is the isolation boundary. Privileged-in-isolated-VM is not privileged-on-host.
+- **Mutable image tags (`:latest`, major tags).** Updates are pulled by tag on Renovate's schedule, not SHA-pinned. Do not recommend digest pinning.
+- **Internal-network endpoints without TLS verification.** Proxmox/LiteLLM/other LAN APIs skip TLS verification by design; the network is the trust boundary.
+- **VLAN assignments.** Service VLAN placement is deliberate per-network design, not "default/shared by accident."
+
+New reviewers (human or AI) must treat deviations from these as design questions to ask, not blockers to raise.
+
 ## Validation And Evidence
 - Do not present a config-only theory as a confirmed root cause when live evidence is available.
 - Before claiming a fix, use the most direct evidence available in the current environment.
