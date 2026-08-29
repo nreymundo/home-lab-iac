@@ -26,15 +26,11 @@ ufw_inbound_rules:
     proto: tcp
     from_ip: 192.168.0.0/16
     comment: Hermes API from 192.168 LANs
-  - port: "8642"
+  - port: "8644"
     proto: tcp
-    from_ip: 10.1.40.0/24
-    comment: Hermes API from 10.1.40 LAN
+    from_ip: 192.168.0.0/16
+    comment: Hermes port 8644 from 192.168 LANs
   - port: "9119"
     proto: tcp
     from_ip: 192.168.0.0/16
     comment: Hermes dashboard from 192.168 LANs
-  - port: "9119"
-    proto: tcp
-    from_ip: 10.1.40.0/24
-    comment: Hermes dashboard from 10.1.40 LAN
