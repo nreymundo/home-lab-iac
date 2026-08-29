@@ -71,6 +71,7 @@ spec:
                     key: N8N_SANDBOX_SERVICE_API_KEY
               N8N_INSTANCE_AI_MODEL: custom/local/coder
               N8N_INSTANCE_AI_MODEL_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
+              N8N_INSTANCE_AI_SEARXNG_URL: http://searxng-main.utils.svc.cluster.local:8080
               N8N_INSTANCE_AI_MODEL_API_KEY:
                 valueFrom:
                   secretKeyRef:
@@ -150,6 +151,7 @@ spec:
                     key: N8N_SANDBOX_SERVICE_API_KEY
               N8N_INSTANCE_AI_MODEL: custom/local/coder
               N8N_INSTANCE_AI_MODEL_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
+              N8N_INSTANCE_AI_SEARXNG_URL: http://searxng-main.utils.svc.cluster.local:8080
               N8N_INSTANCE_AI_MODEL_API_KEY:
                 valueFrom:
                   secretKeyRef:
