@@ -69,7 +69,7 @@ spec:
                   secretKeyRef:
                     name: n8n-sandbox-secrets
                     key: N8N_SANDBOX_SERVICE_API_KEY
-              N8N_INSTANCE_AI_MODEL: custom/local/reasoning-max-context
+              N8N_INSTANCE_AI_MODEL: custom/local/coder
               N8N_INSTANCE_AI_MODEL_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
               N8N_INSTANCE_AI_MODEL_API_KEY:
                 valueFrom:
@@ -148,7 +148,7 @@ spec:
                   secretKeyRef:
                     name: n8n-sandbox-secrets
                     key: N8N_SANDBOX_SERVICE_API_KEY
-              N8N_INSTANCE_AI_MODEL: custom/local/reasoning-max-context
+              N8N_INSTANCE_AI_MODEL: custom/local/coder
               N8N_INSTANCE_AI_MODEL_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
               N8N_INSTANCE_AI_MODEL_API_KEY:
                 valueFrom:
