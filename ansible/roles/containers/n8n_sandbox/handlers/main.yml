@@ -1,0 +1,18 @@
+---
+- name: Restart n8n sandbox firewall service
+  ansible.builtin.systemd_service:
+    name: "{{ n8n_sandbox_firewall_service_name }}"
+    state: restarted
+    daemon_reload: true
+  when:
+    - n8n_sandbox_enabled | bool
+    - not ansible_check_mode
+
+- name: Restart n8n sandbox service
+  ansible.builtin.systemd_service:
+    name: "{{ n8n_sandbox_service_name }}"
+    state: restarted
+    daemon_reload: true
+  when:
+    - n8n_sandbox_enabled | bool
+    - not ansible_check_mode

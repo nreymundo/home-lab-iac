@@ -1,0 +1,48 @@
+---
+# Toggle n8n's self-hosted AI Assistant sandbox service.
+n8n_sandbox_enabled: true
+
+# Docker Compose and systemd service settings.
+n8n_sandbox_service_name: n8n-sandbox
+n8n_sandbox_compose_project_name: n8n-sandbox
+n8n_sandbox_base_dir: /etc/n8n-sandbox
+n8n_sandbox_compose_file: "{{ n8n_sandbox_base_dir }}/docker-compose.yml"
+
+# The n8n workload owns the shared sandbox credentials. This role decrypts the
+# source secret locally, following the existing NetBird Authentik-secret pattern.
+n8n_sandbox_secrets_file: >-
+  {{ playbook_dir }}/../../kubernetes/apps/apps/automation/n8n/n8n-sandbox-secrets.sops.yaml
+n8n_sandbox_sops_age_key_file: >-
+  {{ lookup('env', 'SOPS_AGE_KEY_FILE') | default(lookup('env', 'HOME') + '/.config/sops/age/keys.txt', true) }}
+
+# Official n8n sandbox images. The runner pulls the sandbox image with its
+# nested Docker daemon when a sandbox is created.
+n8n_sandbox_api_image: ghcr.io/n8n-io/n8n-sandbox-service-api:latest
+n8n_sandbox_runner_image: ghcr.io/n8n-io/n8n-sandbox-service-runner-dind:latest
+n8n_sandbox_runner_sandbox_image: ghcr.io/n8n-io/n8n-sandbox-service-sandbox:latest
+
+# Only the API is reachable from Kubernetes. Runner ports remain internal to
+# the Docker network and are not published on the VM.
+n8n_sandbox_api_bind_address: "0.0.0.0"
+n8n_sandbox_api_host_port: 8080
+
+# UFW cannot filter Docker-published ports: Docker DNATs packets before they
+# reach the host INPUT chain, so the filter runs in DOCKER-USER instead. This
+# role owns that service-specific behavior, analogous to NetBird owning its
+# service-specific UFW rule.
+n8n_sandbox_firewall_service_name: n8n-sandbox-firewall
+n8n_sandbox_firewall_script_path: /usr/local/sbin/n8n-sandbox-firewall
+n8n_sandbox_firewall_chain: N8N_SANDBOX
+
+# Sources allowed to reach the published API port. Derived from the
+# TCP/{{ n8n_sandbox_api_host_port }} ufw_inbound_rules entries so the host
+# firewall and the DOCKER-USER filter share one allowlist definition.
+n8n_sandbox_firewall_allowed_sources: >-
+  {{ ufw_inbound_rules | default([])
+     | selectattr('proto', 'defined')
+     | selectattr('proto', 'equalto', 'tcp')
+     | selectattr('port', 'defined')
+     | selectattr('port', 'equalto', n8n_sandbox_api_host_port | string)
+     | selectattr('from_ip', 'defined')
+     | map(attribute='from_ip')
+     | list }}

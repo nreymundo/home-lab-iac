@@ -1,0 +1,17 @@
+[Unit]
+Description=n8n AI Assistant sandbox service
+Wants=network-online.target
+After=network-online.target docker.service {{ n8n_sandbox_firewall_service_name }}.service
+Requires=docker.service {{ n8n_sandbox_firewall_service_name }}.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory={{ n8n_sandbox_base_dir }}
+ExecStart=/usr/bin/docker compose -p {{ n8n_sandbox_compose_project_name }} -f {{ n8n_sandbox_compose_file }} up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -p {{ n8n_sandbox_compose_project_name }} -f {{ n8n_sandbox_compose_file }} down
+TimeoutStartSec=0
+TimeoutStopSec=120s
+
+[Install]
+WantedBy=multi-user.target

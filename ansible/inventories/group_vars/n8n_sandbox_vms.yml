@@ -1,0 +1,38 @@
+---
+# Hand-maintained group variables for the n8n sandbox VM.
+# The n8n_sandbox_vms inventory group and its host are Terraform-generated
+# output (ansible/inventories/n8n-sandbox.yml); this file only configures
+# Ansible behavior and must not define hosts.
+
+# The sandbox login user is created by Terraform cloud-init.
+common_user: sandbox
+common_enable_mosh: false
+
+# Install the Docker engine and Compose plugin for the n8n sandbox stack.
+docker_install_enabled: true
+docker_users:
+  - sandbox
+
+# UFW: default deny inbound, allow outbound, permit SSH, and allow
+# the n8n sandbox API only from the current K3s nodes.
+n8n_sandbox_api_bind_address: "{{ ansible_host }}"
+
+ufw_install_enabled: true
+ufw_enabled: true
+ufw_allow_ssh: true
+ufw_allow_mosh: false
+ufw_default_incoming_policy: deny
+ufw_default_outgoing_policy: allow
+ufw_inbound_rules:
+  - port: "8080"
+    proto: tcp
+    from_ip: 192.168.10.50
+    comment: n8n sandbox from k3s-node-01
+  - port: "8080"
+    proto: tcp
+    from_ip: 192.168.10.51
+    comment: n8n sandbox from k3s-node-02
+  - port: "8080"
+    proto: tcp
+    from_ip: 192.168.10.52
+    comment: n8n sandbox from k3s-node-03

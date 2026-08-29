@@ -7,6 +7,7 @@ components:
 resources:
   - db-backup.yaml
   - n8n-db-secrets.sops.yaml
+  - n8n-sandbox-secrets.sops.yaml
   - n8n-secrets.sops.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml

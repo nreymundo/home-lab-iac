@@ -1,0 +1,171 @@
+---
+- name: Ensure n8n sandbox role supports Linux
+  ansible.builtin.assert:
+    that:
+      - ansible_system == 'Linux'
+    fail_msg: "n8n sandbox role supports Linux only"
+
+- name: Verify Docker Compose is available
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - version
+  changed_when: false
+
+- name: Verify n8n sandbox secrets file exists
+  ansible.builtin.stat:
+    path: "{{ n8n_sandbox_secrets_file }}"
+  delegate_to: localhost
+  become: false
+  register: n8n_sandbox_secrets_file_stat
+  run_once: true
+
+- name: Require n8n sandbox secrets file
+  ansible.builtin.assert:
+    that:
+      - n8n_sandbox_secrets_file_stat.stat.exists
+    fail_msg: "Create and encrypt {{ n8n_sandbox_secrets_file }} before running this playbook."
+  run_once: true
+
+- name: Decrypt n8n sandbox secrets
+  ansible.builtin.command:
+    argv:
+      - sops
+      - --decrypt
+      - "{{ n8n_sandbox_secrets_file }}"
+  delegate_to: localhost
+  become: false
+  environment:
+    SOPS_AGE_KEY_FILE: "{{ n8n_sandbox_sops_age_key_file }}"
+  changed_when: false
+  no_log: true
+  check_mode: false
+  register: n8n_sandbox_decrypted_secrets
+  run_once: true
+
+- name: Load n8n sandbox secrets
+  ansible.builtin.set_fact:
+    n8n_sandbox_secrets: "{{ n8n_sandbox_decrypted_secrets.stdout | from_yaml }}"
+  no_log: true
+
+- name: Verify required n8n sandbox secret values
+  ansible.builtin.assert:
+    that:
+      - n8n_sandbox_secrets.stringData.N8N_SANDBOX_SERVICE_API_KEY | default('') | length > 0
+      - n8n_sandbox_secrets.stringData.SANDBOX_API_RUNNER_REGISTRATION_TOKEN | default('') | length > 0
+      - n8n_sandbox_secrets.stringData.SANDBOX_API_RUNNER_API_KEY | default('') | length > 0
+    fail_msg: "n8n sandbox secret must contain the API and runner credentials."
+  no_log: true
+
+- name: Require n8n sandbox firewall allowlist sources
+  ansible.builtin.assert:
+    that:
+      - n8n_sandbox_firewall_allowed_sources | length > 0
+    fail_msg: >-
+      n8n_sandbox_firewall_allowed_sources is empty: define TCP
+      {{ n8n_sandbox_api_host_port }} ufw_inbound_rules entries with from_ip
+      for the n8n sandbox VMs.
+    quiet: true
+
+- name: Ensure n8n sandbox configuration directory exists
+  ansible.builtin.file:
+    path: "{{ n8n_sandbox_base_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Render n8n sandbox Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ n8n_sandbox_compose_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: Restart n8n sandbox service
+
+- name: Validate n8n sandbox Docker Compose file
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - "{{ n8n_sandbox_compose_project_name }}"
+      - -f
+      - "{{ n8n_sandbox_compose_file }}"
+      - config
+      - --quiet
+  changed_when: false
+  when:
+    - n8n_sandbox_enabled | bool
+    - not ansible_check_mode
+
+- name: Pull n8n sandbox images
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -p
+      - "{{ n8n_sandbox_compose_project_name }}"
+      - -f
+      - "{{ n8n_sandbox_compose_file }}"
+      - pull
+  register: n8n_sandbox_image_pull
+  changed_when: >-
+    'Downloaded newer image' in n8n_sandbox_image_pull.stdout
+    or 'Pull complete' in n8n_sandbox_image_pull.stdout
+    or 'Status: Downloaded' in n8n_sandbox_image_pull.stdout
+  when:
+    - n8n_sandbox_enabled | bool
+    - not ansible_check_mode
+  notify: Restart n8n sandbox service
+
+- name: Install n8n sandbox firewall script
+  ansible.builtin.template:
+    src: n8n-sandbox-firewall.sh.j2
+    dest: "{{ n8n_sandbox_firewall_script_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart n8n sandbox firewall service
+
+- name: Install n8n sandbox firewall systemd unit
+  ansible.builtin.template:
+    src: n8n-sandbox-firewall.service.j2
+    dest: "/etc/systemd/system/{{ n8n_sandbox_firewall_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Restart n8n sandbox firewall service
+
+- name: Install n8n sandbox systemd unit
+  ansible.builtin.template:
+    src: n8n-sandbox.service.j2
+    dest: "/etc/systemd/system/{{ n8n_sandbox_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Restart n8n sandbox service
+
+- name: Flush n8n sandbox handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Manage n8n sandbox firewall service
+  ansible.builtin.systemd_service:
+    name: "{{ n8n_sandbox_firewall_service_name }}"
+    enabled: "{{ n8n_sandbox_enabled | bool }}"
+    state: "{{ 'started' if n8n_sandbox_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Manage n8n sandbox service
+  ansible.builtin.systemd_service:
+    name: "{{ n8n_sandbox_service_name }}"
+    enabled: "{{ n8n_sandbox_enabled | bool }}"
+    state: "{{ 'started' if n8n_sandbox_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode

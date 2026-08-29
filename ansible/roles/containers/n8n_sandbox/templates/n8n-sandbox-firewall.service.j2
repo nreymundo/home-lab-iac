@@ -1,0 +1,12 @@
+[Unit]
+Description=n8n sandbox published-port firewall (DOCKER-USER chain)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart={{ n8n_sandbox_firewall_script_path }}
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
