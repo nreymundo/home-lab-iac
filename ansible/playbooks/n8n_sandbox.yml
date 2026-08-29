@@ -1,0 +1,11 @@
+---
+- name: Provision n8n sandbox VM
+  hosts: n8n_sandbox_vms
+  become: true
+  roles:
+    - common
+    - ssh_hardening
+    - disk_expand
+    - ufw
+    - docker
+    - n8n_sandbox

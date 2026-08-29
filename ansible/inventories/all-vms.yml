@@ -6,3 +6,4 @@ all:
         development_vms: {}
         hermes_vms: {}
         k3s_nodes: {}
+        n8n_sandbox_vms: {}

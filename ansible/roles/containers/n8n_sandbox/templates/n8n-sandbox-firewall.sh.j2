@@ -1,0 +1,43 @@
+#!/bin/sh
+# Rebuild the n8n sandbox filter in Docker's DOCKER-USER chain. Docker
+# publishes ports through the FORWARD path after DNAT, so UFW INPUT rules
+# never see this traffic and original-destination conntrack matching is
+# required. Idempotent: only the {{ n8n_sandbox_firewall_chain }} chain is
+# flushed and rebuilt, and exactly one jump is kept at the top of
+# DOCKER-USER. Docker preserves DOCKER-USER contents across daemon restarts,
+# so this only needs to run at boot.
+set -eu
+
+IPTABLES=/usr/sbin/iptables
+CHAIN={{ n8n_sandbox_firewall_chain }}
+
+# Create the dedicated chain if absent.
+"$IPTABLES" -w -t filter -S "$CHAIN" >/dev/null 2>&1 \
+  || "$IPTABLES" -w -t filter -N "$CHAIN"
+
+# Rebuild only this chain.
+"$IPTABLES" -w -t filter -F "$CHAIN"
+
+# Keep established and related connections.
+"$IPTABLES" -w -t filter -A "$CHAIN" -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+
+# Return allowed sources to the published API port. Docker has already DNATed
+# the packet, so match the conntrack original destination, not the current
+# destination address.
+{% for source in n8n_sandbox_firewall_allowed_sources %}
+"$IPTABLES" -w -t filter -A "$CHAIN" -s {{ source }} -p tcp \
+  -m conntrack --ctorigdst {{ n8n_sandbox_api_bind_address }} \
+  --ctorigdstport {{ n8n_sandbox_api_host_port }} -j RETURN
+{% endfor %}
+
+# Drop every other TCP connection to the published API port.
+"$IPTABLES" -w -t filter -A "$CHAIN" -p tcp \
+  -m conntrack --ctorigdst {{ n8n_sandbox_api_bind_address }} \
+  --ctorigdstport {{ n8n_sandbox_api_host_port }} -j DROP
+
+# Leave traffic to other destinations for the remaining DOCKER-USER rules.
+"$IPTABLES" -w -t filter -A "$CHAIN" -j RETURN
+
+# Ensure exactly one jump at the top of DOCKER-USER.
+"$IPTABLES" -w -t filter -C DOCKER-USER -j "$CHAIN" 2>/dev/null \
+  || "$IPTABLES" -w -t filter -I DOCKER-USER 1 -j "$CHAIN"
