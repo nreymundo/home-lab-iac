@@ -60,6 +60,11 @@ These patterns are deliberate. Do not flag them as findings without new, specifi
 
 New reviewers (human or AI) must treat deviations from these as design questions to ask, not blockers to raise.
 
+## Reviewer Rules
+- AI and human reviewers must read `REVIEW_GUIDELINES.md` at the repo root
+  before reviewing. It defines accepted design choices that must not be
+  flagged as findings and the expected review discipline.
+
 ## Validation And Evidence
 - Do not present a config-only theory as a confirmed root cause when live evidence is available.
 - Before claiming a fix, use the most direct evidence available in the current environment.
