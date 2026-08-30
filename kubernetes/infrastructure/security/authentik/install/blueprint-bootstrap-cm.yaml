@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/v1.32.0/configmap-v1.json
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -1291,7 +1290,7 @@ data:
             - authorization_code
           client_authentication_method: client_secret_post
           redirect_uris:
-            - url: "https://pve.lan.${CLUSTER_DOMAIN}"
+            - url: "https://pve1.lan.${CLUSTER_DOMAIN}"
               matching_mode: strict
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]

@@ -20,9 +20,7 @@ metadata:
   namespace: external-proxy
 subsets:
   - addresses:
-      - ip: ${PVE1_IP}
-      - ip: ${PVE2_IP}
-      - ip: ${PVE3_IP}
+      - ip: ${PROXMOX_IP}
     ports:
       - name: https
         port: 8006
@@ -35,11 +33,11 @@ metadata:
   namespace: external-proxy
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    external-dns.alpha.kubernetes.io/hostname: pve.lan.${CLUSTER_DOMAIN}
+    external-dns.alpha.kubernetes.io/hostname: pve1.lan.${CLUSTER_DOMAIN}
 spec:
   ingressClassName: traefik
   rules:
-    - host: pve.lan.${CLUSTER_DOMAIN}
+    - host: pve1.lan.${CLUSTER_DOMAIN}
       http:
         paths:
           - path: /
