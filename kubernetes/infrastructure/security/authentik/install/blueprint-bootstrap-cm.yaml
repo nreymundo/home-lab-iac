@@ -190,6 +190,9 @@ data:
           user_fields:
             - email
             - username
+          password_stage: !Find
+            - authentik_stages_password.passwordstage
+            - [name, default-authentication-password]
           case_insensitive_matching: true
           show_matched_user: true
           pretend_user_exists: true
