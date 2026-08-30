@@ -6,6 +6,19 @@
 
 development_workstation_user: dev
 
+# Standard XDG home directories for the Terraform-created dev account,
+# mirroring the Hermes operator user layout.
+development_workstation_xdg_directories:
+  - Desktop
+  - Documents
+  - Downloads
+  - Music
+  - Pictures
+  - Projects
+  - Public
+  - Templates
+  - Videos
+
 # Baseline apt packages. Ubuntu's "yq" package is intentionally excluded:
 # it is a different project from mikefarah/yq.
 development_workstation_baseline_packages:
@@ -25,9 +38,10 @@ development_workstation_baseline_packages:
   - shellcheck
   - shfmt
   - tar
+  - tmux
   - unzip
 
-# Root-owned staging directory for Herdr and uv bootstrappers.
+# Root-owned staging directory for the uv bootstrapper.
 development_workstation_download_dir: /var/tmp/development_workstation
 
 # --- Official signed APT repositories -------------------------------------
@@ -102,24 +116,6 @@ development_workstation_checkov_package: checkov
 development_workstation_collections:
   - ansible.posix
   - community.general
-
-# Herdr, installed into the dev user's ~/.local/bin from the official
-# herdr.dev latest.json release manifest. Herdr updates itself in place
-# with `herdr update`, so the role only performs the initial install
-# when the binary is absent and never manages or overwrites an existing
-# installation afterwards.
-development_workstation_herdr_manifest_url: https://herdr.dev/latest.json
-
-# Map of supported ansible_architecture values to the matching linux
-# asset key in the latest.json manifest (assets/<key> holds the binary
-# URL, sha256/<key> holds its checksum). Architectures not listed here
-# fail the role.
-development_workstation_herdr_asset_map:
-  x86_64: linux-x86_64
-  aarch64: linux-aarch64
-
-development_workstation_herdr_asset_key: "{{ development_workstation_herdr_asset_map[ansible_architecture] }}"
-development_workstation_herdr_binary: "{{ development_workstation_user_home }}/.local/bin/herdr"
 
 # uv and uvx (uvx ships with uv), bootstrapped for the dev user with
 # Astral's official standalone installer. The role only performs the

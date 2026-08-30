@@ -4,6 +4,9 @@
 - name: Run development workstation preflight tasks
   ansible.builtin.include_tasks: preflight.yml
 
+- name: Create XDG home directories for the development user
+  ansible.builtin.include_tasks: xdg-directories.yml
+
 - name: Install baseline development packages
   ansible.builtin.include_tasks: packages.yml
 
@@ -18,9 +21,6 @@
 
 - name: Install user-scoped development tooling
   ansible.builtin.include_tasks: dev-tools.yml
-
-- name: Install Herdr for the development user
-  ansible.builtin.include_tasks: herdr.yml
 
 - name: Install uv and uvx for the development user
   ansible.builtin.include_tasks: uv.yml
