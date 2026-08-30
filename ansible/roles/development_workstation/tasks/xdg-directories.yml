@@ -1,0 +1,13 @@
+---
+# Standard XDG home directories for the Terraform-created dev account.
+# The role never creates the user itself; these tasks only shape the
+# home directory that Terraform cloud-init provisioned.
+
+- name: Ensure development user XDG directories exist
+  ansible.builtin.file:
+    path: "{{ development_workstation_user_home }}/{{ item }}"
+    state: directory
+    owner: "{{ development_workstation_user }}"
+    group: "{{ development_workstation_user_group }}"
+    mode: "0755"
+  loop: "{{ development_workstation_xdg_directories }}"
