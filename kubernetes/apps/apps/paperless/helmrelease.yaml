@@ -11,6 +11,8 @@ spec:
     controllers:
       # Paperless webserver
       main:
+        annotations:
+          reloader.stakater.com/auto: "true"
         pod:
           securityContext:
             runAsUser: 99
