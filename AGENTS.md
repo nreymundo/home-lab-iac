@@ -27,9 +27,11 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - A request to explain, review, or pause supersedes earlier approval. Do not edit, commit, revert, or push until fresh approval is given.
 
 ## Editor Schema Metadata
-- For new YAML files, and for existing YAML files lacking a schema directive that are being materially modified, add a `# yaml-language-server: $schema=<url>` directive pointing at the maintained schema when one exists. Do not retrofit directives into files you are not otherwise touching.
+- For new YAML files, and for existing YAML files lacking a schema directive that are being materially modified, add a `# yaml-language-server: $schema=<url>` directive pointing at the maintained schema when one exists. This is the root file's domain: GitHub Actions workflows, tooling configs (`.pre-commit-config.yaml`, `.checkov.yaml`, and similar), and any other YAML outside an owned subtree. Do not retrofit directives into files you are not otherwise touching.
+- Kubernetes YAML follows `kubernetes/AGENTS.md`, which mandates the same rule for custom-resource manifests.
+- Ansible YAML does not take schema directives: it is validated by the ansible language server and ansible-lint, and generic YAML schemas produce false positives on Ansible constructs.
+- Terraform and Packer are HCL, not YAML; they use their native language servers and no schema comments.
 - Do not mass-annotate files, annotate SOPS-encrypted files, or treat editor metadata as a replacement for validation.
-- Terraform and Packer HCL, and Ansible YAML, use their native language servers and linters rather than YAML schema comments. Kubernetes-specific guidance lives in `kubernetes/AGENTS.md`.
 
 ## jCodeMunch Exploration
 - When jCodeMunch MCP tools are available and this repository is indexed, prefer them for unfamiliar code exploration, symbol and text search, dependency/reference tracing, change-impact analysis, and task-context assembly.
