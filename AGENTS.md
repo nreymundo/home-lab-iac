@@ -27,9 +27,11 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - A request to explain, review, or pause supersedes earlier approval. Do not edit, commit, revert, or push until fresh approval is given.
 
 ## Editor Schema Metadata
-- For new or materially modified declarative configuration, add appropriate editor schema metadata when the format has a maintained schema mechanism and the metadata is useful.
+- For new YAML files, and for existing YAML files lacking a schema directive that are being materially modified, add a `# yaml-language-server: $schema=<url>` directive pointing at the maintained schema when one exists. This is the root file's domain: GitHub Actions workflows, tooling configs (`.pre-commit-config.yaml`, `.checkov.yaml`, and similar), and any other YAML outside an owned subtree. Do not retrofit directives into files you are not otherwise touching.
+- Kubernetes YAML follows `kubernetes/AGENTS.md`, which mandates the same rule for custom-resource manifests.
+- Ansible YAML does not take schema directives: it is validated by the ansible language server and ansible-lint, and generic YAML schemas produce false positives on Ansible constructs.
+- Terraform and Packer are HCL, not YAML; they use their native language servers and no schema comments.
 - Do not mass-annotate files, annotate SOPS-encrypted files, or treat editor metadata as a replacement for validation.
-- Terraform and Packer HCL, and Ansible YAML, use their native language servers and linters rather than YAML schema comments. Kubernetes-specific guidance lives in `kubernetes/AGENTS.md`.
 
 ## jCodeMunch Exploration
 - When jCodeMunch MCP tools are available and this repository is indexed, prefer them for unfamiliar code exploration, symbol and text search, dependency/reference tracing, change-impact analysis, and task-context assembly.
@@ -59,6 +61,11 @@ These patterns are deliberate. Do not flag them as findings without new, specifi
 - **VLAN assignments.** Service VLAN placement is deliberate per-network design, not "default/shared by accident."
 
 New reviewers (human or AI) must treat deviations from these as design questions to ask, not blockers to raise.
+
+## Reviewer Rules
+- AI and human reviewers must read `REVIEW_GUIDELINES.md` at the repo root
+  before reviewing. It defines accepted design choices that must not be
+  flagged as findings and the expected review discipline.
 
 ## Validation And Evidence
 - Do not present a config-only theory as a confirmed root cause when live evidence is available.
