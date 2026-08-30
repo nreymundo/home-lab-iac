@@ -145,6 +145,182 @@ data:
           input_cost_per_token: 0.0
           output_cost_per_token: 0.0
 
+      - model_name: openrouter/free
+        model_info:
+          mode: chat
+        litellm_params:
+          model: openrouter/openrouter/free
+          custom_llm_provider: openrouter
+          litellm_credential_name: openrouter
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+
+      - model_name: local/rerank
+        model_info:
+          mode: rerank
+          max_input_tokens: 8192
+        litellm_params:
+          model: hosted_vllm/qwen3-reranker-0.6b
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local/stt-fast
+        model_info:
+          mode: audio_transcription
+        litellm_params:
+          model: hosted_vllm/whisper/large-v3-turbo-q5_0
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local/embedding
+        model_info:
+          mode: embedding
+          max_input_tokens: 16384
+          output_vector_size: 2560
+        litellm_params:
+          model: hosted_vllm/qwen3-embedding-4b
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local/stt-large
+        model_info:
+          mode: audio_transcription
+        litellm_params:
+          model: hosted_vllm/whisper/large-v3-q5_0
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local/automation-lite
+        model_info:
+          mode: chat
+          max_input_tokens: 63488
+          max_output_tokens: 2048
+          supports_function_calling: true
+          supports_tool_choice: true
+        litellm_params:
+          model: hosted_vllm/unsloth/gemma-4-e4b-it-qat
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local/camera-analysis
+        model_info:
+          mode: chat
+          max_input_tokens: 30720
+          max_output_tokens: 2048
+          supports_vision: true
+          supports_function_calling: true
+          supports_tool_choice: true
+        litellm_params:
+          model: hosted_vllm/unsloth/gemma-4-12b-it-qat-camera
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local/document-analysis
+        model_info:
+          mode: chat
+          max_input_tokens: 28672
+          max_output_tokens: 4096
+          supports_vision: true
+          supports_function_calling: true
+          supports_tool_choice: true
+        litellm_params:
+          model: hosted_vllm/unsloth/gemma-4-26b-a4b-it-qat-doc
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local/document-best
+        model_info:
+          mode: chat
+          max_input_tokens: 61440
+          max_output_tokens: 4096
+          supports_vision: true
+          supports_function_calling: true
+          supports_tool_choice: true
+        litellm_params:
+          model: hosted_vllm/unsloth/gemma-4-31b-it-qat-doc-best
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local/coder
+        model_info:
+          mode: chat
+          max_input_tokens: 253952
+          max_output_tokens: 8192
+          supports_function_calling: true
+          supports_reasoning: true
+          supports_tool_choice: true
+        litellm_params:
+          model: hosted_vllm/unsloth-qwen3.8-27b
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local/tts
+        model_info:
+          mode: audio_speech
+          health_check_voice: Abigail.wav
+        litellm_params:
+          model: openai/chatterbox
+          custom_llm_provider: openai
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+
       - model_name: zai-coding/glm-5.3
         model_info:
           mode: chat
@@ -336,19 +512,6 @@ data:
       cooldown_time: 5
       retry_after: 0
       enable_pre_call_checks: false
-      model_group_alias:
-        openrouter/free: openrouter/openrouter/free
-        local/tts: openai/chatterbox
-        local/rerank: hosted_vllm/qwen3-reranker-0.6b
-        local/stt-fast: hosted_vllm/whisper/large-v3-turbo-q5_0
-        local/embedding: hosted_vllm/qwen3-embedding-4b
-        local/stt-large: hosted_vllm/whisper/large-v3-q5_0
-        local/automation-lite: hosted_vllm/unsloth/gemma-4-e4b-it-qat
-        local/camera-analysis: hosted_vllm/unsloth/gemma-4-12b-it-qat-camera
-        local/document-analysis: hosted_vllm/unsloth/gemma-4-26b-a4b-it-qat-doc
-        local/document-best: hosted_vllm/unsloth/gemma-4-31b-it-qat-doc-best
-        local/reasoning-max-context: hosted_vllm/unsloth/gemma-4-26b-a4b-it-qat-reasoning-max-context
-        local/coder: hosted_vllm/unsloth-qwen3.8-27b
 
   cache_bypass.py: |
     import json
