@@ -27,7 +27,7 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - A request to explain, review, or pause supersedes earlier approval. Do not edit, commit, revert, or push until fresh approval is given.
 
 ## Editor Schema Metadata
-- For new or materially modified declarative configuration, add appropriate editor schema metadata when the format has a maintained schema mechanism and the metadata is useful.
+- For new YAML files, and for existing YAML files lacking a schema directive that are being materially modified, add a `# yaml-language-server: $schema=<url>` directive pointing at the maintained schema when one exists. Do not retrofit directives into files you are not otherwise touching.
 - Do not mass-annotate files, annotate SOPS-encrypted files, or treat editor metadata as a replacement for validation.
 - Terraform and Packer HCL, and Ansible YAML, use their native language servers and linters rather than YAML schema comments. Kubernetes-specific guidance lives in `kubernetes/AGENTS.md`.
 
