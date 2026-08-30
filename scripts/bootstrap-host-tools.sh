@@ -382,6 +382,7 @@ print_manual_install_hint() {
       printf '    - op: install the 1Password CLI from https://www.1password.dev/cli/get-started/ and place it on PATH.\n' >&2
       ;;
     checkov)
+      # shellcheck disable=SC2016 # Backticks are intentional Markdown in the install hint.
       printf '    - checkov: install with `pipx install checkov`, or another isolated Python package method that puts `checkov` on PATH.\n' >&2
       ;;
     shfmt)
