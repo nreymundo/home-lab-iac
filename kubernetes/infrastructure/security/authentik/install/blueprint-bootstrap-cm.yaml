@@ -131,6 +131,57 @@ data:
       labels:
         blueprints.goauthentik.io/instantiate: "true"
     entries:
+      - model: authentik_flows.flow
+        id: passwordless-passkeys-flow
+        identifiers:
+          slug: "passwordless-passkeys"
+        attrs:
+          name: "passwordless-passkeys"
+          title: "Passwordless passkey sign-in"
+          slug: "passwordless-passkeys"
+          designation: "authentication"
+          authentication: "none"
+          denied_action: "message_continue"
+          policy_engine_mode: "any"
+
+      - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+        id: passwordless-passkeys-validation
+        identifiers:
+          name: "passwordless-passkeys-validation"
+        attrs:
+          name: "passwordless-passkeys-validation"
+          device_classes:
+            - "webauthn"
+
+      - model: authentik_stages_user_login.userloginstage
+        id: passwordless-passkeys-login
+        identifiers:
+          name: "passwordless-passkeys-login"
+        attrs:
+          name: "passwordless-passkeys-login"
+          session_duration: "seconds=0"
+          remember_me_offset: "seconds=0"
+
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !KeyOf passwordless-passkeys-flow
+          stage: !KeyOf passwordless-passkeys-validation
+          order: 10
+          evaluate_on_plan: true
+          re_evaluate_policies: false
+          invalid_response_action: "retry"
+          policy_engine_mode: "any"
+
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !KeyOf passwordless-passkeys-flow
+          stage: !KeyOf passwordless-passkeys-login
+          order: 30
+          evaluate_on_plan: true
+          re_evaluate_policies: false
+          invalid_response_action: "retry"
+          policy_engine_mode: "any"
+
       - model: authentik_stages_identification.identificationstage
         state: present
         identifiers:
@@ -145,6 +196,7 @@ data:
           webauthn_stage: !Find
             - authentik_stages_authenticator_validate.authenticatorvalidatestage
             - [name, default-authentication-mfa-validation]
+          passwordless_flow: !KeyOf passwordless-passkeys-flow
 
   120-netbird.yaml: |
     version: 1
