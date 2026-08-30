@@ -33,11 +33,11 @@ metadata:
   namespace: external-proxy
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    external-dns.alpha.kubernetes.io/hostname: pve1.lan.${CLUSTER_DOMAIN}
+    external-dns.alpha.kubernetes.io/hostname: pve.lan.${CLUSTER_DOMAIN}
 spec:
   ingressClassName: traefik
   rules:
-    - host: pve1.lan.${CLUSTER_DOMAIN}
+    - host: pve.lan.${CLUSTER_DOMAIN}
       http:
         paths:
           - path: /

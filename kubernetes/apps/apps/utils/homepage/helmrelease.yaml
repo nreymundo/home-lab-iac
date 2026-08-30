@@ -222,10 +222,10 @@ spec:
             - Proxmox:
                 icon: proxmox.png
                 description: "Proxmox Virtual Environment"
-                href: https://pve1.lan.${CLUSTER_DOMAIN}
+                href: https://pve.lan.${CLUSTER_DOMAIN}
                 # widget:
                 #   type: proxmox
-                #   url: https://pve1.lan.${CLUSTER_DOMAIN}
+                #   url: https://pve.lan.${CLUSTER_DOMAIN}
                 #   username: "api-ro@pam!homepage"
                 #   password: "{{HOMEPAGE_VAR_PROXMOX_API_KEY}}"
             - Proxmox Backup Server:
