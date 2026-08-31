@@ -1,0 +1,7 @@
+This is a file to test the new review flow.
+
+# review-test.txt — inline comment pipeline test                                                                                                                          │
+api_key = "sk-live-1234567890abcdef1234"                                                                                                                                  │
+connection_timeout = -5                                                                                                                                                   │
+debug_mode = true                                                                                                                                                         │
+max_retries = 999999
