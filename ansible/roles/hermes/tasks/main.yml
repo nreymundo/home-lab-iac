@@ -44,6 +44,24 @@
       {{ hermes_user_name }} ALL=(ALL) NOPASSWD:ALL
     validate: 'visudo -csf %s'
 
+- name: Install polkit rule allowing hermes to restart managed Hermes units
+  ansible.builtin.copy:
+    dest: /etc/polkit-1/rules.d/50-hermes-dashboard-restart.rules
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      // Managed by Ansible - allow passwordless restart of managed Hermes units only.
+      polkit.addRule(function(action, subject) {
+          if (subject.user == "{{ hermes_user_name }}" &&
+              action.id == "org.freedesktop.systemd1.manage-units" &&
+              (action.lookup("unit") == "{{ hermes_dashboard_service_name }}.service" ||
+               action.lookup("unit") == "{{ hermes_service_name }}.service") &&
+              action.lookup("verb") == "restart") {
+              return polkit.Result.YES;
+          }
+      });
+
 - name: Ensure native Hermes binary directory exists
   ansible.builtin.file:
     path: "{{ hermes_user_home }}/.local/bin"
