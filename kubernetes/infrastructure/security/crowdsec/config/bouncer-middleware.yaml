@@ -13,4 +13,5 @@ spec:
       crowdsecLapiKeyFile: /etc/traefik/crowdsec-bouncer-api-key
       crowdsecLapiTLSInsecureVerify: true
       updateIntervalSeconds: 60
+      httpTimeoutSeconds: 15
       logLevel: INFO
