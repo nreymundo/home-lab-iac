@@ -21,7 +21,7 @@ spec:
     size: 20Gi
     storageClass: longhorn-r2
 
-  imageName: ghcr.io/cloudnative-pg/postgis:17.10-3.6.3-202606151233-standard-trixie@sha256:2b06fd2e4caef7364f46b1378e4c79794a171e0c1d2ad22ecdccc94438a2daf4
+  imageName: ghcr.io/cloudnative-pg/postgis:17.10-3.6.3-202606151233-system-trixie@sha256:4e1baab9267766d99ecf78b096df528e830584cde08c2a1e4586dd84e09e0df1
 
   postgresql:
     parameters:
