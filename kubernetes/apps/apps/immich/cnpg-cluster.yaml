@@ -61,7 +61,7 @@ spec:
       destinationPath: "s3://cloudnative-pg/immich"
       endpointURL: "https://s3.${CLUSTER_DOMAIN}"
       serverName: "immich-pg-v1"
-    retentionPolicy: "14d"
+    retentionPolicy: "21d"
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
@@ -69,7 +69,7 @@ metadata:
   name: immich-pg-backup
   namespace: immich
 spec:
-  schedule: "0 0 0 * * *"  # Daily at midnight
+  schedule: "0 0 0 * * 0"  # Weekly Sunday at midnight
   backupOwnerReference: self
   cluster:
     name: immich-pg

@@ -49,7 +49,7 @@ spec:
       destinationPath: "s3://cloudnative-pg/authentik"
       endpointURL: "https://s3.${CLUSTER_DOMAIN}"
       serverName: "authentik-pg-v1"
-    retentionPolicy: "14d"
+    retentionPolicy: "21d"
 
   bootstrap:
     initdb:
@@ -64,7 +64,7 @@ metadata:
   name: authentik-pg-backup
   namespace: authentik
 spec:
-  schedule: "0 0 0 * * *"
+  schedule: "0 0 0 * * 0"
   backupOwnerReference: self
   cluster:
     name: authentik-pg

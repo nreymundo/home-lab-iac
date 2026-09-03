@@ -58,7 +58,7 @@ spec:
       destinationPath: "s3://cloudnative-pg/dawarich"
       endpointURL: "https://s3.${CLUSTER_DOMAIN}"
       serverName: "dawarich-pg-v1"
-    retentionPolicy: "14d"
+    retentionPolicy: "21d"
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
@@ -66,7 +66,7 @@ metadata:
   name: dawarich-pg-backup
   namespace: utils
 spec:
-  schedule: "0 0 0 * * *"  # Daily at midnight
+  schedule: "0 0 0 * * 0"  # Weekly Sunday at midnight
   backupOwnerReference: self
   cluster:
     name: dawarich-pg
