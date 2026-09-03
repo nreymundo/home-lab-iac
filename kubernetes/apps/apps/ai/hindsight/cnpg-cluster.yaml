@@ -59,7 +59,7 @@ spec:
       destinationPath: "s3://cloudnative-pg/hindsight"
       endpointURL: "https://s3.${CLUSTER_DOMAIN}"
       serverName: "hindsight-pg-v1"
-    retentionPolicy: "14d"
+    retentionPolicy: "21d"
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup

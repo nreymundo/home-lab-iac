@@ -54,7 +54,7 @@ spec:
       destinationPath: "s3://cloudnative-pg/n8n"
       endpointURL: "https://s3.${CLUSTER_DOMAIN}"
       serverName: "n8n-pg-v1"
-    retentionPolicy: "14d"
+    retentionPolicy: "21d"
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup

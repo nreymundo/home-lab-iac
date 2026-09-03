@@ -57,7 +57,7 @@ spec:
       destinationPath: "s3://cloudnative-pg/nextcloud"
       endpointURL: "https://s3.${CLUSTER_DOMAIN}"
       serverName: "nextcloud-pg-v1"
-    retentionPolicy: "14d"
+    retentionPolicy: "21d"
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
