@@ -57,3 +57,15 @@ spec:
       endpointURL: "https://s3.${CLUSTER_DOMAIN}"
       serverName: "scrob-pg-v1"
     retentionPolicy: "14d"
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: scrob-pg-backup
+  namespace: media
+spec:
+  schedule: "0 0 0 * * 0"  # Weekly Sunday at midnight
+  backupOwnerReference: self
+  cluster:
+    name: scrob-pg
+  method: barmanObjectStore

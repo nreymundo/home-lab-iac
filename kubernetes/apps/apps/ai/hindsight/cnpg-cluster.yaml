@@ -67,7 +67,7 @@ metadata:
   name: hindsight-pg-backup
   namespace: ai
 spec:
-  schedule: "0 0 0 * * *"
+  schedule: "0 0 0 * * 0"  # Weekly Sunday at midnight
   backupOwnerReference: self
   cluster:
     name: hindsight-pg
