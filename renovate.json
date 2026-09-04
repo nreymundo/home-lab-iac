@@ -194,11 +194,12 @@
       "autoReplaceStringTemplate": "tag: {{{newValue}}}-openvino"
     },
     {
-      "description": "Enable # renovate: datasource=... comments (repo/tag directly below)",
+      "description": "Enable # renovate: datasource=... comments (repo/tag directly below; append digest=true to opt in to tracking the adjacent digest line)",
       "customType": "regex",
       "fileMatch": ["\\.ya?ml$"],
       "packageNameTemplate": "{{{depName}}}",
       "matchStrings": [
+        "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s+digest=true\\s*\\r?\\n\\s*repository:\\s*(?<packageName>\\S+)\\s*\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?\\r?\\n[ \\t]*digest:[ \\t]*[\"']?(?<currentDigest>sha256:[a-f0-9]+)[\"']?",
         "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+registryUrl=(?<registryUrl>\\S+))?\\s*\\r?\\n\\s*repository:\\s*(?<packageName>\\S+)\\s*\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
       ]
     },

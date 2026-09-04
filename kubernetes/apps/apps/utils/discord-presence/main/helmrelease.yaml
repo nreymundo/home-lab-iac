@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -17,8 +18,10 @@ spec:
         containers:
           kasmcord:
             image:
+              # renovate: datasource=docker depName=kasmweb/discord registryUrl=https://docker.io digest=true
               repository: kasmweb/discord
-              tag: 1.18.0
+              tag: 1.19.0-rolling-weekly
+              digest: sha256:48619e8c4f07b32f719a119637dfddabba9525fd4b46912d091a05e6e851b51b
             env:
               TZ: Europe/Berlin
               VNC_PW:
