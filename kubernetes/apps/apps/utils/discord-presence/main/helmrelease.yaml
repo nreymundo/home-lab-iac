@@ -37,6 +37,7 @@ spec:
               - -lc
               - |
                 set -e
+                sed -i 's|^START_COMMAND="/usr/share/discord/Discord"$|START_COMMAND="/usr/bin/discord"|' /dockerstartup/custom_startup.sh
                 mkdir -p /run/user/1000
                 chown -R 1000:1000 /run/user/1000
                 chmod 700 /run/user/1000
@@ -80,7 +81,7 @@ spec:
                     command:
                       - /bin/sh
                       - -c
-                      - pgrep -f '^/usr/share/discord/Discord' >/dev/null && test -S /run/user/1000/discord-ipc-0
+                      - pgrep -x Discord >/dev/null && test -S /run/user/1000/discord-ipc-0
                   initialDelaySeconds: 45
                   periodSeconds: 30
                   timeoutSeconds: 5
@@ -93,7 +94,7 @@ spec:
                     command:
                       - /bin/sh
                       - -c
-                      - pgrep -f '^/usr/share/discord/Discord' >/dev/null && test -S /run/user/1000/discord-ipc-0
+                      - pgrep -x Discord >/dev/null && test -S /run/user/1000/discord-ipc-0
                   initialDelaySeconds: 45
                   periodSeconds: 30
                   timeoutSeconds: 5
