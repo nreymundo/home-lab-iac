@@ -107,6 +107,10 @@ spec:
               INFERENCE_MAX_OUTPUT_TOKENS: "512"
               INFERENCE_JOB_TIMEOUT_SEC: "120"
               INFERENCE_NUM_WORKERS: "1"
+              # Webhook deliveries to LAN targets are blocked by the SSRF
+              # guard (private ranges are disallowed by default); allowlist
+              # the Hermes webhook relay explicitly.
+              CRAWLER_ALLOWED_INTERNAL_HOSTNAMES: "192.168.10.100"
             ports:
               - name: http
                 containerPort: 3000
