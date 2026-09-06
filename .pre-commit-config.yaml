@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/pre-commit-config.json
 ---
 default_install_hook_types: [pre-commit, commit-msg]
 
@@ -44,6 +45,22 @@ repos:
         language: system
         files: ^terraform/.*\.tf$
         pass_filenames: false
+
+      # Lint standalone shell scripts; Kubernetes workload scripts are out of scope
+      - id: shellcheck
+        name: ShellCheck standalone scripts
+        entry: shellcheck -x
+        language: system
+        files: ^(scripts|packer|terraform)/.*\.sh$
+        pass_filenames: true
+
+      # Format standalone shell scripts touched by the change
+      - id: shfmt
+        name: shfmt format standalone scripts
+        entry: shfmt -w -i 2 -ci -sr
+        language: system
+        files: ^(scripts|packer|terraform)/.*\.sh$
+        pass_filenames: true
 
       # Block committing private key material (age + common key files)
       - id: forbid-sensitive-files

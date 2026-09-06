@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 ---
 name: CI
 
@@ -23,6 +24,10 @@ jobs:
       checkov: ${{ steps.filter.outputs.checkov }}
       kubeconform: ${{ steps.filter.outputs.kubeconform }}
       trivy: ${{ steps.filter.outputs.trivy }}
+      ansible_lint: ${{ steps.filter.outputs.ansible_lint }}
+      terraform_fmt: ${{ steps.filter.outputs.terraform_fmt }}
+      packer_fmt: ${{ steps.filter.outputs.packer_fmt }}
+      shell: ${{ steps.filter.outputs.shell }}
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -43,6 +48,10 @@ jobs:
               echo "checkov=true"
               echo "kubeconform=true"
               echo "trivy=true"
+              echo "ansible_lint=true"
+              echo "terraform_fmt=true"
+              echo "packer_fmt=true"
+              echo "shell=true"
             } >>"$GITHUB_OUTPUT"
             exit 0
           fi
@@ -78,6 +87,30 @@ jobs:
             echo "trivy=true" >>"$GITHUB_OUTPUT"
           else
             echo "trivy=false" >>"$GITHUB_OUTPUT"
+          fi
+
+          if matches '^(ansible/|\.github/workflows/ci\.yml$)'; then
+            echo "ansible_lint=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "ansible_lint=false" >>"$GITHUB_OUTPUT"
+          fi
+
+          if matches '^(terraform/|\.github/workflows/ci\.yml$)'; then
+            echo "terraform_fmt=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "terraform_fmt=false" >>"$GITHUB_OUTPUT"
+          fi
+
+          if matches '^(packer/|\.github/workflows/ci\.yml$)'; then
+            echo "packer_fmt=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "packer_fmt=false" >>"$GITHUB_OUTPUT"
+          fi
+
+          if matches '^((scripts|packer|terraform)/.*\.sh$|\.github/workflows/ci\.yml$)'; then
+            echo "shell=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "shell=false" >>"$GITHUB_OUTPUT"
           fi
 
   kubeconform:
@@ -148,3 +181,143 @@ jobs:
 
       - name: Run Checkov IaC scan
         run: checkov --config-file .checkov.yaml
+
+  ansible-lint:
+    name: Ansible Lint
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ansible_lint == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+
+      - name: Install ansible-core and ansible-lint
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ansible-core==2.21.3 ansible-lint==26.8.0
+
+      - name: Install required Ansible collections
+        run: >-
+          ANSIBLE_CONFIG=ansible/ansible.cfg ansible-galaxy collection install
+          'ansible.posix:==2.2.2' 'community.general:==13.3.0'
+
+      - name: Run ansible-lint
+        run: ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint --project-dir ansible ansible/playbooks/ ansible/roles/
+
+  terraform-fmt:
+    name: Terraform fmt
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.terraform_fmt == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
+        with:
+          terraform_version: "1.15.9"
+          terraform_wrapper: false
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive terraform
+
+  packer-fmt:
+    name: Packer fmt
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.packer_fmt == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@ce93c3c08a6c2ff2275bf4b54ff0d9a75f6c9789
+        with:
+          version: "1.16.0"
+
+      - name: Check Packer formatting
+        run: packer fmt -check -recursive packer
+
+  shell:
+    name: Shell
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.shell == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+
+      - name: Install ShellCheck
+        env:
+          SHELLCHECK_VERSION: v0.11.0
+          SHELLCHECK_SHA256: 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
+        run: |
+          base_url="https://github.com/koalaman/shellcheck/releases/download"
+          archive="shellcheck-v0.11.0.linux.x86_64.tar.xz"
+          curl -fsSL "${base_url}/${SHELLCHECK_VERSION}/${archive}" -o shellcheck.tar.xz
+          echo "${SHELLCHECK_SHA256}  shellcheck.tar.xz" | sha256sum --check -
+          tar -xJf shellcheck.tar.xz
+          sudo install -m 0755 "shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
+
+      - name: Install shfmt
+        env:
+          SHFMT_VERSION: v3.13.1
+          SHFMT_SHA256: fb096c5d1ac6beabbdbaa2874d025badb03ee07929f0c9ff67563ce8c75398b1
+        run: |
+          base_url="https://github.com/mvdan/sh/releases/download"
+          asset="shfmt_v3.13.1_linux_amd64"
+          curl -fsSL "${base_url}/${SHFMT_VERSION}/${asset}" -o shfmt
+          echo "${SHFMT_SHA256}  shfmt" | sha256sum --check -
+          sudo install -m 0755 shfmt /usr/local/bin/shfmt
+
+      - name: Run ShellCheck on standalone scripts
+        run: |
+          mapfile -d '' shell_scripts < <(
+            git ls-files -z -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh'
+          )
+          printf 'ShellCheck targets:\n'
+          printf '  %s\n' "${shell_scripts[@]}"
+          shellcheck -x "${shell_scripts[@]}"
+
+      - name: Check shfmt formatting for changed standalone scripts
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "workflow_dispatch has no event diff; skipping shfmt diff check"
+            exit 0
+          fi
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base_sha="$PR_BASE_SHA"
+            head_sha="$PR_HEAD_SHA"
+          else
+            base_sha="$PUSH_BEFORE_SHA"
+            head_sha="$GITHUB_SHA"
+          fi
+
+          mapfile -d '' changed_scripts < <(
+            git diff --name-only --diff-filter=d -z "$base_sha" "$head_sha" \
+              -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh'
+          )
+
+          if (( ${#changed_scripts[@]} == 0 )); then
+            echo "No standalone shell scripts changed in this event range"
+            exit 0
+          fi
+
+          printf 'shfmt targets (changed in event range):\n'
+          printf '  %s\n' "${changed_scripts[@]}"
+          shfmt -d -i 2 -ci -sr "${changed_scripts[@]}"
