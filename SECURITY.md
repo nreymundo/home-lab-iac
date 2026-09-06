@@ -10,7 +10,10 @@ Sensitive data is managed per component through dedicated secret stores:
 - Use environment variables for local development
 - Secrets are injected at runtime via each component's secret integration
 
-See [docs/SECRETS_MANAGEMENT.md](docs/SECRETS_MANAGEMENT.md) for detailed setup.
+See [Secrets by Component](#secrets-by-component) and
+[1Password CLI for Infrastructure Automation](#1password-cli-for-infrastructure-automation)
+below, and [ansible/secrets/README.md](ansible/secrets/README.md) for the
+committed SOPS-encrypted Ansible secrets.
 
 ### Secrets by Component
 

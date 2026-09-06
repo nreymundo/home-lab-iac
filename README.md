@@ -11,14 +11,39 @@ All the other `.md` files in this repository are either fully written by LLMs or
 
 ## TL;DR of what I'm trying to accomplish with this.
 
-* Ansible to provision and configure systems. Mainly VMs, Proxmox hosts and other servers, single board computers and things like that. It also provisions my k3s cluster.
-* Packer creates base images that I then upload to Proxmox so I can spin up VMs based on them.
-* Terraform to create the VMs and LXC containers that run my infrastructure, plus cloud infrastructure. I may eventually add my Cloudflare settings here.
-* The Kubernetes folder uses Flux for GitOps and Renovate to keep things up to date.
-* Bunch of pre-commit hooks to try not to push _that_ much broken crap.
-
+Everything starts with [Packer](packer/) baking base VM templates (Ubuntu, Fedora) that get uploaded to Proxmox. [Terraform](terraform/README.md) clones those templates into the VMs and LXC containers that run my infrastructure, plus some cloud infrastructure (I may eventually add my Cloudflare settings here), and it generates the Ansible inventory for the K3s fleet. [Ansible](ansible/README.md) then provisions and configures systems: mainly VMs, Proxmox hosts and other servers, single board computers and things like that. It also provisions my k3s cluster. From there [Kubernetes](kubernetes/README.md) takes over: Flux does GitOps reconciliation and Renovate keeps charts and images from going stale. A bunch of pre-commit hooks try not to push _that_ much broken crap.
 
 I'm following a lot of good practices but this will _definitely_ be more of a bazaar than a cathedral.
+
+
+## The map
+
+| Layer | What lives there |
+| --- | --- |
+| [packer/](packer/) | Base VM image templates uploaded to Proxmox |
+| [terraform/](terraform/README.md) | Reusable modules plus concrete VM, LXC, and cloud roots |
+| [ansible/](ansible/README.md) | Roles and thin playbooks that configure everything above |
+| [kubernetes/](kubernetes/README.md) | Flux-managed desired state for the cluster |
+| [docs/](docs/README.md) | Decision record, runbooks, and agent workflow notes |
+
+
+## Practices I'm weirdly proud of
+
+* **One source of truth for node topology.** Terraform generates the Ansible inventory for the K3s nodes (`terraform/instances/vm/k3s_nodes/` renders `ansible/inventories/k3s-nodes.yml`), so the fleet is defined once instead of maintained in two places.
+* **Registry peer sharing with an upstream escape hatch.** Every K3s node runs the embedded registry and serves its cached images to peer nodes over TCP `5001`, and any cache miss falls through to a direct upstream pull. The knobs live in `ansible/roles/k3s/defaults/main.yml`.
+* **Layered secrets with guardrails to match.** Ansible, Packer, and Terraform pull secrets at runtime through a read-only 1Password CLI service account; Kubernetes secrets are SOPS-encrypted `*.sops.yaml` files in Git; pre-commit hooks block key material and plaintext Secrets before they ever reach a commit.
+* **Path-filtered validation.** CI only runs the hard-failing jobs that match what actually changed (kubeconform, Checkov, Trivy), so a docs tweak doesn't spin up the whole gauntlet.
+
+
+## Reading map
+
+| Doc | What it's for |
+| --- | --- |
+| [docs/decisions-and-tradeoffs.md](docs/decisions-and-tradeoffs.md) | Durable control and automation decisions, and the trade-offs behind them |
+| [docs/kubernetes-bootstrap.md](docs/kubernetes-bootstrap.md) | Bootstrap and restore runbook for the Flux-managed cluster |
+| [SECURITY.md](SECURITY.md) | Security practices, secrets handling, and network posture |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Workflow, validation commands, and conventions |
+| [AGENTS.md](AGENTS.md) with [docs/opencode.md](docs/opencode.md) | How AI agents are expected to behave in this repo |
 
 
 ## Credits / Attribution
