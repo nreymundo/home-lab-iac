@@ -11,7 +11,7 @@ All the other `.md` files in this repository are either fully written by LLMs or
 
 ## TL;DR of what I'm trying to accomplish with this.
 
-Everything starts with [Packer](packer/) baking base VM templates (Ubuntu, Fedora) that get uploaded to Proxmox. [Terraform](terraform/README.md) clones those templates into the VMs and LXC containers that run my infrastructure, plus some cloud infrastructure (I may eventually add my Cloudflare settings here), and it generates the Ansible inventory for the K3s fleet. [Ansible](ansible/README.md) then provisions and configures systems: mainly VMs, Proxmox hosts and other servers, single board computers and things like that. It also provisions my k3s cluster. From there [Kubernetes](kubernetes/README.md) takes over: Flux does GitOps reconciliation and Renovate keeps charts and images from going stale. A bunch of pre-commit hooks try not to push _that_ much broken crap.
+Almost everything starts with [Packer](packer/) baking base VM templates (Ubuntu and Fedora for now) that get uploaded to Proxmox. [Terraform](terraform/README.md) clones those or other ready-made templates into the VMs and LXC containers that run my infrastructure, plus some cloud infrastructure (I may eventually add my Cloudflare settings here), and it generates the Ansible inventories. [Ansible](ansible/README.md) then provisions and configures systems: mainly VMs, Proxmox hosts and other servers, single board computers and things like that. It also provisions my k3s cluster. From there [Kubernetes](kubernetes/README.md) takes over: Flux does GitOps reconciliation and Renovate keeps charts and images from going stale. A bunch of pre-commit hooks do their best to keep me from pushing too much broken stuff.
 
 I'm following a lot of good practices but this will _definitely_ be more of a bazaar than a cathedral.
 
@@ -27,12 +27,24 @@ I'm following a lot of good practices but this will _definitely_ be more of a ba
 | [docs/](docs/README.md) | Decision record, runbooks, and agent workflow notes |
 
 
-## Practices I'm weirdly proud of
+## Some practices that I actually like how they turned out
 
 * **One source of truth for node topology.** Terraform generates the Ansible inventory for the K3s nodes (`terraform/instances/vm/k3s_nodes/` renders `ansible/inventories/k3s-nodes.yml`), so the fleet is defined once instead of maintained in two places.
-* **Registry peer sharing with an upstream escape hatch.** Every K3s node runs the embedded registry and serves its cached images to peer nodes over TCP `5001`, and any cache miss falls through to a direct upstream pull. The knobs live in `ansible/roles/k3s/defaults/main.yml`.
+* **Registry peer sharing with an upstream escape hatch.** Every K3s node runs the embedded registry and serves its cached images to peer nodes over TCP `5001`, and any cache miss falls through to a direct upstream pull. The knobs live in `ansible/roles/k3s/defaults/main.yml`. I used `Harbor` for a while but the overhead and complexity it added was just not worth it for a small cluster.
 * **Layered secrets with guardrails to match.** Ansible, Packer, and Terraform pull secrets at runtime through a read-only 1Password CLI service account; Kubernetes secrets are SOPS-encrypted `*.sops.yaml` files in Git; pre-commit hooks block key material and plaintext Secrets before they ever reach a commit.
 * **Path-filtered validation.** CI only runs the hard-failing jobs that match what actually changed (kubeconform, Checkov, Trivy), so a docs tweak doesn't spin up the whole gauntlet.
+
+
+## AI review with some actual guardrails
+
+Pull requests I open take a short detour before a review lands back on GitHub:
+
+1. GitHub sends the PR webhook to [n8n](kubernetes/apps/apps/automation/n8n/), which runs in the K3s cluster.
+2. n8n confirms that the PR author is my GitHub user before it forwards anything to [Hermes](terraform/instances/vm/hermes/), which runs in a VM.
+3. Hermes triggers the review pipeline and returns its result to n8n.
+4. n8n validates that result, then posts the review to GitHub through my bot account.
+
+This repo manages the n8n deployment, its secret delivery, and the network path to Hermes; the workflow itself lives in n8n. The relay only accepts traffic from cluster nodes, so it is not a general-purpose public webhook endpoint.
 
 
 ## Reading map
