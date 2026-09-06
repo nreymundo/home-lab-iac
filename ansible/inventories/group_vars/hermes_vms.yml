@@ -14,8 +14,8 @@ homebrew_user: hermes
 homebrew_brew_packages: []
 
 # UFW: default deny inbound, allow outbound, permit SSH plus authenticated
-# Hermes API and dashboard access from every known LAN subnet. No platform
-# webhook listener is enabled yet.
+# Hermes API, webhook relay, and dashboard access from every known LAN
+# subnet.
 ufw_install_enabled: true
 ufw_enabled: true
 ufw_allow_ssh: true
@@ -30,6 +30,18 @@ ufw_inbound_rules:
     proto: tcp
     from_ip: 192.168.0.0/16
     comment: Hermes port 8644 from 192.168 LANs
+  - port: "8645"
+    proto: tcp
+    from_ip: 192.168.10.50
+    comment: Hermes webhook relay from k3s-node-01
+  - port: "8645"
+    proto: tcp
+    from_ip: 192.168.10.51
+    comment: Hermes webhook relay from k3s-node-02
+  - port: "8645"
+    proto: tcp
+    from_ip: 192.168.10.52
+    comment: Hermes webhook relay from k3s-node-03
   - port: "9119"
     proto: tcp
     from_ip: 192.168.0.0/16
