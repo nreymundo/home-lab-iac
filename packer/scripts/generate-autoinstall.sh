@@ -14,14 +14,14 @@ echo "    Output:   $OUTPUT_FILE"
 
 # Auto-detect format based on filename
 if [[ "$TEMPLATE_FILE" == *ks.cfg.template ]]; then
-    FORMAT="kickstart"
-    echo "    Format:   Kickstart (Fedora)"
+  FORMAT="kickstart"
+  echo "    Format:   Kickstart (Fedora)"
 elif [[ "$TEMPLATE_FILE" == *user-data.template ]]; then
-    FORMAT="cloudinit"
-    echo "    Format:   Cloud-init (Ubuntu)"
+  FORMAT="cloudinit"
+  echo "    Format:   Cloud-init (Ubuntu)"
 else
-    echo "ERROR: Cannot determine format from template filename" >&2
-    exit 1
+  echo "ERROR: Cannot determine format from template filename" >&2
+  exit 1
 fi
 
 # Fetch SSH keys from 1Password
@@ -29,22 +29,22 @@ echo "==> Fetching SSH keys from 1Password..."
 SSH_KEYS=$("$SCRIPT_DIR/fetch-ssh-keys.sh" "$FORMAT")
 
 if [[ -z "$SSH_KEYS" ]]; then
-    echo "ERROR: Failed to fetch SSH keys" >&2
-    exit 1
+  echo "ERROR: Failed to fetch SSH keys" >&2
+  exit 1
 fi
 
 # Replace {{SSH_KEYS}} placeholder in template
 # Use line-by-line processing to handle multi-line SSH keys
 TEMP_FILE=$(mktemp)
-trap "rm -f $TEMP_FILE" EXIT
+trap 'rm -f "$TEMP_FILE"' EXIT
 
 while IFS= read -r line; do
-    if [[ "$line" == *"{{SSH_KEYS}}"* ]]; then
-        # Replace the placeholder with the SSH keys
-        echo "$SSH_KEYS"
-    else
-        echo "$line"
-    fi
+  if [[ "$line" == *"{{SSH_KEYS}}"* ]]; then
+    # Replace the placeholder with the SSH keys
+    echo "$SSH_KEYS"
+  else
+    echo "$line"
+  fi
 done < "$TEMPLATE_FILE" > "$TEMP_FILE"
 
 mv "$TEMP_FILE" "$OUTPUT_FILE"

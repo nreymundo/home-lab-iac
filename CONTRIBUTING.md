@@ -59,6 +59,8 @@ The repository uses pre-commit to enforce code quality:
 | `ansible-lint` | Lint Ansible playbooks and roles |
 | `packer-fmt` | Format Packer HCL files |
 | `terraform-fmt` | Format Terraform files |
+| `shellcheck` | Lint standalone shell scripts under `scripts/`, `packer/`, and `terraform/` |
+| `shfmt` | Format shell scripts under `scripts/`, `packer/`, and `terraform/` |
 | `forbid-sensitive-files` | Block committing private key material |
 | `prevent-plaintext-k8s-secrets` | Block unencrypted Kubernetes Secret manifests |
 | `kubeconform` | Validate rendered Kubernetes manifests |
