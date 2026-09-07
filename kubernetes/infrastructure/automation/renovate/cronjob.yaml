@@ -52,7 +52,7 @@ spec:
                   value: "200"
               envFrom:
                 - secretRef:
-                    name: renovate-token
+                    name: renovate-token-eso
               volumeMounts:
                 - name: config-volume
                   mountPath: /opt/renovate
