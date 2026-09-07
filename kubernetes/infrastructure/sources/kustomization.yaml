@@ -10,6 +10,7 @@ resources:
   - stakater.yaml
   - cert-manager.yaml
   - external-dns.yaml
+  - external-secrets.yaml
   - longhorn.yaml
   - prometheus-community.yaml
   - grafana.yaml
