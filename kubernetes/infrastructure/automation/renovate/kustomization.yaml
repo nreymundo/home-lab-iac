@@ -4,3 +4,4 @@ resources:
   - configmap.yaml
   - secret.sops.yaml
   - cronjob.yaml
+  - externalsecret.yaml

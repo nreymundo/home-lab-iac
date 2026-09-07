@@ -17,6 +17,7 @@ spec:
   dependsOn:
     - name: cluster-identity
     - name: infrastructure
+    - name: external-secrets-config
   postBuild:
     substituteFrom:
       - kind: ConfigMap
