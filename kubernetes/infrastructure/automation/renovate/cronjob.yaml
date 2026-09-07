@@ -50,6 +50,8 @@ spec:
                   value: /tmp/renovate/cache
                 - name: RENOVATE_DOCKER_MAX_PAGES
                   value: "200"
+                - name: RENOVATE_X_DOCKER_HUB_TAGS_DISABLE
+                  value: "true"
               envFrom:
                 - secretRef:
                     name: renovate-token-eso
