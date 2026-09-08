@@ -20,6 +20,7 @@ spec:
               - --opnsense.protocol=http
               - --opnsense.address=192.168.10.1
               - --exporter.disable-unbound
+              - --exporter.disable-temperature
               - --exporter.instance-label=opnsense
               - --web.listen-address=:8080
             envFrom:
