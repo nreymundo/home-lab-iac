@@ -4,5 +4,5 @@ components:
   - ../../../../components/bjw-s-defaults
 resources:
   - helmrelease.yaml
-  - plex-exporter-secret.sops.yaml
+  - externalsecret.yaml
   - servicemonitor.yaml

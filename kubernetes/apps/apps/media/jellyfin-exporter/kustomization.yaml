@@ -4,5 +4,5 @@ components:
   - ../../../../components/bjw-s-defaults
 resources:
   - helmrelease.yaml
-  - jellyfin-exporter-secret.sops.yaml
+  - externalsecret.yaml
   - servicemonitor.yaml
