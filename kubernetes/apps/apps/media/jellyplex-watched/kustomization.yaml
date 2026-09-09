@@ -4,4 +4,4 @@ components:
   - ../../../../components/bjw-s-defaults
 resources:
   - helmrelease.yaml
-  - externalsecret.yaml
+  - secret.sops.yaml

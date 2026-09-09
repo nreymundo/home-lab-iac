@@ -6,4 +6,4 @@ components:
   - ../../../../components/ingress/auth-guard
 resources:
   - helmrelease.yaml
-  - externalsecret.yaml
+  - secret.sops.yaml

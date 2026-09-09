@@ -5,7 +5,7 @@ components:
   - ../../../../components/ingress/traefik-base
 
 resources:
-  - externalsecret-db.yaml
-  - externalsecret-integrations.yaml
+  - airtrail-db-secrets.sops.yaml
+  - airtrail-integration-secrets.sops.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml

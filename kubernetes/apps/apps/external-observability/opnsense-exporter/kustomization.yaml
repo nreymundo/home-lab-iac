@@ -4,6 +4,6 @@ components:
   - ../../../../components/bjw-s-defaults
 resources:
   - helmrelease.yaml
-  - externalsecret.yaml
+  - opnsense-exporter-secret.sops.yaml
   - scrapeconfig.yaml
   - servicemonitor.yaml

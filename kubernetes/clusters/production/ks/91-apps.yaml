@@ -15,7 +15,6 @@ spec:
     - name: cluster-identity
     - name: apps-storage
     - name: traefik-config
-    - name: external-secrets-config
   decryption:
     provider: sops
     secretRef:

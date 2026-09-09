@@ -6,4 +6,4 @@ components:
 resources:
   - helmrelease.yaml
   - ingressroutetcp.yaml
-  - externalsecret.yaml
+  - gitea-mailer-secret.sops.yaml
