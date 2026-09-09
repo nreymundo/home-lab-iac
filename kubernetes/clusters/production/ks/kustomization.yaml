@@ -16,8 +16,6 @@ resources:
   # - 28-netbird-config.yaml
   - 30-kube-replicator-install.yaml
   - 31-reloader-install.yaml
-  - 32-external-secrets-install.yaml
-  - 33-external-secrets-config.yaml
   - 42-authentik-install.yaml
   - 43-authentik-config.yaml
   - 44-crowdsec-install.yaml
