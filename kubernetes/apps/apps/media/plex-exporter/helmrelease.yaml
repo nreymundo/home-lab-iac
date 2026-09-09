@@ -13,8 +13,8 @@ spec:
         containers:
           main:
             image:
-              repository: ghcr.io/jsclayton/prometheus-plex-exporter
-              digest: sha256:18ef1b2197efbcb75bd7276380955760995f10a9fbe55106809a6fcff91c2940
+              repository: ghcr.io/timothystewart6/prometheus-plex-exporter
+              digest: sha256:90dc0799601c334f2945a3d5b4b552a06352b208a8ce88a428cf90d6c9aa51cd
               pullPolicy: Always
             envFrom:
               - secretRef:
