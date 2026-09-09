@@ -5,4 +5,4 @@ components:
   - ../../../../components/ingress/traefik-base
 resources:
   - helmrelease.yaml
-  - searxng-secrets.sops.yaml
+  - externalsecret.yaml
