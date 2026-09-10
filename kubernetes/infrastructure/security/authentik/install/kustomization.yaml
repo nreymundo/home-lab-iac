@@ -34,3 +34,4 @@ resources:
   - llama-auth-secret.sops.yaml
   - frigate-proxy-secret.sops.yaml
   - tautulli-basic-auth-pbk-secret.sops.yaml
+  - open-webui-sso-secret.sops.yaml

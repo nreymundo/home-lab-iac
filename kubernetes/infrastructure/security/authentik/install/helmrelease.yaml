@@ -248,6 +248,16 @@ spec:
             secretKeyRef:
               name: hermes-sso-secret
               key: CLIENT_SECRET
+        - name: OPEN_WEBUI_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: open-webui-sso-secret
+              key: CLIENT_ID
+        - name: OPEN_WEBUI_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: open-webui-sso-secret
+              key: CLIENT_SECRET
         - name: DISCORD_BASIC_AUTH
           valueFrom:
             secretKeyRef:
