@@ -31,7 +31,7 @@ I'm following a lot of good practices but this will _definitely_ be more of a ba
 
 * **One source of truth for node topology.** Terraform generates the Ansible inventory for the K3s nodes (`terraform/instances/vm/k3s_nodes/` renders `ansible/inventories/k3s-nodes.yml`), so the fleet is defined once instead of maintained in two places.
 * **Registry peer sharing with an upstream escape hatch.** Every K3s node runs the embedded registry and serves its cached images to peer nodes over TCP `5001`, and any cache miss falls through to a direct upstream pull. The knobs live in `ansible/roles/k3s/defaults/main.yml`. I used `Harbor` for a while but the overhead and complexity it added was just not worth it for a small cluster.
-* **Layered secrets with guardrails to match.** Ansible, Packer, and Terraform pull secrets at runtime through a read-only 1Password CLI service account; Kubernetes secrets are SOPS-encrypted `*.sops.yaml` files in Git; pre-commit hooks block key material and plaintext Secrets before they ever reach a commit.
+* **Layered secrets with guardrails to match.** Ansible, Packer, and Terraform retrieve secrets at runtime through read-only secret-helper flows; Kubernetes secrets are SOPS-encrypted `*.sops.yaml` files in Git; pre-commit hooks block key material and plaintext Secrets before they ever reach a commit.
 * **Path-filtered validation.** CI only runs the hard-failing jobs that match what actually changed (kubeconform, Checkov, Trivy), so a docs tweak doesn't spin up the whole gauntlet.
 
 

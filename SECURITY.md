@@ -11,7 +11,7 @@ Sensitive data is managed per component through dedicated secret stores:
 - Secrets are injected at runtime via each component's secret integration
 
 See [Secrets by Component](#secrets-by-component) and
-[1Password CLI for Infrastructure Automation](#1password-cli-for-infrastructure-automation)
+[Secret Manager for Infrastructure Automation](#secret-manager-for-infrastructure-automation)
 below, and [ansible/secrets/README.md](ansible/secrets/README.md) for the
 committed SOPS-encrypted Ansible secrets.
 
@@ -19,19 +19,19 @@ committed SOPS-encrypted Ansible secrets.
 
 | Component | Method |
 |-----------|--------|
-| Ansible | 1Password CLI (`op`) in the `ssh_hardening` role |
-| Packer | 1Password CLI (`op`) via `generate-autoinstall.sh` |
-| Terraform | 1Password CLI (`op`) via `hashicorp/external` data source |
+| Ansible | Runtime secret helper in the `ssh_hardening` role |
+| Packer | Runtime secret helper via `generate-autoinstall.sh` |
+| Terraform | Runtime secret helper via `hashicorp/external` data source |
 | Kubernetes | SOPS (AGE-encrypted `*.sops.yaml` files in Git) |
 
-### 1Password CLI for Infrastructure Automation
+### Secret Manager for Infrastructure Automation
 
-Ansible, Packer, and Terraform use the `op` CLI with a read-only service
-account. The local runtime environment must provide
-`OP_SERVICE_ACCOUNT_TOKEN` and `IAC_1PASSWORD_VAULT_ID`; neither belongs in
-the repository. The vault ID is explicitly passed to every SSH-key lookup, and
-the existing `ansible`, `packer`, and `terraform` tags limit each tool's key
-selection within that vault.
+Ansible, Packer, and Terraform retrieve secrets at runtime through read-only
+secret-helper flows backed by the configured secret manager. The local runtime
+environment must provide the required secret-manager client and its
+credentials; neither belongs in the repository. Secret lookups are explicitly
+scoped, and the existing `ansible`, `packer`, and `terraform` tags limit each
+tool's key selection.
 
 ---
 
@@ -118,7 +118,7 @@ If you discover a security vulnerability:
 
 ### For Secrets
 
-1. Rotate 1Password access when accounts or integrations change
+1. Rotate secret-manager access when accounts or integrations change
 2. Use separate machine accounts for different environments
-3. Audit secret access via 1Password account activity
+3. Audit secret access via the secret manager's activity logs
 4. Never store secrets in plain text or commit to Git

@@ -5,7 +5,7 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 ## What This Subtree Owns
 - `terraform/modules/` holds reusable infrastructure building blocks.
 - Concrete root modules live under both `terraform/instances/` and `terraform/cloud/`; those roots can produce downstream artifacts such as Ansible inventory or cloud-specific infrastructure state.
-- Secrets belong in 1Password CLI-backed helper flows (the `hashicorp/external` data source and `terraform/scripts/` helpers), not inline Terraform values or plaintext files.
+- Secrets belong in the external secret-helper flows (the `hashicorp/external` data source and `terraform/scripts/` helpers), not inline Terraform values or plaintext files.
 
 ## Source Of Truth Boundaries
 - Treat Terraform roots, including cloud roots, as the source of truth for generated inventory under `ansible/inventories/`.
@@ -14,7 +14,7 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 
 ## Local Anti-Patterns
 - Do not hand-edit Terraform-generated Ansible inventory.
-- Do not move secrets into `tfvars`, plaintext files, or ad hoc environment handling when the existing module already uses the 1Password-backed helper.
+- Do not move secrets into `tfvars`, plaintext files, or ad hoc environment handling when the existing module already uses the secret-helper flow.
 - Do not treat module internals as a safe place for per-instance overrides when the root module already owns that concern.
 - Do not change root-module outputs or inventory shape without checking downstream Ansible impact.
 
@@ -28,5 +28,5 @@ terraform -chdir="$ROOT" plan
 ```
 
 - Set `ROOT` to each modified root module, including cloud roots. `plan` requires the configured backend and provider credentials.
-- The 1Password-backed external data source needs `op` CLI and `jq` on PATH for anything that reads data sources; it requires `OP_SERVICE_ACCOUNT_TOKEN` and scopes all list/read lookups to `IAC_1PASSWORD_VAULT_ID`.
+- The secret-helper external data source needs its configured secret-manager client and `jq` on PATH for anything that reads data sources, plus the environment credentials that client consumes.
 - After changing Terraform that feeds Ansible, inspect the generated inventory diff and any host labels, users, or topology assumptions consumed downstream.
