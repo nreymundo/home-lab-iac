@@ -1,0 +1,145 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: open-webui
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=open-webui/open-webui registryUrl=https://ghcr.io
+              repository: ghcr.io/open-webui/open-webui
+              tag: v0.11.3
+            env:
+              TZ: Europe/Berlin
+              WEBUI_URL: https://chat.lan.${CLUSTER_DOMAIN}
+              WEBUI_AUTH: "true"
+              WEBUI_SESSION_COOKIE_SECURE: "true"
+              WEBUI_AUTH_COOKIE_SECURE: "true"
+              WEBUI_SECRET_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-secrets
+                    key: WEBUI_SECRET_KEY
+              ENABLE_PERSISTENT_CONFIG: "false"
+              ENABLE_VALVE_ENCRYPTION: "true"
+              ENABLE_OLLAMA_API: "false"
+              ENABLE_SIGNUP: "false"
+              ENABLE_OAUTH_SIGNUP: "true"
+              ENABLE_PASSWORD_AUTH: "false"
+              ENABLE_LOGIN_FORM: "false"
+              OAUTH_AUTO_REDIRECT: "true"
+              OAUTH_MERGE_ACCOUNTS_BY_EMAIL: "false"
+              OPENID_PROVIDER_URL: https://sso.${CLUSTER_DOMAIN}/application/o/open-webui/.well-known/openid-configuration
+              OPENID_REDIRECT_URI: https://chat.lan.${CLUSTER_DOMAIN}/oauth/oidc/callback
+              OAUTH_PROVIDER_NAME: Authentik
+              OAUTH_SCOPES: openid email profile open_webui
+              OAUTH_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-sso-secret
+                    key: CLIENT_ID
+              OAUTH_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-sso-secret
+                    key: CLIENT_SECRET
+              ENABLE_OAUTH_ROLE_MANAGEMENT: "true"
+              OAUTH_ROLES_CLAIM: open_webui_role
+              OAUTH_ALLOWED_ROLES: user,admin
+              OAUTH_ADMIN_ROLES: admin
+              OPENAI_API_BASE_URLS: http://litellm-main.ai.svc.cluster.local:4000/v1
+              OPENAI_API_KEYS:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-secrets
+                    key: LITELLM_API_KEY
+              ENABLE_WEB_SEARCH: "true"
+              WEB_SEARCH_ENGINE: searxng
+              SEARXNG_QUERY_URL: http://searxng-main.utils.svc.cluster.local:8080/search?q=<query>
+              WEB_SEARCH_RESULT_COUNT: "5"
+              # Consumed by the separately imported OpenRouter pipe, not Open WebUI core.
+              OPENROUTER_API_BASE_URL: https://openrouter.ai/api/v1
+              OPENROUTER_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-secrets
+                    key: OPENROUTER_API_KEY
+            ports:
+              - name: http
+                containerPort: 8080
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8080
+    ingress:
+      main:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: chat.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: chat.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: open-webui
+        globalMounts:
+          - path: /app/backend/data

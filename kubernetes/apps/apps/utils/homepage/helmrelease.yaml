@@ -350,6 +350,10 @@ spec:
                 icon: nextcloud.png
                 description: "File sync and share"
                 href: https://cloud.${CLUSTER_DOMAIN}
+            - Open WebUI:
+                icon: open-webui.png
+                description: "Chat interface for AI models"
+                href: https://chat.lan.${CLUSTER_DOMAIN}
             - Paperless:
                 icon: paperless-ngx.png
                 description: "Document management"
