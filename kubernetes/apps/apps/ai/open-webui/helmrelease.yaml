@@ -72,6 +72,15 @@ spec:
                   secretKeyRef:
                     name: open-webui-secrets
                     key: LITELLM_API_KEY
+              AUDIO_STT_ENGINE: openai
+              AUDIO_STT_MODEL: local/stt-large
+              AUDIO_STT_OPENAI_API_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
+              AUDIO_STT_OPENAI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-secrets
+                    key: LITELLM_API_KEY
+              AUDIO_STT_OPENAI_API_REQUEST_FORMAT: multipart
               ENABLE_PROFILE_IMAGE_URL_FORWARDING: "false"
               ENABLE_OAUTH_ID_TOKEN_COOKIE: "false"
               OAUTH_CLIENT_ID:
@@ -88,6 +97,7 @@ spec:
               OAUTH_ROLES_CLAIM: open_webui_role
               OAUTH_ALLOWED_ROLES: user,admin
               OAUTH_ADMIN_ROLES: admin
+              DEFAULT_MODELS: openai/gpt-5.6-luna
               OPENAI_API_BASE_URLS: http://litellm-main.ai.svc.cluster.local:4000/v1
               OPENAI_API_KEYS:
                 valueFrom:
