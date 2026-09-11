@@ -165,6 +165,21 @@ data:
             - pve3
           guardrails: []
 
+      - model_name: remote/rerank
+        model_info:
+          mode: rerank
+          max_input_tokens: 8192
+        litellm_params:
+          # LiteLLM has no native OpenRouter rerank provider; hosted_vllm is the
+          # OpenAI-compatible rerank client that posts to {api_base}/rerank.
+          model: hosted_vllm/voyageai/rerank-2.5-lite
+          custom_llm_provider: hosted_vllm
+          api_base: https://openrouter.ai/api/v1
+          litellm_credential_name: openrouter
+          # Voyage rerank pricing, in USD/token: $0.02 per million input tokens.
+          input_cost_per_token: 0.00000002
+          output_cost_per_token: 0.0
+
       - model_name: local/stt-fast
         model_info:
           mode: audio_transcription
