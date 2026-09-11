@@ -6,8 +6,10 @@
 - Image: `ghcr.io/open-webui/open-webui` (Renovate-tracked)
 - Auth: native Authentik OIDC only (`open-webui-sso-secret` replicated from the Authentik
   namespace; no password login, no forward-auth)
-- Models: routed through LiteLLM (`litellm-main.ai.svc.cluster.local:4000/v1`), with no model
-  allowlists. OpenRouter access is provided separately by the imported pipe described below.
+- Models: routed through LiteLLM (`litellm-main.ai.svc.cluster.local:4000/v1`), with
+  `openai/gpt-5.6-luna` selected by default and no model allowlists. A user's own default model
+  still takes precedence. OpenRouter access is provided separately by the imported pipe described
+  below.
 - Database: dedicated CNPG PostgreSQL cluster `open-webui-pg` (PostgreSQL 18, 1 instance,
   5Gi `longhorn-r2`) with pgvector (extension `vector`, pgvector 0.8.2 bundled in the
   `ghcr.io/cloudnative-pg/postgresql:18` image, created by the cluster bootstrap). Open WebUI
@@ -17,6 +19,8 @@
   `RAG_OPENAI_API_BASE_URL=http://litellm-main.ai.svc.cluster.local:4000/v1`), stored in
   pgvector at up to 2560 dimensions using halfvec (`PGVECTOR_USE_HALFVEC=true`) with HNSW
   indexes
+- Speech-to-text: OpenAI-compatible transcription through LiteLLM using
+  `local/stt-large` (`whisper/large-v3-q5_0`) with multipart audio uploads
 - Web search: SearXNG (`searxng-main.utils.svc.cluster.local:8080`)
 - Cache: ephemeral Valkey controller (`open-webui-valkey`, 6379, emptyDir) used only for
   websocket fan-out / live state coordination (`WEBSOCKET_MANAGER=redis`,
