@@ -45,6 +45,8 @@ spec:
               OPENID_REDIRECT_URI: https://chat.lan.${CLUSTER_DOMAIN}/oauth/oidc/callback
               OAUTH_PROVIDER_NAME: Authentik
               OAUTH_SCOPES: openid email profile open_webui
+              OAUTH_UPDATE_PICTURE_ON_LOGIN: "true"
+              ENABLE_RAG_LOCAL_WEB_FETCH: "true"
               OAUTH_CLIENT_ID:
                 valueFrom:
                   secretKeyRef:
