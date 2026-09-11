@@ -224,8 +224,10 @@ spec:
         volumeSpec:
           persistentVolumeClaim:
             claimName: open-webui
-        globalMounts:
-          - path: /app/backend/data
+        advancedMounts:
+          main:
+            main:
+              - path: /app/backend/data
       valkey-data:
         enabled: true
         type: emptyDir
