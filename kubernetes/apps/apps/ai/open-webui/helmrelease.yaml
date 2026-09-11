@@ -8,6 +8,9 @@ spec:
   chart:
     spec:
       chart: app-template
+  # Temporarily replace resources to remove fields retained by the failed Valkey rollout.
+  upgrade:
+    force: true
   values:
     controllers:
       main:
