@@ -44,7 +44,7 @@ spec:
               HINDSIGHT_API_EMBEDDINGS_LITELLM_MODEL: local/embedding
               HINDSIGHT_API_RERANKER_PROVIDER: litellm
               HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000
-              HINDSIGHT_API_RERANKER_LITELLM_MODEL: local/rerank
+              HINDSIGHT_API_RERANKER_LITELLM_MODEL: remote/rerank
               HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
               HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
               HINDSIGHT_API_LLM_API_KEY:
@@ -141,7 +141,7 @@ spec:
               HINDSIGHT_API_EMBEDDINGS_LITELLM_MODEL: local/embedding
               HINDSIGHT_API_RERANKER_PROVIDER: litellm
               HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000
-              HINDSIGHT_API_RERANKER_LITELLM_MODEL: local/rerank
+              HINDSIGHT_API_RERANKER_LITELLM_MODEL: remote/rerank
               HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
               HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
               HINDSIGHT_API_WORKER_ID: hindsight-worker-1
