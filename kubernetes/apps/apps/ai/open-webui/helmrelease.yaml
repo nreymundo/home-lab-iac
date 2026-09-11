@@ -27,11 +27,26 @@ spec:
               WEBUI_AUTH: "true"
               WEBUI_SESSION_COOKIE_SECURE: "true"
               WEBUI_AUTH_COOKIE_SECURE: "true"
+              JWT_EXPIRES_IN: "24h"
               WEBUI_SECRET_KEY:
                 valueFrom:
                   secretKeyRef:
                     name: open-webui-secrets
                     key: WEBUI_SECRET_KEY
+              DATABASE_URL:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-db-secrets
+                    key: DATABASE_URL
+              # The vector extension is created by the open-webui-pg CNPG bootstrap;
+              # pgvector reuses DATABASE_URL (PGVECTOR_DB_URL stays unset).
+              VECTOR_DB: pgvector
+              PGVECTOR_CREATE_EXTENSION: "false"
+              PGVECTOR_INITIALIZE_MAX_VECTOR_LENGTH: "2560"
+              PGVECTOR_USE_HALFVEC: "true"
+              PGVECTOR_INDEX_METHOD: hnsw
+              REDIS_URL: redis://open-webui-valkey:6379/0
+              WEBSOCKET_MANAGER: redis
               ENABLE_PERSISTENT_CONFIG: "false"
               ENABLE_VALVE_ENCRYPTION: "true"
               ENABLE_OLLAMA_API: "false"
@@ -46,7 +61,19 @@ spec:
               OAUTH_PROVIDER_NAME: Authentik
               OAUTH_SCOPES: openid email profile open_webui
               OAUTH_UPDATE_PICTURE_ON_LOGIN: "true"
+              OAUTH_UPDATE_NAME_ON_LOGIN: "true"
+              OAUTH_UPDATE_EMAIL_ON_LOGIN: "true"
               ENABLE_RAG_LOCAL_WEB_FETCH: "true"
+              RAG_EMBEDDING_ENGINE: openai
+              RAG_EMBEDDING_MODEL: local/embedding
+              RAG_OPENAI_API_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
+              RAG_OPENAI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-secrets
+                    key: LITELLM_API_KEY
+              ENABLE_PROFILE_IMAGE_URL_FORWARDING: "false"
+              ENABLE_OAUTH_ID_TOKEN_COOKIE: "false"
               OAUTH_CLIENT_ID:
                 valueFrom:
                   secretKeyRef:
@@ -119,12 +146,66 @@ spec:
                 memory: 512Mi
               limits:
                 memory: 2Gi
+
+      valkey:
+        containers:
+          valkey:
+            image:
+              # renovate: datasource=docker depName=valkey/valkey registryUrl=https://docker.io
+              repository: docker.io/valkey/valkey
+              tag: 9-alpine
+            command:
+              - valkey-server
+              - --save
+              - "30"
+              - "1"
+              - --loglevel
+              - warning
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - redis-cli ping || exit 1
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - redis-cli ping || exit 1
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
     service:
       main:
         controller: main
         ports:
           http:
             port: 8080
+      valkey:
+        controller: valkey
+        ports:
+          valkey:
+            port: 6379
     ingress:
       main:
         annotations:
@@ -145,3 +226,10 @@ spec:
             claimName: open-webui
         globalMounts:
           - path: /app/backend/data
+      valkey-data:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          valkey:
+            valkey:
+              - path: /data
