@@ -261,16 +261,56 @@ data:
             - pve3
           guardrails: []
 
+      - model_name: local/chat
+        model_info:
+          mode: chat
+          max_input_tokens: 253952
+          max_output_tokens: 8192
+          supports_vision: true
+          supports_function_calling: true
+          supports_reasoning: true
+          supports_tool_choice: true
+        litellm_params:
+          model: hosted_vllm/qwen3.8-27b
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local/analysis
+        model_info:
+          mode: chat
+          max_input_tokens: 253952
+          max_output_tokens: 8192
+          supports_vision: true
+          supports_function_calling: true
+          supports_reasoning: true
+          supports_tool_choice: true
+        litellm_params:
+          model: hosted_vllm/qwen3.8-27b-analysis
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
       - model_name: local/document-analysis
         model_info:
           mode: chat
-          max_input_tokens: 28672
+          max_input_tokens: 258048
           max_output_tokens: 4096
           supports_vision: true
           supports_function_calling: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/unsloth/gemma-4-26b-a4b-it-qat-doc
+          model: hosted_vllm/qwen3.8-27b-documents
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -283,13 +323,14 @@ data:
       - model_name: local/document-best
         model_info:
           mode: chat
-          max_input_tokens: 61440
-          max_output_tokens: 4096
+          max_input_tokens: 253952
+          max_output_tokens: 8192
           supports_vision: true
           supports_function_calling: true
+          supports_reasoning: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/unsloth/gemma-4-31b-it-qat-doc-best
+          model: hosted_vllm/qwen3.8-27b-analysis
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -304,11 +345,12 @@ data:
           mode: chat
           max_input_tokens: 253952
           max_output_tokens: 8192
+          supports_vision: true
           supports_function_calling: true
           supports_reasoning: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/unsloth-qwen3.8-27b
+          model: hosted_vllm/qwen3.8-27b-coding
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
