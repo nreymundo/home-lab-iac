@@ -5,4 +5,5 @@ components:
   - ../../../../components/ingress/traefik-base
   - ../../../../components/ingress/auth-guard
 resources:
+  - configmap.yaml
   - helmrelease.yaml

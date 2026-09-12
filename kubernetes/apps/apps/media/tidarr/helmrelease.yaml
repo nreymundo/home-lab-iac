@@ -48,6 +48,14 @@ spec:
                   identifier: main
                   port: http
     persistence:
+      config:
+        enabled: true
+        type: configMap
+        name: tidarr-config
+        globalMounts:
+          - path: /tidarr/docker/settings/config.toml
+            subPath: config.toml
+            readOnly: true
       data:
         enabled: true
         type: custom
