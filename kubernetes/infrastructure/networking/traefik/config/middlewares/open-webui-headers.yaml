@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/traefik.io/middleware_v1alpha1.json
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: open-webui-headers
+  namespace: traefik
+spec:
+  headers:
+    contentTypeNosniff: true
+    browserXssFilter: true
+    referrerPolicy: "strict-origin-when-cross-origin"
+    stsSeconds: 31536000
+    stsIncludeSubdomains: true
+    stsPreload: true
+    contentSecurityPolicy: "frame-ancestors 'self'"
+    customResponseHeaders:
+      X-Frame-Options: "SAMEORIGIN"
+      X-Permitted-Cross-Domain-Policies: "none"
+      Permissions-Policy: "camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), vr=(), interest-cohort=()"

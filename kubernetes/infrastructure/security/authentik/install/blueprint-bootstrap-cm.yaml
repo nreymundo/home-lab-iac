@@ -1936,6 +1936,9 @@ data:
             - authorization_code
           client_authentication_method: client_secret_basic
           redirect_uris:
+            - url: "https://chat.${CLUSTER_DOMAIN}/oauth/oidc/callback"
+              matching_mode: strict
+            # Retain during the hostname migration; remove after the new callback is live.
             - url: "https://chat.lan.${CLUSTER_DOMAIN}/oauth/oidc/callback"
               matching_mode: strict
           property_mappings:
