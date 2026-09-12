@@ -1,11 +1,25 @@
 # Open WebUI
 
 [Open WebUI](https://github.com/open-webui/open-webui) chat interface for AI models, served at
-`https://chat.lan.${CLUSTER_DOMAIN}` in the `ai` namespace.
+`https://chat.${CLUSTER_DOMAIN}` in the `ai` namespace.
 
 - Image: `ghcr.io/open-webui/open-webui` (Renovate-tracked)
 - Auth: native Authentik OIDC only (`open-webui-sso-secret` replicated from the Authentik
   namespace; no password login, no forward-auth)
+- Ingress: canonical hostname `chat.${CLUSTER_DOMAIN}` via ExternalDNS and Traefik, with the
+  `traefik-open-webui-headers@kubernetescrd` security-headers middleware (STS, CSP
+  frame-ancestors, nosniff, and related headers). Its Permissions Policy allows same-origin
+  microphone and camera access for voice and camera features; no Gatekeeper, CrowdSec, rate
+  limiting, or LAN allowlist is layered on this route
+- CORS: restricted to the canonical origin (`CORS_ALLOW_ORIGIN=https://chat.${CLUSTER_DOMAIN}`)
+- Sessions: cookies are `Secure` with `WEBUI_SESSION_COOKIE_SAME_SITE=strict`
+- Privacy: community sharing disabled (`ENABLE_COMMUNITY_SHARING=false`), public active-user
+  count hidden (`ENABLE_PUBLIC_ACTIVE_USERS_COUNT=false`), and outbound version update check
+  disabled (`ENABLE_VERSION_UPDATE_CHECK=false`). `ENABLE_RAG_LOCAL_WEB_FETCH=true` remains
+  enabled by accepted risk decision
+- Uploads: `RAG_FILE_MAX_SIZE=50` (50 MB per file) and `RAG_FILE_MAX_COUNT=10` (10 files per
+  chat-message upload). `RAG_FILE_MAX_COUNT` does not cap total Knowledge Base files, and
+  folder uploads retain their separate default count
 - Models: routed through LiteLLM (`litellm-main.ai.svc.cluster.local:4000/v1`), with
   `openai/gpt-5.6-luna` selected by default and no model allowlists. A user's own default model
   still takes precedence. OpenRouter access is provided separately by the imported pipe described

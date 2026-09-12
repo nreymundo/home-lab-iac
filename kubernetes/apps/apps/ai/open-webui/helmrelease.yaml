@@ -23,9 +23,11 @@ spec:
               tag: v0.11.3
             env:
               TZ: Europe/Berlin
-              WEBUI_URL: https://chat.lan.${CLUSTER_DOMAIN}
+              WEBUI_URL: https://chat.${CLUSTER_DOMAIN}
+              CORS_ALLOW_ORIGIN: https://chat.${CLUSTER_DOMAIN}
               WEBUI_AUTH: "true"
               WEBUI_SESSION_COOKIE_SECURE: "true"
+              WEBUI_SESSION_COOKIE_SAME_SITE: "strict"
               WEBUI_AUTH_COOKIE_SECURE: "true"
               JWT_EXPIRES_IN: "24h"
               WEBUI_SECRET_KEY:
@@ -54,16 +56,21 @@ spec:
               ENABLE_OAUTH_SIGNUP: "true"
               ENABLE_PASSWORD_AUTH: "false"
               ENABLE_LOGIN_FORM: "false"
+              ENABLE_COMMUNITY_SHARING: "false"
+              ENABLE_PUBLIC_ACTIVE_USERS_COUNT: "false"
+              ENABLE_VERSION_UPDATE_CHECK: "false"
               OAUTH_AUTO_REDIRECT: "true"
               OAUTH_MERGE_ACCOUNTS_BY_EMAIL: "false"
               OPENID_PROVIDER_URL: https://sso.${CLUSTER_DOMAIN}/application/o/open-webui/.well-known/openid-configuration
-              OPENID_REDIRECT_URI: https://chat.lan.${CLUSTER_DOMAIN}/oauth/oidc/callback
+              OPENID_REDIRECT_URI: https://chat.${CLUSTER_DOMAIN}/oauth/oidc/callback
               OAUTH_PROVIDER_NAME: Authentik
               OAUTH_SCOPES: openid email profile open_webui
               OAUTH_UPDATE_PICTURE_ON_LOGIN: "true"
               OAUTH_UPDATE_NAME_ON_LOGIN: "true"
               OAUTH_UPDATE_EMAIL_ON_LOGIN: "true"
               ENABLE_RAG_LOCAL_WEB_FETCH: "true"
+              RAG_FILE_MAX_SIZE: "50"
+              RAG_FILE_MAX_COUNT: "10"
               RAG_EMBEDDING_ENGINE: openai
               RAG_EMBEDDING_MODEL: local/embedding
               RAG_OPENAI_API_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
@@ -219,9 +226,10 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: chat.lan.${CLUSTER_DOMAIN}
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-open-webui-headers@kubernetescrd
+          external-dns.alpha.kubernetes.io/hostname: chat.${CLUSTER_DOMAIN}
         hosts:
-          - host: chat.lan.${CLUSTER_DOMAIN}
+          - host: chat.${CLUSTER_DOMAIN}
             paths:
               - path: /
                 service:
