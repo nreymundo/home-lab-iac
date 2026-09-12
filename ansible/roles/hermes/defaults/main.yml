@@ -54,5 +54,9 @@ hermes_profile_gateway_service_prefix: "{{ hermes_service_name }}-"
 hermes_dashboard_service_name: hermes-dashboard
 hermes_dashboard_service_enabled: true
 hermes_dashboard_service_state: started
-hermes_dashboard_host: 0.0.0.0
+# Bind the dashboard to the VM's LAN address rather than 0.0.0.0 so the
+# listener itself is unreachable from other interfaces; UFW still governs
+# which source subnets may connect. WireGuard clients reach it via their
+# routed LAN address, no separate bind or firewall rule needed.
+hermes_dashboard_host: 192.168.10.100
 hermes_dashboard_port: 9119
