@@ -1938,9 +1938,6 @@ data:
           redirect_uris:
             - url: "https://chat.${CLUSTER_DOMAIN}/oauth/oidc/callback"
               matching_mode: strict
-            # Retain during the hostname migration; remove after the new callback is live.
-            - url: "https://chat.lan.${CLUSTER_DOMAIN}/oauth/oidc/callback"
-              matching_mode: strict
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
@@ -1956,7 +1953,7 @@ data:
           icon: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/open-webui.svg"
           provider: !KeyOf open-webui-provider
           group: "Kubernetes"
-          meta_launch_url: "https://chat.lan.${CLUSTER_DOMAIN}"
+          meta_launch_url: "https://chat.${CLUSTER_DOMAIN}"
 
       # Restrict access to Open WebUI Users
       - model: authentik_policies.policybinding
