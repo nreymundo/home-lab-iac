@@ -32,6 +32,7 @@ spec:
               HINDSIGHT_API_LLM_PROVIDER: openai
               HINDSIGHT_API_LLM_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
               HINDSIGHT_API_LLM_MODEL: zai-coding/glm-5-turbo
+              HINDSIGHT_API_REFLECT_LLM_MODEL: zai-coding/glm-5.3-flash
               HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: English
               HINDSIGHT_API_LLM_STRICT_SCHEMA: "false"
               HINDSIGHT_API_LLM_EXTRA_BODY: '{"allowed_openai_params":["response_format","tools","tool_choice"]}'
@@ -130,6 +131,7 @@ spec:
               HINDSIGHT_API_LLM_PROVIDER: openai
               HINDSIGHT_API_LLM_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
               HINDSIGHT_API_LLM_MODEL: zai-coding/glm-5-turbo
+              HINDSIGHT_API_REFLECT_LLM_MODEL: zai-coding/glm-5.3-flash
               HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: English
               HINDSIGHT_API_LLM_STRICT_SCHEMA: "false"
               HINDSIGHT_API_LLM_EXTRA_BODY: '{"allowed_openai_params":["response_format","tools","tool_choice"]}'
@@ -149,7 +151,7 @@ spec:
               HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
               HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
               HINDSIGHT_API_WORKER_ID: hindsight-worker-1
-              HINDSIGHT_API_WORKER_MAX_SLOTS: "4"
+              HINDSIGHT_API_WORKER_MAX_SLOTS: "3"
               HINDSIGHT_API_WORKER_CONSOLIDATION_RESERVED_SLOTS: "1"
               HINDSIGHT_API_WORKER_REFRESH_MENTAL_MODEL_RESERVED_SLOTS: "1"
               HINDSIGHT_API_WORKER_RETAIN_RESERVED_SLOTS: "1"
