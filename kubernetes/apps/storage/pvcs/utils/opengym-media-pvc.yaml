@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/v1/persistentvolumeclaim.json
+# Rebuildable exercise media fetched by the opengym media-init container; no
+# backup labels on purpose: the content is third-party with unresolved
+# licensing (see upstream openGym NOTICE.md) and is re-downloadable at will.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: opengym-media
+  namespace: utils
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-r2
+  resources:
+    requests:
+      storage: 1Gi
