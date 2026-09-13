@@ -121,12 +121,15 @@ spec:
               RP_ID: opengym.lan.${CLUSTER_DOMAIN}
               ORIGIN: https://opengym.lan.${CLUSTER_DOMAIN}
               RP_NAME: openGym
-              # Bootstrap posture: signups stay open until the first profile
-              # exists. After the first login, set ADMIN_UIDS to that profile's
-              # id and flip INVITE_ONLY to "1" here.
+              # Keep profile creation invite-only after the initial passkey
+              # profile has been promoted to administrator.
+              ADMIN_UIDS: OyE9X4rgzJZ32oA4
               ALLOW_GUEST: "0"
-              INVITE_ONLY: "0"
+              INVITE_ONLY: "1"
               SESSION_DAYS: "30"
+              AUDIT_LOG: "1"
+              AUDIT_MAX: "5000"
+              AUDIT_DAYS: "90"
               AUDIT_IP: "off"
             ports:
               - name: api
