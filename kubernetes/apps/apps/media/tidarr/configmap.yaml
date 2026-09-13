@@ -32,7 +32,7 @@ data:
 
     # if you don't specify the template for a resource
     # then default template will be used.
-    default = "{album.artist}/{album.date:%Y} - {album.title}/{item.number:02d}. {item.title_version}"
+    default = "{album.artist}/{album.release}/{album.title} ({album.date:%Y})/{item.number:02d}. {item.title_version}"
 
     # track = "{album.artist}/{album.date:%Y} - {album.title}/{album.artist} - {item.title_version}"
     # album = "{album.artist}/{album.date:%Y} - {album.title}/{item.number:02d}. {item.title_version}"
@@ -170,3 +170,111 @@ data:
     # album = "m3u/{type}/{album.artist} - {album.title}"
     # mix = "m3u/{type}/{now:%x}"
     playlist = "m3u/{type}/{playlist.title}"
+  beets-config.yml: |
+    plugins: embedart importadded fetchart lastgenre missing advancedrewrite
+
+    art_filename: folder
+    threaded: yes
+    per_disc_numbering: yes
+    id3v23: no
+    asciify_paths: true
+
+    ui:
+        color: no
+
+    paths:
+        default: "%asciify{$albumartist}/$original_year - %asciify{$album}%aunique{}/$track - %asciify{$title}"
+        singleton: Non-Album/%asciify{$artist} - %asciify{$title}
+        comp: Compilations/%asciify{$album}%aunique{}/$track - %asciify{$title}
+        albumtype_soundtrack: Soundtracks/%asciify{$album}%aunique{}/$track - %asciify{$title}
+
+    import:
+        write: yes
+        copy: no
+        move: no
+        resume: ask
+        incremental: no
+        quiet_fallback: asis
+        timid: no
+        duplicate_action: asis
+        log: /shared/beets/beet.log
+        languages: ['en']
+        group_albums: no
+
+    lastgenre:
+      auto: yes
+      source: album
+      count: 2
+      force: no
+      keep_existing: yes
+      canonical: no
+      title_case: yes
+      fallback: ""
+      min_weight: 10
+
+    match:
+        strong_rec_thresh: 0.10 # 0.04
+        medium_rec_thresh: 0.25 # 0.25
+        rec_gap_thresh: 0.25 # 0.25
+        max_rec:
+            missing_tracks: medium # medium
+            unmatched_tracks: medium # medium
+            track_length: medium
+            track_index: medium
+        distance_weights:
+            source: 2.0 # 2.0
+            artist: 3.0 # 3.0
+            album: 3.0 # 3.0
+            media: 1.0 # 1.0
+            mediums: 1.0 # 1.0
+            year: 1.0 # 1.0
+            country: 0.5 # 0.5
+            label: 0.5 # 0.5
+            catalognum: 0.5 # 0.5
+            albumdisambig: 0.5 # 0.5
+            album_id: 5.0 # 5.0
+            tracks: 2.0 # 2.0
+            missing_tracks: 0.9 # 0.9
+            unmatched_tracks: 0.6 # 0.6
+            track_title: 3.0 # 3.0
+            track_artist: 2.0 # 2.0
+            track_index: 1.0 # 1.0
+            track_length: 2.0 # 2.0
+            track_id: 5.0 # 5.0
+        preferred:
+            countries: [] # []
+            media: [] # []
+            original_year: no # no
+        ignored: ['missing_tracks', 'track_length', 'unmatched_tracks', 'track_index'] # []
+        required: [] # []
+        ignored_media: [] # []
+        ignore_data_tracks: yes # yes
+        ignore_video_tracks: yes # yes
+        track_length_grace: 10 # 10
+        track_length_max: 30 # 30
+
+    embedart:
+        auto: no
+
+    importadded:
+        preserve_mtimes: yes
+        preserve_write_mtimes: yes
+
+    permissions:
+        file: 644
+        dir: 755
+  custom-script.sh: |
+    #!/bin/sh
+    set -eu
+
+    for artist_dir in "$PROCESSING_PATH"/*; do
+      [ -d "$artist_dir" ] || continue
+
+      if [ -d "$artist_dir/ALBUM" ]; then
+        mv "$artist_dir/ALBUM" "$artist_dir/Album"
+      fi
+
+      if [ -d "$artist_dir/SINGLE" ]; then
+        mv "$artist_dir/SINGLE" "$artist_dir/Single"
+      fi
+    done

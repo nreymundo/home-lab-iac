@@ -11,6 +11,15 @@ spec:
     controllers:
       main:
         strategy: Recreate
+        initContainers:
+          prepare-custom-script:
+            image:
+              repository: docker.io/library/busybox
+              tag: 1.36.1
+            command:
+              - sh
+              - -c
+              - cp /tmp/custom-script.sh /shared/custom-script.sh && chmod 755 /shared/custom-script.sh
         containers:
           main:
             image:
@@ -21,6 +30,7 @@ spec:
               TZ: Europe/Berlin
               PUID: "99"
               PGID: "100"
+              ENABLE_BEETS: "true"
             ports:
               - name: http
                 containerPort: 8484
@@ -58,6 +68,15 @@ spec:
             readOnly: true
           - path: /shared/.tiddl/config.toml
             subPath: config.toml
+            readOnly: true
+          - path: /tidarr/docker/settings/beets-config.yml
+            subPath: beets-config.yml
+            readOnly: true
+          - path: /shared/beets-config.yml
+            subPath: beets-config.yml
+            readOnly: true
+          - path: /tmp/custom-script.sh
+            subPath: custom-script.sh
             readOnly: true
       data:
         enabled: true
