@@ -89,10 +89,9 @@ spec:
       media:
         type: nfs
         server: ${UNRAID_IP}
-        path: /mnt/user/media
+        path: /mnt/user/media/libraries/music
         globalMounts:
           - path: /music
-            subPath: usenet/music
       nzb-downloads:
         type: nfs
         server: ${UNRAID_IP}
