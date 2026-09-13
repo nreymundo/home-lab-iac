@@ -603,6 +603,21 @@ data:
                 cache_controls["no-cache"] = True
                 cache_controls["no-store"] = True
 
+            drop_request_params = metadata.get("drop_request_params")
+            if isinstance(drop_request_params, list):
+                for param in drop_request_params:
+                    if isinstance(param, str):
+                        data.pop(param, None)
+
+            drop_request_params_by_model = metadata.get("drop_request_params_by_model")
+            model = data.get("model")
+            if isinstance(drop_request_params_by_model, dict) and isinstance(model, str):
+                model_drop_params = drop_request_params_by_model.get(model)
+                if isinstance(model_drop_params, list):
+                    for param in model_drop_params:
+                        if isinstance(param, str):
+                            data.pop(param, None)
+
             return data
 
 
