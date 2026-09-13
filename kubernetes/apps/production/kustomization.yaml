@@ -16,6 +16,7 @@ resources:
   - ../apps/utils/dawarich
   - ../apps/utils/airtrail
   - ../apps/utils/karakeep
+  - ../apps/utils/opengym
   - ../apps/nextcloud
   - ../apps/media/audiobookshelf
   - ../apps/media/jellyfin

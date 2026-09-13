@@ -355,6 +355,10 @@ spec:
                 icon: open-webui.png
                 description: "Chat interface for AI models"
                 href: https://chat.${CLUSTER_DOMAIN}
+            - OpenGym:
+                icon: https://raw.githubusercontent.com/DuarteSantos8/openGym/main/frontend/public/icon-180.png
+                description: "Self-hosted gym & body-weight tracker"
+                href: https://opengym.lan.${CLUSTER_DOMAIN}
             - Paperless:
                 icon: paperless-ngx.png
                 description: "Document management"
