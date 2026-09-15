@@ -318,7 +318,7 @@ spec:
             - Jellyfin:
                 icon: jellyfin.png
                 description: "Media server"
-                href: https://jellyfin.lan.${CLUSTER_DOMAIN}
+                href: https://jellyfin.${CLUSTER_DOMAIN}
             - Karakeep:
                 icon: karakeep.png
                 description: "Self-hosted bookmark manager"
@@ -374,7 +374,7 @@ spec:
             - Plex:
                 icon: plex.png
                 description: "Media server"
-                href: https://plex.lan.${CLUSTER_DOMAIN}
+                href: https://plex.${CLUSTER_DOMAIN}
             - Prometheus:
                 icon: prometheus.png
                 description: "Metrics"
