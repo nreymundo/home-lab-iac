@@ -30,6 +30,11 @@ services:
       JWT_SECRET: "${JWT_SECRET}"
       LYRICS_VAD_THRESHOLD: "{{ audiomuse_lyrics_vad_threshold }}"
       VAD_VOICE_RECOGNITION: "{{ audiomuse_vad_voice_recognition }}"
+      LYRICS_API_ENABLE: "{{ audiomuse_lyrics_api_enabled | bool | lower }}"
+      LYRICS_API_1_URL_TEMPLATE: "{{ audiomuse_lyrics_api_1_url_template }}"
+      LYRICS_API_1_ARTIST_PARAM: "{{ audiomuse_lyrics_api_1_artist_param }}"
+      LYRICS_API_1_TITLE_PARAM: "{{ audiomuse_lyrics_api_1_title_param }}"
+      LYRICS_API_1_LYRICS_FIELD: "{{ audiomuse_lyrics_api_1_lyrics_field }}"
     volumes:
       - "{{ audiomuse_flask_temp_dir }}:/app/temp_audio"
       - "{{ audiomuse_flask_plugins_dir }}:/app/plugin/installed"
@@ -55,6 +60,11 @@ services:
       PER_SONG_MODEL_RELOAD: "{{ audiomuse_per_song_model_reload | bool | lower }}"
       LYRICS_VAD_THRESHOLD: "{{ audiomuse_lyrics_vad_threshold }}"
       VAD_VOICE_RECOGNITION: "{{ audiomuse_vad_voice_recognition }}"
+      LYRICS_API_ENABLE: "{{ audiomuse_lyrics_api_enabled | bool | lower }}"
+      LYRICS_API_1_URL_TEMPLATE: "{{ audiomuse_lyrics_api_1_url_template }}"
+      LYRICS_API_1_ARTIST_PARAM: "{{ audiomuse_lyrics_api_1_artist_param }}"
+      LYRICS_API_1_TITLE_PARAM: "{{ audiomuse_lyrics_api_1_title_param }}"
+      LYRICS_API_1_LYRICS_FIELD: "{{ audiomuse_lyrics_api_1_lyrics_field }}"
     devices:
 {% for device in audiomuse_devices %}
       - "{{ device }}"
