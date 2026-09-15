@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+  - ../../../../components/bjw-s-defaults
+  - ../../../../components/ingress/traefik-base
+
+resources:
+  - mailflow-secrets.sops.yaml
+  - mailflow-db-secrets.sops.yaml
+  - cnpg-cluster.yaml
+  - configmap.yaml
+  - helmrelease.yaml

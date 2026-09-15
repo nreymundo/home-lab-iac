@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/cluster_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: mailflow-pg
+  namespace: utils
+  labels:
+    release: observability-kube-prometheus-stack
+spec:
+  inheritedMetadata:
+    labels:
+      recurring-job.longhorn.io/backup-daily: enabled
+      recurring-job.longhorn.io/backup-weekly: enabled
+  instances: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  monitoring:
+    enablePodMonitor: true
+  # 10Gi: MailFlow caches message bodies and full-text indexes in Postgres,
+  # which grows well beyond the metadata-only apps that use the 5Gi default.
+  storage:
+    size: 10Gi
+    storageClass: longhorn-r2
+
+  # MailFlow requires PostgreSQL 16+ and ships postgres:16-alpine upstream.
+  imageName: ghcr.io/cloudnative-pg/postgresql:16
+
+  postgresql:
+    parameters:
+      wal_level: "replica"
+      archive_timeout: "21600" # Wait 6 hours before shipping WALs when no activity
+      archive_mode: "on"
+
+  bootstrap:
+    initdb:
+      database: mailflow
+      owner: mailflow
+      secret:
+        name: mailflow-db-secrets
+      # MailFlow migrations create pg_trgm themselves (0008/0018), but the
+      # app user is not a superuser, so provide it up front like the
+      # airtrail unaccent precedent.
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+  backup:
+    barmanObjectStore:
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-backup-s3
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-backup-s3
+          key: ACCESS_SECRET_KEY
+        region:
+          name: cnpg-backup-s3
+          key: AWS_DEFAULT_REGION
+      destinationPath: "s3://cloudnative-pg/mailflow"
+      endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+      serverName: "mailflow-pg-v1"
+    retentionPolicy: "21d"
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: mailflow-pg-backup
+  namespace: utils
+spec:
+  schedule: "0 0 0 * * 0"  # Weekly Sunday at midnight
+  backupOwnerReference: self
+  cluster:
+    name: mailflow-pg
+  method: barmanObjectStore

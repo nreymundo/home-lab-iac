@@ -1,0 +1,141 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/v1.32.0/configmap-v1.json
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mailflow-nginx-config
+  namespace: utils
+data:
+  # Kubernetes port of upstream frontend/nginx.conf (its HTTP/80 server block
+  # only). Traefik terminates TLS, so upstream's 443/self-signed-cert server
+  # block is intentionally dropped. Upstream's Docker embedded-DNS resolver
+  # (127.0.0.11) and `backend:3000` upstream are replaced by the co-located
+  # backend container, which needs no runtime DNS resolution. Location
+  # precedence, proxy timeouts, AI SSE no-buffering, the WebSocket upgrade and
+  # the SPA/service-worker caching rules are copied from upstream so behavior
+  # matches the documented deployment. Upstream also forwards
+  # X-Forwarded-Proto from the edge proxy (Traefik), which the backend relies
+  # on for Secure session cookies.
+  default.conf: |
+    upstream mailflow_api {
+        server 127.0.0.1:3000;
+    }
+
+    server {
+        listen 80;
+        server_name _;
+
+        # Security headers — HSTS is intentionally omitted here; it must only be
+        # sent over HTTPS and belongs on the TLS-terminating proxy instead.
+        add_header X-Content-Type-Options    "nosniff" always;
+        add_header X-Frame-Options           "SAMEORIGIN" always;
+        add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy        "camera=(), microphone=(), geolocation=()" always;
+        add_header Content-Security-Policy   "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data: https:; img-src 'self' data: https: blob:; connect-src 'self' wss: ws:; frame-src 'self'; object-src 'none'; base-uri 'self';" always;
+
+        root /usr/share/nginx/html;
+        index index.html;
+
+        client_max_body_size 50m;
+
+        proxy_buffer_size       128k;
+        proxy_buffers           4 256k;
+        proxy_busy_buffers_size 256k;
+
+        # OAuth proxy
+        location /oauth/ {
+            proxy_pass         http://mailflow_api;
+            proxy_http_version 1.1;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $http_x_forwarded_proto;
+            proxy_read_timeout 30s;
+        }
+
+        # OIDC browser redirect flows (start + callback)
+        location /auth/oidc/ {
+            proxy_pass         http://mailflow_api;
+            proxy_http_version 1.1;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $http_x_forwarded_proto;
+            proxy_read_timeout 30s;
+        }
+
+        # Long-running API operations (rules run iterates all inbox messages via IMAP)
+        location = /api/rules/run {
+            proxy_pass         http://mailflow_api;
+            proxy_http_version 1.1;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $http_x_forwarded_proto;
+            proxy_read_timeout 300s;
+        }
+
+        # AI streaming endpoints — long timeout, no buffering (SSE)
+        location /api/ai/ {
+            proxy_pass             http://mailflow_api;
+            proxy_http_version     1.1;
+            proxy_set_header       Host $host;
+            proxy_set_header       X-Real-IP $remote_addr;
+            proxy_set_header       X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header       X-Forwarded-Proto $http_x_forwarded_proto;
+            proxy_read_timeout     300s;
+            proxy_buffering        off;
+            proxy_cache            off;
+        }
+
+        # API proxy
+        location /api/ {
+            proxy_pass         http://mailflow_api;
+            proxy_http_version 1.1;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $http_x_forwarded_proto;
+            proxy_read_timeout 60s;
+        }
+
+        # WebSocket proxy
+        location /ws {
+            proxy_pass         http://mailflow_api;
+            proxy_http_version 1.1;
+            proxy_set_header   Upgrade $http_upgrade;
+            proxy_set_header   Connection "upgrade";
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $http_x_forwarded_proto;
+            proxy_read_timeout 86400s;
+        }
+
+        # SPA fallback — never cache HTML so browsers always get current JS filenames
+        location / {
+            try_files $uri $uri/ /index.html;
+            add_header Cache-Control "no-store" always;
+            # Re-declare security headers (add_header in child blocks overrides parent)
+            add_header X-Content-Type-Options    "nosniff" always;
+            add_header X-Frame-Options           "SAMEORIGIN" always;
+            add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
+            add_header Permissions-Policy        "camera=(), microphone=(), geolocation=()" always;
+            add_header Content-Security-Policy   "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data: https:; img-src 'self' data: https: blob:; connect-src 'self' wss: ws:; frame-src 'self'; object-src 'none'; base-uri 'self';" always;
+        }
+
+        # Service worker must never be cached
+        location = /sw.js {
+            add_header Cache-Control "no-store" always;
+            add_header X-Content-Type-Options    "nosniff" always;
+            add_header X-Frame-Options           "SAMEORIGIN" always;
+            add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
+            add_header Permissions-Policy        "camera=(), microphone=(), geolocation=()" always;
+            add_header Content-Security-Policy   "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data: https:; img-src 'self' data: https: blob:; connect-src 'self' wss: ws:; frame-src 'self'; object-src 'none'; base-uri 'self';" always;
+        }
+
+        # Cache static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
