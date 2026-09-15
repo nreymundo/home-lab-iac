@@ -1,4 +1,16 @@
-# NetBird secrets
+# Ansible secrets
+
+## AudioMuse-AI
+
+`audiomuse.sops.yml` is committed encrypted and contains the internal PostgreSQL password and stable JWT signing secret used by the AudioMuse-AI container role. The AudioMuse administrator credentials and media-server credentials are configured through the application's setup wizard and stored in PostgreSQL.
+
+Verify the encrypted file without printing its contents:
+
+```bash
+sops --decrypt ansible/secrets/audiomuse.sops.yml >/dev/null
+```
+
+## NetBird
 
 `netbird.sops.yml` is committed encrypted. SOPS encrypts all `netbird_*` values
 using the repository Age recipient:

@@ -1,0 +1,46 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: audiomuse
+  namespace: external-proxy
+spec:
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: audiomuse
+  namespace: external-proxy
+subsets:
+  - addresses:
+      - ip: ${LLAMA_SWAP_IP}
+    ports:
+      - name: http
+        port: 8000
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: audiomuse
+  namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    external-dns.alpha.kubernetes.io/hostname: audiomuse.lan.${CLUSTER_DOMAIN}
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: audiomuse.lan.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: audiomuse
+                port:
+                  name: http

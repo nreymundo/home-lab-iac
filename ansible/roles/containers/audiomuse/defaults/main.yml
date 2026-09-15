@@ -1,0 +1,52 @@
+---
+audiomuse_enabled: true
+
+audiomuse_service_name: audiomuse-container
+audiomuse_compose_project_name: audiomuse
+
+audiomuse_version: "3.6.0"
+audiomuse_web_image: "ghcr.io/neptunehub/audiomuse-ai:{{ audiomuse_version }}"
+audiomuse_worker_image: "ghcr.io/schaka/audiomuse-ai-rocm:{{ audiomuse_version }}-gfx1151"
+audiomuse_postgres_image: "docker.io/library/postgres:15-alpine"
+
+audiomuse_config_dir: /etc/audiomuse
+audiomuse_compose_file: "{{ audiomuse_config_dir }}/docker-compose.yml"
+audiomuse_env_file: "{{ audiomuse_config_dir }}/audiomuse.env"
+audiomuse_secrets_file: "{{ playbook_dir }}/../secrets/audiomuse.sops.yml"
+audiomuse_sops_age_key_file: >-
+  {{ lookup('env', 'SOPS_AGE_KEY_FILE') | default(lookup('env', 'HOME') + '/.config/sops/age/keys.txt', true) }}
+
+audiomuse_base_dir: /opt/ai/containers/audiomuse
+audiomuse_postgres_data_dir: "{{ audiomuse_base_dir }}/postgres"
+audiomuse_flask_temp_dir: "{{ audiomuse_base_dir }}/temp/flask"
+audiomuse_worker_temp_dir: "{{ audiomuse_base_dir }}/temp/worker"
+audiomuse_flask_plugins_dir: "{{ audiomuse_base_dir }}/plugins/flask"
+audiomuse_worker_plugins_dir: "{{ audiomuse_base_dir }}/plugins/worker"
+audiomuse_migraphx_cache_dir: "{{ audiomuse_base_dir }}/cache/migraphx"
+audiomuse_miopen_cache_dir: "{{ audiomuse_base_dir }}/cache/miopen"
+
+audiomuse_bind_address: "0.0.0.0"
+audiomuse_host_port: 8000
+audiomuse_container_port: 8000
+
+audiomuse_postgres_user: audiomuse
+audiomuse_postgres_database: audiomusedb
+audiomuse_timezone: Europe/Berlin
+
+audiomuse_required_device_nodes:
+  - /dev/kfd
+  - /dev/dri/renderD128
+audiomuse_devices:
+  - /dev/kfd:/dev/kfd
+  - /dev/dri:/dev/dri
+audiomuse_render_gid: "105"
+audiomuse_video_gid: "39"
+audiomuse_gpu_architecture: gfx1151
+audiomuse_migraphx_compile_parallel: 8
+audiomuse_use_gpu_clustering: false
+audiomuse_per_song_model_reload: true
+
+audiomuse_validate_health: true
+audiomuse_health_url: "http://127.0.0.1:{{ audiomuse_host_port }}/"
+audiomuse_health_retries: 30
+audiomuse_health_delay: 10
