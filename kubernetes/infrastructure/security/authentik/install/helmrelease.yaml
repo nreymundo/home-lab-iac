@@ -258,6 +258,16 @@ spec:
             secretKeyRef:
               name: open-webui-sso-secret
               key: CLIENT_SECRET
+        - name: MAILFLOW_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: mailflow-sso-secret
+              key: CLIENT_ID
+        - name: MAILFLOW_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: mailflow-sso-secret
+              key: CLIENT_SECRET
         - name: DISCORD_BASIC_AUTH
           valueFrom:
             secretKeyRef:

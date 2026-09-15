@@ -347,6 +347,12 @@ spec:
                 icon: longhorn.png
                 description: "Storage management"
                 href: https://longhorn.lan.${CLUSTER_DOMAIN}
+            - MailFlow:
+                # No mailflow icon in homarr-labs/dashboard-icons (full tree
+                # searched); use the upstream project logo like the OpenGym card.
+                icon: https://raw.githubusercontent.com/maathimself/mailflow/main/media/mailflow-logo.png
+                description: "Self-hosted unified webmail"
+                href: https://mail.${CLUSTER_DOMAIN}
             - n8n:
                 icon: n8n.png
                 description: "Workflow automation"
