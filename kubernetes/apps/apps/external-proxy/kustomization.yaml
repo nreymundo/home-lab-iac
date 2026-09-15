@@ -17,5 +17,6 @@ resources:
   - llama-swap.yaml
   - comfyui.yaml
   - chatterbox.yaml
+  - audiomuse.yaml
   - syncthing.yaml
   - dev.yaml

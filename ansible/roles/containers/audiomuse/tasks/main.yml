@@ -1,0 +1,207 @@
+---
+- name: Ensure AudioMuse container role supports this system
+  ansible.builtin.assert:
+    that:
+      - ansible_system == 'Linux'
+    fail_msg: "AudioMuse container role supports Linux only"
+
+- name: Stat required AudioMuse GPU device nodes
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ audiomuse_required_device_nodes }}"
+  register: audiomuse_device_nodes
+  when: audiomuse_enabled | bool
+
+- name: Assert required AudioMuse GPU device nodes are present
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+    fail_msg: "Required AudioMuse GPU device node {{ item.item }} is missing"
+  loop: "{{ audiomuse_device_nodes.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: audiomuse_enabled | bool
+
+- name: Detect AudioMuse AMD GPU architecture
+  ansible.builtin.command: rocminfo
+  register: audiomuse_rocminfo
+  changed_when: false
+  check_mode: false
+  when: audiomuse_enabled | bool
+
+- name: Assert AudioMuse AMD GPU architecture is supported by the worker image
+  ansible.builtin.assert:
+    that:
+      - audiomuse_gpu_architecture in audiomuse_rocminfo.stdout
+    fail_msg: >-
+      AudioMuse worker image expects {{ audiomuse_gpu_architecture }}, but rocminfo did not report that architecture.
+  when: audiomuse_enabled | bool
+
+- name: Verify Docker Compose is available
+  ansible.builtin.command: docker compose version
+  changed_when: false
+  check_mode: false
+  when: audiomuse_enabled | bool
+
+- name: Verify AudioMuse secrets file exists
+  ansible.builtin.stat:
+    path: "{{ audiomuse_secrets_file }}"
+  delegate_to: localhost
+  become: false
+  register: audiomuse_secrets_file_stat
+  when: audiomuse_enabled | bool
+
+- name: Require AudioMuse secrets file
+  ansible.builtin.assert:
+    that:
+      - audiomuse_secrets_file_stat.stat.exists
+    fail_msg: >-
+      Create and encrypt {{ audiomuse_secrets_file }} as documented in ansible/secrets/README.md before running this role.
+  when: audiomuse_enabled | bool
+
+- name: Decrypt AudioMuse secrets
+  ansible.builtin.command:
+    argv:
+      - sops
+      - --decrypt
+      - "{{ audiomuse_secrets_file }}"
+  delegate_to: localhost
+  become: false
+  environment:
+    SOPS_AGE_KEY_FILE: "{{ audiomuse_sops_age_key_file }}"
+  register: audiomuse_decrypted_secrets
+  changed_when: false
+  check_mode: false
+  no_log: true
+  when: audiomuse_enabled | bool
+
+- name: Load AudioMuse secrets
+  ansible.builtin.set_fact:
+    audiomuse_secrets: "{{ audiomuse_decrypted_secrets.stdout | from_yaml }}"
+  no_log: true
+  when: audiomuse_enabled | bool
+
+- name: Verify required AudioMuse secret values
+  ansible.builtin.assert:
+    that:
+      - audiomuse_secrets.audiomuse_postgres_password | default('') | length >= 32
+      - audiomuse_secrets.audiomuse_jwt_secret | default('') | length >= 32
+    fail_msg: "AudioMuse secrets must define strong PostgreSQL and JWT secrets."
+  no_log: true
+  when: audiomuse_enabled | bool
+
+- name: Ensure AudioMuse configuration directory exists
+  ansible.builtin.file:
+    path: "{{ audiomuse_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: audiomuse_enabled | bool
+
+- name: Ensure AudioMuse persistent directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ audiomuse_base_dir }}"
+    - "{{ audiomuse_postgres_data_dir }}"
+    - "{{ audiomuse_flask_temp_dir }}"
+    - "{{ audiomuse_worker_temp_dir }}"
+    - "{{ audiomuse_flask_plugins_dir }}"
+    - "{{ audiomuse_worker_plugins_dir }}"
+    - "{{ audiomuse_migraphx_cache_dir }}"
+    - "{{ audiomuse_miopen_cache_dir }}"
+  when: audiomuse_enabled | bool
+
+- name: Render AudioMuse environment file
+  ansible.builtin.template:
+    src: audiomuse.env.j2
+    dest: "{{ audiomuse_env_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: Restart AudioMuse containers
+  when: audiomuse_enabled | bool
+
+- name: Render AudioMuse Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ audiomuse_compose_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart AudioMuse containers
+  when: audiomuse_enabled | bool
+
+- name: Validate AudioMuse Compose file
+  ansible.builtin.command:
+    cmd: >-
+      docker compose --env-file {{ audiomuse_env_file }}
+      -p {{ audiomuse_compose_project_name }}
+      -f {{ audiomuse_compose_file }} config --quiet
+  changed_when: false
+  when:
+    - audiomuse_enabled | bool
+    - not ansible_check_mode
+
+- name: Pull AudioMuse container images
+  ansible.builtin.command:
+    cmd: >-
+      docker compose --env-file {{ audiomuse_env_file }}
+      -p {{ audiomuse_compose_project_name }}
+      -f {{ audiomuse_compose_file }} pull
+  register: audiomuse_image_pull
+  changed_when: >-
+    'Pulled' in (audiomuse_image_pull.stdout ~ audiomuse_image_pull.stderr)
+    or 'Downloaded newer image' in (audiomuse_image_pull.stdout ~ audiomuse_image_pull.stderr)
+  notify: Restart AudioMuse containers
+  when:
+    - audiomuse_enabled | bool
+    - not ansible_check_mode
+
+- name: Install AudioMuse systemd unit
+  ansible.builtin.template:
+    src: audiomuse-container.service.j2
+    dest: "/etc/systemd/system/{{ audiomuse_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload AudioMuse systemd
+    - Restart AudioMuse containers
+  when: audiomuse_enabled | bool
+
+- name: Flush AudioMuse handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Manage AudioMuse service
+  ansible.builtin.systemd_service:
+    name: "{{ audiomuse_service_name }}"
+    enabled: "{{ audiomuse_enabled | bool }}"
+    state: "{{ 'started' if audiomuse_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Validate AudioMuse health endpoint
+  ansible.builtin.uri:
+    url: "{{ audiomuse_health_url }}"
+    status_code: 200
+    return_content: false
+  register: audiomuse_health
+  until: audiomuse_health.status == 200
+  retries: "{{ audiomuse_health_retries }}"
+  delay: "{{ audiomuse_health_delay }}"
+  when:
+    - audiomuse_enabled | bool
+    - audiomuse_validate_health | bool
+    - not ansible_check_mode
+
+- name: Report AudioMuse endpoint
+  ansible.builtin.debug:
+    msg: "AudioMuse will listen on http://{{ ansible_host | default(inventory_hostname) }}:{{ audiomuse_host_port }}"
+  when: audiomuse_enabled | bool

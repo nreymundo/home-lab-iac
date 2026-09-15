@@ -7,6 +7,9 @@
     - lxc_bootstrap
     - docker
     - llm_runtime
+    - role: audiomuse
+      tags:
+        - audiomuse
     - role: comfyui
       tags:
         - comfyui

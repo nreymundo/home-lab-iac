@@ -159,6 +159,10 @@ spec:
 
       services:
         - Local Services:
+            - AudioMuse AI:
+                icon: audiomuse-ai.png
+                description: "AI-powered music analysis and playlist generation"
+                href: https://audiomuse.lan.${CLUSTER_DOMAIN}
             - Chatterbox:
                 icon: https://i.imgur.com/w9QDXK0.png
                 description: "Text-to-speech API"

@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: "{{ audiomuse_postgres_image }}"
+    container_name: audiomuse-postgres
+    restart: unless-stopped
+    environment:
+      TZ: "${TZ}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    volumes:
+      - "{{ audiomuse_postgres_data_dir }}:/var/lib/postgresql/data"
+
+  audiomuse-ai-flask:
+    image: "{{ audiomuse_web_image }}"
+    container_name: audiomuse-ai-flask-app
+    restart: unless-stopped
+    ports:
+      - "{{ audiomuse_bind_address }}:{{ audiomuse_host_port }}:{{ audiomuse_container_port }}"
+    environment:
+      SERVICE_TYPE: flask
+      TZ: "${TZ}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      TEMP_DIR: /app/temp_audio
+      AUTH_ENABLED: "true"
+      JWT_SECRET: "${JWT_SECRET}"
+    volumes:
+      - "{{ audiomuse_flask_temp_dir }}:/app/temp_audio"
+      - "{{ audiomuse_flask_plugins_dir }}:/app/plugin/installed"
+    depends_on:
+      - postgres
+
+  audiomuse-ai-worker:
+    image: "{{ audiomuse_worker_image }}"
+    container_name: audiomuse-ai-worker-instance
+    restart: unless-stopped
+    environment:
+      SERVICE_TYPE: worker
+      TZ: "${TZ}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      TEMP_DIR: /app/temp_audio
+      JWT_SECRET: "${JWT_SECRET}"
+      MIGRAPHX_GPU_COMPILE_PARALLEL: "{{ audiomuse_migraphx_compile_parallel }}"
+      USE_GPU_CLUSTERING: "{{ audiomuse_use_gpu_clustering | bool | lower }}"
+      PER_SONG_MODEL_RELOAD: "{{ audiomuse_per_song_model_reload | bool | lower }}"
+    devices:
+{% for device in audiomuse_devices %}
+      - "{{ device }}"
+{% endfor %}
+    group_add:
+      - "{{ audiomuse_render_gid }}"
+      - "{{ audiomuse_video_gid }}"
+    security_opt:
+      - seccomp=unconfined
+    ipc: host
+    volumes:
+      - "{{ audiomuse_worker_temp_dir }}:/app/temp_audio"
+      - "{{ audiomuse_worker_plugins_dir }}:/app/plugin/installed"
+      - "{{ audiomuse_migraphx_cache_dir }}:/app/.cache/migraphx"
+      - "{{ audiomuse_miopen_cache_dir }}:/app/.cache/miopen"
+    depends_on:
+      - postgres

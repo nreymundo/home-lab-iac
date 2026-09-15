@@ -1,0 +1,17 @@
+[Unit]
+Description=AudioMuse-AI containers
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory={{ audiomuse_config_dir }}
+ExecStart=/usr/bin/docker compose --env-file {{ audiomuse_env_file }} -p {{ audiomuse_compose_project_name }} -f {{ audiomuse_compose_file }} up -d --remove-orphans
+ExecStop=/usr/bin/docker compose --env-file {{ audiomuse_env_file }} -p {{ audiomuse_compose_project_name }} -f {{ audiomuse_compose_file }} down
+TimeoutStartSec=0
+TimeoutStopSec=120s
+
+[Install]
+WantedBy=multi-user.target

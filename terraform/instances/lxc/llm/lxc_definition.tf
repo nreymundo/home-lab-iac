@@ -10,7 +10,7 @@ locals {
     cpu_cores        = 12
     memory_mb        = 98304
     swap_mb          = 8192
-    rootfs_size_gb   = 128
+    rootfs_size_gb   = 256
     model_host_path  = "/mnt/ai-files"
     model_guest_path = "/opt/ai"
     proxmox_tags = [
