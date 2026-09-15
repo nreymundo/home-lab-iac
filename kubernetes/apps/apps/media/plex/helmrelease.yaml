@@ -80,9 +80,9 @@ spec:
       main:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
-          external-dns.alpha.kubernetes.io/hostname: plex.lan.${CLUSTER_DOMAIN}
+          external-dns.alpha.kubernetes.io/hostname: plex.${CLUSTER_DOMAIN}
         hosts:
-          - host: plex.lan.${CLUSTER_DOMAIN}
+          - host: plex.${CLUSTER_DOMAIN}
             paths:
               - path: /
                 service:
