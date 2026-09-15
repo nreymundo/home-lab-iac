@@ -28,6 +28,8 @@ services:
       TEMP_DIR: /app/temp_audio
       AUTH_ENABLED: "true"
       JWT_SECRET: "${JWT_SECRET}"
+      LYRICS_VAD_THRESHOLD: "{{ audiomuse_lyrics_vad_threshold }}"
+      VAD_VOICE_RECOGNITION: "{{ audiomuse_vad_voice_recognition }}"
     volumes:
       - "{{ audiomuse_flask_temp_dir }}:/app/temp_audio"
       - "{{ audiomuse_flask_plugins_dir }}:/app/plugin/installed"
@@ -51,6 +53,8 @@ services:
       MIGRAPHX_GPU_COMPILE_PARALLEL: "{{ audiomuse_migraphx_compile_parallel }}"
       USE_GPU_CLUSTERING: "{{ audiomuse_use_gpu_clustering | bool | lower }}"
       PER_SONG_MODEL_RELOAD: "{{ audiomuse_per_song_model_reload | bool | lower }}"
+      LYRICS_VAD_THRESHOLD: "{{ audiomuse_lyrics_vad_threshold }}"
+      VAD_VOICE_RECOGNITION: "{{ audiomuse_vad_voice_recognition }}"
     devices:
 {% for device in audiomuse_devices %}
       - "{{ device }}"
