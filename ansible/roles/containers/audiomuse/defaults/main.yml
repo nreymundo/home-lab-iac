@@ -45,6 +45,13 @@ audiomuse_gpu_architecture: gfx1151
 audiomuse_migraphx_compile_parallel: 8
 audiomuse_use_gpu_clustering: false
 audiomuse_per_song_model_reload: true
+audiomuse_lyrics_vad_threshold: 0.10
+audiomuse_vad_voice_recognition: 5
+audiomuse_lyrics_api_enabled: true
+audiomuse_lyrics_api_1_url_template: https://lrclib.net/api/get
+audiomuse_lyrics_api_1_artist_param: artist_name
+audiomuse_lyrics_api_1_title_param: track_name
+audiomuse_lyrics_api_1_lyrics_field: plainLyrics
 
 audiomuse_validate_health: true
 audiomuse_health_url: "http://127.0.0.1:{{ audiomuse_host_port }}/"
