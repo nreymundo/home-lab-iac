@@ -43,6 +43,17 @@
     - filesystem
     - storage
 
+- name: Manage Unraid NFS storage mount
+  ansible.builtin.include_tasks:
+    file: unraid_nfs.yml
+    apply:
+      tags:
+        - storage
+        - nfs
+  tags:
+    - storage
+    - nfs
+
 - name: Configure swap
   ansible.builtin.include_tasks:
     file: swap.yml

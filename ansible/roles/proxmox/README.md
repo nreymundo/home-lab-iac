@@ -11,6 +11,8 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 - Power tuning through an optional boot-time systemd unit.
 - ZFS thin-provisioning audit and optional enforcement.
 - ZFS ARC limits.
+- Unraid shared storage NFS mount with systemd automount, including replacing a
+  previous CIFS mount at the same mountpoint and removing the legacy retry cron.
 - SMTP email notifications through the PVE notification API: endpoint,
   matcher routing, and backup-job notification-mode migration.
 - Optional CoreFreq DKMS install/removal.
@@ -41,6 +43,21 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 - `proxmox_power_tuning_cron_entries_to_remove`: exact root crontab lines removed after migration to
   the systemd unit.
 - `proxmox_corefreq_enabled`: install or remove CoreFreq.
+- `proxmox_unraid_nfs_enabled`: master switch for the Unraid NFS storage mount
+  (default `false`). The export `/mnt/user/proxmox` is mounted at
+  `/mnt/unraid/proxmox` on every node when enabled.
+- `proxmox_unraid_nfs_server`, `proxmox_unraid_nfs_export`,
+  `proxmox_unraid_nfs_mountpoint`: NFS endpoint and local mountpoint. The
+  server defaults to `192.168.10.4`; pve2 overrides it to `10.0.0.2` in
+  host_vars for its direct host-only path to the Unraid VM.
+- `proxmox_unraid_nfs_options`: list of mount options joined with commas
+  (`_netdev,noatime,x-systemd.automount,x-systemd.idle-timeout=600,
+  x-systemd.mount-timeout=20s,nofail`), copied from the proven PVE2 mount.
+- `proxmox_unraid_nfs_cleanup_legacy`, `proxmox_unraid_nfs_legacy_cron_entries`,
+  `proxmox_unraid_nfs_legacy_script_path`: remove the exact root cron lines and
+  the `/root/mnt_unraid.sh` retry script left over from the CIFS workaround
+  (cleanup defaults to `true`). The separate `/mnt/unraid/backup` mounts on
+  pve2/pve3 are not managed by this role and are never modified.
 - `proxmox_notifications_enabled`: master switch for email notifications
   (default `false`). Requires `ansible/secrets/proxmox.sops.yml` to be filled
   and encrypted first; see `ansible/secrets/README.md`.
@@ -70,6 +87,7 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 - `kernel`: kernel command-line management.
 - `gpu_passthrough`: VFIO and GPU driver management.
 - `storage`: swap and ZFS tasks.
+- `nfs`: Unraid NFS storage mount tasks.
 - `swap`: swapfile tasks.
 - `zfs`: ZFS audit, enforcement, and ARC tasks.
 - `power` / `power_tuning`: power tuning service management.
@@ -106,3 +124,9 @@ Run Ansible from the `ansible/` directory so `ansible.cfg` supplies the expected
 ```bash
 ansible-playbook -i inventories/baremetal.yml playbooks/proxmox.yml --limit pve3 --tags power_tuning
 ```
+
+The Unraid NFS mount replaces any previous CIFS mount at the same mountpoint
+after unmounting it; the mount source and fstype are asserted read-only after
+the change. On pve2 the NFS server is `10.0.0.2` (host-only path to the Unraid
+VM), while pve1/pve3 use `192.168.10.4`; the export, mountpoint, and options
+are identical on all nodes.

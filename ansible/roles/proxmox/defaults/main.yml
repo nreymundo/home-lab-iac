@@ -19,12 +19,33 @@ proxmox_zfs_thin_enforce: false
 proxmox_zfs_thin_audit: true
 
 # --- Host directories ---
-proxmox_host_directories:
-  - path: /mnt/unraid/proxmox
-    owner: root
-    group: root
-    mode: "0755"
+proxmox_host_directories: []
 proxmox_extra_host_directories: []
+
+# --- Unraid NFS storage mount ---
+# Master switch for the shared Proxmox storage NFS mount.
+proxmox_unraid_nfs_enabled: false
+
+# NFS server and export. pve2 overrides the server in host_vars for its direct
+# host-only path to the Unraid VM; the export and mountpoint stay identical.
+proxmox_unraid_nfs_server: 192.168.10.4
+proxmox_unraid_nfs_export: /mnt/user/proxmox
+proxmox_unraid_nfs_mountpoint: /mnt/unraid/proxmox
+
+# Mount options (joined with commas). Copied from the proven PVE2 NFS mount.
+proxmox_unraid_nfs_options:
+  - _netdev
+  - noatime
+  - x-systemd.automount
+  - x-systemd.idle-timeout=600
+  - x-systemd.mount-timeout=20s
+  - nofail
+
+# Remove the legacy cron workaround that retried the old CIFS mount.
+proxmox_unraid_nfs_cleanup_legacy: true
+proxmox_unraid_nfs_legacy_cron_entries:
+  - "*/15 * * * * /root/mnt_unraid.sh"
+proxmox_unraid_nfs_legacy_script_path: /root/mnt_unraid.sh
 
 # --- Swap ---
 proxmox_swapfile_path: /swapfile
