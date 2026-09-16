@@ -133,9 +133,12 @@
         proxmox_smtp_endpoint_drift: "{{ proxmox_smtp_endpoint_drift | default([]) + [item.key] }}"
       when: >-
         (not (proxmox_smtp_endpoint_exists | bool))
-        or ((proxmox_smtp_endpoint_current[item.key]
-             | default(0 if item.key == 'disable' else none)
-             | string) != (item.value | string))
+        or (item.key == 'disable'
+            and ((proxmox_smtp_endpoint_current[item.key] | default(false) | bool)
+                 != (item.value | bool)))
+        or (item.key != 'disable'
+            and ((proxmox_smtp_endpoint_current[item.key] | default(none) | string)
+                 != (item.value | string)))
       loop: "{{ proxmox_smtp_endpoint_desired | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
