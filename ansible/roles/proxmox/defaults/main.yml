@@ -109,15 +109,20 @@ proxmox_smtp_author: Proxmox VE
 
 # Matcher routing: notify only these severities. The defaults exclude info
 # events such as successful backups and package-update notices.
-proxmox_notifications_matcher_name: default-matcher
+proxmox_notifications_matcher_name: infrastructure-issues
 proxmox_notifications_severities:
   - error
   - warning
   - unknown
 
+# Optionally disable the built-in matcher without replacing its routing rules.
+# This avoids duplicate delivery while preserving its configuration for rollback.
+proxmox_notifications_disable_default_matcher: false
+proxmox_notifications_default_matcher_name: default-matcher
+
 # Migrate backup jobs still on legacy-sendmail/auto to notification-system
 # when notifications are enabled. Old mailto fields are left in place.
-proxmox_notifications_migrate_backup_jobs: true
+proxmox_notifications_migrate_backup_jobs: false
 
 # Send a test notification to the SMTP endpoint on demand (never automatic).
 proxmox_notifications_test_target: false

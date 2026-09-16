@@ -51,12 +51,17 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 - `proxmox_smtp_endpoint_name`, `proxmox_smtp_author`: notification endpoint
   name (`infrastructure-email`) and mail author (`Proxmox VE`).
 - `proxmox_notifications_matcher_name`, `proxmox_notifications_severities`:
-  matcher to configure (`default-matcher`) and the severities it routes
-  (`error`, `warning`, `unknown`; excludes `info` events such as successful
-  backups and package-update notices).
+  Ansible-owned matcher to configure (`infrastructure-issues`) and the severities
+  it routes (`error`, `warning`, `unknown`; excludes `info` events such as
+  successful backups and package-update notices).
+- `proxmox_notifications_disable_default_matcher`: disable the built-in matcher
+  without replacing its target or filter configuration (default `false`). Enable
+  this explicitly when the managed matcher should be the sole notification route.
+- `proxmox_notifications_default_matcher_name`: built-in matcher to disable when
+  explicitly requested (default `default-matcher`).
 - `proxmox_notifications_migrate_backup_jobs`: move backup jobs from
   legacy-sendmail/auto to `notification-system` when notifications are enabled
-  (default `true`; old mailto fields are preserved).
+  (default `false`; old mailto fields are preserved).
 - `proxmox_notifications_test_target`: send a test notification on demand
   (default `false`; never sent automatically).
 

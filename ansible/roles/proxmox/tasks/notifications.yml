@@ -74,6 +74,16 @@
       no_log: true
       run_once: true
 
+    - name: Validate notification matcher ownership
+      ansible.builtin.assert:
+        that:
+          - proxmox_notifications_matcher_name != proxmox_notifications_default_matcher_name
+        fail_msg: >-
+          The managed notification matcher must have a different name from the
+          built-in matcher when the built-in matcher is disabled.
+      run_once: true
+      when: proxmox_notifications_disable_default_matcher | default(false) | bool
+
     - name: Compute managed SMTP endpoint comment
       ansible.builtin.set_fact:
         proxmox_smtp_endpoint_comment: >-
@@ -261,8 +271,44 @@
         and (proxmox_notifications_matcher_needs_update | bool)
         and not ansible_check_mode
 
+    - name: Disable the built-in notification matcher
+      when: proxmox_notifications_disable_default_matcher | default(false) | bool
+      block:
+        - name: Query built-in notification matcher
+          ansible.builtin.command:
+            argv:
+              - pvesh
+              - get
+              - /cluster/notifications/matchers/{{ proxmox_notifications_default_matcher_name }}
+              - --output-format
+              - json
+          changed_when: false
+          check_mode: false
+          register: proxmox_notifications_default_matcher_query
+          run_once: true
+
+        - name: Record built-in notification matcher state
+          ansible.builtin.set_fact:
+            proxmox_notifications_default_matcher_current: >-
+              {{ proxmox_notifications_default_matcher_query.stdout | from_json }}
+          run_once: true
+
+        - name: Disable built-in notification matcher without changing its routing
+          ansible.builtin.command:
+            argv:
+              - pvesh
+              - set
+              - /cluster/notifications/matchers/{{ proxmox_notifications_default_matcher_name }}
+              - --disable
+              - "1"
+          changed_when: true
+          run_once: true
+          when: >-
+            (proxmox_notifications_default_matcher_current.disable | default(0) | int != 1)
+            and not ansible_check_mode
+
     - name: Migrate backup jobs to the PVE notification system
-      when: proxmox_notifications_migrate_backup_jobs | default(true) | bool
+      when: proxmox_notifications_migrate_backup_jobs | default(false) | bool
       block:
         - name: Query backup jobs
           ansible.builtin.command:
