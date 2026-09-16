@@ -41,7 +41,7 @@ spec:
 
         # Email/SMTP configuration (username/password come from authentik-env secret)
         - name: AUTHENTIK_EMAIL__HOST
-          value: "mail-eu.smtp2go.com"
+          value: "smtp.purelymail.com"
         - name: AUTHENTIK_EMAIL__PORT
           value: "587"
         - name: AUTHENTIK_EMAIL__USE_TLS

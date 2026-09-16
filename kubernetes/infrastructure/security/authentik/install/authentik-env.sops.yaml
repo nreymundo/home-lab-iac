@@ -8,8 +8,8 @@ stringData:
     AUTHENTIK_SECRET_KEY: ENC[AES256_GCM,data:3ZjVUIe9thjucKjTOQf/9WnaCJAohtvWL2GX7JoZCyvYf4MHfMRB5c6mmPqOYZoGqmseNRVtbICNH3anU+zsWeFRq/+sY+7D0PB0tDPfJdzvwjFX/DWmc2PZUrELSa9ccaWxQ+nJ4qZjXQ7NnScN5/ri+WGFHCEjCB9CggScIJg=,iv:sPqWpEjvrGPz9subXmxeuoQH3+4wa0/oR81pG37pmU8=,tag:0XFzylbR8prLC7GyiFeA/g==,type:str]
     AUTHENTIK_BOOTSTRAP_PASSWORD: ENC[AES256_GCM,data:RJRc2T3yExKsAzNsNRZbg/sr1D7cdo7jfs+JTsmFFxfrLjvqN/nkn8nSsfEyFh6s7dHVFeaJysFyej24hdefjA==,iv:npBvszIKzgkzcxSzI0dRlDHAXYKbeIMhkG4kCvwaq4M=,tag:4JSCQMYiM15ga7dxW+8mIg==,type:str]
     AUTHENTIK_BOOTSTRAP_TOKEN: ENC[AES256_GCM,data:cBStW/Mwn7VbdmrSvfD+3kF0RC0k5rDTi10dCHj/KPLDPNNATKaxDrVSYsyDEVhQqYe4IsyXXIMWmiA1C/ZnVQ==,iv:H4TtUvtIPUxB5rpnaAOG93Q81ow4bBRbWYoQ3y0+OHs=,tag:+i/uZM+U0NXq9AEIe8ua4w==,type:str]
-    AUTHENTIK_EMAIL__USERNAME: ENC[AES256_GCM,data:S58602UjX7pmb8rlAm38/RItjxtHB8qaD38bdnZyqP5sRw==,iv:xfHkm8p9U78tnGtwgG2omqNZhK6+zX0sUgf+cDpceZA=,tag:BBszNg0K0Zg3WoDcoQ36Kg==,type:str]
-    AUTHENTIK_EMAIL__PASSWORD: ENC[AES256_GCM,data:jobzLhBtvnMCgbnGIrfBrQS52PhFJNXUNw==,iv:2LKoEvp/qo34FM/UE4xaWcRBxduuvK5xnu4QLstD9+Y=,tag:z7+2lZmA3xXySDb+jkQw6A==,type:str]
+    AUTHENTIK_EMAIL__USERNAME: ENC[AES256_GCM,data:RJvRbRMXjC8JSSzxIBZVpUHH2vhDMOX4chYh49dGu/c=,iv:rGNjbIEg+6V6YxpXffxSjPu96AjLheKcJypBlR3i1kM=,tag:tJ5yMAkbR8cfEyPlBeVLXQ==,type:str]
+    AUTHENTIK_EMAIL__PASSWORD: ENC[AES256_GCM,data:gCIMi7qCXS71Gy5ro/o3Ybtiirg=,iv:MybRq5LmFDLoQiB0Gtwnx0Y05HJxnWKrPn8ZkbfrvRA=,tag:UBmSU0Nb8/S7bES7PQIAcg==,type:str]
     #ENC[AES256_GCM,data:4cxp+I92Th6tlg==,iv:ZzpPh/g3U2ApsLXuynlmOQa61UeBaz+7SThSkuIBru4=,tag:8T+rPhlkeWLg8NAJHGl0UQ==,type:comment]
     AK_BLUEPRINT_USERNAME: ENC[AES256_GCM,data:EvHKxuKAmj3f,iv:XhDwE9gdHVbdRLq5ed/H3aWGkea7qgz1L8SgHN6rKhM=,tag:0sZnNTMpILppuVwGWl//IA==,type:str]
     AK_BLUEPRINT_NAME: ENC[AES256_GCM,data:XQo0trDVf/jo3CXTxagRCw==,iv:l3NhCHY1+7DIPRowXoff86ox4q8FG4I/yoQXoz9AZzE=,tag:ELvBvgq9TGnhuXfTv5V1fQ==,type:str]
@@ -40,6 +40,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-08-15T12:32:09Z"
-    mac: ENC[AES256_GCM,data:B565HGE4lvbwhEmcT+4TzrNsXh2TAX85RJcm166X3A2zh6rWFXwB+COkAXrrRLNKpn8NQlzCNR5tHvS7XJCy95K/24dMDrYHIBZMftaC65EW1piU8c6ytOCbyzw4F1mYjcjTdKARvwsG+jB5MoSmzMIeZ7xkx/IuBY6HfvKjK3g=,iv:tz0acqTc0mebrI7JTs68ipaAV6OqCEV212HTYtzUg8o=,tag:C2WzrZTAuokcw2zZPnb1/A==,type:str]
+    lastmodified: "2026-09-16T18:56:54Z"
+    mac: ENC[AES256_GCM,data:+L6WQ6MbIs/hUFFrZD/HvSuCpVaHc/5B6J23qBsTu+RIbhEMHEc2/3i8tb5BljOmwNP8BS4Xsi6w/dnU1quCUTdjjKKCsar0bkC3UKMMQ26U4d3JgS946IZLaSOJJgvF3ZEGrXQaOXhZ0z1l/DmeICHoprYHxUaeglG9+iYGDcw=,iv:W5E/jXHhB9w4KPQRXwHouLlZLa+LZxKJKrpKWSI/tF0=,tag:2dUt7ZwWcLCx9E0U7V+kWw==,type:str]
     version: 3.13.3
