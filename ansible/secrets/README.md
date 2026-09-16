@@ -38,3 +38,31 @@ The mesh proxy setup key is consumed during initial enrollment. Its persistent
 Docker volume preserves the peer identity. If that volume is lost, create a new
 setup key for `netbird-proxy`, replace the encrypted value, and rerun the
 NetBird playbook.
+
+## Proxmox
+
+`proxmox.sops.yml` holds the SMTP credentials for the Proxmox email
+notification target. Edit the encrypted document with SOPS and verify that it
+can be decrypted without printing its contents:
+
+```bash
+sops ansible/secrets/proxmox.sops.yml
+sops --decrypt ansible/secrets/proxmox.sops.yml >/dev/null
+```
+
+Contents:
+
+```yaml
+proxmox_smtp_username: <SMTP login user>
+proxmox_smtp_password: <SMTP login password>
+proxmox_smtp_from_address: <envelope From address>
+proxmox_smtp_recipients:
+  - <alert recipient>
+proxmox_smtp_credential_revision: <any short value, e.g. 1>
+```
+
+`proxmox_smtp_credential_revision` is embedded in the SMTP endpoint comment on
+the cluster; increase it whenever the password is rotated so the Proxmox role
+pushes the new credential on the next playbook run. The role refuses to enable
+notifications while the file is missing, undecryptable, or still contains
+`REPLACE_ME` placeholders.

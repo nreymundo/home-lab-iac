@@ -1,0 +1,318 @@
+---
+# Configure the PVE notification system through the pvesh API. Notification
+# targets and matchers are cluster-wide (pmxcfs), so every API call runs once
+# on a single node. Requires ansible/secrets/proxmox.sops.yml once it has been
+# filled and encrypted; until then the feature stays disabled.
+
+- name: Configure Proxmox SMTP email notifications
+  when: proxmox_notifications_enabled | default(false) | bool
+  block:
+    - name: Verify Proxmox notification secrets file exists
+      ansible.builtin.stat:
+        path: "{{ proxmox_notifications_secrets_file }}"
+      become: false
+      delegate_to: localhost
+      register: proxmox_notifications_secrets_stat
+      run_once: true
+
+    - name: Require Proxmox notification secrets file
+      ansible.builtin.assert:
+        that:
+          - proxmox_notifications_secrets_stat.stat.exists
+        fail_msg: >-
+          Missing {{ proxmox_notifications_secrets_file }}. Fill and encrypt
+          ansible/secrets/proxmox.sops.yml as documented in
+          ansible/secrets/README.md before enabling notifications.
+      run_once: true
+
+    - name: Decrypt Proxmox notification secrets
+      ansible.builtin.command:
+        argv:
+          - sops
+          - --decrypt
+          - "{{ proxmox_notifications_secrets_file }}"
+      become: false
+      check_mode: false
+      changed_when: false
+      delegate_to: localhost
+      environment:
+        SOPS_AGE_KEY_FILE: "{{ proxmox_notifications_sops_age_key_file }}"
+      no_log: true
+      register: proxmox_notifications_decrypted_secrets
+      run_once: true
+
+    - name: Load Proxmox notification secrets
+      ansible.builtin.set_fact:
+        proxmox_notifications_secrets: >-
+          {{ proxmox_notifications_decrypted_secrets.stdout | from_yaml }}
+      no_log: true
+
+    - name: Collect Proxmox notification secret values for validation
+      ansible.builtin.set_fact:
+        proxmox_notifications_secret_values: >-
+          {{ ([proxmox_notifications_secrets.proxmox_smtp_username | default(''),
+               proxmox_notifications_secrets.proxmox_smtp_password | default(''),
+               proxmox_notifications_secrets.proxmox_smtp_from_address | default(''),
+               proxmox_notifications_secrets.proxmox_smtp_credential_revision | default('') | string]
+              + (proxmox_notifications_secrets.proxmox_smtp_recipients | default([])))
+             | join(' ') }}
+      no_log: true
+
+    - name: Validate Proxmox notification secrets
+      ansible.builtin.assert:
+        that:
+          - proxmox_notifications_secrets.proxmox_smtp_username | default('') | trim | length > 0
+          - proxmox_notifications_secrets.proxmox_smtp_password | default('') | trim | length > 0
+          - proxmox_notifications_secrets.proxmox_smtp_from_address | default('') | trim | length > 0
+          - proxmox_notifications_secrets.proxmox_smtp_recipients | default([]) | length > 0
+          - proxmox_notifications_secrets.proxmox_smtp_credential_revision | default('') | string | trim | length > 0
+          - not (proxmox_notifications_secret_values is search('REPLACE_ME'))
+        fail_msg: >-
+          ansible/secrets/proxmox.sops.yml is missing values or still contains
+          REPLACE_ME placeholders; fill and encrypt it before enabling
+          notifications.
+      no_log: true
+      run_once: true
+
+    - name: Compute managed SMTP endpoint comment
+      ansible.builtin.set_fact:
+        proxmox_smtp_endpoint_comment: >-
+          Managed by Ansible (roles/proxmox).
+          Credential revision: {{ proxmox_notifications_secrets.proxmox_smtp_credential_revision }}
+      no_log: true
+
+    - name: Query current SMTP endpoint
+      ansible.builtin.command:
+        argv:
+          - pvesh
+          - get
+          - /cluster/notifications/endpoints/smtp/{{ proxmox_smtp_endpoint_name }}
+          - --output-format
+          - json
+      changed_when: false
+      check_mode: false
+      failed_when: false
+      no_log: true
+      register: proxmox_smtp_endpoint_query
+      run_once: true
+
+    - name: Record current SMTP endpoint configuration
+      ansible.builtin.set_fact:
+        proxmox_smtp_endpoint_exists: "{{ proxmox_smtp_endpoint_query.rc == 0 }}"
+        proxmox_smtp_endpoint_current: >-
+          {{ (proxmox_smtp_endpoint_query.stdout | from_json)
+             if (proxmox_smtp_endpoint_query.rc == 0) else {} }}
+      no_log: true
+
+    - name: Compute desired SMTP endpoint configuration
+      ansible.builtin.set_fact:
+        proxmox_smtp_endpoint_desired:
+          server: "{{ proxmox_smtp_server }}"
+          port: "{{ proxmox_smtp_port }}"
+          mode: "{{ proxmox_smtp_mode }}"
+          author: "{{ proxmox_smtp_author }}"
+          from-address: "{{ proxmox_notifications_secrets.proxmox_smtp_from_address }}"
+          username: "{{ proxmox_notifications_secrets.proxmox_smtp_username }}"
+          mailto: "{{ proxmox_notifications_secrets.proxmox_smtp_recipients }}"
+          comment: "{{ proxmox_smtp_endpoint_comment }}"
+          disable: 0
+      no_log: true
+
+    - name: Detect SMTP endpoint drift
+      ansible.builtin.set_fact:
+        proxmox_smtp_endpoint_drift: "{{ proxmox_smtp_endpoint_drift | default([]) + [item.key] }}"
+      when: >-
+        (not (proxmox_smtp_endpoint_exists | bool))
+        or ((proxmox_smtp_endpoint_current[item.key]
+             | default(0 if item.key == 'disable' else none)
+             | string) != (item.value | string))
+      loop: "{{ proxmox_smtp_endpoint_desired | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      no_log: true
+
+    - name: Prepare SMTP endpoint shared arguments
+      ansible.builtin.set_fact:
+        proxmox_smtp_endpoint_shared_argv: >-
+          {{ ['--server', proxmox_smtp_server,
+              '--port', proxmox_smtp_port | string,
+              '--mode', proxmox_smtp_mode,
+              '--author', proxmox_smtp_author,
+              '--from-address', proxmox_notifications_secrets.proxmox_smtp_from_address,
+              '--username', proxmox_notifications_secrets.proxmox_smtp_username,
+              '--password', proxmox_notifications_secrets.proxmox_smtp_password,
+              '--comment', proxmox_smtp_endpoint_comment,
+              '--disable', '0']
+             + (['--mailto'] | product(proxmox_notifications_secrets.proxmox_smtp_recipients)
+                | flatten) }}
+      no_log: true
+
+    - name: Prepare SMTP endpoint create arguments
+      ansible.builtin.set_fact:
+        proxmox_smtp_endpoint_create_argv: >-
+          {{ ['pvesh', 'create', '/cluster/notifications/endpoints/smtp',
+              '--name', proxmox_smtp_endpoint_name]
+             + proxmox_smtp_endpoint_shared_argv }}
+      no_log: true
+
+    - name: Prepare SMTP endpoint update arguments
+      ansible.builtin.set_fact:
+        proxmox_smtp_endpoint_update_argv: >-
+          {{ ['pvesh', 'set',
+              '/cluster/notifications/endpoints/smtp/' ~ proxmox_smtp_endpoint_name]
+             + proxmox_smtp_endpoint_shared_argv }}
+      no_log: true
+
+    - name: Create SMTP notification endpoint
+      ansible.builtin.command:
+        argv: "{{ proxmox_smtp_endpoint_create_argv }}"
+      changed_when: true
+      no_log: true
+      run_once: true
+      when: >-
+        (not (proxmox_smtp_endpoint_exists | bool))
+        and not ansible_check_mode
+
+    - name: Update SMTP notification endpoint
+      ansible.builtin.command:
+        argv: "{{ proxmox_smtp_endpoint_update_argv }}"
+      changed_when: true
+      no_log: true
+      run_once: true
+      when: >-
+        (proxmox_smtp_endpoint_exists | bool)
+        and ((proxmox_smtp_endpoint_drift | default([])) | length > 0)
+        and not ansible_check_mode
+
+    - name: Query current notification matcher
+      ansible.builtin.command:
+        argv:
+          - pvesh
+          - get
+          - /cluster/notifications/matchers/{{ proxmox_notifications_matcher_name }}
+          - --output-format
+          - json
+      changed_when: false
+      check_mode: false
+      failed_when: false
+      register: proxmox_notifications_matcher_query
+      run_once: true
+
+    - name: Record current notification matcher configuration
+      ansible.builtin.set_fact:
+        proxmox_notifications_matcher_current: >-
+          {{ (proxmox_notifications_matcher_query.stdout | from_json)
+             if (proxmox_notifications_matcher_query.rc == 0) else {} }}
+      run_once: true
+
+    - name: Detect notification matcher drift
+      ansible.builtin.set_fact:
+        proxmox_notifications_matcher_needs_update: >-
+          {{ (proxmox_notifications_matcher_query.rc != 0)
+             or ((proxmox_notifications_matcher_current.target | default([]) | sort | list)
+                 != ([proxmox_smtp_endpoint_name] | sort | list))
+             or ((proxmox_notifications_matcher_current['match-severity'] | default([]) | sort | list)
+                 != (proxmox_notifications_severities | sort | list))
+             or (proxmox_notifications_matcher_current.disable | default(0) | int != 0)
+             or (proxmox_notifications_matcher_current['invert-match'] | default(0) | int != 0)
+             or (proxmox_notifications_matcher_current.mode | default('all') != 'all')
+             or (proxmox_notifications_matcher_current['match-calendar'] | default([]) | length > 0)
+             or (proxmox_notifications_matcher_current['match-field'] | default([]) | length > 0) }}
+      run_once: true
+
+    - name: Prepare notification matcher arguments
+      ansible.builtin.set_fact:
+        proxmox_notifications_matcher_target_argv: >-
+          {{ ['--target', proxmox_smtp_endpoint_name,
+              '--disable', '0',
+              '--invert-match', '0',
+              '--mode', 'all']
+             + (['--match-severity'] | product(proxmox_notifications_severities) | flatten) }}
+        proxmox_notifications_matcher_delete_argv: >-
+          {{ (['--delete', 'match-calendar']
+              if (proxmox_notifications_matcher_current['match-calendar'] | default([]) | length > 0)
+              else [])
+             + (['--delete', 'match-field']
+                if (proxmox_notifications_matcher_current['match-field'] | default([]) | length > 0)
+                else []) }}
+      run_once: true
+
+    - name: Create notification matcher
+      ansible.builtin.command:
+        argv: "{{ ['pvesh', 'create', '/cluster/notifications/matchers',
+                   '--name', proxmox_notifications_matcher_name]
+                  + proxmox_notifications_matcher_target_argv }}"
+      changed_when: true
+      run_once: true
+      when: >-
+        (proxmox_notifications_matcher_query.rc != 0)
+        and not ansible_check_mode
+
+    - name: Update notification matcher
+      ansible.builtin.command:
+        argv: "{{ ['pvesh', 'set',
+                   '/cluster/notifications/matchers/' ~ proxmox_notifications_matcher_name]
+                  + proxmox_notifications_matcher_delete_argv
+                  + proxmox_notifications_matcher_target_argv }}"
+      changed_when: true
+      run_once: true
+      when: >-
+        (proxmox_notifications_matcher_query.rc == 0)
+        and (proxmox_notifications_matcher_needs_update | bool)
+        and not ansible_check_mode
+
+    - name: Migrate backup jobs to the PVE notification system
+      when: proxmox_notifications_migrate_backup_jobs | default(true) | bool
+      block:
+        - name: Query backup jobs
+          ansible.builtin.command:
+            argv:
+              - pvesh
+              - get
+              - /cluster/backup
+              - --output-format
+              - json
+          changed_when: false
+          check_mode: false
+          no_log: true
+          register: proxmox_notifications_backup_jobs_query
+          run_once: true
+
+        - name: Detect backup jobs outside notification-system mode
+          ansible.builtin.set_fact:
+            proxmox_notifications_backup_jobs_to_migrate: >-
+              {{ proxmox_notifications_backup_jobs_to_migrate | default([])
+                 + [item.id] }}
+          when: (item['notification-mode'] | default('auto')) != 'notification-system'
+          loop: "{{ proxmox_notifications_backup_jobs_query.stdout | from_json }}"
+          loop_control:
+            label: "{{ item.id }}"
+          no_log: true
+          run_once: true
+
+        - name: Move backup jobs to the notification system
+          ansible.builtin.command:
+            argv:
+              - pvesh
+              - set
+              - /cluster/backup/{{ item }}
+              - --notification-mode
+              - notification-system
+          changed_when: true
+          loop: "{{ proxmox_notifications_backup_jobs_to_migrate | default([]) }}"
+          loop_control:
+            label: "{{ item }}"
+          run_once: true
+          when: not ansible_check_mode
+
+    - name: Send test notification to the SMTP endpoint
+      ansible.builtin.command:
+        argv:
+          - pvesh
+          - create
+          - /cluster/notifications/targets/{{ proxmox_smtp_endpoint_name }}/test
+      changed_when: true
+      run_once: true
+      when: >-
+        proxmox_notifications_test_target | default(false) | bool
+        and not ansible_check_mode

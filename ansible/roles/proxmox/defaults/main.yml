@@ -24,10 +24,6 @@ proxmox_host_directories:
     owner: root
     group: root
     mode: "0755"
-  - path: /mnt/unraid/backup
-    owner: root
-    group: root
-    mode: "0755"
 proxmox_extra_host_directories: []
 
 # --- Swap ---
@@ -93,3 +89,35 @@ proxmox_ai_amd_packages:
   - rocm-smi
   - amd-smi
   - rocm-opencl-icd
+
+# --- Email notifications (PVE notification system) ---
+# Master switch. Keep disabled until ansible/secrets/proxmox.sops.yml has been
+# filled and encrypted; see ansible/secrets/README.md.
+proxmox_notifications_enabled: false
+
+# SOPS-encrypted SMTP credentials (same pattern as the NetBird role).
+proxmox_notifications_secrets_file: "{{ playbook_dir }}/../secrets/proxmox.sops.yml"
+proxmox_notifications_sops_age_key_file: >-
+  {{ lookup('env', 'SOPS_AGE_KEY_FILE') | default(lookup('env', 'HOME') + '/.config/sops/age/keys.txt', true) }}
+
+# SMTP transport (non-secret).
+proxmox_smtp_server: smtp.purelymail.com
+proxmox_smtp_port: 587
+proxmox_smtp_mode: starttls
+proxmox_smtp_endpoint_name: infrastructure-email
+proxmox_smtp_author: Proxmox VE
+
+# Matcher routing: notify only these severities. The defaults exclude info
+# events such as successful backups and package-update notices.
+proxmox_notifications_matcher_name: default-matcher
+proxmox_notifications_severities:
+  - error
+  - warning
+  - unknown
+
+# Migrate backup jobs still on legacy-sendmail/auto to notification-system
+# when notifications are enabled. Old mailto fields are left in place.
+proxmox_notifications_migrate_backup_jobs: true
+
+# Send a test notification to the SMTP endpoint on demand (never automatic).
+proxmox_notifications_test_target: false

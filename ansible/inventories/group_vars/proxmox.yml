@@ -41,3 +41,7 @@ proxmox_kernel_params_base_add:
 proxmox_kernel_params_base_remove: []
 
 proxmox_corefreq_enabled: false
+
+# Email notifications via the PVE notification system (SMTP endpoint applied
+# through pvesh). The encrypted values are documented in ansible/secrets/README.md.
+proxmox_notifications_enabled: true

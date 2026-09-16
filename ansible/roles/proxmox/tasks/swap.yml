@@ -72,7 +72,7 @@
     src: "{{ proxmox_swapfile_path }}"
     fstype: swap
     opts: sw
-    state: present
+    state: mounted
 
 - name: Configure vm.swappiness
   ansible.builtin.copy:

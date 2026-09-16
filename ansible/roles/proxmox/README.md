@@ -11,6 +11,8 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 - Power tuning through an optional boot-time systemd unit.
 - ZFS thin-provisioning audit and optional enforcement.
 - ZFS ARC limits.
+- SMTP email notifications through the PVE notification API: endpoint,
+  matcher routing, and backup-job notification-mode migration.
 - Optional CoreFreq DKMS install/removal.
 - Root shell profile defaults.
 
@@ -39,6 +41,24 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 - `proxmox_power_tuning_cron_entries_to_remove`: exact root crontab lines removed after migration to
   the systemd unit.
 - `proxmox_corefreq_enabled`: install or remove CoreFreq.
+- `proxmox_notifications_enabled`: master switch for email notifications
+  (default `false`). Requires `ansible/secrets/proxmox.sops.yml` to be filled
+  and encrypted first; see `ansible/secrets/README.md`.
+- `proxmox_notifications_secrets_file`, `proxmox_notifications_sops_age_key_file`:
+  SOPS secrets file and Age key location (same pattern as the NetBird role).
+- `proxmox_smtp_server`, `proxmox_smtp_port`, `proxmox_smtp_mode`: SMTP transport,
+  defaulting to `smtp.purelymail.com:587` with STARTTLS.
+- `proxmox_smtp_endpoint_name`, `proxmox_smtp_author`: notification endpoint
+  name (`infrastructure-email`) and mail author (`Proxmox VE`).
+- `proxmox_notifications_matcher_name`, `proxmox_notifications_severities`:
+  matcher to configure (`default-matcher`) and the severities it routes
+  (`error`, `warning`, `unknown`; excludes `info` events such as successful
+  backups and package-update notices).
+- `proxmox_notifications_migrate_backup_jobs`: move backup jobs from
+  legacy-sendmail/auto to `notification-system` when notifications are enabled
+  (default `true`; old mailto fields are preserved).
+- `proxmox_notifications_test_target`: send a test notification on demand
+  (default `false`; never sent automatically).
 
 ## Tags
 
@@ -49,11 +69,27 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 - `zfs`: ZFS audit, enforcement, and ARC tasks.
 - `power` / `power_tuning`: power tuning service management.
 - `corefreq`: CoreFreq tasks.
+- `notifications`: PVE notification system (SMTP endpoint, matcher, backup-job
+  migration).
 - `shell`: root shell profile files.
 
 ## Operational Notes
 
 Kernel parameter, module, initramfs, and ZFS ARC changes usually require a reboot to take effect.
+
+Email notifications are cluster-wide (pmxcfs) and applied once per run through
+`pvesh`. Enable them by filling and encrypting `ansible/secrets/proxmox.sops.yml`
+and setting `proxmox_notifications_enabled: true` in
+`ansible/inventories/group_vars/proxmox.yml`, then apply with:
+
+```bash
+ansible-playbook -i inventories/baremetal.yml playbooks/proxmox.yml --tags notifications
+```
+
+Rotate the SMTP password in the secrets file and bump
+`proxmox_smtp_credential_revision`; the revision is stored in the endpoint
+comment and its change triggers a credential update on the next run. A one-off
+test mail can be sent with `-e proxmox_notifications_test_target=true`.
 Power tuning changes can be applied immediately with:
 
 ```bash
