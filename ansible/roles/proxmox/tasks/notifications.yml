@@ -222,7 +222,7 @@
              or ((proxmox_notifications_matcher_current.target | default([]) | sort | list)
                  != ([proxmox_smtp_endpoint_name] | sort | list))
              or ((proxmox_notifications_matcher_current['match-severity'] | default([]) | sort | list)
-                 != (proxmox_notifications_severities | sort | list))
+                 != ([proxmox_notifications_severities | join(',')] | sort | list))
              or (proxmox_notifications_matcher_current.disable | default(0) | int != 0)
              or (proxmox_notifications_matcher_current['invert-match'] | default(0) | int != 0)
              or (proxmox_notifications_matcher_current.mode | default('all') != 'all')
@@ -237,7 +237,7 @@
               '--disable', '0',
               '--invert-match', '0',
               '--mode', 'all']
-             + (['--match-severity'] | product(proxmox_notifications_severities) | flatten) }}
+             + ['--match-severity', proxmox_notifications_severities | join(',')] }}
         proxmox_notifications_matcher_delete_argv: >-
           {{ (['--delete', 'match-calendar']
               if (proxmox_notifications_matcher_current['match-calendar'] | default([]) | length > 0)
