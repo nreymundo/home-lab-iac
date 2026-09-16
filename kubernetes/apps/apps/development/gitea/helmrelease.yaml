@@ -34,10 +34,14 @@ spec:
               # Mailer configuration
               GITEA__mailer__ENABLED: "true"
               GITEA__mailer__FROM: gitea@${CLUSTER_DOMAIN}
-              GITEA__mailer__PROTOCOL: smtps
-              GITEA__mailer__SMTP_ADDR: mail-eu.smtp2go.com
+              GITEA__mailer__PROTOCOL: smtp+starttls
+              GITEA__mailer__SMTP_ADDR: smtp.purelymail.com
               GITEA__mailer__SMTP_PORT: "587"
-              GITEA__mailer__USER: gitea@${CLUSTER_DOMAIN}
+              GITEA__mailer__USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: gitea-mailer-secret
+                    key: GITEA__mailer__USER
             envFrom:
               - secretRef:
                   name: gitea-mailer-secret
