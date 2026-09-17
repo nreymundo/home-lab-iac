@@ -31,7 +31,6 @@ data:
     HERMES_IP: ENC[AES256_GCM,data:NdiUY+b+u7mXdDp8U0E=,iv:mmLgU5/CoHMaCoCDnpHjrrAMYAkQbcfDYO8uGGFIxjs=,tag:3He6dlzN+EWpkOVGpX75mg==,type:str]
     ESPHOME_BUILDER_LB_IP: ENC[AES256_GCM,data:MydLieHVrWajkWZ1w2M=,iv:upMp6Lg7WMKXSLQ84s+Bn20oAZM+ZWXMQhVCSdAhqBY=,tag:1iLvA+bZK4IOVLHUXViYGw==,type:str]
     DEV_VM_IP: ENC[AES256_GCM,data:zi/fPuR0d/zK94f0p0g=,iv:JQ/clpEdpviyuzUTGvF+7HTuYrk7NlIL+cMvzGxZ034=,tag:v6BbU+4WewLN3pE9I+C8UA==,type:str]
-    N8N_SANDBOX_IP: ENC[AES256_GCM,data:pvDxhZ4QHndgaBFay+A=,iv:Eh/Zwv+2UJXNthQvtfI//7UcXEJ+fCz5+L02XfHLlxk=,tag:Jp+Do1yOsrk+W3MJwVjLbw==,type:str]
     OMNIROUTE_IP: ENC[AES256_GCM,data:fEOkeFn8JbteNoclikE=,iv:zdXhtJ5NkPFvUIZZbmLVsUfapp/X1w1y8VMp8rr7Y7o=,tag:PnTbt7LZAvy9aUCukfrqWg==,type:str]
 sops:
     age:
@@ -45,6 +44,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-09-17T20:29:07Z"
-    mac: ENC[AES256_GCM,data:Z/xtDBk0YaK1+/eMy4eKuHpJwV5Trnohz7grWC0g1rIfWhQRpO409AN3WvHxcnvGf8KS2+pnPsRrvG4jH/JOhBTqIVQLTVyGUUiK+ZW9xSfU5W8GSBlu/ce+KvuSKcKEDLjiEKXyL6WF1+HE5R9UmQMdGekl6QLgAV25yX23fHM=,iv:hXFTz2CtoS2KIUv+PT2L5/6HBLIyG7yCo8W6fui2C0k=,tag:7NCOVYRUypGxEujY3dY+rQ==,type:str]
+    lastmodified: "2026-09-17T22:38:01Z"
+    mac: ENC[AES256_GCM,data:Pa/V5E8NskA6Xc1Upah/MH+IiDQw2iGTTgPq5Mq3y3/EyGXNtjq3Ing3YSRc7lSADLgy8Ek3NAKkSMaFK6UEXOfXHYJ1EaF9WOEt6rYybH+PUWtYvelPZN72s8qGICqDOZ3cp92xl1MhG2eKu1xDoWLc8mRAWwAAIUY0gJvoFZQ=,iv:mD5J/FZg9SIGhifTIUssxBWQjX7ybV6t+M1RLrTDhZo=,tag:wy3Bz7WgKLNofg1+5jNZXg==,type:str]
     version: 3.13.3
