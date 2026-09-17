@@ -38,10 +38,18 @@ ufw_inbound_rules:
     from_ip: 192.168.10.0/24
     comment: OmniRoute clients on the LAN
 
-# Inference-only client credentials. OmniRoute returns each raw value once; the
-# bootstrap stores it root-only in /etc/omniroute/bootstrap-api-keys.json.
+# Root-only management credential used by Ansible after password login is
+# disabled. It has no model access and is stored on the VM with mode 0600.
+omniroute_management_api_key_name: ansible-bootstrap
 omniroute_api_keys:
-  - name: claude-code
-    modelAccessMode: all
-  - name: codex-cli
-    modelAccessMode: all
+  - name: "{{ omniroute_management_api_key_name }}"
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: []
+    scopes:
+      - admin
+
+# Explicitly remove the inference keys created by the initial deployment.
+omniroute_api_keys_to_remove:
+  - claude-code
+  - codex-cli

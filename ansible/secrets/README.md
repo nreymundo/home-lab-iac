@@ -78,6 +78,13 @@ The Authentik OAuth client credentials for OmniRoute live in
 the Ansible role decrypts that same file so OmniRoute and Authentik always
 share one client identity.
 
+On the first run, the bootstrap authenticates with the initial password, creates
+an `ansible-bootstrap` API key with `admin` scope and no model access, stores its
+one-time raw value in `/etc/omniroute/bootstrap-api-keys.json` with mode `0600`,
+and disables password login. Later runs authenticate with that management key.
+Losing the root-owned key file requires recovery through an authenticated OIDC
+session before Ansible can manage OmniRoute again.
+
 ## Proxmox
 
 `proxmox.sops.yml` holds the SMTP credentials for the Proxmox email

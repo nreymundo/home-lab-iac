@@ -12,7 +12,8 @@ management REST API documented in docs/reference/API_REFERENCE.md
 - model import via POST /api/providers/<id>/sync-models?mode=import
 - combos via POST /api/combos
 - model-combo mappings via POST /api/model-combo-mappings
-- named consumer API keys via POST /api/keys
+- named API keys via POST /api/keys
+- password-to-admin-key bootstrap migration before password login is disabled
 
 Every step converges by a stable identity (settings field, provider id + name,
 node name, combo name, mapping pattern, key name), updating managed fields when
@@ -22,8 +23,8 @@ Optional credentials that are not configured are skipped, never invented.
 The script prints exactly one JSON object on stdout:
     {"ok": true, "changed": false, "actions": ["..."], "warnings": ["..."]}
 Secret values are never printed; failures report the endpoint and HTTP status.
-Raw consumer API keys are returned once by the API and are persisted only to
-the root-owned output file named in the config.
+Raw API keys are returned once by the API and are persisted only to the
+root-owned output file named in the config.
 """
 
 import json
@@ -67,10 +68,12 @@ class ApiResponse:
 
 
 class OmniRouteClient:
-    def __init__(self, base_url, password):
+    def __init__(self, base_url, password, access_token=None):
         self.base_url = base_url.rstrip("/")
         self.cookie = None
-        self._login(password)
+        self.access_token = access_token
+        if not self.access_token:
+            self._login(password)
 
     def _login(self, password):
         response = self.request("POST", "/api/auth/login", {"password": password})
@@ -94,6 +97,8 @@ class OmniRouteClient:
             request.add_header("Content-Type", "application/json")
         if self.cookie:
             request.add_header("Cookie", self.cookie)
+        if self.access_token:
+            request.add_header("Authorization", "Bearer %s" % self.access_token)
         try:
             with urllib.request.urlopen(request, timeout=API_TIMEOUT_SECONDS) as response:
                 return ApiResponse(response.status, response.headers, response.read())
@@ -124,6 +129,12 @@ class OmniRouteClient:
             raise BootstrapError("PUT %s failed with HTTP %d" % (path, response.status))
         return response.json()
 
+    def delete(self, path):
+        response = self.request("DELETE", path)
+        if response.status != 200:
+            raise BootstrapError("DELETE %s failed with HTTP %d" % (path, response.status))
+        return response.json()
+
 
 def masked_key_matches(masked, desired):
     """Compare the non-secret prefix/suffix exposed by OmniRoute's key mask."""
@@ -148,7 +159,7 @@ def ensure_oidc_settings(client, desired, actions):
         "oidcScopes": desired.get("scopes") or ["openid", "profile", "email"],
         "oidcRedirectPath": desired.get("redirectPath", "/api/auth/oidc/callback"),
         "oidcAllowedSubjects": desired.get("allowedSubjects") or [],
-        "oidcDisablePasswordLogin": False,
+        "oidcDisablePasswordLogin": bool(desired.get("disablePasswordLogin")),
     }
     if not payload["oidcAllowedSubjects"]:
         raise BootstrapError(
@@ -377,15 +388,26 @@ def ensure_api_key(client, spec, actions, created_keys):
     return True
 
 
+def read_stored_keys(path):
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return []
+    return data if isinstance(data, list) else []
+
+
+def load_stored_key(path, name):
+    for entry in read_stored_keys(path):
+        if entry.get("name") == name and entry.get("key"):
+            return entry["key"]
+    return None
+
+
 def store_created_keys(path, created_keys):
     if not created_keys:
         return
-    existing = []
-    try:
-        with open(path, "r", encoding="utf-8") as handle:
-            existing = json.load(handle)
-    except (OSError, ValueError):
-        existing = []
+    existing = read_stored_keys(path)
     known = [entry.get("name") for entry in existing]
     for entry in created_keys:
         if entry["name"] not in known:
@@ -394,6 +416,32 @@ def store_created_keys(path, created_keys):
         json.dump(existing, handle, indent=2)
         handle.write("\n")
     os.chmod(path, 0o600)
+
+
+def remove_stored_keys(path, names):
+    existing = read_stored_keys(path)
+    retained = [entry for entry in existing if entry.get("name") not in names]
+    if retained == existing:
+        return
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(retained, handle, indent=2)
+        handle.write("\n")
+    os.chmod(path, 0o600)
+
+
+def remove_api_keys(client, names, output_path, actions):
+    names = set(names)
+    if not names:
+        return False
+    changed = False
+    keys = (client.get("/api/keys") or {}).get("keys") or []
+    for existing in keys:
+        if existing.get("name") in names:
+            client.delete("/api/keys/%s" % existing["id"])
+            actions.append("api key '%s': removed" % existing["name"])
+            changed = True
+    remove_stored_keys(output_path, names)
+    return changed
 
 
 def main():
@@ -407,9 +455,21 @@ def main():
     created_keys = []
     changed = False
 
-    client = OmniRouteClient(config["dashboardUrl"], config["initialPassword"])
+    output_path = config["apiKeysOutputFile"]
+    management_key_name = config["managementKeyName"]
+    management_token = load_stored_key(output_path, management_key_name)
+    client = OmniRouteClient(
+        config["dashboardUrl"], config["initialPassword"], management_token
+    )
 
-    changed = ensure_oidc_settings(client, config.get("oidc") or {}, actions) or changed
+    oidc_desired = dict(config.get("oidc") or {})
+    oidc_initial = dict(oidc_desired)
+    # On the migration run, leave password login enabled until the new admin
+    # key has been created and durably stored. Existing installations use the
+    # admin key immediately and converge the final OIDC state in one pass.
+    if oidc_desired.get("disablePasswordLogin") and not management_token:
+        oidc_initial["disablePasswordLogin"] = False
+    changed = ensure_oidc_settings(client, oidc_initial, actions) or changed
 
     for spec in config.get("providers") or []:
         if spec.get("enabled"):
@@ -445,9 +505,26 @@ def main():
         if len(created_keys) > created_count:
             # The API returns a raw key only once. Persist each key before the
             # next API call so a later failure cannot discard it.
-            store_created_keys(
-                config["apiKeysOutputFile"], created_keys[created_count:]
-            )
+            store_created_keys(output_path, created_keys[created_count:])
+
+    management_token = load_stored_key(output_path, management_key_name)
+    if not management_token:
+        raise BootstrapError(
+            "management API key '%s' is unavailable; password login remains enabled"
+            % management_key_name
+        )
+
+    keys_to_remove = config.get("apiKeysToRemove") or []
+    if management_key_name in keys_to_remove:
+        raise BootstrapError("management API key cannot also be scheduled for removal")
+    changed = remove_api_keys(
+        client, keys_to_remove, output_path, actions
+    ) or changed
+
+    if oidc_initial.get("disablePasswordLogin") != oidc_desired.get(
+        "disablePasswordLogin"
+    ):
+        changed = ensure_oidc_settings(client, oidc_desired, actions) or changed
 
     print(
         json.dumps(
