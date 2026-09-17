@@ -170,6 +170,14 @@
       "automerge": false
     },
     {
+      "description": "Pause n8n image updates",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["n8nio/n8n"],
+      "matchPackageNames": ["n8nio/n8n", "docker.n8n.io/n8nio/n8n"],
+      "matchPaths": ["kubernetes/apps/apps/automation/n8n/helmrelease.yaml"],
+      "enabled": false
+    },
+    {
       "description": "Keep LiteLLM on stable releases with manual review while local monkey patches are active",
       "matchDatasources": ["docker"],
       "matchDepNames": ["berriai/litellm"],
