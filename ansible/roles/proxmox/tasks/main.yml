@@ -43,6 +43,17 @@
     - filesystem
     - storage
 
+- name: Manage Unraid NFS storage mount
+  ansible.builtin.include_tasks:
+    file: unraid_nfs.yml
+    apply:
+      tags:
+        - storage
+        - nfs
+  tags:
+    - storage
+    - nfs
+
 - name: Configure swap
   ansible.builtin.include_tasks:
     file: swap.yml
@@ -141,6 +152,15 @@
   tags:
     - storage
     - zfs
+
+- name: Configure Proxmox email notifications
+  ansible.builtin.include_tasks:
+    file: notifications.yml
+    apply:
+      tags:
+        - notifications
+  tags:
+    - notifications
 
 - name: CoreFreq (DKMS)
   ansible.builtin.include_tasks:

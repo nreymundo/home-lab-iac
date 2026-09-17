@@ -28,6 +28,7 @@ repos:
         entry: env ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint
         language: system
         files: ^ansible/.*\.(ya?ml|j2|cfg|ini)$
+        exclude: ^ansible/secrets/.*\.sops\.ya?ml$
         args: ["--project-dir", "ansible"]
         pass_filenames: true
         always_run: false

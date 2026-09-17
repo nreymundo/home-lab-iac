@@ -60,19 +60,28 @@
       ansible.builtin.command: "mkswap {{ proxmox_swapfile_path }}"
       changed_when: false
 
-- name: Enable swap
-  ansible.builtin.command: "swapon {{ proxmox_swapfile_path }}"
-  changed_when: false
-  failed_when: false
-  when: proxmox_recreate_swapfile
-
-- name: Ensure swap is enabled and persists
+- name: Ensure swap persists
   ansible.posix.mount:
     path: none
     src: "{{ proxmox_swapfile_path }}"
     fstype: swap
     opts: sw
     state: present
+
+- name: Read active swap devices
+  ansible.builtin.command:
+    argv:
+      - swapon
+      - --show=NAME
+      - --noheadings
+  register: proxmox_active_swaps
+  changed_when: false
+  check_mode: false
+
+- name: Enable swap
+  ansible.builtin.command: "swapon {{ proxmox_swapfile_path }}"
+  changed_when: true
+  when: proxmox_swapfile_path not in proxmox_active_swaps.stdout_lines
 
 - name: Configure vm.swappiness
   ansible.builtin.copy:

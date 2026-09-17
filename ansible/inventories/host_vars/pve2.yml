@@ -28,3 +28,8 @@ proxmox_gpu_passthrough:
     - i915
     - kvmgt
   disable_vga: true
+
+# Unraid runs as VM 103 on this node; use its direct host-only vmbr1 path
+# instead of the routed 192.168.10.4 address. Export and mountpoint match
+# the other nodes.
+proxmox_unraid_nfs_server: 10.0.0.2

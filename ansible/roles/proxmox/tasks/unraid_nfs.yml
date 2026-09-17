@@ -1,0 +1,120 @@
+---
+# Manage the shared Unraid Proxmox storage as an NFS mount with systemd
+# automounting. A previously mounted CIFS export at the same mountpoint is
+# detected and unmounted before the fstab entry is replaced. The separate
+# /mnt/unraid/backup mounts on pve2/pve3 are out of scope and never touched.
+
+- name: Manage Unraid NFS storage mount
+  when: proxmox_unraid_nfs_enabled | default(false) | bool
+  block:
+    - name: Install NFS client on Proxmox hosts
+      ansible.builtin.apt:
+        name: nfs-common
+        state: present
+        cache_valid_time: 3600
+
+    - name: Read current Unraid storage mount state
+      ansible.builtin.command:
+        argv:
+          - findmnt
+          - -n
+          - -o
+          - SOURCE,FSTYPE
+          - "{{ proxmox_unraid_nfs_mountpoint }}"
+      changed_when: false
+      check_mode: false
+      failed_when: false
+      register: proxmox_unraid_nfs_current_mount
+
+    - name: Record current Unraid storage mount state
+      ansible.builtin.set_fact:
+        proxmox_unraid_nfs_desired_source: "{{ proxmox_unraid_nfs_server }}:{{ proxmox_unraid_nfs_export }}"
+        proxmox_unraid_nfs_mounted: "{{ proxmox_unraid_nfs_current_mount.rc == 0 }}"
+        proxmox_unraid_nfs_current_source: >-
+          {{ (proxmox_unraid_nfs_current_mount.stdout.split() | first)
+             if proxmox_unraid_nfs_current_mount.rc == 0 else '' }}
+        proxmox_unraid_nfs_current_fstype: >-
+          {{ (proxmox_unraid_nfs_current_mount.stdout.split() | last)
+             if proxmox_unraid_nfs_current_mount.rc == 0 else '' }}
+
+    - name: Unmount foreign mount at the Unraid storage mountpoint
+      ansible.posix.mount:
+        path: "{{ proxmox_unraid_nfs_mountpoint }}"
+        state: unmounted
+      when: >-
+        (proxmox_unraid_nfs_mounted | bool)
+        and (proxmox_unraid_nfs_current_source != proxmox_unraid_nfs_desired_source
+             or proxmox_unraid_nfs_current_fstype not in ['nfs', 'nfs4'])
+
+    - name: Ensure Unraid NFS mountpoint exists
+      ansible.builtin.file:
+        path: "{{ proxmox_unraid_nfs_mountpoint }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      when: >-
+        (not (proxmox_unraid_nfs_mounted | bool))
+        or (proxmox_unraid_nfs_current_source != proxmox_unraid_nfs_desired_source)
+        or (proxmox_unraid_nfs_current_fstype not in ['nfs', 'nfs4'])
+
+    - name: Mount Unraid Proxmox storage over NFS
+      ansible.posix.mount:
+        path: "{{ proxmox_unraid_nfs_mountpoint }}"
+        src: "{{ proxmox_unraid_nfs_desired_source }}"
+        fstype: nfs
+        opts: "{{ proxmox_unraid_nfs_options | join(',') }}"
+        state: mounted
+
+    - name: Verify Unraid NFS storage mount
+      when: not ansible_check_mode
+      block:
+        - name: Read final Unraid storage mount state
+          ansible.builtin.command:
+            argv:
+              - findmnt
+              - -n
+              - -o
+              - SOURCE,FSTYPE
+              - "{{ proxmox_unraid_nfs_mountpoint }}"
+          changed_when: false
+          check_mode: false
+          register: proxmox_unraid_nfs_final_mount
+
+        - name: Assert Unraid storage is mounted over NFS
+          ansible.builtin.assert:
+            that:
+              - proxmox_unraid_nfs_final_mount.rc == 0
+              - >-
+                (proxmox_unraid_nfs_final_mount.stdout.split() | first)
+                == proxmox_unraid_nfs_desired_source
+              - (proxmox_unraid_nfs_final_mount.stdout.split() | last) in ['nfs', 'nfs4']
+            fail_msg: >-
+              Expected {{ proxmox_unraid_nfs_desired_source }} over NFS at
+              {{ proxmox_unraid_nfs_mountpoint }}.
+
+    - name: Remove legacy Unraid CIFS mount workaround
+      when: proxmox_unraid_nfs_cleanup_legacy | default(true) | bool
+      block:
+        - name: Read root crontab for legacy Unraid mount entries
+          ansible.builtin.command: crontab -l
+          register: proxmox_unraid_nfs_root_crontab
+          changed_when: false
+          failed_when: proxmox_unraid_nfs_root_crontab.rc not in [0, 1]
+
+        - name: Remove legacy Unraid mount cron entries
+          ansible.builtin.shell: |
+            set -o pipefail
+            (crontab -l | grep -v -Fx {{ item | quote }} || true) | crontab -
+          args:
+            executable: /bin/bash
+          loop: "{{ proxmox_unraid_nfs_legacy_cron_entries }}"
+          changed_when: true
+          when:
+            - proxmox_unraid_nfs_root_crontab.rc == 0
+            - item in proxmox_unraid_nfs_root_crontab.stdout_lines
+
+        - name: Remove legacy Unraid mount retry script
+          ansible.builtin.file:
+            path: "{{ proxmox_unraid_nfs_legacy_script_path }}"
+            state: absent
