@@ -1,0 +1,274 @@
+---
+- name: Ensure OmniRoute role supports Linux
+  ansible.builtin.assert:
+    that:
+      - ansible_system == 'Linux'
+    fail_msg: OmniRoute container role supports Linux only
+
+- name: Verify OmniRoute secrets file exists
+  ansible.builtin.stat:
+    path: "{{ omniroute_secrets_file }}"
+  delegate_to: localhost
+  become: false
+  register: omniroute_secrets_file_stat
+  when: omniroute_enabled | bool
+
+- name: Require OmniRoute secrets file
+  ansible.builtin.assert:
+    that:
+      - omniroute_secrets_file_stat.stat.exists
+    fail_msg: >-
+      Create and encrypt {{ omniroute_secrets_file }} as documented in
+      ansible/secrets/README.md before running this role.
+  when: omniroute_enabled | bool
+
+- name: Decrypt OmniRoute secrets
+  ansible.builtin.command:
+    argv:
+      - sops
+      - --decrypt
+      - "{{ omniroute_secrets_file }}"
+  delegate_to: localhost
+  become: false
+  environment:
+    SOPS_AGE_KEY_FILE: "{{ omniroute_sops_age_key_file }}"
+  changed_when: false
+  check_mode: false
+  no_log: true
+  register: omniroute_decrypted_secrets
+  when: omniroute_enabled | bool
+
+- name: Load OmniRoute secrets
+  ansible.builtin.set_fact:
+    omniroute_secrets: "{{ omniroute_decrypted_secrets.stdout | from_yaml }}"
+  no_log: true
+  when: omniroute_enabled | bool
+
+- name: Decrypt Authentik OmniRoute OAuth credentials
+  ansible.builtin.command:
+    argv:
+      - sops
+      - --decrypt
+      - "{{ omniroute_authentik_sso_secret_file }}"
+  delegate_to: localhost
+  become: false
+  environment:
+    SOPS_AGE_KEY_FILE: "{{ omniroute_sops_age_key_file }}"
+  changed_when: false
+  check_mode: false
+  no_log: true
+  register: omniroute_decrypted_authentik_sso_secret
+  when: omniroute_enabled | bool
+
+- name: Load Authentik OmniRoute OAuth credentials
+  ansible.builtin.set_fact:
+    omniroute_authentik_sso_secret: "{{ omniroute_decrypted_authentik_sso_secret.stdout | from_yaml }}"
+  no_log: true
+  when: omniroute_enabled | bool
+
+- name: Decrypt cluster identity
+  ansible.builtin.command:
+    argv:
+      - sops
+      - --decrypt
+      - "{{ omniroute_cluster_identity_file }}"
+  delegate_to: localhost
+  become: false
+  environment:
+    SOPS_AGE_KEY_FILE: "{{ omniroute_sops_age_key_file }}"
+  changed_when: false
+  check_mode: false
+  no_log: true
+  register: omniroute_decrypted_cluster_identity
+  when: omniroute_enabled | bool
+
+- name: Load cluster identity
+  ansible.builtin.set_fact:
+    omniroute_cluster_identity: "{{ omniroute_decrypted_cluster_identity.stdout | from_yaml }}"
+  no_log: true
+  when: omniroute_enabled | bool
+
+- name: Verify required OmniRoute secret values
+  ansible.builtin.assert:
+    that:
+      - omniroute_secrets.omniroute_initial_password | default('') | length >= 16
+      - omniroute_secrets.omniroute_jwt_secret | default('') | length >= 32
+      - omniroute_secrets.omniroute_api_key_secret | default('') | length >= 32
+      - omniroute_secrets.omniroute_storage_encryption_key | default('') | length >= 32
+      - omniroute_secrets.omniroute_ws_bridge_secret | default('') | length >= 32
+      - omniroute_oidc_allowed_subjects | length > 0
+      - omniroute_oidc_allowed_subjects | select('string') | list | length == omniroute_oidc_allowed_subjects | length
+      - omniroute_oidc_allowed_subjects | reject('equalto', '') | list | length == omniroute_oidc_allowed_subjects | length
+      - omniroute_cluster_identity.data.CLUSTER_DOMAIN | default('') | length > 0
+      - omniroute_authentik_sso_secret.stringData.CLIENT_ID | default('') | length > 0
+      - omniroute_authentik_sso_secret.stringData.CLIENT_SECRET | default('') | length > 0
+    fail_msg: >-
+      OmniRoute secrets must define strong runtime secrets, at least one exact
+      OIDC subject or verified email, and the Authentik OAuth client credentials.
+      Optional upstream provider API keys (openrouter, glm, llama-swap) may stay
+      empty and are then skipped.
+  no_log: true
+  when: omniroute_enabled | bool
+
+- name: Verify Docker Compose is available
+  ansible.builtin.command: docker compose version
+  changed_when: false
+  check_mode: false
+  when: omniroute_enabled | bool
+
+- name: Ensure OmniRoute configuration directory exists
+  ansible.builtin.file:
+    path: "{{ omniroute_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: omniroute_enabled | bool
+
+- name: Render OmniRoute environment file
+  ansible.builtin.template:
+    src: omniroute.env.j2
+    dest: "{{ omniroute_env_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: Restart OmniRoute containers
+  when: omniroute_enabled | bool
+
+- name: Render OmniRoute Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ omniroute_compose_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart OmniRoute containers
+  when: omniroute_enabled | bool
+
+- name: Validate OmniRoute Compose file
+  ansible.builtin.command:
+    cmd: >-
+      docker compose --env-file {{ omniroute_env_file }}
+      -p {{ omniroute_compose_project_name }}
+      -f {{ omniroute_compose_file }} config --quiet
+  changed_when: false
+  when:
+    - omniroute_enabled | bool
+    - not ansible_check_mode
+
+- name: Check for pinned OmniRoute container images
+  ansible.builtin.command:
+    argv:
+      - docker
+      - image
+      - inspect
+      - "{{ item }}"
+  loop: "{{ omniroute_images }}"
+  register: omniroute_image_inspect
+  changed_when: false
+  failed_when: false
+  when:
+    - omniroute_enabled | bool
+    - not ansible_check_mode
+
+- name: Pull missing pinned OmniRoute container images
+  ansible.builtin.command:
+    argv:
+      - docker
+      - pull
+      - "{{ item.item }}"
+  loop: "{{ omniroute_image_inspect.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item | default('unknown') }}"
+  changed_when: true
+  notify: Restart OmniRoute containers
+  when:
+    - omniroute_enabled | bool
+    - not ansible_check_mode
+    - item.rc | default(0) != 0
+
+- name: Install OmniRoute systemd unit
+  ansible.builtin.template:
+    src: omniroute-compose.service.j2
+    dest: "/etc/systemd/system/{{ omniroute_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload OmniRoute systemd
+    - Restart OmniRoute containers
+  when: omniroute_enabled | bool
+
+- name: Flush OmniRoute handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Manage OmniRoute service
+  ansible.builtin.systemd_service:
+    name: "{{ omniroute_service_name }}"
+    enabled: "{{ omniroute_enabled | bool }}"
+    state: "{{ 'started' if omniroute_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Validate OmniRoute health endpoint
+  ansible.builtin.uri:
+    url: "{{ omniroute_health_url }}"
+    status_code: 200
+    return_content: false
+  register: omniroute_health
+  until: omniroute_health.status == 200
+  retries: "{{ omniroute_health_retries }}"
+  delay: "{{ omniroute_health_delay }}"
+  when:
+    - omniroute_enabled | bool
+    - omniroute_validate_health | bool
+    - not ansible_check_mode
+
+- name: Install OmniRoute bootstrap script
+  ansible.builtin.template:
+    src: bootstrap_omniroute.py.j2
+    dest: "{{ omniroute_bootstrap_script }}"
+    owner: root
+    group: root
+    mode: "0755"
+  when: omniroute_enabled | bool
+
+- name: Render OmniRoute bootstrap configuration
+  ansible.builtin.template:
+    src: bootstrap-config.json.j2
+    dest: "{{ omniroute_bootstrap_config_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  when: omniroute_enabled | bool
+
+- name: Run OmniRoute management API bootstrap
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ omniroute_bootstrap_script }}"
+      - "{{ omniroute_bootstrap_config_file }}"
+  register: omniroute_bootstrap
+  changed_when: (omniroute_bootstrap.stdout | from_json).changed
+  when:
+    - omniroute_enabled | bool
+    - not ansible_check_mode
+
+- name: Require successful OmniRoute bootstrap
+  ansible.builtin.assert:
+    that:
+      - (omniroute_bootstrap.stdout | from_json).ok
+    fail_msg: >-
+      OmniRoute bootstrap reported a failure: {{ omniroute_bootstrap.stdout }}
+  when:
+    - omniroute_enabled | bool
+    - not ansible_check_mode
+
+- name: Report OmniRoute endpoint
+  ansible.builtin.debug:
+    msg: >-
+      OmniRoute dashboard and API listen on port {{ omniroute_host_port }}
+      and are exposed through the cluster ingress.
+  when: omniroute_enabled | bool

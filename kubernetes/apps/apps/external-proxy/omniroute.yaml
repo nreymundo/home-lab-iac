@@ -1,0 +1,46 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: omniroute
+  namespace: external-proxy
+spec:
+  ports:
+    - name: http
+      port: 20128
+      targetPort: 20128
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: omniroute
+  namespace: external-proxy
+subsets:
+  - addresses:
+      - ip: ${OMNIROUTE_IP}
+    ports:
+      - name: http
+        port: 20128
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: omniroute
+  namespace: external-proxy
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    external-dns.alpha.kubernetes.io/hostname: omniroute.lan.${CLUSTER_DOMAIN}
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: omniroute.lan.${CLUSTER_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: omniroute
+                port:
+                  name: http

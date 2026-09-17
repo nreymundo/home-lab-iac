@@ -178,6 +178,16 @@ spec:
             secretKeyRef:
               name: netbird-sso-secret
               key: CLIENT_SECRET
+        - name: OMNIROUTE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: omniroute-sso-secret
+              key: CLIENT_ID
+        - name: OMNIROUTE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: omniroute-sso-secret
+              key: CLIENT_SECRET
         - name: SCROB_CLIENT_ID
           valueFrom:
             secretKeyRef:

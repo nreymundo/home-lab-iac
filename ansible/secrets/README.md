@@ -39,6 +39,45 @@ Docker volume preserves the peer identity. If that volume is lost, create a new
 setup key for `netbird-proxy`, replace the encrypted value, and rerun the
 NetBird playbook.
 
+## OmniRoute
+
+`omniroute.sops.yml` is committed encrypted and holds the OmniRoute container
+runtime secrets. SOPS encrypts all `omniroute_*` values using the repository
+Age recipient:
+
+```yaml
+omniroute_initial_password: <dashboard admin password, >= 16 chars>
+omniroute_jwt_secret: <openssl rand -base64 48>
+omniroute_api_key_secret: <openssl rand -hex 32>
+omniroute_storage_encryption_key: <openssl rand -hex 32>
+omniroute_ws_bridge_secret: <openssl rand -base64 32>
+omniroute_oidc_allowed_subjects:
+  - <exact Authentik subject or verified user email>
+omniroute_openrouter_api_key: ""   # optional; empty skips that provider
+omniroute_glm_api_key: ""          # optional; empty skips that provider
+omniroute_llama_swap_api_key: ""   # empty skips the protected llama-swap provider
+```
+
+The runtime secrets are generated once. Add at least one exact Authentik
+subject or verified email to `omniroute_oidc_allowed_subjects`; OmniRoute
+refuses to enable OIDC with an empty allowlist. Optionally add the OpenRouter
+and Z.AI GLM Coding Plan API keys; empty provider keys make the management API
+bootstrap skip those providers instead of inventing credentials. The live
+llama-swap endpoint requires its own API key, so that integration is also
+skipped while `omniroute_llama_swap_api_key` is empty. The role reads the
+domain from the encrypted cluster-identity ConfigMap rather than
+copying it into the Ansible secret. Edit and verify with:
+
+```bash
+sops ansible/secrets/omniroute.sops.yml
+sops --decrypt ansible/secrets/omniroute.sops.yml >/dev/null
+```
+
+The Authentik OAuth client credentials for OmniRoute live in
+`kubernetes/infrastructure/security/authentik/install/omniroute-sso-secret.sops.yaml`;
+the Ansible role decrypts that same file so OmniRoute and Authentik always
+share one client identity.
+
 ## Proxmox
 
 `proxmox.sops.yml` holds the SMTP credentials for the Proxmox email
