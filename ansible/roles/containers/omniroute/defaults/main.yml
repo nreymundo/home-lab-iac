@@ -51,9 +51,13 @@ omniroute_health_delay: 5
 # Management API bootstrap (dashboard session via INITIAL_PASSWORD).
 omniroute_dashboard_url: "http://127.0.0.1:{{ omniroute_host_port }}"
 
-# Native OIDC against Authentik; the issuer follows the repository convention
-# https://sso.<cluster domain>/application/o/<application slug>/.
+# Native OIDC against Authentik. OmniRoute v3.8.51 removes exactly one
+# trailing slash before validating the ID-token issuer, while Authentik's
+# canonical issuer ends in one slash. Store two trailing slashes so the value
+# passed to jwtVerify remains the canonical Authentik issuer. Remove this
+# workaround after upstream preserves the discovered issuer verbatim.
 omniroute_oidc_enabled: true
+omniroute_oidc_disable_password_login: true
 omniroute_oidc_redirect_path: /api/auth/oidc/callback
 omniroute_oidc_scopes:
   - openid
@@ -97,4 +101,6 @@ omniroute_llama_swap_connection_name: "llama-swap"
 #     modelAccessMode: all
 omniroute_combos: []
 omniroute_model_combo_mappings: []
+omniroute_management_api_key_name: ansible-bootstrap
 omniroute_api_keys: []
+omniroute_api_keys_to_remove: []

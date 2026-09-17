@@ -1,10 +1,12 @@
 {
   "dashboardUrl": {{ omniroute_dashboard_url | to_json }},
   "initialPassword": {{ omniroute_secrets.omniroute_initial_password | to_json }},
+  "managementKeyName": {{ omniroute_management_api_key_name | to_json }},
   "apiKeysOutputFile": {{ omniroute_api_keys_output_file | to_json }},
   "oidc": {
     "enabled": {{ omniroute_oidc_enabled | bool | lower }},
-    "issuer": {{ ('https://sso.' ~ omniroute_cluster_identity.data.CLUSTER_DOMAIN ~ '/application/o/omniroute/') | to_json }},
+    "disablePasswordLogin": {{ omniroute_oidc_disable_password_login | bool | lower }},
+    "issuer": {{ ('https://sso.' ~ omniroute_cluster_identity.data.CLUSTER_DOMAIN ~ '/application/o/omniroute//') | to_json }},
     "clientId": {{ omniroute_authentik_sso_secret.stringData.CLIENT_ID | to_json }},
     "clientSecret": {{ omniroute_authentik_sso_secret.stringData.CLIENT_SECRET | to_json }},
     "currentPassword": {{ omniroute_secrets.omniroute_initial_password | to_json }},
@@ -37,5 +39,6 @@
   },
   "combos": {{ omniroute_combos | to_json }},
   "modelComboMappings": {{ omniroute_model_combo_mappings | to_json }},
-  "apiKeys": {{ omniroute_api_keys | to_json }}
+  "apiKeys": {{ omniroute_api_keys | to_json }},
+  "apiKeysToRemove": {{ omniroute_api_keys_to_remove | to_json }}
 }
