@@ -1,0 +1,11 @@
+---
+- name: Provision OmniRoute VM
+  hosts: omniroute_vms
+  become: true
+  roles:
+    - common
+    - ssh_hardening
+    - disk_expand
+    - ufw
+    - docker
+    - omniroute

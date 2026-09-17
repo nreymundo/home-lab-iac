@@ -2145,6 +2145,86 @@ data:
         attrs:
           group: !Find [authentik_core.group, [name, "Llama Users"]]
 
+  528-omniroute.yaml: |
+    version: 1
+    metadata:
+      name: omniroute-sso
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # OmniRoute Users group
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: "OmniRoute Users"
+        attrs:
+          is_superuser: false
+          parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
+
+      # OmniRoute Admins group
+      - model: authentik_core.group
+        state: present
+        id: omniroute-admins
+        identifiers:
+          name: "OmniRoute Admins"
+        attrs:
+          is_superuser: false
+          parent: null
+
+      # OAuth2/OIDC Provider for OmniRoute (native OmniRoute OIDC gate)
+      - model: authentik_providers_oauth2.oauth2provider
+        id: omniroute-provider
+        identifiers:
+          name: "OmniRoute"
+        attrs:
+          client_id: !Env OMNIROUTE_CLIENT_ID
+          client_secret: !Env OMNIROUTE_CLIENT_SECRET
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          jwt_algorithm: RS256
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
+          client_type: confidential
+          grant_types:
+            - authorization_code
+          client_authentication_method: client_secret_post
+          include_claims_in_id_token: true
+          redirect_uris:
+            - url: "https://omniroute.lan.${CLUSTER_DOMAIN}/api/auth/oidc/callback"
+              matching_mode: strict
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+
+      # OmniRoute Application
+      - model: authentik_core.application
+        identifiers:
+          slug: "omniroute"
+        attrs:
+          name: "OmniRoute"
+          icon: "https://raw.githubusercontent.com/selfhst/icons/main/svg/omniroute.svg"
+          provider: !KeyOf omniroute-provider
+          group: "Local Services"
+          meta_launch_url: "https://omniroute.lan.${CLUSTER_DOMAIN}"
+
+      # Restrict access to OmniRoute Users
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "omniroute"]]
+          order: 0
+        attrs:
+          group: !Find [authentik_core.group, [name, "OmniRoute Users"]]
+
+      # Grant OmniRoute Admins access as well
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !Find [authentik_core.application, [slug, "omniroute"]]
+          order: 1
+        attrs:
+          group: !KeyOf omniroute-admins
+
   540-tautulli.yaml: |
     version: 1
     metadata:

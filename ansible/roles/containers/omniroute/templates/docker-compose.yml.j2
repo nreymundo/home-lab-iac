@@ -1,0 +1,38 @@
+services:
+  omniroute:
+    image: "{{ omniroute_image }}"
+    container_name: omniroute
+    restart: unless-stopped
+    stop_grace_period: "{{ omniroute_stop_grace_period }}"
+    ports:
+      - "{{ omniroute_bind_address }}:{{ omniroute_host_port }}:{{ omniroute_container_port }}"
+    environment:
+      PORT: "${PORT}"
+      DATA_DIR: "${DATA_DIR}"
+      INITIAL_PASSWORD: "${INITIAL_PASSWORD}"
+      JWT_SECRET: "${JWT_SECRET}"
+      API_KEY_SECRET: "${API_KEY_SECRET}"
+      STORAGE_ENCRYPTION_KEY: "${STORAGE_ENCRYPTION_KEY}"
+      OMNIROUTE_WS_BRIDGE_SECRET: "${OMNIROUTE_WS_BRIDGE_SECRET}"
+      AUTH_COOKIE_SECURE: "${AUTH_COOKIE_SECURE}"
+      REQUIRE_API_KEY: "${REQUIRE_API_KEY}"
+      OMNIROUTE_MEMORY_MB: "${OMNIROUTE_MEMORY_MB}"
+      REDIS_URL: "${REDIS_URL}"
+    volumes:
+      - omniroute_data:/app/data
+    depends_on:
+      redis:
+        condition: service_started
+
+  # Private rate-limiter backend; reachable only on the compose network and
+  # never published to the host (upstream runs it without requirepass).
+  redis:
+    image: "{{ omniroute_redis_image }}"
+    container_name: omniroute-redis
+    restart: unless-stopped
+    volumes:
+      - omniroute_redis_data:/data
+
+volumes:
+  omniroute_data:
+  omniroute_redis_data:

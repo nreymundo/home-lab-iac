@@ -24,6 +24,7 @@ resources:
   - nextcloud-sso-secret.sops.yaml
   - litellm-sso-secret.sops.yaml
   - netbird-sso-secret.sops.yaml
+  - omniroute-sso-secret.sops.yaml
   - proxmox-sso-secret.sops.yaml
   - proxmox-backup-sso-secret.sops.yaml
   - home-assistant-sso-secret.sops.yaml

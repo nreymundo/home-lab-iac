@@ -1,0 +1,41 @@
+{
+  "dashboardUrl": {{ omniroute_dashboard_url | to_json }},
+  "initialPassword": {{ omniroute_secrets.omniroute_initial_password | to_json }},
+  "apiKeysOutputFile": {{ omniroute_api_keys_output_file | to_json }},
+  "oidc": {
+    "enabled": {{ omniroute_oidc_enabled | bool | lower }},
+    "issuer": {{ ('https://sso.' ~ omniroute_cluster_identity.data.CLUSTER_DOMAIN ~ '/application/o/omniroute/') | to_json }},
+    "clientId": {{ omniroute_authentik_sso_secret.stringData.CLIENT_ID | to_json }},
+    "clientSecret": {{ omniroute_authentik_sso_secret.stringData.CLIENT_SECRET | to_json }},
+    "currentPassword": {{ omniroute_secrets.omniroute_initial_password | to_json }},
+    "scopes": {{ omniroute_oidc_scopes | to_json }},
+    "redirectPath": {{ omniroute_oidc_redirect_path | to_json }},
+    "allowedSubjects": {{ omniroute_oidc_allowed_subjects | to_json }}
+  },
+  "providers": [
+    {
+      "enabled": {{ (omniroute_secrets.omniroute_openrouter_api_key | default('') | length > 0) | bool | lower }},
+      "providerId": {{ omniroute_openrouter_provider_id | to_json }},
+      "name": {{ omniroute_openrouter_connection_name | to_json }},
+      "apiKey": {{ omniroute_secrets.omniroute_openrouter_api_key | default('') | to_json }}
+    },
+    {
+      "enabled": {{ (omniroute_secrets.omniroute_glm_api_key | default('') | length > 0) | bool | lower }},
+      "providerId": {{ omniroute_glm_provider_id | to_json }},
+      "name": {{ omniroute_glm_connection_name | to_json }},
+      "apiKey": {{ omniroute_secrets.omniroute_glm_api_key | default('') | to_json }}
+    }
+  ],
+  "providerNode": {
+    "enabled": {{ (omniroute_secrets.omniroute_llama_swap_api_key | default('') | length > 0) | bool | lower }},
+    "name": {{ omniroute_llama_swap_node_name | to_json }},
+    "prefix": {{ omniroute_llama_swap_prefix | to_json }},
+    "apiType": {{ omniroute_llama_swap_api_type | to_json }},
+    "baseUrl": {{ omniroute_llama_swap_base_url | to_json }},
+    "connectionName": {{ omniroute_llama_swap_connection_name | to_json }},
+    "apiKey": {{ omniroute_secrets.omniroute_llama_swap_api_key | default('') | to_json }}
+  },
+  "combos": {{ omniroute_combos | to_json }},
+  "modelComboMappings": {{ omniroute_model_combo_mappings | to_json }},
+  "apiKeys": {{ omniroute_api_keys | to_json }}
+}

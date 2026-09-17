@@ -1,0 +1,47 @@
+---
+# Hand-maintained group variables for the OmniRoute VM.
+# The omniroute_vms inventory group and its host are Terraform-generated output;
+# this file only configures Ansible behavior and must not define hosts.
+
+common_user: omniroute
+common_enable_mosh: false
+
+# Install Docker Engine and the Compose plugin for the OmniRoute service.
+docker_install_enabled: true
+docker_users:
+  - omniroute
+
+# UFW: default deny inbound, allow outbound, permit SSH, and allow the
+# OmniRoute dashboard/API port only from the current K3s nodes, which front
+# it with the cluster Traefik ingress.
+ufw_install_enabled: true
+ufw_enabled: true
+ufw_allow_ssh: true
+ufw_allow_mosh: false
+ufw_default_incoming_policy: deny
+ufw_default_outgoing_policy: allow
+ufw_inbound_rules:
+  - port: "20128"
+    proto: tcp
+    from_ip: 192.168.10.50
+    comment: OmniRoute from k3s-node-01
+  - port: "20128"
+    proto: tcp
+    from_ip: 192.168.10.51
+    comment: OmniRoute from k3s-node-02
+  - port: "20128"
+    proto: tcp
+    from_ip: 192.168.10.52
+    comment: OmniRoute from k3s-node-03
+  - port: "20128"
+    proto: tcp
+    from_ip: 192.168.10.0/24
+    comment: OmniRoute clients on the LAN
+
+# Inference-only client credentials. OmniRoute returns each raw value once; the
+# bootstrap stores it root-only in /etc/omniroute/bootstrap-api-keys.json.
+omniroute_api_keys:
+  - name: claude-code
+    modelAccessMode: all
+  - name: codex-cli
+    modelAccessMode: all

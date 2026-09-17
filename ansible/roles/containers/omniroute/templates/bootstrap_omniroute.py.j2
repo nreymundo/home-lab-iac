@@ -1,0 +1,464 @@
+#!/usr/bin/env python3
+"""Idempotent OmniRoute management API bootstrap.
+
+Reads a JSON config file (rendered by Ansible from
+templates/bootstrap-config.json.j2) and converges dashboard state through the
+management REST API documented in docs/reference/API_REFERENCE.md
+(release/v3.8.51):
+
+- OIDC settings via PATCH /api/settings
+- API-key provider connections via POST /api/providers
+- an OpenAI-compatible provider node (llama-swap) via POST /api/provider-nodes
+- model import via POST /api/providers/<id>/sync-models?mode=import
+- combos via POST /api/combos
+- model-combo mappings via POST /api/model-combo-mappings
+- named consumer API keys via POST /api/keys
+
+Every step converges by a stable identity (settings field, provider id + name,
+node name, combo name, mapping pattern, key name), updating managed fields when
+they drift. Re-running the script is a no-op once desired state is present.
+Optional credentials that are not configured are skipped, never invented.
+
+The script prints exactly one JSON object on stdout:
+    {"ok": true, "changed": false, "actions": ["..."], "warnings": ["..."]}
+Secret values are never printed; failures report the endpoint and HTTP status.
+Raw consumer API keys are returned once by the API and are persisted only to
+the root-owned output file named in the config.
+"""
+
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+
+API_TIMEOUT_SECONDS = 60
+
+KEY_OPTIONAL_FIELDS = (
+    "modelAccessMode",
+    "allowedModels",
+    "allowedCombos",
+    "noLog",
+    "allowUsageCommand",
+    "usageLimitEnabled",
+    "dailyUsageLimitUsd",
+    "weeklyUsageLimitUsd",
+    "scopes",
+)
+
+
+class BootstrapError(Exception):
+    """Fatal bootstrap failure; the message must stay secret-free."""
+
+
+class ApiResponse:
+    def __init__(self, status, headers, body):
+        self.status = status
+        self.headers = headers
+        self.body = body
+
+    def json(self):
+        if not self.body:
+            return None
+        try:
+            return json.loads(self.body.decode("utf-8"))
+        except ValueError:
+            return None
+
+
+class OmniRouteClient:
+    def __init__(self, base_url, password):
+        self.base_url = base_url.rstrip("/")
+        self.cookie = None
+        self._login(password)
+
+    def _login(self, password):
+        response = self.request("POST", "/api/auth/login", {"password": password})
+        if response.status != 200:
+            raise BootstrapError(
+                "dashboard login failed with HTTP %d; check the INITIAL_PASSWORD secret"
+                % response.status
+            )
+        set_cookie = response.headers.get("Set-Cookie", "")
+        if not set_cookie:
+            raise BootstrapError("dashboard login returned no session cookie")
+        self.cookie = set_cookie.split(";")[0]
+
+    def request(self, method, path, body=None):
+        data = None
+        if body is not None:
+            data = json.dumps(body).encode("utf-8")
+        request = urllib.request.Request(self.base_url + path, data=data, method=method)
+        request.add_header("Accept", "application/json")
+        if body is not None:
+            request.add_header("Content-Type", "application/json")
+        if self.cookie:
+            request.add_header("Cookie", self.cookie)
+        try:
+            with urllib.request.urlopen(request, timeout=API_TIMEOUT_SECONDS) as response:
+                return ApiResponse(response.status, response.headers, response.read())
+        except urllib.error.HTTPError as error:
+            return ApiResponse(error.code, error.headers, error.read())
+
+    def get(self, path):
+        response = self.request("GET", path)
+        if response.status != 200:
+            raise BootstrapError("GET %s failed with HTTP %d" % (path, response.status))
+        return response.json()
+
+    def post(self, path, body=None):
+        response = self.request("POST", path, body)
+        if response.status not in (200, 201):
+            raise BootstrapError("POST %s failed with HTTP %d" % (path, response.status))
+        return response.json()
+
+    def patch(self, path, body):
+        response = self.request("PATCH", path, body)
+        if response.status != 200:
+            raise BootstrapError("PATCH %s failed with HTTP %d" % (path, response.status))
+        return response.json()
+
+    def put(self, path, body):
+        response = self.request("PUT", path, body)
+        if response.status != 200:
+            raise BootstrapError("PUT %s failed with HTTP %d" % (path, response.status))
+        return response.json()
+
+
+def masked_key_matches(masked, desired):
+    """Compare the non-secret prefix/suffix exposed by OmniRoute's key mask."""
+    if not masked or not desired:
+        return False
+    if "****" not in masked:
+        return masked == desired
+    prefix, suffix = masked.split("****", 1)
+    return desired.startswith(prefix) and desired.endswith(suffix)
+
+
+def ensure_oidc_settings(client, desired, actions):
+    if not desired.get("enabled"):
+        actions.append("oidc: disabled in Ansible configuration; settings untouched")
+        return False
+    current = client.get("/api/settings") or {}
+    payload = {
+        "oidcEnabled": True,
+        "oidcIssuer": desired["issuer"],
+        "oidcClientId": desired["clientId"],
+        "oidcClientSecret": desired["clientSecret"],
+        "oidcScopes": desired.get("scopes") or ["openid", "profile", "email"],
+        "oidcRedirectPath": desired.get("redirectPath", "/api/auth/oidc/callback"),
+        "oidcAllowedSubjects": desired.get("allowedSubjects") or [],
+        "oidcDisablePasswordLogin": False,
+    }
+    if not payload["oidcAllowedSubjects"]:
+        raise BootstrapError(
+            "OIDC requires at least one exact subject or verified email in oidcAllowedSubjects"
+        )
+    differing = sorted(
+        key for key, value in payload.items() if current.get(key) != value
+    )
+    if not differing:
+        actions.append("oidc: settings already converged")
+        return False
+    # OmniRoute requires password re-authentication whenever a PATCH touches
+    # oidcEnabled, oidcClientSecret, or oidcDisablePasswordLogin.
+    payload["currentPassword"] = desired["currentPassword"]
+    client.patch("/api/settings", payload)
+    actions.append("oidc: updated settings (%s)" % ", ".join(differing))
+    return True
+
+
+def ensure_provider_connection(client, spec, actions):
+    provider = spec["providerId"]
+    name = spec["name"]
+    api_key = spec.get("apiKey") or ""
+    connections = (client.get("/api/providers") or {}).get("connections") or []
+    for connection in connections:
+        if connection.get("provider") == provider and connection.get("name") == name:
+            if not api_key:
+                actions.append("provider %s: connection '%s' already present" % (provider, name))
+                return False
+            if masked_key_matches(connection.get("apiKey"), api_key):
+                actions.append("provider %s: connection '%s' already converged" % (provider, name))
+                return False
+            client.put(
+                "/api/providers/%s" % connection["id"],
+                {"name": name, "apiKey": api_key},
+            )
+            actions.append("provider %s: rotated connection '%s' credential" % (provider, name))
+            return True
+    if not api_key:
+        actions.append("provider %s: skipped (no API key configured)" % provider)
+        return False
+    client.post(
+        "/api/providers",
+        {"provider": provider, "name": name, "apiKey": api_key},
+    )
+    actions.append("provider %s: created connection '%s'" % (provider, name))
+    return True
+
+
+def ensure_provider_node(client, spec, actions):
+    name = spec["name"]
+    nodes = (client.get("/api/provider-nodes") or {}).get("nodes") or []
+    for node in nodes:
+        if node.get("name") == name:
+            desired_fields = {
+                "name": name,
+                "prefix": spec["prefix"],
+                "apiType": spec["apiType"],
+                "baseUrl": spec["baseUrl"],
+            }
+            differing = [
+                key for key, value in desired_fields.items() if node.get(key) != value
+            ]
+            if differing:
+                client.put("/api/provider-nodes/%s" % node["id"], desired_fields)
+                actions.append("node %s: updated (%s)" % (name, ", ".join(differing)))
+                return node.get("id"), True
+            actions.append("node %s: already converged (id %s)" % (name, node.get("id")))
+            return node.get("id"), False
+    node = (
+        client.post(
+            "/api/provider-nodes",
+            {
+                "type": spec.get("type", "openai-compatible"),
+                "name": name,
+                "prefix": spec["prefix"],
+                "apiType": spec["apiType"],
+                "baseUrl": spec["baseUrl"],
+            },
+        )
+        or {}
+    ).get("node") or {}
+    actions.append("node %s: created (id %s)" % (name, node.get("id")))
+    return node.get("id"), True
+
+
+def ensure_node_connection(client, node_id, spec, actions):
+    name = spec["connectionName"]
+    connections = (client.get("/api/providers") or {}).get("connections") or []
+    for connection in connections:
+        if connection.get("provider") == node_id:
+            api_key = spec.get("apiKey") or ""
+            if api_key and not masked_key_matches(connection.get("apiKey"), api_key):
+                client.put(
+                    "/api/providers/%s" % connection["id"],
+                    {"name": name, "apiKey": api_key},
+                )
+                actions.append("node connection '%s': rotated credential" % name)
+                return connection.get("id"), True
+            if connection.get("name") != name:
+                client.put("/api/providers/%s" % connection["id"], {"name": name})
+                actions.append("node connection '%s': renamed" % name)
+                return connection.get("id"), True
+            actions.append("node connection '%s': already converged" % name)
+            return connection.get("id"), False
+    body = {"provider": node_id, "name": name}
+    api_key = spec.get("apiKey") or ""
+    if api_key:
+        body["apiKey"] = api_key
+    connection = (client.post("/api/providers", body) or {}).get("connection") or {}
+    actions.append("node connection '%s': created" % name)
+    return connection.get("id"), True
+
+
+def sync_models(client, connection_id, label, actions):
+    path = "/api/providers/%s/sync-models?mode=import" % connection_id
+    response = client.request("POST", path)
+    if response.status not in (200, 201):
+        raise BootstrapError(
+            "model sync for %s failed with HTTP %d; verify upstream reachability and credentials"
+            % (label, response.status)
+        )
+    result = response.json() or {}
+    changes = result.get("modelChanges") or {}
+    actions.append(
+        "model sync %s: %s models available (%s added, %s removed)"
+        % (label, result.get("availableModelsCount", "?"), changes.get("added", "?"), changes.get("removed", "?"))
+    )
+
+
+def canonical_combo_model(model):
+    if isinstance(model, str):
+        provider, separator, name = model.partition("/")
+        return {"provider": provider, "model": name} if separator else {"model": model}
+    if not isinstance(model, dict):
+        return model
+    if model.get("kind") == "combo-ref":
+        return {"kind": "combo-ref", "comboName": model.get("comboName")}
+    result = dict(model)
+    if "providerId" in result and "provider" not in result:
+        result["provider"] = result.pop("providerId")
+    return result
+
+
+def ensure_combo(client, spec, actions):
+    name = spec["name"]
+    combos = (client.get("/api/combos") or {}).get("combos") or []
+    body = {"name": name, "models": spec["models"]}
+    for optional in ("description", "strategy", "config"):
+        if spec.get(optional) is not None:
+            body[optional] = spec[optional]
+    for combo in combos:
+        if combo.get("name") == name:
+            differing = []
+            desired_models = [canonical_combo_model(item) for item in body["models"]]
+            current_models = [canonical_combo_model(item) for item in combo.get("models") or []]
+            if current_models != desired_models:
+                differing.append("models")
+            for field in ("description", "strategy", "config"):
+                if field in body and combo.get(field) != body[field]:
+                    differing.append(field)
+            if differing:
+                client.put("/api/combos/%s" % combo["id"], body)
+                actions.append("combo '%s': updated (%s)" % (name, ", ".join(differing)))
+                return combo.get("id"), True
+            actions.append("combo '%s': already converged" % name)
+            return combo.get("id"), False
+    combo = client.post("/api/combos", body) or {}
+    actions.append("combo '%s': created" % name)
+    return combo.get("id"), True
+
+
+def ensure_mapping(client, spec, combo_ids, actions):
+    pattern = spec["pattern"]
+    combo_id = (combo_ids or {}).get(spec["comboName"])
+    if not combo_id:
+        raise BootstrapError(
+            "mapping '%s' references combo '%s' which is not configured"
+            % (pattern, spec["comboName"])
+        )
+    mappings = (client.get("/api/model-combo-mappings") or {}).get("mappings") or []
+    body = {"pattern": pattern, "comboId": combo_id}
+    for optional in ("priority", "enabled", "description"):
+        if spec.get(optional) is not None:
+            body[optional] = spec[optional]
+    for mapping in mappings:
+        if mapping.get("pattern") == pattern:
+            differing = [
+                key for key, value in body.items() if mapping.get(key) != value
+            ]
+            if differing:
+                client.put("/api/model-combo-mappings/%s" % mapping["id"], body)
+                actions.append("mapping '%s': updated (%s)" % (pattern, ", ".join(differing)))
+                return True
+            actions.append("mapping '%s': already converged" % pattern)
+            return False
+    client.post("/api/model-combo-mappings", body)
+    actions.append("mapping '%s': created" % pattern)
+    return True
+
+
+def ensure_api_key(client, spec, actions, created_keys):
+    name = spec["name"]
+    keys = (client.get("/api/keys") or {}).get("keys") or []
+    body = {"name": name}
+    for field in KEY_OPTIONAL_FIELDS:
+        if spec.get(field) is not None:
+            body[field] = spec[field]
+    for existing in keys:
+        if existing.get("name") == name:
+            desired_permissions = {key: value for key, value in body.items() if key != "name"}
+            differing = [
+                key for key, value in desired_permissions.items() if existing.get(key) != value
+            ]
+            if differing:
+                client.patch("/api/keys/%s" % existing["id"], desired_permissions)
+                actions.append("api key '%s': updated permissions (%s)" % (name, ", ".join(differing)))
+                return True
+            actions.append("api key '%s': already converged" % name)
+            return False
+    created = client.post("/api/keys", body) or {}
+    if not created.get("key"):
+        raise BootstrapError("api key '%s' was created but no raw key was returned" % name)
+    created_keys.append({"name": name, "id": created.get("id"), "key": created["key"]})
+    actions.append("api key '%s': created (raw key stored only on this host)" % name)
+    return True
+
+
+def store_created_keys(path, created_keys):
+    if not created_keys:
+        return
+    existing = []
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            existing = json.load(handle)
+    except (OSError, ValueError):
+        existing = []
+    known = [entry.get("name") for entry in existing]
+    for entry in created_keys:
+        if entry["name"] not in known:
+            existing.append(entry)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(existing, handle, indent=2)
+        handle.write("\n")
+    os.chmod(path, 0o600)
+
+
+def main():
+    if len(sys.argv) != 2:
+        raise BootstrapError("usage: bootstrap_omniroute.py <config.json>")
+    with open(sys.argv[1], "r", encoding="utf-8") as handle:
+        config = json.load(handle)
+
+    actions = []
+    warnings = []
+    created_keys = []
+    changed = False
+
+    client = OmniRouteClient(config["dashboardUrl"], config["initialPassword"])
+
+    changed = ensure_oidc_settings(client, config.get("oidc") or {}, actions) or changed
+
+    for spec in config.get("providers") or []:
+        if spec.get("enabled"):
+            changed = ensure_provider_connection(client, spec, actions) or changed
+
+    node_spec = config.get("providerNode") or {}
+    if node_spec.get("enabled"):
+        node_id, node_changed = ensure_provider_node(client, node_spec, actions)
+        changed = node_changed or changed
+        if node_id:
+            connection_id, connection_changed = ensure_node_connection(
+                client, node_id, node_spec, actions
+            )
+            changed = connection_changed or changed
+            if connection_id:
+                sync_models(client, connection_id, node_spec["name"], actions)
+    else:
+        actions.append("node %s: skipped (no API key configured)" % node_spec.get("name", "provider"))
+
+    combo_ids = {}
+    for spec in config.get("combos") or []:
+        combo_id, combo_changed = ensure_combo(client, spec, actions)
+        changed = combo_changed or changed
+        if combo_id:
+            combo_ids[spec["name"]] = combo_id
+
+    for spec in config.get("modelComboMappings") or []:
+        changed = ensure_mapping(client, spec, combo_ids, actions) or changed
+
+    for spec in config.get("apiKeys") or []:
+        created_count = len(created_keys)
+        changed = ensure_api_key(client, spec, actions, created_keys) or changed
+        if len(created_keys) > created_count:
+            # The API returns a raw key only once. Persist each key before the
+            # next API call so a later failure cannot discard it.
+            store_created_keys(
+                config["apiKeysOutputFile"], created_keys[created_count:]
+            )
+
+    print(
+        json.dumps(
+            {"ok": True, "changed": changed, "actions": actions, "warnings": warnings}
+        )
+    )
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except BootstrapError as error:
+        print(json.dumps({"ok": False, "changed": False, "error": str(error)}))
+        sys.exit(1)

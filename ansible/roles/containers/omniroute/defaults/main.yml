@@ -1,0 +1,100 @@
+---
+omniroute_enabled: true
+
+omniroute_service_name: omniroute-compose
+omniroute_compose_project_name: omniroute
+
+omniroute_config_dir: /etc/omniroute
+omniroute_compose_file: "{{ omniroute_config_dir }}/docker-compose.yml"
+omniroute_env_file: "{{ omniroute_config_dir }}/omniroute.env"
+omniroute_bootstrap_script: "{{ omniroute_config_dir }}/bootstrap_omniroute.py"
+omniroute_bootstrap_config_file: "{{ omniroute_config_dir }}/bootstrap.json"
+omniroute_api_keys_output_file: "{{ omniroute_config_dir }}/bootstrap-api-keys.json"
+
+# Pinned to the :next manifest digest containing the Authentik OIDC fixes
+# (PR #10614: missing OIDC state parameter, origin-aware error redirects).
+# Re-pin deliberately; :next is a mutable pre-release channel.
+omniroute_image: >-
+  diegosouzapw/omniroute:next@sha256:80eade3c516c4b4e0b9ab07a72a96648155722fbf311cfb4bc058cc4d1e18b3a
+# Matches the image the upstream 1-click Redis launcher uses and is pinned so
+# repeated Ansible runs do not restart a healthy gateway on a mutable tag.
+omniroute_redis_image: >-
+  redis:7-alpine@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
+omniroute_images:
+  - "{{ omniroute_image }}"
+  - "{{ omniroute_redis_image }}"
+
+omniroute_secrets_file: "{{ playbook_dir }}/../secrets/omniroute.sops.yml"
+omniroute_authentik_sso_secret_file: >-
+  {{ playbook_dir }}/../../kubernetes/infrastructure/security/authentik/install/omniroute-sso-secret.sops.yaml
+omniroute_cluster_identity_file: >-
+  {{ playbook_dir }}/../../kubernetes/clusters/production/identity/cluster-identity.sops.yaml
+omniroute_sops_age_key_file: >-
+  {{ lookup('env', 'SOPS_AGE_KEY_FILE') | default(lookup('env', 'HOME') + '/.config/sops/age/keys.txt', true) }}
+
+# Runtime contract verified against upstream docs/reference/ENVIRONMENT.md
+# (release/v3.8.51): PORT is the single dashboard+API port, DATA_DIR holds the
+# SQLite database, OMNIROUTE_MEMORY_MB is the V8 heap limit for coding-agent
+# workloads, REDIS_URL points at the rate-limiter backend, and
+# OMNIROUTE_WS_BRIDGE_SECRET is required in production.
+omniroute_bind_address: "0.0.0.0"
+omniroute_host_port: 20128
+omniroute_container_port: 20128
+omniroute_memory_mb: 8192
+omniroute_stop_grace_period: 40s
+
+omniroute_validate_health: true
+omniroute_health_url: "http://127.0.0.1:{{ omniroute_host_port }}/healthz"
+omniroute_health_retries: 60
+omniroute_health_delay: 5
+
+# Management API bootstrap (dashboard session via INITIAL_PASSWORD).
+omniroute_dashboard_url: "http://127.0.0.1:{{ omniroute_host_port }}"
+
+# Native OIDC against Authentik; the issuer follows the repository convention
+# https://sso.<cluster domain>/application/o/<application slug>/.
+omniroute_oidc_enabled: true
+omniroute_oidc_redirect_path: /api/auth/oidc/callback
+omniroute_oidc_scopes:
+  - openid
+  - profile
+  - email
+# OmniRoute requires at least one exact OIDC subject or verified email before
+# OIDC can be enabled. Values come from the encrypted Ansible secret file.
+omniroute_oidc_allowed_subjects: >-
+  {{ omniroute_secrets.omniroute_oidc_allowed_subjects | default([]) }}
+
+# Upstream provider ids from docs/reference/PROVIDER_REFERENCE.md:
+# openrouter (API key) and glm (Z.AI GLM Coding Plan, international).
+omniroute_openrouter_provider_id: openrouter
+omniroute_openrouter_connection_name: "OpenRouter"
+omniroute_glm_provider_id: glm
+omniroute_glm_connection_name: "GLM Coding Plan"
+
+# llama-swap is wired through the generic OpenAI-compatible provider-node
+# mechanism. The prefix must not collide with a reserved provider prefix
+# (llama-cpp, llamafile, ...), hence "llamaswap".
+omniroute_llama_swap_node_name: "llama-swap"
+omniroute_llama_swap_prefix: "llamaswap"
+omniroute_llama_swap_api_type: chat
+omniroute_llama_swap_base_url: "http://192.168.10.70:8080/v1"
+omniroute_llama_swap_connection_name: "llama-swap"
+
+# Optional routing objects. Entries use the management API field names and are
+# created or updated by stable name/pattern; leave empty to skip. Example:
+# omniroute_combos:
+#   - name: coding-fallback
+#     strategy: priority
+#     models:
+#       - glm/glm-4.7
+#       - openrouter/openai/gpt-5-mini
+# omniroute_model_combo_mappings:
+#   - pattern: "^glm-4.7$"
+#     comboName: coding-fallback
+#     priority: 10
+# omniroute_api_keys:
+#   - name: claude-code
+#     modelAccessMode: all
+omniroute_combos: []
+omniroute_model_combo_mappings: []
+omniroute_api_keys: []

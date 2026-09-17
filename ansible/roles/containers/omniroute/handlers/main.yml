@@ -1,0 +1,13 @@
+---
+- name: Reload OmniRoute systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Restart OmniRoute containers
+  ansible.builtin.systemd_service:
+    name: "{{ omniroute_service_name }}"
+    state: restarted
+    daemon_reload: true
+  when:
+    - omniroute_enabled | bool
+    - not ansible_check_mode
