@@ -22,3 +22,6 @@ proxmox_power_powertop_auto_tune: true
 proxmox_power_tuning_cron_entries_to_remove:
   - "@reboot /usr/bin/cpupower frequency-set -g powersave"
   - "@reboot /usr/sbin/powertop --auto-tune"
+
+proxmox_smartd_device_overrides:
+  - "/dev/nvme1 -d nvme -H 0xfb -f -t -l error -n standby -m root -M exec /usr/share/smartmontools/smartd-runner"
