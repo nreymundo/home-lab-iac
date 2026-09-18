@@ -12,7 +12,7 @@ management REST API documented in docs/reference/API_REFERENCE.md
 - model import via POST /api/providers/<id>/sync-models?mode=import
 - combos via POST /api/combos
 - model-combo mappings via POST /api/model-combo-mappings
-- custom model aliases via POST /api/settings/model-aliases
+- custom model aliases via POST/DELETE /api/settings/model-aliases
 - named API keys via POST /api/keys
 - password-to-admin-key bootstrap migration before password login is disabled
 
@@ -131,8 +131,8 @@ class OmniRouteClient:
             raise BootstrapError("PUT %s failed with HTTP %d" % (path, response.status))
         return response.json()
 
-    def delete(self, path):
-        response = self.request("DELETE", path)
+    def delete(self, path, body=None):
+        response = self.request("DELETE", path, body)
         if response.status != 200:
             raise BootstrapError("DELETE %s failed with HTTP %d" % (path, response.status))
         return response.json()
@@ -385,6 +385,20 @@ def ensure_model_aliases(client, aliases, actions):
     return changed
 
 
+def remove_model_aliases(client, aliases, actions):
+    """Remove explicitly retired custom aliases without pruning other entries."""
+    current = (client.get("/api/settings/model-aliases") or {}).get("custom") or {}
+    changed = False
+    for alias in aliases or []:
+        if alias not in current:
+            actions.append("model alias '%s': already absent" % alias)
+            continue
+        client.delete("/api/settings/model-aliases", {"from": alias})
+        actions.append("model alias '%s': removed" % alias)
+        changed = True
+    return changed
+
+
 def ensure_api_key(client, spec, actions, created_keys):
     name = spec["name"]
     keys = (client.get("/api/keys") or {}).get("keys") or []
@@ -525,6 +539,9 @@ def main():
 
     changed = ensure_model_aliases(
         client, config.get("modelAliases") or {}, actions
+    ) or changed
+    changed = remove_model_aliases(
+        client, config.get("modelAliasesToRemove") or [], actions
     ) or changed
 
     for spec in config.get("apiKeys") or []:
