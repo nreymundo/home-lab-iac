@@ -12,12 +12,14 @@ management REST API documented in docs/reference/API_REFERENCE.md
 - model import via POST /api/providers/<id>/sync-models?mode=import
 - combos via POST /api/combos
 - model-combo mappings via POST /api/model-combo-mappings
+- custom model aliases via POST /api/settings/model-aliases
 - named API keys via POST /api/keys
 - password-to-admin-key bootstrap migration before password login is disabled
 
 Every step converges by a stable identity (settings field, provider id + name,
-node name, combo name, mapping pattern, key name), updating managed fields when
-they drift. Re-running the script is a no-op once desired state is present.
+node name, combo name, mapping pattern, alias name, key name), updating managed
+fields when they drift. Re-running the script is a no-op once desired state is
+present.
 Optional credentials that are not configured are skipped, never invented.
 
 The script prints exactly one JSON object on stdout:
@@ -361,6 +363,28 @@ def ensure_mapping(client, spec, combo_ids, actions):
     return True
 
 
+def ensure_model_aliases(client, aliases, actions):
+    """Converge managed custom model aliases without touching others.
+
+    GET /api/settings/model-aliases returns the UI-visible alias map split
+    into builtIn, custom, and all; Ansible manages only the custom entries.
+    A managed alias is POSTed ({from, to}) only when it is absent from
+    custom or its stored target drifted, so custom aliases created outside
+    Ansible are preserved and never pruned or bulk-replaced.
+    """
+    current = (client.get("/api/settings/model-aliases") or {}).get("custom") or {}
+    changed = False
+    for alias, desired in (aliases or {}).items():
+        if current.get(alias) == desired:
+            actions.append("model alias '%s': already converged" % alias)
+            continue
+        client.post("/api/settings/model-aliases", {"from": alias, "to": desired})
+        state = "updated" if alias in current else "created"
+        actions.append("model alias '%s': %s -> %s" % (alias, state, desired))
+        changed = True
+    return changed
+
+
 def ensure_api_key(client, spec, actions, created_keys):
     name = spec["name"]
     keys = (client.get("/api/keys") or {}).get("keys") or []
@@ -498,6 +522,10 @@ def main():
 
     for spec in config.get("modelComboMappings") or []:
         changed = ensure_mapping(client, spec, combo_ids, actions) or changed
+
+    changed = ensure_model_aliases(
+        client, config.get("modelAliases") or {}, actions
+    ) or changed
 
     for spec in config.get("apiKeys") or []:
         created_count = len(created_keys)
