@@ -125,20 +125,3 @@ omniroute_model_aliases:
   local-document-best: llamaswap/qwen3.8-27b-analysis
   local-coder: llamaswap/qwen3.8-27b-coding
   local-tts: llamaswap/chatterbox
-
-# Retire the slash-qualified aliases that OmniRoute parsed as provider/model
-# before applying custom alias rewrites.
-omniroute_model_aliases_to_remove:
-  - local/rerank
-  - remote/rerank
-  - local/stt-fast
-  - local/embedding
-  - local/stt-large
-  - local/automation-lite
-  - local/camera-analysis
-  - local/chat
-  - local/analysis
-  - local/document-analysis
-  - local/document-best
-  - local/coder
-  - local/tts
