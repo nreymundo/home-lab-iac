@@ -153,6 +153,15 @@
     - storage
     - zfs
 
+- name: Configure host-specific smartd devices
+  ansible.builtin.include_tasks:
+    file: smartd.yml
+    apply:
+      tags:
+        - smartd
+  tags:
+    - smartd
+
 - name: Configure Proxmox email notifications
   ansible.builtin.include_tasks:
     file: notifications.yml

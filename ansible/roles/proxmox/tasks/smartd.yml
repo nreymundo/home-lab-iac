@@ -1,0 +1,20 @@
+---
+- name: Manage host-specific smartd device overrides
+  ansible.builtin.blockinfile:
+    path: /etc/smartd.conf
+    insertbefore: '^DEVICESCAN'
+    marker: '# {mark} ANSIBLE MANAGED SMARTD DEVICE OVERRIDES'
+    block: "{{ proxmox_smartd_device_overrides | join('\n') }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: proxmox_smartd_device_overrides | length > 0
+  notify: Restart smartmontools
+
+- name: Remove host-specific smartd device overrides when empty
+  ansible.builtin.blockinfile:
+    path: /etc/smartd.conf
+    marker: '# {mark} ANSIBLE MANAGED SMARTD DEVICE OVERRIDES'
+    state: absent
+  when: proxmox_smartd_device_overrides | length == 0
+  notify: Restart smartmontools
