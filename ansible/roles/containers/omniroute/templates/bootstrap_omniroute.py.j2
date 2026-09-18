@@ -12,7 +12,7 @@ management REST API documented in docs/reference/API_REFERENCE.md
 - model import via POST /api/providers/<id>/sync-models?mode=import
 - combos via POST /api/combos
 - model-combo mappings via POST /api/model-combo-mappings
-- model aliases via PUT /api/models/alias
+- custom model aliases via POST /api/settings/model-aliases
 - named API keys via POST /api/keys
 - password-to-admin-key bootstrap migration before password login is disabled
 
@@ -364,20 +364,21 @@ def ensure_mapping(client, spec, combo_ids, actions):
 
 
 def ensure_model_aliases(client, aliases, actions):
-    """Converge managed model aliases without touching unmanaged ones.
+    """Converge managed custom model aliases without touching others.
 
-    GET /api/models/alias returns the stored alias map (alias -> target
-    string), so a managed alias is rewritten through PUT /api/models/alias
-    only when its stored target differs from the desired provider-qualified
-    model id. Aliases created outside Ansible are never pruned.
+    GET /api/settings/model-aliases returns the UI-visible alias map split
+    into builtIn, custom, and all; Ansible manages only the custom entries.
+    A managed alias is POSTed ({from, to}) only when it is absent from
+    custom or its stored target drifted, so custom aliases created outside
+    Ansible are preserved and never pruned or bulk-replaced.
     """
-    current = (client.get("/api/models/alias") or {}).get("aliases") or {}
+    current = (client.get("/api/settings/model-aliases") or {}).get("custom") or {}
     changed = False
     for alias, desired in (aliases or {}).items():
         if current.get(alias) == desired:
             actions.append("model alias '%s': already converged" % alias)
             continue
-        client.put("/api/models/alias", {"alias": alias, "model": desired})
+        client.post("/api/settings/model-aliases", {"from": alias, "to": desired})
         state = "updated" if alias in current else "created"
         actions.append("model alias '%s': %s -> %s" % (alias, state, desired))
         changed = True

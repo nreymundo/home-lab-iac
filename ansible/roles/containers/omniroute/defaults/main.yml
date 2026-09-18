@@ -108,9 +108,9 @@ omniroute_api_keys_to_remove: []
 # Managed model aliases mirroring LiteLLM's public local/* and remote/* names
 # (kubernetes/apps/apps/ai/litellm/configmap.yaml) onto OmniRoute
 # provider-qualified model ids: llamaswap/* targets the llama-swap provider
-# node and openrouter/* the OpenRouter connection. Each entry converges by
-# alias name through the management API; aliases created outside Ansible are
-# never pruned.
+# node and openrouter/* the OpenRouter connection. Each entry converges as a
+# UI-visible custom alias (Settings -> Model Aliases) through the management
+# API; custom aliases created outside Ansible are never pruned.
 omniroute_model_aliases:
   local/rerank: llamaswap/qwen3-reranker-0.6b
   remote/rerank: openrouter/voyageai/rerank-2.5-lite
