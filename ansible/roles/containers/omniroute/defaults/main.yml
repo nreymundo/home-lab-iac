@@ -106,22 +106,22 @@ omniroute_api_keys: []
 omniroute_api_keys_to_remove: []
 
 # Managed model aliases mirroring LiteLLM's public local/* and remote/* names
-# (kubernetes/apps/apps/ai/litellm/configmap.yaml) onto OmniRoute
-# provider-qualified model ids: llamaswap/* targets the llama-swap provider
+# with OmniRoute-compatible local-* and remote-* names. Provider-qualified
+# targets use llamaswap/* for the llama-swap provider
 # node and openrouter/* the OpenRouter connection. Each entry converges as a
 # UI-visible custom alias (Settings -> Model Aliases) through the management
 # API; custom aliases created outside Ansible are never pruned.
 omniroute_model_aliases:
-  local/rerank: llamaswap/qwen3-reranker-0.6b
-  remote/rerank: openrouter/voyageai/rerank-2.5-lite
-  local/stt-fast: llamaswap/whisper/large-v3-turbo-q5_0
-  local/embedding: llamaswap/qwen3-embedding-4b
-  local/stt-large: llamaswap/whisper/large-v3-q5_0
-  local/automation-lite: llamaswap/unsloth/gemma-4-e4b-it-qat
-  local/camera-analysis: llamaswap/unsloth/gemma-4-12b-it-qat-camera
-  local/chat: llamaswap/qwen3.8-27b
-  local/analysis: llamaswap/qwen3.8-27b-analysis
-  local/document-analysis: llamaswap/qwen3.8-27b-documents
-  local/document-best: llamaswap/qwen3.8-27b-analysis
-  local/coder: llamaswap/qwen3.8-27b-coding
-  local/tts: llamaswap/chatterbox
+  local-rerank: llamaswap/qwen3-reranker-0.6b
+  remote-rerank: openrouter/voyageai/rerank-2.5-lite
+  local-stt-fast: llamaswap/whisper/large-v3-turbo-q5_0
+  local-embedding: llamaswap/qwen3-embedding-4b
+  local-stt-large: llamaswap/whisper/large-v3-q5_0
+  local-automation-lite: llamaswap/unsloth/gemma-4-e4b-it-qat
+  local-camera-analysis: llamaswap/unsloth/gemma-4-12b-it-qat-camera
+  local-chat: llamaswap/qwen3.8-27b
+  local-analysis: llamaswap/qwen3.8-27b-analysis
+  local-document-analysis: llamaswap/qwen3.8-27b-documents
+  local-document-best: llamaswap/qwen3.8-27b-analysis
+  local-coder: llamaswap/qwen3.8-27b-coding
+  local-tts: llamaswap/chatterbox
