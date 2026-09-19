@@ -17,7 +17,6 @@ resources:
   - ../apps/utils/airtrail
   - ../apps/utils/karakeep
   - ../apps/utils/mailflow
-  - ../apps/utils/opengym
   - ../apps/nextcloud
   - ../apps/media/audiobookshelf
   - ../apps/media/jellyfin
