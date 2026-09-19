@@ -170,6 +170,17 @@
       "automerge": false
     },
     {
+      "description": "Keep Dawarich on stable releases with manual review for migrations and breaking changes",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["freikin/dawarich"],
+      "matchPackageNames": ["freikin/dawarich", "docker.io/freikin/dawarich"],
+      "matchPaths": ["kubernetes/apps/apps/utils/dawarich/helmrelease.yaml"],
+      "versioning": "semver",
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/",
+      "automerge": false,
+      "platformAutomerge": false
+    },
+    {
       "description": "Pause n8n image updates",
       "matchDatasources": ["docker"],
       "matchDepNames": ["n8nio/n8n"],
