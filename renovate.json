@@ -22,6 +22,16 @@
 
   "packageRules": [
     {
+      "description": "Track Apollo backend through its upstream main branch instead of mutable Docker tags",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "apollo-reborn/apollo-backend",
+        "ghcr.io/apollo-reborn/apollo-backend"
+      ],
+      "matchFileNames": ["kubernetes/apps/apps/reddit/apollo-backend/helmrelease.yaml"],
+      "enabled": false
+    },
+    {
       "description": "Pin images used by Checkov-scanned Kubernetes jobs",
       "matchDatasources": ["docker"],
       "matchPaths": [
@@ -232,6 +242,18 @@
       "matchStrings": [
         "(?:^|\\r?\\n)\\s*#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s+registryUrl=(?<registryUrl>\\S+)\\s*\\r?\\n\\s*(?:version|value):\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
       ]
+    },
+    {
+      "description": "Track Apollo backend commit images from upstream main",
+      "customType": "regex",
+      "managerFilePatterns": ["/^kubernetes/apps/apps/reddit/apollo-backend/helmrelease\\.ya?ml$/"],
+      "matchStrings": [
+        "(?:^|\\r?\\n)\\s*#\\s*renovate-apollo-backend:\\s*branch=main\\s*\\r?\\n\\s*repository:\\s*ghcr\\.io/apollo-reborn/apollo-backend\\s*\\r?\\n\\s*tag:\\s*sha-(?<currentDigest>[a-f0-9]{40})"
+      ],
+      "currentValueTemplate": "main",
+      "depNameTemplate": "Apollo-Reborn/apollo-backend",
+      "packageNameTemplate": "https://github.com/Apollo-Reborn/apollo-backend",
+      "datasourceTemplate": "git-refs"
     }
   ]
 }

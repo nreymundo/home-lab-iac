@@ -16,10 +16,9 @@ spec:
         containers:
           api:
             image:
-              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: latest
-              pullPolicy: Always
+              tag: sha-392be173fd6d645891e03cc029ac06d746f0913d
             args:
               - api
             envFrom:
@@ -77,10 +76,9 @@ spec:
         containers:
           scheduler:
             image:
-              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: latest
-              pullPolicy: Always
+              tag: sha-392be173fd6d645891e03cc029ac06d746f0913d
             args:
               - scheduler
             envFrom:
@@ -103,10 +101,9 @@ spec:
         containers:
           worker:
             image:
-              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: latest
-              pullPolicy: Always
+              tag: sha-392be173fd6d645891e03cc029ac06d746f0913d
             args:
               - worker
               - --queue
@@ -133,10 +130,9 @@ spec:
         containers:
           worker:
             image:
-              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: latest
-              pullPolicy: Always
+              tag: sha-392be173fd6d645891e03cc029ac06d746f0913d
             args:
               - worker
               - --queue
@@ -163,10 +159,9 @@ spec:
         containers:
           worker:
             image:
-              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: latest
-              pullPolicy: Always
+              tag: sha-392be173fd6d645891e03cc029ac06d746f0913d
             args:
               - worker
               - --queue
@@ -193,10 +188,9 @@ spec:
         containers:
           worker:
             image:
-              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: latest
-              pullPolicy: Always
+              tag: sha-392be173fd6d645891e03cc029ac06d746f0913d
             args:
               - worker
               - --queue
@@ -223,10 +217,9 @@ spec:
         containers:
           worker:
             image:
-              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: latest
-              pullPolicy: Always
+              tag: sha-392be173fd6d645891e03cc029ac06d746f0913d
             args:
               - worker
               - --queue
