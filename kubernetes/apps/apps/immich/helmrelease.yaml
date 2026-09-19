@@ -203,7 +203,6 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: photos.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: photos.${CLUSTER_DOMAIN}
         hosts:
           - host: photos.${CLUSTER_DOMAIN}

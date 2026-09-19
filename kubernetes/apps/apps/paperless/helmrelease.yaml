@@ -173,7 +173,6 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: docs.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: docs.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: docs.lan.${CLUSTER_DOMAIN}

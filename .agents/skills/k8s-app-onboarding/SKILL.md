@@ -77,10 +77,7 @@ kubernetes/apps/apps/<category>/<app>/
   directly above `repository:` (required by `renovate.json` custom regex
   managers; without it the tag will not be tracked).
 - `ingress.main.annotations`:
-  - `external-dns.alpha.kubernetes.io/hostname: <app>.lan.${CLUSTER_DOMAIN}`
   - `external-dns.kubernetes.io/hostname: <app>.lan.${CLUSTER_DOMAIN}`
-    (both prefixes during the ExternalDNS annotation-prefix migration; the
-    controller still runs with the legacy prefix until phase 2 switches it)
 - Homepage cards are maintained centrally in
   `kubernetes/apps/apps/utils/homepage/helmrelease.yaml` under
   `config.services`; do not add mandatory `gethomepage.dev/*` discovery

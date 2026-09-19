@@ -30,7 +30,6 @@ metadata:
   namespace: external-proxy
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    external-dns.alpha.kubernetes.io/hostname: hermes.lan.${CLUSTER_DOMAIN}
     external-dns.kubernetes.io/hostname: hermes.lan.${CLUSTER_DOMAIN}
 spec:
   ingressClassName: traefik

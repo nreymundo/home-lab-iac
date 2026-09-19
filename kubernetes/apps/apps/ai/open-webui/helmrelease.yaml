@@ -227,7 +227,6 @@ spec:
       main:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-open-webui-headers@kubernetescrd
-          external-dns.alpha.kubernetes.io/hostname: chat.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: chat.${CLUSTER_DOMAIN}
         hosts:
           - host: chat.${CLUSTER_DOMAIN}

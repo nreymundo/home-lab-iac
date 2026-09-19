@@ -62,7 +62,6 @@ spec:
       main:
         enabled: true
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: start.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: start.lan.${CLUSTER_DOMAIN}
         ingressClassName: traefik
         hosts:
