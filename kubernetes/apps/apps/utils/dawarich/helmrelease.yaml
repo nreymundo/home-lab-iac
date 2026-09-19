@@ -380,6 +380,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: dawarich.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: dawarich.${CLUSTER_DOMAIN}
         hosts:
           - host: dawarich.${CLUSTER_DOMAIN}
             paths:

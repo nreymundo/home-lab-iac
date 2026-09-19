@@ -32,6 +32,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     external-dns.alpha.kubernetes.io/hostname: z2m.lan.${CLUSTER_DOMAIN}
+    external-dns.kubernetes.io/hostname: z2m.lan.${CLUSTER_DOMAIN}
 spec:
   ingressClassName: traefik
   rules:

@@ -48,6 +48,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: lidatube.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: lidatube.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: lidatube.lan.${CLUSTER_DOMAIN}
             paths:

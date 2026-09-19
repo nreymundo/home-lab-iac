@@ -40,6 +40,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: lidarr.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: lidarr.lan.${CLUSTER_DOMAIN}
           # gethomepage.dev/widget.type: "lidarr"
           # gethomepage.dev/widget.url: "http://lidarr.media.svc.cluster.local:8686"
           # gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_LIDARR_KEY}}"}}'

@@ -9,6 +9,7 @@ metadata:
     traefik.ingress.kubernetes.io/service.serversscheme: https
     traefik.ingress.kubernetes.io/service.serverstransport: traefik-lan-https-insecure@kubernetescrd
     external-dns.alpha.kubernetes.io/hostname: crowdsec.lan.${CLUSTER_DOMAIN}
+    external-dns.kubernetes.io/hostname: crowdsec.lan.${CLUSTER_DOMAIN}
 spec:
   ingressClassName: traefik
   rules:

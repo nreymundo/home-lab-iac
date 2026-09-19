@@ -186,6 +186,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: opengym.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: opengym.lan.${CLUSTER_DOMAIN}
           # Default chain (rate-limit + headers + CrowdSec) instead of
           # auth-guard: openGym owns authentication via passkeys and the
           # Gatekeeper forward-auth chain would add a second login boundary
