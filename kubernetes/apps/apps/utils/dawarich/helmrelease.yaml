@@ -23,8 +23,9 @@ spec:
         containers:
           main:
             image:
+              # renovate: datasource=docker depName=freikin/dawarich registryUrl=https://docker.io
               repository: docker.io/freikin/dawarich
-              tag: 1.9.1
+              tag: 1.14.5
             command:
               - web-entrypoint.sh
             args:
@@ -178,8 +179,9 @@ spec:
         containers:
           sidekiq:
             image:
+              # renovate: datasource=docker depName=freikin/dawarich registryUrl=https://docker.io
               repository: docker.io/freikin/dawarich
-              tag: 1.9.1
+              tag: 1.14.5
             command:
               - sidekiq-entrypoint.sh
             args:
