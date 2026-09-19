@@ -40,7 +40,6 @@ spec:
       main:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
-          external-dns.alpha.kubernetes.io/hostname: tavern.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: tavern.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: tavern.lan.${CLUSTER_DOMAIN}

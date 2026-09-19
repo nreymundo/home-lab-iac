@@ -257,7 +257,6 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: mail.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: mail.${CLUSTER_DOMAIN}
         hosts:
           - host: mail.${CLUSTER_DOMAIN}

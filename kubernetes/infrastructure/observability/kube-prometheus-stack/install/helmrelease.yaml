@@ -137,7 +137,6 @@ spec:
         annotations:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
-          external-dns.alpha.kubernetes.io/hostname: prometheus.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: prometheus.lan.${CLUSTER_DOMAIN}
         hosts:
           - prometheus.lan.${CLUSTER_DOMAIN}

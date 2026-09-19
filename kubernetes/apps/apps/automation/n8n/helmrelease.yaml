@@ -217,7 +217,6 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: n8n.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: n8n.${CLUSTER_DOMAIN}
         hosts:
           - host: n8n.${CLUSTER_DOMAIN}

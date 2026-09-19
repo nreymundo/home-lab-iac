@@ -165,7 +165,6 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: git.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: git.${CLUSTER_DOMAIN}
           # gethomepage.dev/widget.type: "gitea"
           # gethomepage.dev/widget.url: "http://gitea.development.svc.cluster.local:3000"

@@ -4,9 +4,7 @@ metadata:
   name: opentelemetry-collector-http
   namespace: observability
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: otel.lan.${CLUSTER_DOMAIN}
     external-dns.kubernetes.io/hostname: otel.lan.${CLUSTER_DOMAIN}
-    external-dns.alpha.kubernetes.io/target: ${TRAEFIK_LB_IP}
     external-dns.kubernetes.io/target: ${TRAEFIK_LB_IP}
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.middlewares: observability-opentelemetry-allowlist@kubernetescrd

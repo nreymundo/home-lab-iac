@@ -36,7 +36,6 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: tools.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: tools.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: tools.lan.${CLUSTER_DOMAIN}

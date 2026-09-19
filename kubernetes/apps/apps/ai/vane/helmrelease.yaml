@@ -54,7 +54,6 @@ spec:
                   port: http
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: vane.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: vane.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: vane.lan.${CLUSTER_DOMAIN}

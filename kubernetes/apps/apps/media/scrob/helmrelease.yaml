@@ -114,7 +114,6 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: scrob.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: scrob.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: scrob.lan.${CLUSTER_DOMAIN}

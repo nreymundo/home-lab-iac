@@ -72,7 +72,6 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: comics.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: comics.lan.${CLUSTER_DOMAIN}
           # gethomepage.dev/widget.type: "komga"
           # gethomepage.dev/widget.url: "http://komga.media.svc.cluster.local:25600"

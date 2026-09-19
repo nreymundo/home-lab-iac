@@ -77,7 +77,6 @@ spec:
       main:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
-          external-dns.alpha.kubernetes.io/hostname: sabnzbd.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: sabnzbd.lan.${CLUSTER_DOMAIN}
           # gethomepage.dev/widget.type: "sabnzbd"
           # gethomepage.dev/widget.url: "http://sabnzbd.media.svc.cluster.local:8080"

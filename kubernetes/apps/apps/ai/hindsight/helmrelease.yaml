@@ -288,7 +288,6 @@ spec:
         enabled: true
         className: traefik
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: hindsight-api.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: hindsight-api.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: hindsight-api.lan.${CLUSTER_DOMAIN}
@@ -299,7 +298,6 @@ spec:
                   port: api
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: hindsight.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: hindsight.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: hindsight.lan.${CLUSTER_DOMAIN}

@@ -130,7 +130,6 @@ spec:
     ingress:
       collabora:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: office.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: office.${CLUSTER_DOMAIN}
           traefik.ingress.kubernetes.io/router.middlewares: traefik-nextcloud-office-chain@kubernetescrd
         hosts:
@@ -142,7 +141,6 @@ spec:
                   port: http
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: cloud.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: cloud.${CLUSTER_DOMAIN}
           traefik.ingress.kubernetes.io/router.middlewares: traefik-nextcloud-office-chain@kubernetescrd
         hosts:

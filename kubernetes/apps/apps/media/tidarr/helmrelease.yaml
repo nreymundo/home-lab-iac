@@ -49,7 +49,6 @@ spec:
     ingress:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: tidarr.lan.${CLUSTER_DOMAIN}
           external-dns.kubernetes.io/hostname: tidarr.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: tidarr.lan.${CLUSTER_DOMAIN}
