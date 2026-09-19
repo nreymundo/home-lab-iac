@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+  - ../../../../components/bjw-s-defaults
+  - ../../../../components/ingress/traefik-base
+resources:
+  - apollo-backend-db-secrets.sops.yaml
+  - apollo-backend-secrets.sops.yaml
+  - cnpg-cluster.yaml
+  - cnpg-pooler.yaml
+  - configmap.yaml
+  - database-schema-configmap.yaml
+  - helmrelease.yaml
