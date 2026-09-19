@@ -8,5 +8,6 @@ resources:
   - ../pvcs/immich
   - ../pvcs/media
   - ../pvcs/paperless
+  - ../pvcs/reddit
   - ../pvcs/security
   - ../pvcs/utils

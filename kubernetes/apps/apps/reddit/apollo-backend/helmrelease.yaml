@@ -1,0 +1,458 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: apollo-backend
+  namespace: reddit
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      api:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          api:
+            image:
+              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              repository: ghcr.io/apollo-reborn/apollo-backend
+              tag: latest
+              pullPolicy: Always
+            args:
+              - api
+            envFrom:
+              - configMapRef:
+                  name: apollo-backend-config
+              - secretRef:
+                  name: apollo-backend-secrets
+              - secretRef:
+                  name: apollo-backend-db-secrets
+            ports:
+              - name: http
+                containerPort: 4000
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/health
+                    port: 4000
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/health
+                    port: 4000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/health
+                    port: 4000
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+      scheduler:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          scheduler:
+            image:
+              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              repository: ghcr.io/apollo-reborn/apollo-backend
+              tag: latest
+              pullPolicy: Always
+            args:
+              - scheduler
+            envFrom:
+              - configMapRef:
+                  name: apollo-backend-config
+              - secretRef:
+                  name: apollo-backend-secrets
+              - secretRef:
+                  name: apollo-backend-db-secrets
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+      worker-notifications:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          worker:
+            image:
+              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              repository: ghcr.io/apollo-reborn/apollo-backend
+              tag: latest
+              pullPolicy: Always
+            args:
+              - worker
+              - --queue
+              - notifications
+              - --consumers
+              - "64"
+            envFrom:
+              - configMapRef:
+                  name: apollo-backend-config
+              - secretRef:
+                  name: apollo-backend-secrets
+              - secretRef:
+                  name: apollo-backend-db-secrets
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+      worker-stuck-notifications:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          worker:
+            image:
+              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              repository: ghcr.io/apollo-reborn/apollo-backend
+              tag: latest
+              pullPolicy: Always
+            args:
+              - worker
+              - --queue
+              - stuck-notifications
+              - --consumers
+              - "16"
+            envFrom:
+              - configMapRef:
+                  name: apollo-backend-config
+              - secretRef:
+                  name: apollo-backend-secrets
+              - secretRef:
+                  name: apollo-backend-db-secrets
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+      worker-subreddits:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          worker:
+            image:
+              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              repository: ghcr.io/apollo-reborn/apollo-backend
+              tag: latest
+              pullPolicy: Always
+            args:
+              - worker
+              - --queue
+              - subreddits
+              - --consumers
+              - "32"
+            envFrom:
+              - configMapRef:
+                  name: apollo-backend-config
+              - secretRef:
+                  name: apollo-backend-secrets
+              - secretRef:
+                  name: apollo-backend-db-secrets
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+      worker-trending:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          worker:
+            image:
+              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              repository: ghcr.io/apollo-reborn/apollo-backend
+              tag: latest
+              pullPolicy: Always
+            args:
+              - worker
+              - --queue
+              - trending
+              - --consumers
+              - "16"
+            envFrom:
+              - configMapRef:
+                  name: apollo-backend-config
+              - secretRef:
+                  name: apollo-backend-secrets
+              - secretRef:
+                  name: apollo-backend-db-secrets
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+      worker-users:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          worker:
+            image:
+              # renovate: datasource=docker depName=apollo-reborn/apollo-backend registryUrl=https://ghcr.io
+              repository: ghcr.io/apollo-reborn/apollo-backend
+              tag: latest
+              pullPolicy: Always
+            args:
+              - worker
+              - --queue
+              - users
+              - --consumers
+              - "16"
+            envFrom:
+              - configMapRef:
+                  name: apollo-backend-config
+              - secretRef:
+                  name: apollo-backend-secrets
+              - secretRef:
+                  name: apollo-backend-db-secrets
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+      valkey-queue:
+        containers:
+          valkey:
+            image:
+              # renovate: datasource=docker depName=valkey/valkey registryUrl=https://docker.io
+              repository: docker.io/valkey/valkey
+              tag: 9-alpine
+            command:
+              - valkey-server
+              - --maxmemory-policy
+              - noeviction
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - redis-cli
+                      - ping
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - redis-cli
+                      - ping
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+      valkey-locks:
+        containers:
+          valkey:
+            image:
+              # renovate: datasource=docker depName=valkey/valkey registryUrl=https://docker.io
+              repository: docker.io/valkey/valkey
+              tag: 9-alpine
+            command:
+              - valkey-server
+              - --maxmemory-policy
+              - noeviction
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - redis-cli
+                      - ping
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - redis-cli
+                      - ping
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+      bark:
+        strategy: Recreate
+        containers:
+          bark:
+            image:
+              # renovate: datasource=docker depName=finab/bark-server registryUrl=https://docker.io
+              repository: docker.io/finab/bark-server
+              tag: v2.3.5
+            ports:
+              - name: http
+                containerPort: 8080
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+    service:
+      main:
+        controller: api
+        ports:
+          http:
+            port: 4000
+      valkey-queue:
+        controller: valkey-queue
+        ports:
+          redis:
+            port: 6379
+      valkey-locks:
+        controller: valkey-locks
+        ports:
+          redis:
+            port: 6379
+      bark:
+        controller: bark
+        ports:
+          http:
+            port: 8080
+
+    ingress:
+      main:
+        annotations:
+          external-dns.kubernetes.io/hostname: apollo.${CLUSTER_DOMAIN}
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+        hosts:
+          - host: apollo.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+      bark:
+        enabled: true
+        className: traefik
+        annotations:
+          external-dns.kubernetes.io/hostname: bark.${CLUSTER_DOMAIN}
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+        hosts:
+          - host: bark.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: bark
+                  port: http
+
+    persistence:
+      valkey-queue-data:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          valkey-queue:
+            valkey:
+              - path: /data
+      valkey-locks-data:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          valkey-locks:
+            valkey:
+              - path: /data
+      bark-data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: apollo-bark
+        advancedMounts:
+          bark:
+            bark:
+              - path: /data

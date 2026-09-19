@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/v1/configmap.json
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apollo-backend-config
+  namespace: reddit
+data:
+  ENV: production
+  PORT: "4000"
+  REDIS_URL: redis://apollo-backend-valkey-queue:6379/0
+  REDIS_QUEUE_URL: redis://apollo-backend-valkey-queue:6379/0
+  REDIS_LOCKS_URL: redis://apollo-backend-valkey-locks:6379/0
+  OTEL_TRACES_EXPORTER: none
+  OTEL_METRICS_EXPORTER: none
