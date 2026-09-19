@@ -50,6 +50,7 @@ spec:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: garage.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: garage.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: garage.lan.${CLUSTER_DOMAIN}
             paths:

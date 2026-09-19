@@ -167,6 +167,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: litellm.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: litellm.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: litellm.lan.${CLUSTER_DOMAIN}
             paths:

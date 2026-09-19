@@ -45,6 +45,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: bazarr.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: bazarr.lan.${CLUSTER_DOMAIN}
           # gethomepage.dev/widget.type: "bazarr"
           # gethomepage.dev/widget.url: "http://bazarr.media.svc.cluster.local:6767"
           # gethomepage.dev/widget.key: '{{"{{HOMEPAGE_VAR_BAZARR_KEY}}"}}'

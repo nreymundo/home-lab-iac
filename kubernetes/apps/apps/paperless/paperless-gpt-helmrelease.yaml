@@ -88,6 +88,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: paperless-gpt.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: paperless-gpt.lan.${CLUSTER_DOMAIN}
           traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
         hosts:
           - host: paperless-gpt.lan.${CLUSTER_DOMAIN}

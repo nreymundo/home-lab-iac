@@ -7,6 +7,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     external-dns.alpha.kubernetes.io/controller: ignore
+    external-dns.kubernetes.io/controller: ignore
 spec:
   ingressClassName: traefik
   rules:

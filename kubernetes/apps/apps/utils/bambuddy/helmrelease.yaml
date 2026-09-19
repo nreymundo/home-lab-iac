@@ -74,6 +74,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: bambuddy.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: bambuddy.lan.${CLUSTER_DOMAIN}
         hosts:
           - host: bambuddy.lan.${CLUSTER_DOMAIN}
             paths:

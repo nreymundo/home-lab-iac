@@ -76,6 +76,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: search.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: search.lan.${CLUSTER_DOMAIN}
           traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
         hosts:
           - host: search.lan.${CLUSTER_DOMAIN}

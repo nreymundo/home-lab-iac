@@ -195,6 +195,7 @@ spec:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-discord-auth-chain@kubernetescrd
           external-dns.alpha.kubernetes.io/hostname: discord2.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: discord2.lan.${CLUSTER_DOMAIN}
         className: traefik
         hosts:
           - host: discord2.lan.${CLUSTER_DOMAIN}

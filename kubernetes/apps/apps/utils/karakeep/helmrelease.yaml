@@ -326,6 +326,7 @@ spec:
       main:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: keep.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: keep.${CLUSTER_DOMAIN}
         hosts:
           - host: keep.${CLUSTER_DOMAIN}
             paths:
