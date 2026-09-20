@@ -1639,9 +1639,9 @@ data:
           users:
             - !Find [authentik_core.user, [username, !Env AK_BLUEPRINT_USERNAME]]
 
-      # Custom groups scope: returns the user's Authentik group names in the
-      # id_token. Sure maps groups to roles on every SSO login through its
-      # DB provider settings (/admin/sso_providers): Sure Admins maps to
+      # Custom groups scope: returns only Sure's authorization groups through
+      # UserInfo. Sure maps them to roles on every SSO login through its DB
+      # provider settings (/admin/sso_providers): Sure Admins maps to
       # super_admin and Sure Users to member.
       - model: authentik_providers_oauth2.scopemapping
         id: sure-groups-scope
@@ -1651,7 +1651,8 @@ data:
           scope_name: groups
           description: "Sure groups claim based on Authentik group membership"
           expression: |
-            return {"groups": [g.name for g in request.user.ak_groups.all()]}
+            sure_groups = {"Sure Users", "Sure Admins"}
+            return {"groups": [g.name for g in request.user.ak_groups.all() if g.name in sure_groups]}
 
       # OAuth2/OIDC Provider for Sure
       - model: authentik_providers_oauth2.oauth2provider
@@ -1672,9 +1673,11 @@ data:
           # omniauth_openid_connect's default token-endpoint auth method; Sure
           # does not override it in the provider options builder.
           client_authentication_method: client_secret_basic
-          # Sure reads the groups claim from the ID token/userinfo during the
-          # callback.
-          include_claims_in_id_token: true
+          # Sure reads groups from UserInfo but stores the ID token in its
+          # cookie session for logout. Keep custom claims out of the ID token
+          # to prevent users with many Authentik groups from overflowing the
+          # Rails session cookie after a successful callback.
+          include_claims_in_id_token: false
           redirect_uris:
             - url: "https://finances.${CLUSTER_DOMAIN}/auth/openid_connect/callback"
               matching_mode: strict

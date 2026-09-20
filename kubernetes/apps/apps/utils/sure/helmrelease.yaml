@@ -22,7 +22,7 @@
 #                         sure-sso-secret (kube-replicator delivers the copy
 #                         to this namespace; the same values back the blueprint
 #                         provider via SURE_CLIENT_ID/SURE_CLIENT_SECRET)
-#        scopes           openid email profile groups
+#        scopes           openid email groups
 #        default role     member
 #        role mapping     Super Admin Groups: Sure Admins
 #                         Member Groups:      Sure Users
