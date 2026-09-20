@@ -421,6 +421,12 @@ spec:
                 icon: sonarr.png
                 description: "TV automation"
                 href: https://sonarr.lan.${CLUSTER_DOMAIN}
+            - Sure:
+                # No sure icon in homarr-labs/dashboard-icons (full tree.json
+                # searched); use the upstream project logo.
+                icon: https://raw.githubusercontent.com/we-promise/sure/main/app/assets/images/logomark-color.svg
+                description: "Personal finance management"
+                href: https://finances.${CLUSTER_DOMAIN}
             - Tautulli:
                 icon: tautulli.png
                 description: "Plex monitoring"

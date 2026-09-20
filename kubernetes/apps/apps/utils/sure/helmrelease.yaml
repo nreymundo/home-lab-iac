@@ -1,0 +1,361 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+# Sure — self-hosted personal finance (Rails + Sidekiq + Valkey + CNPG).
+#
+# POST-DEPLOY OPERATOR STEPS — Sure stores SSO provider configuration in its
+# own database (AUTH_PROVIDERS_SOURCE=db; managed at /admin/sso_providers),
+# so the Authentik client cannot be wired purely through env. Bootstrap:
+#
+#   1. Register the first local account at https://finances.${CLUSTER_DOMAIN};
+#      on a fresh instance the first account is automatically promoted to
+#      super_admin (app/models/user.rb role_for_new_family_creator).
+#   2. As super admin, open /admin/sso_providers and add a provider with
+#      exactly:
+#        strategy         OpenID Connect
+#        name             openid_connect
+#        label            Sign in with Authentik
+#        issuer           https://sso.${CLUSTER_DOMAIN}/application/o/sure/
+#        generated callback
+#                         https://finances.${CLUSTER_DOMAIN}/auth/openid_connect/callback
+#                         (Name determines /auth/<name>/callback; verify the UI
+#                         displays this byte-identical strict Authentik URI)
+#        client id/secret from the Authentik-owned SOPS source Secret
+#                         sure-sso-secret (kube-replicator delivers the copy
+#                         to this namespace; the same values back the blueprint
+#                         provider via SURE_CLIENT_ID/SURE_CLIENT_SECRET)
+#        scopes           openid email profile groups
+#        default role     member
+#        role mapping     Super Admin Groups: Sure Admins
+#                         Member Groups:      Sure Users
+#      "Sure Admins" maps to super_admin and "Sure Users" to member; matching
+#      is exact/case-sensitive and the highest matched role wins. Keep admins
+#      in BOTH groups (see the demotion caveat below).
+#   3. Test before hardening: an admin login receives super_admin, a plain
+#      "Sure Users" login receives member, and a user in neither group is
+#      denied by the Authentik application policy before reaching Sure.
+#   4. Hardening follow-up in Git after SSO works: change ONBOARDING_STATE to
+#      closed and AUTH_LOCAL_LOGIN_ENABLED to false in the env below (keep
+#      AUTH_LOCAL_ADMIN_OVERRIDE_ENABLED=true so super admins retain local
+#      login during an Authentik outage) and let Flux reconcile. The current
+#      open/on values are bootstrap-only.
+#
+# Role-demotion caveat (app/models/oidc_identity.rb apply_role_mapping!):
+# role mapping runs on every SSO login and only acts when a mapped group
+# matches. Losing "Sure Admins" while keeping "Sure Users" demotes the user to
+# member on the next login; losing every mapped group leaves the stored role
+# untouched, so fully revoking admin access means removing the user from the
+# Authentik application groups (Authentik admission is the real gate) and, if
+# needed, editing the role at /admin/users.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sure
+  namespace: utils
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    # Both images declare their own non-root USER (sure: 1000:1000, valkey:
+    # its built-in user); fsGroup only makes the shared RWO volumes writable.
+    defaultPodOptions:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            # Image default CMD ("./bin/rails server") runs db:prepare at boot
+            # via /rails/bin/docker-entrypoint, so migrations are applied by
+            # this controller (bin/docker-entrypoint, Dockerfile).
+            image:
+              # renovate: datasource=docker depName=we-promise/sure registryUrl=https://ghcr.io
+              repository: ghcr.io/we-promise/sure
+              tag: "0.7.4"
+            env:
+              TZ: Europe/Berlin
+              RAILS_ENV: production
+              SELF_HOSTED: "true"
+              APP_DOMAIN: finances.${CLUSTER_DOMAIN}
+              # Traefik terminates TLS in front of the plain-HTTP container.
+              RAILS_ASSUME_SSL: "true"
+              DB_HOST: sure-pg-rw
+              DB_PORT: "5432"
+              # config/database.yml: production DB name comes from POSTGRES_DB
+              # (default sure_production); must match the CNPG database.
+              POSTGRES_DB: sure
+              POSTGRES_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-db-secrets
+                    key: username
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-db-secrets
+                    key: password
+              REDIS_URL: redis://sure-valkey:6379/1
+              SECRET_KEY_BASE:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: SECRET_KEY_BASE
+              AUTH_PROVIDERS_SOURCE: db
+              AUTH_LOCAL_ADMIN_OVERRIDE_ENABLED: "true"
+              WEBAUTHN_RP_ID: ${CLUSTER_DOMAIN}
+              WEBAUTHN_ALLOWED_ORIGINS: https://finances.${CLUSTER_DOMAIN}
+              EXCHANGE_RATE_PROVIDER: yahoo_finance
+              SECURITIES_PROVIDER: yahoo_finance
+              # Bootstrap-only values; harden per the operator steps above.
+              ONBOARDING_STATE: open
+              AUTH_LOCAL_LOGIN_ENABLED: "true"
+            ports:
+              - name: http
+                containerPort: 3000
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /up
+                    port: 3000
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /up
+                    port: 3000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  # Generous: first boot runs db:prepare against CNPG.
+                  httpGet:
+                    path: /up
+                    port: 3000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+
+      worker:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        # Same-node contract as the dawarich sidekiq sibling: /rails/storage is
+        # RWO, so the worker must land on the web controller's node.
+        pod:
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/controller: main
+                      app.kubernetes.io/instance: sure
+                      app.kubernetes.io/name: sure
+                  topologyKey: kubernetes.io/hostname
+        containers:
+          worker:
+            image:
+              # renovate: datasource=docker depName=we-promise/sure registryUrl=https://ghcr.io
+              repository: ghcr.io/we-promise/sure
+              tag: "0.7.4"
+            # Keep the image entrypoint (it skips db:prepare for non-server
+            # commands) and mirror the upstream compose worker command.
+            args:
+              - bundle
+              - exec
+              - sidekiq
+            env:
+              TZ: Europe/Berlin
+              RAILS_ENV: production
+              SELF_HOSTED: "true"
+              APP_DOMAIN: finances.${CLUSTER_DOMAIN}
+              RAILS_ASSUME_SSL: "true"
+              DB_HOST: sure-pg-rw
+              DB_PORT: "5432"
+              POSTGRES_DB: sure
+              POSTGRES_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-db-secrets
+                    key: username
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-db-secrets
+                    key: password
+              REDIS_URL: redis://sure-valkey:6379/1
+              SECRET_KEY_BASE:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: SECRET_KEY_BASE
+              AUTH_PROVIDERS_SOURCE: db
+              AUTH_LOCAL_ADMIN_OVERRIDE_ENABLED: "true"
+              WEBAUTHN_RP_ID: ${CLUSTER_DOMAIN}
+              WEBAUTHN_ALLOWED_ORIGINS: https://finances.${CLUSTER_DOMAIN}
+              EXCHANGE_RATE_PROVIDER: yahoo_finance
+              SECURITIES_PROVIDER: yahoo_finance
+              # Bootstrap-only values; harden per the operator steps above.
+              ONBOARDING_STATE: open
+              AUTH_LOCAL_LOGIN_ENABLED: "true"
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - pgrep -f sidekiq
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - pgrep -f sidekiq
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                # Upstream documents the demo-data generator peaking near
+                # 680Mi in the worker; 1Gi leaves room for large imports.
+                memory: 1Gi
+
+      # Valkey is protocol-compatible with the Redis client Sure/Sidekiq use.
+      # It holds the Sidekiq queues plus the Rails cache: RDB persistence on a
+      # longhorn-r1 PVC survives pod recreation, but it is operational state
+      # only — Postgres and /rails/storage stay authoritative — so the PVC
+      # carries no Longhorn recurring-backup labels.
+      valkey:
+        containers:
+          valkey:
+            image:
+              # renovate: datasource=docker depName=valkey/valkey registryUrl=https://docker.io
+              repository: docker.io/valkey/valkey
+              tag: 9-alpine
+            command:
+              - valkey-server
+              - --save
+              - "900"
+              - "1"
+              - --save
+              - "300"
+              - "10"
+              - --appendonly
+              - "no"
+              # Sidekiq data must never be silently evicted.
+              - --maxmemory-policy
+              - noeviction
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - redis-cli ping || exit 1
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - redis-cli ping || exit 1
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 3000
+      valkey:
+        controller: valkey
+        ports:
+          valkey:
+            port: 6379
+
+    ingress:
+      main:
+        annotations:
+          external-dns.kubernetes.io/hostname: finances.${CLUSTER_DOMAIN}
+        hosts:
+          - host: finances.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      # Active Storage disk uploads (config/storage.yml local root).
+      storage:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: sure
+        advancedMounts:
+          main:
+            main:
+              - path: /rails/storage
+          worker:
+            worker:
+              - path: /rails/storage
+      valkey-data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: sure-valkey
+        advancedMounts:
+          valkey:
+            valkey:
+              - path: /data

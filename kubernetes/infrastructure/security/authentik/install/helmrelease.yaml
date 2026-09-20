@@ -278,6 +278,16 @@ spec:
             secretKeyRef:
               name: mailflow-sso-secret
               key: CLIENT_SECRET
+        - name: SURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: sure-sso-secret
+              key: CLIENT_ID
+        - name: SURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: sure-sso-secret
+              key: CLIENT_SECRET
         - name: DISCORD_BASIC_AUTH
           valueFrom:
             secretKeyRef:

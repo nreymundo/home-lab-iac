@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: authentik
@@ -37,3 +38,4 @@ resources:
   - tautulli-basic-auth-pbk-secret.sops.yaml
   - open-webui-sso-secret.sops.yaml
   - mailflow-sso-secret.sops.yaml
+  - sure-sso-secret.sops.yaml
