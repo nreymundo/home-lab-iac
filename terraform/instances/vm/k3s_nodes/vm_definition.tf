@@ -6,7 +6,7 @@ locals {
     node_vmid_start        = 200
     vm_cores               = 8
     vm_memory_mb           = 24576
-    vm_balloon_mb          = 16384
+    vm_balloon_mb          = 24576
     vm_disk_size_gb        = 128
     secondary_disk_enabled = true
     secondary_disk_size_gb = 600

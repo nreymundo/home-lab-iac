@@ -32,7 +32,7 @@ resource "proxmox_vm_qemu" "home_assistant" {
   }
 
   memory  = 6144
-  balloon = 3072
+  balloon = 4096
 
   agent              = 1
   tablet             = false

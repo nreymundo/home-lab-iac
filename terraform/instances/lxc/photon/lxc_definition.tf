@@ -7,7 +7,7 @@ locals {
     ip_address      = "192.168.10.72"
     ansible_user    = "root"
     cpu_cores       = 4
-    memory_mb       = 16384
+    memory_mb       = 8192
     swap_mb         = 4096
     rootfs_size_gb  = 32
     data_size       = "500G"
