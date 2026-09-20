@@ -132,6 +132,11 @@ spec:
               SMTP_TLS_ENABLED: "true"
               SMTP_TLS_SKIP_VERIFY: "false"
               EMAIL_SENDER: sure@${CLUSTER_DOMAIN}
+              AUTO_SYNC_ENABLED: "1"
+              AUTO_SYNC_TIME: "02:22"
+              AUTO_SYNC_TIMEZONE: Europe/Berlin
+              SIMPLEFIN_INCLUDE_PENDING: "1"
+              PLAID_INCLUDE_PENDING: "1"
               AUTH_PROVIDERS_SOURCE: db
               AUTH_LOCAL_ADMIN_OVERRIDE_ENABLED: "false"
               AUTH_PASSKEY_LOGIN_ENABLED: "false"
@@ -266,6 +271,11 @@ spec:
               SMTP_TLS_ENABLED: "true"
               SMTP_TLS_SKIP_VERIFY: "false"
               EMAIL_SENDER: sure@${CLUSTER_DOMAIN}
+              AUTO_SYNC_ENABLED: "1"
+              AUTO_SYNC_TIME: "02:22"
+              AUTO_SYNC_TIMEZONE: Europe/Berlin
+              SIMPLEFIN_INCLUDE_PENDING: "1"
+              PLAID_INCLUDE_PENDING: "1"
               AUTH_PROVIDERS_SOURCE: db
               AUTH_LOCAL_ADMIN_OVERRIDE_ENABLED: "false"
               AUTH_PASSKEY_LOGIN_ENABLED: "false"
