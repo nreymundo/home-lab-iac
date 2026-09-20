@@ -103,6 +103,20 @@ spec:
                   secretKeyRef:
                     name: sure-secrets
                     key: SECRET_KEY_BASE
+              LLM_PROVIDER: openai
+              OPENAI_URI_BASE: http://192.168.10.102:20128/v1
+              OPENAI_MODEL: local-chat
+              OPENAI_ACCESS_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: OMNIROUTE_API_KEY
+              LLM_CONTEXT_WINDOW: "32768"
+              LLM_MAX_RESPONSE_TOKENS: "2048"
+              LLM_JSON_MODE: auto
+              OPENAI_REQUEST_TIMEOUT: "180"
+              AI_RESPONSE_TIMEOUT: "720"
+              ASSISTANT_MAX_TOOL_CALL_ITERATIONS: "2"
               AUTH_PROVIDERS_SOURCE: db
               AUTH_LOCAL_ADMIN_OVERRIDE_ENABLED: "false"
               AUTH_PASSKEY_LOGIN_ENABLED: "false"
@@ -208,6 +222,20 @@ spec:
                   secretKeyRef:
                     name: sure-secrets
                     key: SECRET_KEY_BASE
+              LLM_PROVIDER: openai
+              OPENAI_URI_BASE: http://192.168.10.102:20128/v1
+              OPENAI_MODEL: local-chat
+              OPENAI_ACCESS_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: OMNIROUTE_API_KEY
+              LLM_CONTEXT_WINDOW: "32768"
+              LLM_MAX_RESPONSE_TOKENS: "2048"
+              LLM_JSON_MODE: auto
+              OPENAI_REQUEST_TIMEOUT: "180"
+              AI_RESPONSE_TIMEOUT: "720"
+              ASSISTANT_MAX_TOOL_CALL_ITERATIONS: "2"
               AUTH_PROVIDERS_SOURCE: db
               AUTH_LOCAL_ADMIN_OVERRIDE_ENABLED: "false"
               AUTH_PASSKEY_LOGIN_ENABLED: "false"
