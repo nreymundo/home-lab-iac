@@ -117,6 +117,21 @@ spec:
               OPENAI_REQUEST_TIMEOUT: "180"
               AI_RESPONSE_TIMEOUT: "720"
               ASSISTANT_MAX_TOOL_CALL_ITERATIONS: "2"
+              SMTP_ADDRESS: smtp.purelymail.com
+              SMTP_PORT: "465"
+              SMTP_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: SMTP_USERNAME
+              SMTP_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: SMTP_PASSWORD
+              SMTP_TLS_ENABLED: "true"
+              SMTP_TLS_SKIP_VERIFY: "false"
+              EMAIL_SENDER: sure@${CLUSTER_DOMAIN}
               AUTH_PROVIDERS_SOURCE: db
               AUTH_LOCAL_ADMIN_OVERRIDE_ENABLED: "false"
               AUTH_PASSKEY_LOGIN_ENABLED: "false"
@@ -236,6 +251,21 @@ spec:
               OPENAI_REQUEST_TIMEOUT: "180"
               AI_RESPONSE_TIMEOUT: "720"
               ASSISTANT_MAX_TOOL_CALL_ITERATIONS: "2"
+              SMTP_ADDRESS: smtp.purelymail.com
+              SMTP_PORT: "465"
+              SMTP_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: SMTP_USERNAME
+              SMTP_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: SMTP_PASSWORD
+              SMTP_TLS_ENABLED: "true"
+              SMTP_TLS_SKIP_VERIFY: "false"
+              EMAIL_SENDER: sure@${CLUSTER_DOMAIN}
               AUTH_PROVIDERS_SOURCE: db
               AUTH_LOCAL_ADMIN_OVERRIDE_ENABLED: "false"
               AUTH_PASSKEY_LOGIN_ENABLED: "false"
