@@ -12,3 +12,4 @@ resources:
   - configmap.yaml
   - database-schema-configmap.yaml
   - helmrelease.yaml
+  - middleware-bark-allowlist.yaml

@@ -415,7 +415,7 @@ spec:
         className: traefik
         annotations:
           external-dns.kubernetes.io/hostname: bark.${CLUSTER_DOMAIN}
-          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: reddit-bark-allowlist@kubernetescrd
         hosts:
           - host: bark.${CLUSTER_DOMAIN}
             paths:
