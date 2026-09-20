@@ -74,7 +74,7 @@ spec:
             image:
               # renovate: datasource=docker depName=we-promise/sure registryUrl=https://ghcr.io
               repository: ghcr.io/we-promise/sure
-              tag: "0.7.4"
+              tag: "0.7.5-alpha.9"
             env:
               TZ: Europe/Berlin
               RAILS_ENV: production
@@ -210,7 +210,7 @@ spec:
             image:
               # renovate: datasource=docker depName=we-promise/sure registryUrl=https://ghcr.io
               repository: ghcr.io/we-promise/sure
-              tag: "0.7.4"
+              tag: "0.7.5-alpha.9"
             # Keep the image entrypoint (it skips db:prepare for non-server
             # commands) and mirror the upstream compose worker command.
             args:
