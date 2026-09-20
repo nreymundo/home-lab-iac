@@ -104,7 +104,7 @@ spec:
                     name: sure-secrets
                     key: SECRET_KEY_BASE
               LLM_PROVIDER: openai
-              OPENAI_URI_BASE: http://192.168.10.102:20128/v1
+              OPENAI_URI_BASE: https://omniroute.lan.${CLUSTER_DOMAIN}/v1
               OPENAI_MODEL: local-chat
               OPENAI_ACCESS_TOKEN:
                 valueFrom:
@@ -243,7 +243,7 @@ spec:
                     name: sure-secrets
                     key: SECRET_KEY_BASE
               LLM_PROVIDER: openai
-              OPENAI_URI_BASE: http://192.168.10.102:20128/v1
+              OPENAI_URI_BASE: https://omniroute.lan.${CLUSTER_DOMAIN}/v1
               OPENAI_MODEL: local-chat
               OPENAI_ACCESS_TOKEN:
                 valueFrom:
