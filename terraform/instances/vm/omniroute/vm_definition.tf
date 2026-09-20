@@ -8,8 +8,8 @@ locals {
     ansible_user    = "omniroute"
     ip_address      = "192.168.10.102"
     vm_cores        = 4
-    vm_memory_mb    = 16384
-    vm_balloon_mb   = 16384
+    vm_memory_mb    = 12288
+    vm_balloon_mb   = 12288
     vm_disk_size_gb = 64
     proxmox_tags    = ["ai"]
   }]

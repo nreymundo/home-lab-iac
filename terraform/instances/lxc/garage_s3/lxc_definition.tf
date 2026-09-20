@@ -7,7 +7,7 @@ locals {
     ip_address      = "192.168.10.71"
     ansible_user    = "root"
     cpu_cores       = 2
-    memory_mb       = 4096
+    memory_mb       = 2048
     swap_mb         = 1024
     rootfs_size_gb  = 32
     data_host_path  = "/mnt/garage-s3"
