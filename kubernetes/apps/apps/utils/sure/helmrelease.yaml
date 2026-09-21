@@ -103,6 +103,24 @@ spec:
                   secretKeyRef:
                     name: sure-secrets
                     key: SECRET_KEY_BASE
+              ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+              ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+              ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+              # Temporary migration compatibility for rows written before
+              # explicit Active Record encryption was enabled.
+              ACTIVE_RECORD_ENCRYPTION_SUPPORT_UNENCRYPTED_DATA: "true"
               LLM_PROVIDER: openai
               OPENAI_URI_BASE: https://omniroute.lan.${CLUSTER_DOMAIN}/v1
               OPENAI_MODEL: local-chat
@@ -242,6 +260,24 @@ spec:
                   secretKeyRef:
                     name: sure-secrets
                     key: SECRET_KEY_BASE
+              ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+              ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+              ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT:
+                valueFrom:
+                  secretKeyRef:
+                    name: sure-secrets
+                    key: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+              # Temporary migration compatibility for rows written before
+              # explicit Active Record encryption was enabled.
+              ACTIVE_RECORD_ENCRYPTION_SUPPORT_UNENCRYPTED_DATA: "true"
               LLM_PROVIDER: openai
               OPENAI_URI_BASE: https://omniroute.lan.${CLUSTER_DOMAIN}/v1
               OPENAI_MODEL: local-chat
