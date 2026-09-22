@@ -120,7 +120,7 @@ spec:
                     key: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
               LLM_PROVIDER: openai
               OPENAI_URI_BASE: https://omniroute.lan.${CLUSTER_DOMAIN}/v1
-              OPENAI_MODEL: local-chat
+              OPENAI_MODEL: cx/gpt-5.6-terra
               OPENAI_ACCESS_TOKEN:
                 valueFrom:
                   secretKeyRef:
@@ -274,7 +274,7 @@ spec:
                     key: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
               LLM_PROVIDER: openai
               OPENAI_URI_BASE: https://omniroute.lan.${CLUSTER_DOMAIN}/v1
-              OPENAI_MODEL: local-chat
+              OPENAI_MODEL: cx/gpt-5.6-terra
               OPENAI_ACCESS_TOKEN:
                 valueFrom:
                   secretKeyRef:
