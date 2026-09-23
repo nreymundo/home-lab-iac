@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -87,19 +88,18 @@ spec:
                   secretKeyRef:
                     name: karakeep-sso-secret
                     key: CLIENT_SECRET
-              # --- AI via LiteLLM (enabled; virtual key in karakeep-ai-secrets) ---
-              OPENAI_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
+              # --- AI via OmniRoute (restricted key in karakeep-ai-secrets) ---
+              OPENAI_BASE_URL: http://omniroute.external-proxy.svc.cluster.local:20128/v1
               OPENAI_API_KEY:
                 valueFrom:
                   secretKeyRef:
                     name: karakeep-ai-secrets
-                    key: LITELLM_API_KEY
+                    key: OMNIROUTE_API_KEY
               INFERENCE_TEXT_MODEL: local/automation-lite
               INFERENCE_IMAGE_MODEL: local/camera-analysis
-              EMBEDDING_TEXT_MODEL: local/embedding
+              EMBEDDING_TEXT_MODEL: embedding-qwen3-4b-2560
               # AI enrichment is on: auto-tagging and summarization run
-              # against LiteLLM via the karakeep-ai-secrets virtual key
-              # (see plan.md).
+              # through the restricted OmniRoute workload key.
               INFERENCE_ENABLE_AUTO_TAGGING: "true"
               INFERENCE_ENABLE_AUTO_SUMMARIZATION: "true"
               # Inference tuning: context/output caps and worker pool.
