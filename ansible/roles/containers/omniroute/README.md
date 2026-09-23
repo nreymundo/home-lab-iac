@@ -17,10 +17,8 @@ clients or remove LiteLLM.
 - API keys and an explicit keys-to-remove list
 
 The installation-specific providers, metadata, public combos, and workload key
-policies are in `ansible/inventories/group_vars/omniroute_vms.yml`. A complete
-synthetically rendered, redacted example is available at
-`examples/bootstrap-config.redacted.json`. Role defaults contain the common
-safety policy. Objects are resolved by stable
+policies are in `ansible/inventories/group_vars/omniroute_vms.yml`. Role
+defaults contain the common safety policy. Objects are resolved by stable
 identity and ambiguous duplicates stop reconciliation. Objects absent from the
 declaration are not pruned.
 
@@ -58,8 +56,6 @@ telemetry and timestamps are ignored.
 Run from the repository root:
 
 ```bash
-python3 -m unittest discover \
-  -s ansible/roles/containers/omniroute/tests -v
 ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint --project-dir ansible \
   ansible/playbooks/omniroute.yml ansible/roles/containers/omniroute/
 ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook \
