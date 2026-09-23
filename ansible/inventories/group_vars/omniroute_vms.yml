@@ -38,18 +38,317 @@ ufw_inbound_rules:
     from_ip: 192.168.10.0/24
     comment: OmniRoute clients on the LAN
 
-# Root-only management credential used by Ansible after password login is
-# disabled. It has no model access and is stored on the VM with mode 0600.
+# Explicit metadata overlays for models served by llama-swap. Create-only
+# fields are corrected by deleting and recreating only the exact managed row;
+# imported provider catalogs and unrelated dashboard rows are never pruned.
+omniroute_provider_models:
+  - providerRef: providerNode
+    modelId: unsloth/gemma-4-e4b-it-qat
+    apiFormat: chat-completions
+    supportedEndpoints: [chat]
+    max_input_tokens: 63488
+    max_output_tokens: 2048
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: unsloth/gemma-4-12b-it-qat-camera
+    apiFormat: chat-completions
+    supportedEndpoints: [chat]
+    max_input_tokens: 30720
+    max_output_tokens: 2048
+    supportsVision: true
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: qwen3.8-27b
+    apiFormat: chat-completions
+    supportedEndpoints: [chat]
+    max_input_tokens: 253952
+    max_output_tokens: 8192
+    supportsVision: true
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: qwen3.8-27b-analysis
+    apiFormat: chat-completions
+    supportedEndpoints: [chat]
+    max_input_tokens: 253952
+    max_output_tokens: 8192
+    supportsVision: true
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: qwen3.8-27b-documents
+    apiFormat: chat-completions
+    supportedEndpoints: [chat]
+    max_input_tokens: 258048
+    max_output_tokens: 4096
+    supportsVision: true
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: qwen3.8-27b-coding
+    apiFormat: chat-completions
+    supportedEndpoints: [chat]
+    max_input_tokens: 253952
+    max_output_tokens: 8192
+    supportsVision: true
+    recreateForCreateOnlyChanges: true
+  - providerRef: llama-cpp
+    modelId: qwen3-embedding-4b
+    apiFormat: embeddings
+    supportedEndpoints: [embeddings]
+    max_input_tokens: 16384
+    dimensions: 2560
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: qwen3-reranker-0.6b
+    apiFormat: rerank
+    supportedEndpoints: [rerank]
+    max_input_tokens: 8192
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: whisper/large-v3-q5_0
+    apiFormat: audio-transcriptions
+    supportedEndpoints: [audio-transcriptions]
+  - providerRef: providerNode
+    modelId: whisper/large-v3-turbo-q5_0
+    apiFormat: audio-transcriptions
+    supportedEndpoints: [audio-transcriptions]
+  - providerRef: providerNode
+    modelId: chatterbox
+    apiFormat: audio-speech
+    supportedEndpoints: [audio-speech]
+  - providerRef: providerNode
+    modelId: Qwen-Image-2512-BF16-4-Step-LoRA
+    apiFormat: images-generations
+    supportedEndpoints: [images]
+  - providerRef: providerNode
+    modelId: simple-sdxl-workflow
+    apiFormat: images-generations
+    supportedEndpoints: [images]
+
+# Public names are active, visible, single-target priority combos. Slash names
+# are used for chat/Responses; bare names are used by modality handlers.
+omniroute_combos:
+  - name: local/automation-lite
+    strategy: priority
+    models: [llamaswap/unsloth/gemma-4-e4b-it-qat]
+    config: {targetTimeoutMs: 120000}
+    isActive: true
+    isHidden: false
+  - name: local/camera-analysis
+    strategy: priority
+    models: [llamaswap/unsloth/gemma-4-12b-it-qat-camera]
+    config: {targetTimeoutMs: 120000}
+    isActive: true
+    isHidden: false
+  - name: local/chat
+    strategy: priority
+    models: [llamaswap/qwen3.8-27b]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: local/analysis
+    strategy: priority
+    models: [llamaswap/qwen3.8-27b-analysis]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: local/document-analysis
+    strategy: priority
+    models: [llamaswap/qwen3.8-27b-documents]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: local/document-best
+    strategy: priority
+    models: [llamaswap/qwen3.8-27b-analysis]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: local/coder
+    strategy: priority
+    models: [llamaswap/qwen3.8-27b-coding]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: cloud/fast
+    strategy: priority
+    models: [codex/gpt-5.6-luna]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: cloud/general
+    strategy: priority
+    models: [codex/gpt-5.6-terra]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: cloud/deep
+    strategy: priority
+    models: [codex/gpt-5.6-sol]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: cloud/coder
+    strategy: priority
+    models: [glm/glm-5.3]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: embedding-qwen3-4b-2560
+    strategy: priority
+    models: [llama-cpp/qwen3-embedding-4b]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: local-stt-large
+    strategy: priority
+    models: [llamaswap/whisper/large-v3-q5_0]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: local-stt-fast
+    strategy: priority
+    models: [llamaswap/whisper/large-v3-turbo-q5_0]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: local-tts
+    strategy: priority
+    models: [llamaswap/chatterbox]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: local-image-qwen
+    strategy: priority
+    models: [llamaswap/Qwen-Image-2512-BF16-4-Step-LoRA]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+  - name: local-image-sdxl
+    strategy: priority
+    models: [llamaswap/simple-sdxl-workflow]
+    config: {targetTimeoutMs: 600000}
+    isActive: true
+    isHidden: false
+
+# Root-only management key plus least-privilege workload keys. Raw values are
+# returned once and persisted at /etc/omniroute/bootstrap-api-keys.json (0600).
 omniroute_management_api_key_name: ansible-bootstrap
 omniroute_api_keys:
   - name: "{{ omniroute_management_api_key_name }}"
     modelAccessMode: restricted
     allowedModels: []
     allowedCombos: []
-    scopes:
-      - admin
+    scopes: [admin]
+  - name: open-webui-chat
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos:
+      - local/automation-lite
+      - local/camera-analysis
+      - local/chat
+      - local/analysis
+      - local/document-analysis
+      - local/document-best
+      - local/coder
+      - cloud/fast
+      - cloud/general
+      - cloud/deep
+      - cloud/coder
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
+  - name: open-webui-embedding
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [embedding-qwen3-4b-2560]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
+  - name: open-webui-audio
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [local-stt-large, local-stt-fast, local-tts]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
+  - name: hindsight
+    modelAccessMode: restricted
+    allowedModels: [openrouter/voyageai/rerank-2.5-lite]
+    allowedCombos: [cloud/fast, embedding-qwen3-4b-2560]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: all
+  - name: karakeep
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [local/automation-lite, local/camera-analysis, embedding-qwen3-4b-2560]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
+  - name: paperless-gpt
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [local/document-analysis]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
+  - name: sure
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [cloud/general]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
+  - name: n8n-instance-ai
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [local/coder]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
+  - name: omniroute-operator
+    modelAccessMode: all
+    allowedModels: []
+    allowedCombos:
+      - local/automation-lite
+      - local/camera-analysis
+      - local/chat
+      - local/analysis
+      - local/document-analysis
+      - local/document-best
+      - local/coder
+      - cloud/fast
+      - cloud/general
+      - cloud/deep
+      - cloud/coder
+      - embedding-qwen3-4b-2560
+      - local-stt-large
+      - local-stt-fast
+      - local-tts
+      - local-image-qwen
+      - local-image-sdxl
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: all
 
-# Explicitly remove the inference keys created by the initial deployment.
+# Explicitly remove only keys created by the initial deployment.
 omniroute_api_keys_to_remove:
   - claude-code
   - codex-cli
