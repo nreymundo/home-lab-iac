@@ -459,17 +459,18 @@ def sync_models(client, connection_id, label, actions):
 
 def canonical_combo_step(item, desired_item=None):
     if isinstance(item, str):
-        provider, separator, model = item.partition("/")
-        return {"provider": provider, "model": model} if separator else {"model": item}
+        provider, separator, _ = item.partition("/")
+        return {"provider": provider, "model": item} if separator else {"model": item}
     if not isinstance(item, dict):
         return item
     if item.get("kind") == "combo-ref":
         result = {"kind": "combo-ref", "comboName": item.get("comboName")}
     else:
-        result = {
-            "provider": item.get("provider", item.get("providerId")),
-            "model": item.get("model"),
-        }
+        provider = item.get("provider", item.get("providerId"))
+        model = item.get("model")
+        if provider and model and not model.startswith("%s/" % provider):
+            model = "%s/%s" % (provider, model)
+        result = {"provider": provider, "model": model}
         result = {key: value for key, value in result.items() if value is not None}
     desired_dict = desired_item if isinstance(desired_item, dict) else {}
     for field in (
@@ -587,15 +588,142 @@ def model_field_value(model, field):
     return None
 
 
-def provider_models(client, provider):
+def provider_model_state(client, provider):
     path = "/api/provider-models?provider=%s" % urllib.parse.quote(provider, safe="")
-    return (client.get(path) or {}).get("models") or []
+    return client.get(path) or {}
+
+
+def provider_models(client, provider):
+    return provider_model_state(client, provider).get("models") or []
+
+
+def matching_model_record(records, model_id, label):
+    return find_unique(
+        records or [],
+        lambda item: item.get("id", item.get("modelId")) == model_id,
+        label,
+    )
+
+
+def preserved_model_create_body(provider, model_id, existing):
+    body = {"provider": provider, "modelId": model_id}
+    field_map = {
+        "name": "modelName",
+        "source": "source",
+        "apiFormat": "apiFormat",
+        "supportedEndpoints": "supportedEndpoints",
+        "targetFormat": "targetFormat",
+        "inputTokenLimit": "max_input_tokens",
+        "outputTokenLimit": "max_output_tokens",
+        "supportsVision": "supportsVision",
+        "generationConfig": "generationConfig",
+        "isFree": "isFree",
+        "dimensions": "dimensions",
+        "supportedInputTypes": "supportedInputTypes",
+        "modelType": "modelType",
+    }
+    ignored = {
+        "id",
+        "contextWindowOverride",
+        "contextWindowOverrideSource",
+    }
+    unsupported = sorted(set(existing) - set(field_map) - ignored)
+    if unsupported:
+        raise BootstrapError(
+            "provider model %s/%s has metadata that cannot be safely recreated: %s"
+            % (provider, model_id, ", ".join(unsupported))
+        )
+    for current_field, api_field in field_map.items():
+        if current_field in existing:
+            body[api_field] = existing[current_field]
+    return body
+
+
+def expected_model_row(create_body):
+    field_map = {
+        "modelName": "name",
+        "source": "source",
+        "apiFormat": "apiFormat",
+        "supportedEndpoints": "supportedEndpoints",
+        "targetFormat": "targetFormat",
+        "max_input_tokens": "inputTokenLimit",
+        "max_output_tokens": "outputTokenLimit",
+        "supportsVision": "supportsVision",
+        "generationConfig": "generationConfig",
+        "isFree": "isFree",
+        "dimensions": "dimensions",
+        "supportedInputTypes": "supportedInputTypes",
+        "modelType": "modelType",
+    }
+    expected = {"id": create_body["modelId"]}
+    for api_field, stored_field in field_map.items():
+        if api_field in create_body:
+            expected[stored_field] = create_body[api_field]
+    return expected
+
+
+def validate_model_compatibility(provider, model_id, compat):
+    unsupported = sorted(
+        set(compat or {})
+        - {
+            "id",
+            "normalizeToolCallId",
+            "preserveOpenAIDeveloperRole",
+            "compatByProtocol",
+            "upstreamHeaders",
+            "isHidden",
+            "hiddenModalities",
+            "apiFormat",
+            "targetFormat",
+            "supportsVision",
+        }
+    )
+    if "preserveVideoUrl" in (compat or {}):
+        unsupported.append("preserveVideoUrl")
+    if unsupported:
+        raise BootstrapError(
+            "provider model %s/%s has compatibility metadata that cannot be safely restored: %s"
+            % (provider, model_id, ", ".join(sorted(set(unsupported))))
+        )
+
+
+def restore_model_compatibility(client, provider, model_id, compat, actions):
+    if not compat:
+        return
+    validate_model_compatibility(provider, model_id, compat)
+    update_fields = (
+        "normalizeToolCallId",
+        "preserveOpenAIDeveloperRole",
+        "compatByProtocol",
+        "upstreamHeaders",
+        "apiFormat",
+        "targetFormat",
+        "supportsVision",
+    )
+    update_body = {"provider": provider, "modelId": model_id}
+    update_body.update({field: compat[field] for field in update_fields if field in compat})
+    if len(update_body) > 2:
+        client.put("/api/provider-models", update_body)
+    if "isHidden" in compat:
+        path = "/api/provider-models?provider=%s&modelId=%s" % (
+            urllib.parse.quote(provider, safe=""),
+            urllib.parse.quote(model_id, safe=""),
+        )
+        client.patch(path, {"isHidden": bool(compat["isHidden"])})
+    for modality, hidden in (compat.get("hiddenModalities") or {}).items():
+        path = "/api/provider-models?provider=%s&modelId=%s" % (
+            urllib.parse.quote(provider, safe=""),
+            urllib.parse.quote(model_id, safe=""),
+        )
+        client.patch(path, {"isHidden": bool(hidden), "modality": modality})
+    actions.append("provider model %s/%s: restored compatibility metadata" % (provider, model_id))
 
 
 def ensure_provider_model(client, spec, provider_ids, actions):
     provider = provider_ids.get(spec["providerRef"], spec["providerRef"])
     model_id = spec["modelId"]
-    models = provider_models(client, provider)
+    state = provider_model_state(client, provider)
+    models = state.get("models") or []
     existing = find_unique(
         models,
         lambda item: item.get("id") == model_id,
@@ -634,12 +762,41 @@ def ensure_provider_model(client, spec, provider_ids, actions):
                 "provider model %s/%s has unsupported create-only drift: %s"
                 % (provider, model_id, ", ".join(create_only_diff))
             )
+        compat = matching_model_record(
+            state.get("modelCompatOverrides") or [],
+            model_id,
+            "compatibility metadata %s/%s" % (provider, model_id),
+        )
+        context = matching_model_record(
+            state.get("modelContextOverrides") or [],
+            model_id,
+            "context metadata %s/%s" % (provider, model_id),
+        )
+        recreate_body = preserved_model_create_body(provider, model_id, existing)
+        validate_model_compatibility(provider, model_id, compat)
+        if context and context.get("contextWindowOverrideSource") != "manual":
+            raise BootstrapError(
+                "provider model %s/%s has a context override that cannot be safely restored"
+                % (provider, model_id)
+            )
+        recreate_body.update(body)
         path = "/api/provider-models?provider=%s&model=%s&resetOverride=true" % (
             urllib.parse.quote(provider, safe=""),
             urllib.parse.quote(model_id, safe=""),
         )
         client.delete(path)
-        client.post("/api/provider-models", body)
+        client.post("/api/provider-models", recreate_body)
+        restore_model_compatibility(client, provider, model_id, compat, actions)
+        if context:
+            client.put(
+                "/api/provider-models",
+                {
+                    "provider": provider,
+                    "modelId": model_id,
+                    "contextWindowOverride": context["contextWindowOverride"],
+                },
+            )
+            actions.append("provider model %s/%s: restored context override" % (provider, model_id))
         actions.append("provider model %s/%s: recreated for create-only metadata" % (provider, model_id))
         changed = True
     elif mutable_diff:
@@ -652,13 +809,48 @@ def ensure_provider_model(client, spec, provider_ids, actions):
         actions.append("provider model %s/%s: already converged" % (provider, model_id))
         return False
 
+    observed_state = provider_model_state(client, provider)
     observed = find_unique(
-        provider_models(client, provider),
+        observed_state.get("models") or [],
         lambda item: item.get("id") == model_id,
         "provider model readback %s/%s" % (provider, model_id),
     )
     if not observed:
         raise BootstrapError("provider model %s/%s disappeared during reconciliation" % (provider, model_id))
+    if create_only_diff:
+        observed_compat = matching_model_record(
+            observed_state.get("modelCompatOverrides") or [],
+            model_id,
+            "compatibility metadata readback %s/%s" % (provider, model_id),
+        )
+        if compat and observed_compat != compat:
+            raise BootstrapError(
+                "provider model %s/%s compatibility metadata changed during recreation"
+                % (provider, model_id)
+            )
+        observed_context = matching_model_record(
+            observed_state.get("modelContextOverrides") or [],
+            model_id,
+            "context metadata readback %s/%s" % (provider, model_id),
+        )
+        if context and (
+            not observed_context
+            or observed_context.get("contextWindowOverride")
+            != context.get("contextWindowOverride")
+        ):
+            raise BootstrapError(
+                "provider model %s/%s context metadata changed during recreation"
+                % (provider, model_id)
+            )
+        preserved_drift = managed_differences(
+            observed,
+            expected_model_row(recreate_body),
+        )
+        if preserved_drift:
+            raise BootstrapError(
+                "provider model %s/%s lost metadata during recreation: %s"
+                % (provider, model_id, ", ".join(preserved_drift))
+            )
     remaining = [
         field
         for field in MODEL_MUTABLE_FIELDS + MODEL_CREATE_ONLY_FIELDS
