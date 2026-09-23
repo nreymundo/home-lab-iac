@@ -97,19 +97,6 @@ class KeyClient:
             self.key.update(body)
 
 
-class AliasClient:
-    def __init__(self):
-        self.aliases = {"local-stt-large": "old", "unmanaged": "keep"}
-        self.deleted = []
-
-    def get(self, path):
-        return {"custom": dict(self.aliases)}
-
-    def delete(self, path, body=None, allow_missing=False):
-        self.deleted.append(body["from"])
-        self.aliases.pop(body["from"], None)
-
-
 class MetadataClient:
     def __init__(self):
         self.model = {
@@ -271,13 +258,6 @@ class BootstrapTests(unittest.TestCase):
             client = KeyClient(ignore_patch=True)
             with self.assertRaisesRegex(bootstrap.BootstrapError, "ignored managed fields"):
                 bootstrap.ensure_api_key(client, spec, str(Path(directory) / "keys.json"), [])
-
-    def test_only_explicit_alias_is_removed(self):
-        client = AliasClient()
-        actions = []
-        self.assertTrue(bootstrap.remove_model_aliases(client, ["local-stt-large", "missing"], actions))
-        self.assertEqual(client.deleted, ["local-stt-large"])
-        self.assertEqual(client.aliases, {"unmanaged": "keep"})
 
     def test_create_only_metadata_drift_recreates_exact_row(self):
         client = MetadataClient()

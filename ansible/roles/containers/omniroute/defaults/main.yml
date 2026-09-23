@@ -148,17 +148,3 @@ omniroute_management_api_key_name: ansible-bootstrap
 omniroute_api_keys: []
 omniroute_api_keys_to_remove: []
 omniroute_model_aliases: {}
-omniroute_model_aliases_to_remove:
-  - local-rerank
-  - remote-rerank
-  - local-stt-fast
-  - local-embedding
-  - local-stt-large
-  - local-automation-lite
-  - local-camera-analysis
-  - local-chat
-  - local-analysis
-  - local-document-analysis
-  - local-document-best
-  - local-coder
-  - local-tts

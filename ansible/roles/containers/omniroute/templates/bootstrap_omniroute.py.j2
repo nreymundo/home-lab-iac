@@ -576,19 +576,6 @@ def ensure_model_aliases(client, aliases, actions):
     return changed
 
 
-def remove_model_aliases(client, aliases, actions):
-    current = (client.get("/api/settings/model-aliases") or {}).get("custom") or {}
-    changed = False
-    for alias in aliases or []:
-        if alias not in current:
-            actions.append("model alias '%s': already absent" % alias)
-            continue
-        client.delete("/api/settings/model-aliases", {"from": alias}, allow_missing=True)
-        actions.append("model alias '%s': removed" % alias)
-        changed = True
-    return changed
-
-
 def model_field_value(model, field):
     aliases = {
         "max_input_tokens": ("max_input_tokens", "inputTokenLimit", "maxInputTokens"),
@@ -864,7 +851,6 @@ def reconcile(config, client, actions, warnings):
         changed = ensure_mapping(client, spec, combo_ids, actions) or changed
 
     changed = ensure_model_aliases(client, config.get("modelAliases") or {}, actions) or changed
-    changed = remove_model_aliases(client, config.get("modelAliasesToRemove") or [], actions) or changed
 
     for spec in config.get("apiKeys") or []:
         changed = ensure_api_key(client, spec, output_path, actions) or changed

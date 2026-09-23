@@ -450,21 +450,6 @@
   ],
   "modelComboMappings": [],
   "modelAliases": {},
-  "modelAliasesToRemove": [
-    "local-rerank",
-    "remote-rerank",
-    "local-stt-fast",
-    "local-embedding",
-    "local-stt-large",
-    "local-automation-lite",
-    "local-camera-analysis",
-    "local-chat",
-    "local-analysis",
-    "local-document-analysis",
-    "local-document-best",
-    "local-coder",
-    "local-tts"
-  ],
   "apiKeys": [
     {
       "name": "ansible-bootstrap",

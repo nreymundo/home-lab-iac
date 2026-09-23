@@ -13,7 +13,7 @@ clients or remove LiteLLM.
 - one OpenAI-compatible provider node and its connection
 - explicitly managed provider-model metadata
 - combos and model-combo mappings
-- Settings aliases to create and an explicit aliases-to-remove list
+- Settings aliases that remain explicitly managed
 - API keys and an explicit keys-to-remove list
 
 The installation-specific providers, metadata, public combos, and workload key
