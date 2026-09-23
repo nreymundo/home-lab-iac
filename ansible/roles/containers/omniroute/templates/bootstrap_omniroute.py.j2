@@ -672,7 +672,6 @@ def validate_model_compatibility(provider, model_id, compat):
             "compatByProtocol",
             "upstreamHeaders",
             "isHidden",
-            "hiddenModalities",
             "apiFormat",
             "targetFormat",
             "supportsVision",
@@ -680,6 +679,8 @@ def validate_model_compatibility(provider, model_id, compat):
     )
     if "preserveVideoUrl" in (compat or {}):
         unsupported.append("preserveVideoUrl")
+    if (compat or {}).get("hiddenModalities"):
+        unsupported.append("hiddenModalities")
     if unsupported:
         raise BootstrapError(
             "provider model %s/%s has compatibility metadata that cannot be safely restored: %s"
@@ -710,13 +711,22 @@ def restore_model_compatibility(client, provider, model_id, compat, actions):
             urllib.parse.quote(model_id, safe=""),
         )
         client.patch(path, {"isHidden": bool(compat["isHidden"])})
-    for modality, hidden in (compat.get("hiddenModalities") or {}).items():
-        path = "/api/provider-models?provider=%s&modelId=%s" % (
-            urllib.parse.quote(provider, safe=""),
-            urllib.parse.quote(model_id, safe=""),
-        )
-        client.patch(path, {"isHidden": bool(hidden), "modality": modality})
     actions.append("provider model %s/%s: restored compatibility metadata" % (provider, model_id))
+
+
+def compatibility_readback_differences(model, compat):
+    fields = (
+        "normalizeToolCallId",
+        "preserveOpenAIDeveloperRole",
+        "compatByProtocol",
+        "upstreamHeaders",
+        "isHidden",
+        "apiFormat",
+        "targetFormat",
+        "supportsVision",
+    )
+    expected = {field: compat[field] for field in fields if field in (compat or {})}
+    return managed_differences(model, expected)
 
 
 def ensure_provider_model(client, spec, provider_ids, actions):
@@ -818,15 +828,11 @@ def ensure_provider_model(client, spec, provider_ids, actions):
     if not observed:
         raise BootstrapError("provider model %s/%s disappeared during reconciliation" % (provider, model_id))
     if create_only_diff:
-        observed_compat = matching_model_record(
-            observed_state.get("modelCompatOverrides") or [],
-            model_id,
-            "compatibility metadata readback %s/%s" % (provider, model_id),
-        )
-        if compat and observed_compat != compat:
+        compatibility_drift = compatibility_readback_differences(observed, compat)
+        if compatibility_drift:
             raise BootstrapError(
-                "provider model %s/%s compatibility metadata changed during recreation"
-                % (provider, model_id)
+                "provider model %s/%s lost compatibility metadata during recreation: %s"
+                % (provider, model_id, ", ".join(compatibility_drift))
             )
         observed_context = matching_model_record(
             observed_state.get("modelContextOverrides") or [],
