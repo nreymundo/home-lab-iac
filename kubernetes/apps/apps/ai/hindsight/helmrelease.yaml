@@ -31,12 +31,11 @@ spec:
               HINDSIGHT_API_DATABASE_BACKEND: postgresql
               HINDSIGHT_API_VECTOR_EXTENSION: vchord
               HINDSIGHT_API_LLM_PROVIDER: openai
-              HINDSIGHT_API_LLM_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
-              HINDSIGHT_API_LLM_MODEL: openai/gpt-5.6-luna
-              HINDSIGHT_API_REFLECT_LLM_MODEL: openai/gpt-5.6-luna
+              HINDSIGHT_API_LLM_BASE_URL: http://omniroute.external-proxy.svc.cluster.local:20128/v1
+              HINDSIGHT_API_LLM_MODEL: cloud/fast
+              HINDSIGHT_API_REFLECT_LLM_MODEL: cloud/fast
               HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: English
               HINDSIGHT_API_LLM_STRICT_SCHEMA: "false"
-              HINDSIGHT_API_LLM_EXTRA_BODY: '{"allowed_openai_params":["response_format","tools","tool_choice"]}'
               HINDSIGHT_API_LLM_MAX_CONCURRENT: "2"
               HINDSIGHT_API_RETAIN_LLM_MAX_CONCURRENT: "1"
               HINDSIGHT_API_REFLECT_LLM_MAX_CONCURRENT: "1"
@@ -45,28 +44,28 @@ spec:
               HINDSIGHT_API_RECALL_MAX_CONCURRENT: "1"
               HINDSIGHT_API_MENTAL_MODEL_MIN_REFRESH_INTERVAL_SECONDS: "3600"
               HINDSIGHT_API_EMBEDDINGS_PROVIDER: litellm
-              HINDSIGHT_API_EMBEDDINGS_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000
-              HINDSIGHT_API_EMBEDDINGS_LITELLM_MODEL: local/embedding
+              HINDSIGHT_API_EMBEDDINGS_LITELLM_API_BASE: http://omniroute.external-proxy.svc.cluster.local:20128/v1
+              HINDSIGHT_API_EMBEDDINGS_LITELLM_MODEL: embedding-qwen3-4b-2560
               HINDSIGHT_API_RERANKER_PROVIDER: litellm
-              HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000
-              HINDSIGHT_API_RERANKER_LITELLM_MODEL: remote/rerank
+              HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://omniroute.external-proxy.svc.cluster.local:20128/v1
+              HINDSIGHT_API_RERANKER_LITELLM_MODEL: openrouter/voyageai/rerank-2.5-lite
               HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
               HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
               HINDSIGHT_API_LLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
                     name: hindsight-secrets
-                    key: LITELLM_API_KEY
+                    key: OMNIROUTE_API_KEY
               HINDSIGHT_API_EMBEDDINGS_LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
                     name: hindsight-secrets
-                    key: LITELLM_API_KEY
+                    key: OMNIROUTE_API_KEY
               HINDSIGHT_API_RERANKER_LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
                     name: hindsight-secrets
-                    key: LITELLM_API_KEY
+                    key: OMNIROUTE_API_KEY
             ports:
               - name: http
                 containerPort: 8888
@@ -131,12 +130,11 @@ spec:
               HINDSIGHT_API_DATABASE_BACKEND: postgresql
               HINDSIGHT_API_VECTOR_EXTENSION: vchord
               HINDSIGHT_API_LLM_PROVIDER: openai
-              HINDSIGHT_API_LLM_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
-              HINDSIGHT_API_LLM_MODEL: openai/gpt-5.6-luna
-              HINDSIGHT_API_REFLECT_LLM_MODEL: openai/gpt-5.6-luna
+              HINDSIGHT_API_LLM_BASE_URL: http://omniroute.external-proxy.svc.cluster.local:20128/v1
+              HINDSIGHT_API_LLM_MODEL: cloud/fast
+              HINDSIGHT_API_REFLECT_LLM_MODEL: cloud/fast
               HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: English
               HINDSIGHT_API_LLM_STRICT_SCHEMA: "false"
-              HINDSIGHT_API_LLM_EXTRA_BODY: '{"allowed_openai_params":["response_format","tools","tool_choice"]}'
               HINDSIGHT_API_LLM_MAX_CONCURRENT: "2"
               HINDSIGHT_API_RETAIN_LLM_MAX_CONCURRENT: "1"
               HINDSIGHT_API_REFLECT_LLM_MAX_CONCURRENT: "1"
@@ -146,11 +144,11 @@ spec:
               HINDSIGHT_API_MENTAL_MODEL_MIN_REFRESH_INTERVAL_SECONDS: "3600"
               HINDSIGHT_API_CONSOLIDATION_MAX_MEMORIES_PER_ROUND: "50"
               HINDSIGHT_API_EMBEDDINGS_PROVIDER: litellm
-              HINDSIGHT_API_EMBEDDINGS_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000
-              HINDSIGHT_API_EMBEDDINGS_LITELLM_MODEL: local/embedding
+              HINDSIGHT_API_EMBEDDINGS_LITELLM_API_BASE: http://omniroute.external-proxy.svc.cluster.local:20128/v1
+              HINDSIGHT_API_EMBEDDINGS_LITELLM_MODEL: embedding-qwen3-4b-2560
               HINDSIGHT_API_RERANKER_PROVIDER: litellm
-              HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000
-              HINDSIGHT_API_RERANKER_LITELLM_MODEL: remote/rerank
+              HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://omniroute.external-proxy.svc.cluster.local:20128/v1
+              HINDSIGHT_API_RERANKER_LITELLM_MODEL: openrouter/voyageai/rerank-2.5-lite
               HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
               HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
               HINDSIGHT_API_WORKER_ID: hindsight-worker-1
@@ -165,17 +163,17 @@ spec:
                 valueFrom:
                   secretKeyRef:
                     name: hindsight-secrets
-                    key: LITELLM_API_KEY
+                    key: OMNIROUTE_API_KEY
               HINDSIGHT_API_EMBEDDINGS_LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
                     name: hindsight-secrets
-                    key: LITELLM_API_KEY
+                    key: OMNIROUTE_API_KEY
               HINDSIGHT_API_RERANKER_LITELLM_API_KEY:
                 valueFrom:
                   secretKeyRef:
                     name: hindsight-secrets
-                    key: LITELLM_API_KEY
+                    key: OMNIROUTE_API_KEY
             ports:
               - name: http
                 containerPort: 8889

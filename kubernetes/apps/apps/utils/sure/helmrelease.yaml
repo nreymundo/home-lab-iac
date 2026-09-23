@@ -119,13 +119,13 @@ spec:
                     name: sure-secrets
                     key: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
               LLM_PROVIDER: openai
-              OPENAI_URI_BASE: http://litellm-main.ai.svc.cluster.local:4000/v1
-              OPENAI_MODEL: openai/gpt-5.6-terra
+              OPENAI_URI_BASE: http://omniroute.external-proxy.svc.cluster.local:20128/v1
+              OPENAI_MODEL: cloud/general
               OPENAI_ACCESS_TOKEN:
                 valueFrom:
                   secretKeyRef:
                     name: sure-secrets
-                    key: LITELLM_API_KEY
+                    key: OMNIROUTE_API_KEY
               LLM_CONTEXT_WINDOW: "32768"
               LLM_MAX_RESPONSE_TOKENS: "2048"
               LLM_JSON_MODE: auto
@@ -273,13 +273,13 @@ spec:
                     name: sure-secrets
                     key: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
               LLM_PROVIDER: openai
-              OPENAI_URI_BASE: http://litellm-main.ai.svc.cluster.local:4000/v1
-              OPENAI_MODEL: openai/gpt-5.6-terra
+              OPENAI_URI_BASE: http://omniroute.external-proxy.svc.cluster.local:20128/v1
+              OPENAI_MODEL: cloud/general
               OPENAI_ACCESS_TOKEN:
                 valueFrom:
                   secretKeyRef:
                     name: sure-secrets
-                    key: LITELLM_API_KEY
+                    key: OMNIROUTE_API_KEY
               LLM_CONTEXT_WINDOW: "32768"
               LLM_MAX_RESPONSE_TOKENS: "2048"
               LLM_JSON_MODE: auto

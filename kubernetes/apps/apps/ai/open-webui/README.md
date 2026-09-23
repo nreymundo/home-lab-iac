@@ -20,21 +20,21 @@
 - Uploads: `RAG_FILE_MAX_SIZE=50` (50 MB per file) and `RAG_FILE_MAX_COUNT=10` (10 files per
   chat-message upload). `RAG_FILE_MAX_COUNT` does not cap total Knowledge Base files, and
   folder uploads retain their separate default count
-- Models: routed through LiteLLM (`litellm-main.ai.svc.cluster.local:4000/v1`), with
-  `openai/gpt-5.6-luna` selected by default and no model allowlists. A user's own default model
-  still takes precedence. OpenRouter access is provided separately by the imported pipe described
-  below.
+- Models: routed through OmniRoute (`omniroute.external-proxy.svc.cluster.local:20128/v1`)
+  with the restricted `open-webui-chat` key and `cloud/fast` selected by default. A user's own
+  default model still takes precedence. OpenRouter access is provided separately by the imported
+  pipe described below.
 - Database: dedicated CNPG PostgreSQL cluster `open-webui-pg` (PostgreSQL 18, 1 instance,
   5Gi `longhorn-r2`) with pgvector (extension `vector`, pgvector 0.8.2 bundled in the
   `ghcr.io/cloudnative-pg/postgresql:18` image, created by the cluster bootstrap). Open WebUI
   uses `VECTOR_DB=pgvector` against `DATABASE_URL`; the extension is not created by the app
   (`PGVECTOR_CREATE_EXTENSION=false`)
-- RAG embeddings: LiteLLM model `local/embedding` (`RAG_EMBEDDING_ENGINE=openai`,
-  `RAG_OPENAI_API_BASE_URL=http://litellm-main.ai.svc.cluster.local:4000/v1`), stored in
+- RAG embeddings: OmniRoute combo `embedding-qwen3-4b-2560`
+  (`RAG_EMBEDDING_ENGINE=openai`) with the restricted `open-webui-embedding` key, stored in
   pgvector at up to 2560 dimensions using halfvec (`PGVECTOR_USE_HALFVEC=true`) with HNSW
   indexes
-- Speech-to-text: OpenAI-compatible transcription through LiteLLM using
-  `local/stt-large` (`whisper/large-v3-q5_0`) with multipart audio uploads
+- Speech-to-text: OpenAI-compatible transcription through OmniRoute using `local-stt-large`
+  (`whisper/large-v3-q5_0`) with the restricted `open-webui-audio` key and multipart uploads
 - Web search: SearXNG (`searxng-main.utils.svc.cluster.local:8080`)
 - Cache: ephemeral Valkey controller (`open-webui-valkey`, 6379, emptyDir) used only for
   websocket fan-out / live state coordination (`WEBSOCKET_MANAGER=redis`,
@@ -44,10 +44,11 @@
   `helm.sh/resource-policy: keep`), mounted at `/app/backend/data`. Since the PostgreSQL
   cutover it holds only uploads and cache; the legacy SQLite database remains on it solely as
   a rollback copy
-- Local secrets are consolidated in `open-webui-secrets`: `WEBUI_SECRET_KEY`,
-  `LITELLM_API_KEY`, and `OPENROUTER_API_KEY`. Database credentials live in
-  `open-webui-db-secrets` (`username`, `password`, `DATABASE_URL`), shared by the CNPG
-  bootstrap (database/owner `open_webui`) and the app
+- Local secrets are consolidated in `open-webui-secrets`: `WEBUI_SECRET_KEY`, three restricted
+  `OMNIROUTE_*_API_KEY` values, the retained `LITELLM_API_KEY` rollback value, and
+  `OPENROUTER_API_KEY`. Database credentials live in `open-webui-db-secrets` (`username`,
+  `password`, `DATABASE_URL`), shared by the CNPG bootstrap (database/owner `open_webui`) and
+  the app
 - Backups: `open-webui-pg` ships WAL and base backups via barman to
   `s3://cloudnative-pg/open-webui` (server `open-webui-pg-v1`, gzip) with 21d retention and a
   weekly `ScheduledBackup` (`open-webui-pg-backup`, Sunday midnight), plus the Longhorn
