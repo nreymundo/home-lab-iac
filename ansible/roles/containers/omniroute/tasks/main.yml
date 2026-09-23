@@ -98,7 +98,9 @@
       - omniroute_secrets.omniroute_ws_bridge_secret | default('') | length >= 32
       - omniroute_oidc_allowed_subjects | length > 0
       - omniroute_oidc_allowed_subjects | select('string') | list | length == omniroute_oidc_allowed_subjects | length
-      - omniroute_oidc_allowed_subjects | reject('equalto', '') | list | length == omniroute_oidc_allowed_subjects | length
+      - >-
+        omniroute_oidc_allowed_subjects | reject('equalto', '') | list | length
+        == omniroute_oidc_allowed_subjects | length
       - omniroute_cluster_identity.data.CLUSTER_DOMAIN | default('') | length > 0
       - omniroute_authentik_sso_secret.stringData.CLIENT_ID | default('') | length > 0
       - omniroute_authentik_sso_secret.stringData.CLIENT_SECRET | default('') | length > 0
@@ -243,6 +245,33 @@
     mode: "0600"
   no_log: true
   when: omniroute_enabled | bool
+
+- name: Validate OmniRoute bootstrap Python syntax
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -m
+      - py_compile
+      - "{{ omniroute_bootstrap_script }}"
+  changed_when: false
+  when:
+    - omniroute_enabled | bool
+    - omniroute_validate_bootstrap_artifacts | bool
+    - not ansible_check_mode
+
+- name: Validate OmniRoute bootstrap JSON syntax
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -m
+      - json.tool
+      - "{{ omniroute_bootstrap_config_file }}"
+  changed_when: false
+  no_log: true
+  when:
+    - omniroute_enabled | bool
+    - omniroute_validate_bootstrap_artifacts | bool
+    - not ansible_check_mode
 
 - name: Run OmniRoute management API bootstrap
   ansible.builtin.command:

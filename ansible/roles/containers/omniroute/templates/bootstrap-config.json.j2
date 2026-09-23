@@ -14,32 +14,28 @@
     "redirectPath": {{ omniroute_oidc_redirect_path | to_json }},
     "allowedSubjects": {{ omniroute_oidc_allowed_subjects | to_json }}
   },
-  "providers": [
-    {
-      "enabled": {{ (omniroute_secrets.omniroute_openrouter_api_key | default('') | length > 0) | bool | lower }},
-      "providerId": {{ omniroute_openrouter_provider_id | to_json }},
-      "name": {{ omniroute_openrouter_connection_name | to_json }},
-      "apiKey": {{ omniroute_secrets.omniroute_openrouter_api_key | default('') | to_json }}
-    },
-    {
-      "enabled": {{ (omniroute_secrets.omniroute_glm_api_key | default('') | length > 0) | bool | lower }},
-      "providerId": {{ omniroute_glm_provider_id | to_json }},
-      "name": {{ omniroute_glm_connection_name | to_json }},
-      "apiKey": {{ omniroute_secrets.omniroute_glm_api_key | default('') | to_json }}
-    }
-  ],
+  "settings": {{ omniroute_settings | to_json }},
+  "cacheSettings": {{ omniroute_cache_settings | to_json }},
+  "compressionSettings": {{ omniroute_compression_settings | to_json }},
+  "comboDefaults": {{ omniroute_combo_defaults | to_json }},
+  "providers": {{ omniroute_provider_connections | to_json }},
+  "requiredProviders": {{ omniroute_required_provider_connections | to_json }},
   "providerNode": {
+    "ref": "providerNode",
     "enabled": {{ (omniroute_secrets.omniroute_llama_swap_api_key | default('') | length > 0) | bool | lower }},
     "name": {{ omniroute_llama_swap_node_name | to_json }},
     "prefix": {{ omniroute_llama_swap_prefix | to_json }},
     "apiType": {{ omniroute_llama_swap_api_type | to_json }},
     "baseUrl": {{ omniroute_llama_swap_base_url | to_json }},
     "connectionName": {{ omniroute_llama_swap_connection_name | to_json }},
-    "apiKey": {{ omniroute_secrets.omniroute_llama_swap_api_key | default('') | to_json }}
+    "apiKey": {{ omniroute_secrets.omniroute_llama_swap_api_key | default('') | to_json }},
+    "syncModels": true
   },
+  "providerModels": {{ omniroute_provider_models | to_json }},
   "combos": {{ omniroute_combos | to_json }},
   "modelComboMappings": {{ omniroute_model_combo_mappings | to_json }},
   "modelAliases": {{ omniroute_model_aliases | to_json }},
+  "modelAliasesToRemove": {{ omniroute_model_aliases_to_remove | to_json }},
   "apiKeys": {{ omniroute_api_keys | to_json }},
   "apiKeysToRemove": {{ omniroute_api_keys_to_remove | to_json }}
 }

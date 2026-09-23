@@ -42,8 +42,12 @@ omniroute_host_port: 20128
 omniroute_container_port: 20128
 omniroute_memory_mb: 8192
 omniroute_stop_grace_period: 40s
+omniroute_fetch_timeout_ms: 600000
+omniroute_audio_remote_provider_nodes: true
+omniroute_rerank_remote_provider_nodes: true
 
 omniroute_validate_health: true
+omniroute_validate_bootstrap_artifacts: true
 omniroute_health_url: "http://127.0.0.1:{{ omniroute_host_port }}/healthz"
 omniroute_health_retries: 60
 omniroute_health_delay: 5
@@ -68,12 +72,36 @@ omniroute_oidc_scopes:
 omniroute_oidc_allowed_subjects: >-
   {{ omniroute_secrets.omniroute_oidc_allowed_subjects | default([]) }}
 
-# Upstream provider ids from docs/reference/PROVIDER_REFERENCE.md:
-# openrouter (API key) and glm (Z.AI GLM Coding Plan, international).
-omniroute_openrouter_provider_id: openrouter
-omniroute_openrouter_connection_name: "OpenRouter"
-omniroute_glm_provider_id: glm
-omniroute_glm_connection_name: "GLM Coding Plan"
+# API-key connections. Native Codex OAuth is enrolled through OmniRoute and
+# intentionally is not synthesized or replaced by Ansible.
+omniroute_provider_connections:
+  - ref: openrouter
+    enabled: "{{ (omniroute_secrets.omniroute_openrouter_api_key | default('') | length > 0) | bool }}"
+    providerId: openrouter
+    name: OpenRouter
+    apiKey: "{{ omniroute_secrets.omniroute_openrouter_api_key | default('') }}"
+    syncModels: true
+  - ref: glm
+    enabled: "{{ (omniroute_secrets.omniroute_glm_api_key | default('') | length > 0) | bool }}"
+    providerId: glm
+    name: GLM Coding Plan
+    apiKey: "{{ omniroute_secrets.omniroute_glm_api_key | default('') }}"
+    syncModels: true
+  - ref: llama-cpp
+    enabled: "{{ (omniroute_secrets.omniroute_llama_swap_api_key | default('') | length > 0) | bool }}"
+    providerId: llama-cpp
+    name: llama-swap embeddings
+    apiKey: "{{ omniroute_secrets.omniroute_llama_swap_api_key | default('') }}"
+    providerSpecificData:
+      baseUrl: "{{ omniroute_llama_swap_base_url }}"
+    syncModels: true
+omniroute_required_provider_connections:
+  - providerId: codex
+    syncModels: true
+  - providerId: openrouter
+    name: OpenRouter
+  - providerId: glm
+    name: GLM Coding Plan
 
 # llama-swap is wired through the generic OpenAI-compatible provider-node
 # mechanism. The prefix must not collide with a reserved provider prefix
@@ -84,44 +112,53 @@ omniroute_llama_swap_api_type: chat
 omniroute_llama_swap_base_url: "http://192.168.10.70:8080/v1"
 omniroute_llama_swap_connection_name: "llama-swap"
 
-# Optional routing objects. Entries use the management API field names and are
-# created or updated by stable name/pattern; leave empty to skip. Example:
-# omniroute_combos:
-#   - name: coding-fallback
-#     strategy: priority
-#     models:
-#       - glm/glm-4.7
-#       - openrouter/openai/gpt-5-mini
-# omniroute_model_combo_mappings:
-#   - pattern: "^glm-4.7$"
-#     comboName: coding-fallback
-#     priority: 10
-# omniroute_api_keys:
-#   - name: claude-code
-#     modelAccessMode: all
+# Only these settings are owned. Unrelated dashboard and OIDC values survive.
+omniroute_settings:
+  autoRoutingEnabled: false
+  hideAutoCombos: true
+omniroute_cache_settings:
+  semanticCacheEnabled: false
+  semanticCacheVectorEnabled: false
+omniroute_compression_settings:
+  enabled: false
+  defaultMode: "off"
+omniroute_combo_defaults:
+  comboDefaults:
+    strategy: priority
+    maxRetries: 1
+    maxGlobalAttempts: 2
+    retryDelayMs: 2000
+    maxSetRetries: 0
+    compressionMode: "off"
+    zeroLatencyOptimizationsEnabled: false
+    hedging: false
+    fallbackCompressionMode: "off"
+    predictiveTtftMs: 0
+    shadowRouting:
+      enabled: false
+    evalRouting:
+      enabled: false
+    connectionAwareExpansion: false
+    trackMetrics: true
+
+omniroute_provider_models: []
 omniroute_combos: []
 omniroute_model_combo_mappings: []
 omniroute_management_api_key_name: ansible-bootstrap
 omniroute_api_keys: []
 omniroute_api_keys_to_remove: []
-
-# Managed model aliases mirroring LiteLLM's public local/* and remote/* names
-# with OmniRoute-compatible local-* and remote-* names. Provider-qualified
-# targets use llamaswap/* for the llama-swap provider
-# node and openrouter/* the OpenRouter connection. Each entry converges as a
-# UI-visible custom alias (Settings -> Model Aliases) through the management
-# API; custom aliases created outside Ansible are never pruned.
-omniroute_model_aliases:
-  local-rerank: llamaswap/qwen3-reranker-0.6b
-  remote-rerank: openrouter/voyageai/rerank-2.5-lite
-  local-stt-fast: llamaswap/whisper/large-v3-turbo-q5_0
-  local-embedding: llamaswap/qwen3-embedding-4b
-  local-stt-large: llamaswap/whisper/large-v3-q5_0
-  local-automation-lite: llamaswap/unsloth/gemma-4-e4b-it-qat
-  local-camera-analysis: llamaswap/unsloth/gemma-4-12b-it-qat-camera
-  local-chat: llamaswap/qwen3.8-27b
-  local-analysis: llamaswap/qwen3.8-27b-analysis
-  local-document-analysis: llamaswap/qwen3.8-27b-documents
-  local-document-best: llamaswap/qwen3.8-27b-analysis
-  local-coder: llamaswap/qwen3.8-27b-coding
-  local-tts: llamaswap/chatterbox
+omniroute_model_aliases: {}
+omniroute_model_aliases_to_remove:
+  - local-rerank
+  - remote-rerank
+  - local-stt-fast
+  - local-embedding
+  - local-stt-large
+  - local-automation-lite
+  - local-camera-analysis
+  - local-chat
+  - local-analysis
+  - local-document-analysis
+  - local-document-best
+  - local-coder
+  - local-tts

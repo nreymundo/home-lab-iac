@@ -85,6 +85,21 @@ and disables password login. Later runs authenticate with that management key.
 Losing the root-owned key file requires recovery through an authenticated OIDC
 session before Ansible can manage OmniRoute again.
 
+The same output file stores one-time workload and operator keys created during
+Phase 1. Copy only the required value into each application's existing SOPS
+secret owner during that application's later cutover; never distribute the
+`ansible-bootstrap` management key. A creation response is written atomically
+before update-only permissions are patched, so rerunning after a partial
+failure reuses the key instead of regenerating it.
+
+The OpenRouter and GLM credentials may reuse the same provider credentials used
+by LiteLLM while both gateways run. The llama-swap credential is used by both
+the custom provider node and the authenticated built-in `llama-cpp` embedding
+connection. OmniRoute's native Codex connection is enrolled interactively and
+owns its rotating OAuth state; do not place ChatGPT OAuth tokens or LiteLLM's
+credential file in this Ansible secret. Recovery of an OAuth connection is an
+OmniRoute enrollment operation, not secret-file reconstruction.
+
 ## Proxmox
 
 `proxmox.sops.yml` holds the SMTP credentials for the Proxmox email
