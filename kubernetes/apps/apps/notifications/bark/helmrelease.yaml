@@ -5,7 +5,6 @@ metadata:
   name: bark
   namespace: notifications
 spec:
-  suspend: true
   chart:
     spec:
       chart: app-template
