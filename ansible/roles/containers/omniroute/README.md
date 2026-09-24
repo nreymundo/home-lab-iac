@@ -16,6 +16,10 @@ clients or remove LiteLLM.
 - Settings aliases that remain explicitly managed
 - API keys and an explicit keys-to-remove list
 
+Pricing sync is enabled for this VM in group vars. OmniRoute refreshes the public
+LiteLLM pricing catalog at startup and daily thereafter; user price overrides
+take precedence over synced entries.
+
 The installation-specific providers, metadata, public combos, and workload key
 policies are in `ansible/inventories/group_vars/omniroute_vms.yml`. Role
 defaults contain the common safety policy. Objects are resolved by stable

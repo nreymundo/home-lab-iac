@@ -43,6 +43,7 @@ omniroute_container_port: 20128
 omniroute_memory_mb: 8192
 omniroute_stop_grace_period: 40s
 omniroute_fetch_timeout_ms: 600000
+omniroute_pricing_sync_enabled: false
 omniroute_audio_remote_provider_nodes: true
 omniroute_rerank_remote_provider_nodes: true
 
