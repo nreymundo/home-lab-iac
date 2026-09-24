@@ -12,6 +12,7 @@ resources:
   - ../apps/automation/esphome-builder
   - ../apps/reddit/apollo-backend
   - ../apps/reddit/bark
+  - ../apps/notifications/bark
   - ../apps/utils/homepage
   - ../apps/utils/bambuddy
   - ../apps/utils/it-tools

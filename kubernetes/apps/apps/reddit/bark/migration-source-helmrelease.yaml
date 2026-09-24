@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: bark-migration-source
+  namespace: reddit
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              repository: docker.io/finab/bark-server
+              tag: v2.3.5
+            command:
+              - /bin/sh
+              - -c
+              - sleep 36000
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: apollo-bark
+            readOnly: true
+        advancedMounts:
+          main:
+            main:
+              - path: /data
+                readOnly: true
