@@ -246,7 +246,7 @@
     {
       "description": "Track Apollo backend commit images from upstream main",
       "customType": "regex",
-      "managerFilePatterns": ["/^kubernetes/apps/apps/reddit/apollo-backend/helmrelease\\.ya?ml$/"],
+      "fileMatch": ["^kubernetes/apps/apps/reddit/apollo-backend/helmrelease\\.ya?ml$"],
       "matchStrings": [
         "(?:^|\\r?\\n)\\s*#\\s*renovate-apollo-backend:\\s*branch=main\\s*\\r?\\n\\s*repository:\\s*ghcr\\.io/apollo-reborn/apollo-backend\\s*\\r?\\n\\s*tag:\\s*sha-(?<currentDigest>[a-f0-9]{40})"
       ],
