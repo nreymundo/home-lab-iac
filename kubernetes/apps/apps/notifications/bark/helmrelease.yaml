@@ -3,8 +3,9 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: bark
-  namespace: reddit
+  namespace: notifications
 spec:
+  suspend: true
   chart:
     spec:
       chart: app-template
@@ -73,7 +74,7 @@ spec:
         className: traefik
         annotations:
           external-dns.kubernetes.io/hostname: bark.${CLUSTER_DOMAIN}
-          traefik.ingress.kubernetes.io/router.middlewares: reddit-bark-allowlist@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: notifications-bark-allowlist@kubernetescrd
         hosts:
           - host: bark.${CLUSTER_DOMAIN}
             paths:
@@ -88,7 +89,7 @@ spec:
         type: custom
         volumeSpec:
           persistentVolumeClaim:
-            claimName: apollo-bark
+            claimName: bark
         advancedMounts:
           main:
             main:

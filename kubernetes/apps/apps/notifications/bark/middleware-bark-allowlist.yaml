@@ -3,7 +3,7 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: bark-allowlist
-  namespace: reddit
+  namespace: notifications
 spec:
   ipAllowList:
     sourceRange:
