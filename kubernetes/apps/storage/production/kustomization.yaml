@@ -9,5 +9,6 @@ resources:
   - ../pvcs/media
   - ../pvcs/paperless
   - ../pvcs/reddit
+  - ../pvcs/notifications
   - ../pvcs/security
   - ../pvcs/utils

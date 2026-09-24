@@ -92,6 +92,11 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: notifications
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: automation
 ---
 apiVersion: v1
