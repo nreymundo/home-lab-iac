@@ -5,10 +5,5 @@ components:
   - ../../../../components/bjw-s-defaults
   - ../../../../components/ingress/traefik-base
 resources:
-  - apollo-backend-db-secrets.sops.yaml
-  - apollo-backend-secrets.sops.yaml
-  - cnpg-cluster.yaml
-  - cnpg-pooler.yaml
-  - configmap.yaml
-  - database-schema-configmap.yaml
   - helmrelease.yaml
+  - middleware-bark-allowlist.yaml

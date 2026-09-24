@@ -1,0 +1,96 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: bark
+  namespace: reddit
+spec:
+  suspend: true
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        strategy: Recreate
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=finab/bark-server registryUrl=https://docker.io
+              repository: docker.io/finab/bark-server
+              tag: v2.3.5
+            ports:
+              - name: http
+                containerPort: 8080
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8080
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        annotations:
+          external-dns.kubernetes.io/hostname: bark.${CLUSTER_DOMAIN}
+          traefik.ingress.kubernetes.io/router.middlewares: reddit-bark-allowlist@kubernetescrd
+        hosts:
+          - host: bark.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: apollo-bark
+        advancedMounts:
+          main:
+            main:
+              - path: /data

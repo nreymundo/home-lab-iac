@@ -326,56 +326,6 @@ spec:
               limits:
                 memory: 256Mi
 
-      bark:
-        strategy: Recreate
-        containers:
-          bark:
-            image:
-              # renovate: datasource=docker depName=finab/bark-server registryUrl=https://docker.io
-              repository: docker.io/finab/bark-server
-              tag: v2.3.5
-            ports:
-              - name: http
-                containerPort: 8080
-            probes:
-              liveness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /healthz
-                    port: 8080
-                  initialDelaySeconds: 10
-                  periodSeconds: 30
-                  timeoutSeconds: 5
-                  failureThreshold: 3
-              readiness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /healthz
-                    port: 8080
-                  periodSeconds: 10
-                  timeoutSeconds: 5
-                  failureThreshold: 3
-              startup:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /healthz
-                    port: 8080
-                  periodSeconds: 5
-                  timeoutSeconds: 5
-                  failureThreshold: 30
-            resources:
-              requests:
-                cpu: 25m
-                memory: 64Mi
-              limits:
-                memory: 256Mi
-
     service:
       main:
         controller: api
@@ -392,11 +342,6 @@ spec:
         ports:
           redis:
             port: 6379
-      bark:
-        controller: bark
-        ports:
-          http:
-            port: 8080
 
     ingress:
       main:
@@ -409,19 +354,6 @@ spec:
               - path: /
                 service:
                   identifier: main
-                  port: http
-      bark:
-        enabled: true
-        className: traefik
-        annotations:
-          external-dns.kubernetes.io/hostname: bark.${CLUSTER_DOMAIN}
-          traefik.ingress.kubernetes.io/router.middlewares: reddit-bark-allowlist@kubernetescrd
-        hosts:
-          - host: bark.${CLUSTER_DOMAIN}
-            paths:
-              - path: /
-                service:
-                  identifier: bark
                   port: http
 
     persistence:
@@ -438,14 +370,4 @@ spec:
         advancedMounts:
           valkey-locks:
             valkey:
-              - path: /data
-      bark-data:
-        enabled: true
-        type: custom
-        volumeSpec:
-          persistentVolumeClaim:
-            claimName: apollo-bark
-        advancedMounts:
-          bark:
-            bark:
               - path: /data
