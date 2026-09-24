@@ -11,6 +11,9 @@ docker_install_enabled: true
 docker_users:
   - omniroute
 
+# Sync public LiteLLM model pricing into OmniRoute daily; user overrides take precedence.
+omniroute_pricing_sync_enabled: true
+
 # UFW: default deny inbound, allow outbound, permit SSH, and allow the
 # OmniRoute dashboard/API port only from the current K3s nodes, which front
 # it with the cluster Traefik ingress.
@@ -170,19 +173,19 @@ omniroute_combos:
     isHidden: false
   - name: cloud/fast
     strategy: priority
-    models: [codex/gpt-5.6-luna]
+    models: [codex/gpt-6-luna]
     config: {targetTimeoutMs: 600000}
     isActive: true
     isHidden: false
   - name: cloud/general
     strategy: priority
-    models: [codex/gpt-5.6-terra]
+    models: [glm/glm-5.3]
     config: {targetTimeoutMs: 600000}
     isActive: true
     isHidden: false
   - name: cloud/deep
     strategy: priority
-    models: [codex/gpt-5.6-sol]
+    models: [codex/gpt-6-sol]
     config: {targetTimeoutMs: 600000}
     isActive: true
     isHidden: false
@@ -294,7 +297,25 @@ omniroute_api_keys:
     compressionEnabled: false
     cacheDefaultMode: bypass
     catalogScope: combos
+  - name: home-assistant
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [local/automation-lite]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
   - name: paperless-gpt
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [local/document-analysis]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
+  - name: paperless-ai
     modelAccessMode: restricted
     allowedModels: []
     allowedCombos: [local/document-analysis]
@@ -321,6 +342,33 @@ omniroute_api_keys:
     compressionEnabled: false
     cacheDefaultMode: bypass
     catalogScope: combos
+  - name: apollo
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [cloud/fast]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
+  - name: mailflow
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [cloud/fast]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
+  - name: hermes
+    modelAccessMode: all
+    allowedModels: []
+    allowedCombos: [combo/*]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: all
   - name: omniroute-operator
     modelAccessMode: all
     allowedModels: []
