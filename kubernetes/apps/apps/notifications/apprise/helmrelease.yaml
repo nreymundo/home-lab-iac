@@ -23,7 +23,7 @@ spec:
               TZ: Europe/Berlin
               APPRISE_STATEFUL_MODE: simple
               APPRISE_CONFIG_DIR: /config
-              APPRISE_DEFAULT_CONFIG_ID: apprise
+              APPRISE_DEFAULT_CONFIG_ID: personal
               APPRISE_CONFIG_LOCK: "yes"
               APPRISE_ADMIN: "no"
               APPRISE_STORAGE_MODE: memory
@@ -102,7 +102,7 @@ spec:
         hosts:
           - host: apprise.lan.${CLUSTER_DOMAIN}
             paths:
-              - path: /notify/apprise
+              - path: /notify/personal
                 pathType: Exact
                 service:
                   identifier: main
@@ -116,8 +116,8 @@ spec:
           secret:
             secretName: apprise-secrets
             items:
-              - key: apprise.cfg
-                path: apprise.cfg
+              - key: personal.cfg
+                path: personal.cfg
         advancedMounts:
           main:
             main:
