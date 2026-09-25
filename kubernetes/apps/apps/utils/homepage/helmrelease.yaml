@@ -267,6 +267,10 @@ spec:
                 icon: air-trail.png
                 description: "Flight history tracker"
                 href: https://airtrail.lan.${CLUSTER_DOMAIN}
+            - Apprise:
+                icon: apprise.png
+                description: "Notification routing"
+                href: https://apprise.lan.${CLUSTER_DOMAIN}
             - Audiobookshelf:
                 icon: audiobookshelf.png
                 description: "Audiobook server"

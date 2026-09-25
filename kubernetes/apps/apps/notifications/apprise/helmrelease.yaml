@@ -1,0 +1,125 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: apprise
+  namespace: notifications
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=caronc/apprise registryUrl=https://docker.io
+              repository: docker.io/caronc/apprise
+              tag: v1.5.4
+            env:
+              TZ: Europe/Berlin
+              APPRISE_STATEFUL_MODE: simple
+              APPRISE_CONFIG_DIR: /config
+              APPRISE_DEFAULT_CONFIG_ID: apprise
+              APPRISE_CONFIG_LOCK: "yes"
+              APPRISE_ADMIN: "no"
+              APPRISE_STORAGE_MODE: memory
+              APPRISE_WORKER_COUNT: "1"
+              SECRET_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: apprise-secrets
+                    key: SECRET_KEY
+            ports:
+              - name: http
+                containerPort: 8000
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /status
+                    port: 8000
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /status
+                    port: 8000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /status
+                    port: 8000
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 25m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8000
+
+    ingress:
+      main:
+        annotations:
+          external-dns.kubernetes.io/hostname: apprise.lan.${CLUSTER_DOMAIN}
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-gatekeeper-auth-chain@kubernetescrd
+        hosts:
+          - host: apprise.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+      api:
+        enabled: true
+        className: traefik
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+        hosts:
+          - host: apprise.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /notify/apprise
+                pathType: Exact
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      config:
+        enabled: true
+        type: custom
+        volumeSpec:
+          secret:
+            secretName: apprise-secrets
+            items:
+              - key: apprise.cfg
+                path: apprise.cfg
+        advancedMounts:
+          main:
+            main:
+              - path: /config
+                readOnly: true
