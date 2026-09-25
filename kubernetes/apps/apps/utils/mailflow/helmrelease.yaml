@@ -114,7 +114,7 @@ spec:
             image:
               # renovate: datasource=docker depName=maathimself/mailflow-backend registryUrl=https://ghcr.io
               repository: ghcr.io/maathimself/mailflow-backend
-              tag: "3.5.2"
+              tag: "3.5.7"
             env:
               TZ: Europe/Berlin
               NODE_ENV: production
