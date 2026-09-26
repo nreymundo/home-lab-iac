@@ -21,7 +21,6 @@ resources:
   - ../apps/utils/airtrail
   - ../apps/utils/karakeep
   - ../apps/utils/mailflow
-  - ../apps/utils/sure
   - ../apps/nextcloud
   - ../apps/media/audiobookshelf
   - ../apps/media/jellyfin

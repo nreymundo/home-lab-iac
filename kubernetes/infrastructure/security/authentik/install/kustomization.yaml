@@ -38,4 +38,3 @@ resources:
   - tautulli-basic-auth-pbk-secret.sops.yaml
   - open-webui-sso-secret.sops.yaml
   - mailflow-sso-secret.sops.yaml
-  - sure-sso-secret.sops.yaml

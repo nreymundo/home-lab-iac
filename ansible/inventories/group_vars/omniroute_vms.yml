@@ -333,15 +333,6 @@ omniroute_api_keys:
     compressionEnabled: false
     cacheDefaultMode: bypass
     catalogScope: combos
-  - name: sure
-    modelAccessMode: restricted
-    allowedModels: []
-    allowedCombos: [cloud/general]
-    scopes: []
-    allowAutoCombos: false
-    compressionEnabled: false
-    cacheDefaultMode: bypass
-    catalogScope: combos
   - name: n8n-instance-ai
     modelAccessMode: restricted
     allowedModels: []
