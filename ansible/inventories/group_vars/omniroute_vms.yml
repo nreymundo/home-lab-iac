@@ -360,10 +360,19 @@ omniroute_api_keys:
     compressionEnabled: false
     cacheDefaultMode: bypass
     catalogScope: combos
+  - name: audiomuse
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: "{{ omniroute_combos | map(attribute='name') | list }}"
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
   - name: sillytavern
     modelAccessMode: all
     allowedModels: []
-    allowedCombos: [combo/*]
+    allowedCombos: "{{ omniroute_combos | map(attribute='name') | list }}"
     scopes: []
     allowAutoCombos: false
     compressionEnabled: false
@@ -372,7 +381,7 @@ omniroute_api_keys:
   - name: hermes
     modelAccessMode: all
     allowedModels: []
-    allowedCombos: [combo/*]
+    allowedCombos: "{{ omniroute_combos | map(attribute='name') | list }}"
     scopes: []
     allowAutoCombos: false
     compressionEnabled: false
@@ -381,24 +390,7 @@ omniroute_api_keys:
   - name: omniroute-operator
     modelAccessMode: all
     allowedModels: []
-    allowedCombos:
-      - local/automation-lite
-      - local/camera-analysis
-      - local/chat
-      - local/analysis
-      - local/document-analysis
-      - local/document-best
-      - local/coder
-      - cloud/fast
-      - cloud/general
-      - cloud/deep
-      - cloud/coder
-      - embedding-qwen3-4b-2560
-      - local-stt-large
-      - local-stt-fast
-      - local-tts
-      - local-image-qwen
-      - local-image-sdxl
+    allowedCombos: "{{ omniroute_combos | map(attribute='name') | list }}"
     scopes: []
     allowAutoCombos: false
     compressionEnabled: false
