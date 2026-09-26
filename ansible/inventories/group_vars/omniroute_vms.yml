@@ -297,6 +297,15 @@ omniroute_api_keys:
     compressionEnabled: false
     cacheDefaultMode: bypass
     catalogScope: combos
+  - name: vane
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: [cloud/fast, cloud/deep, embedding-qwen3-4b-2560]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
   - name: home-assistant
     modelAccessMode: restricted
     allowedModels: []
@@ -360,6 +369,15 @@ omniroute_api_keys:
     compressionEnabled: false
     cacheDefaultMode: bypass
     catalogScope: combos
+  - name: sillytavern
+    modelAccessMode: all
+    allowedModels: []
+    allowedCombos: [combo/*]
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: all
   - name: hermes
     modelAccessMode: all
     allowedModels: []
