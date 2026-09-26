@@ -155,7 +155,7 @@ data:
           mode: rerank
           max_input_tokens: 8192
         litellm_params:
-          model: hosted_vllm/qwen3-reranker-0.6b
+          model: hosted_vllm/qwen/qwen3-reranker-0.6b
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -200,7 +200,7 @@ data:
           max_input_tokens: 16384
           output_vector_size: 2560
         litellm_params:
-          model: hosted_vllm/qwen3-embedding-4b
+          model: hosted_vllm/majentik/qwen3-embedding-4b
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -271,7 +271,7 @@ data:
           supports_reasoning: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/qwen3.8-27b
+          model: hosted_vllm/unsloth/qwen3.8-27b
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -291,7 +291,7 @@ data:
           supports_reasoning: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/qwen3.8-27b-analysis
+          model: hosted_vllm/unsloth/qwen3.8-27b-analysis
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -310,7 +310,7 @@ data:
           supports_function_calling: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/qwen3.8-27b-documents
+          model: hosted_vllm/unsloth/qwen3.8-27b-documents
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -330,7 +330,7 @@ data:
           supports_reasoning: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/qwen3.8-27b-analysis
+          model: hosted_vllm/unsloth/qwen3.8-27b-analysis
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -350,7 +350,7 @@ data:
           supports_reasoning: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/qwen3.8-27b-coding
+          model: hosted_vllm/unsloth/qwen3.8-27b-coding
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0

@@ -106,6 +106,51 @@ omniroute_provider_models:
     max_input_tokens: 8192
     recreateForCreateOnlyChanges: true
   - providerRef: providerNode
+    modelId: unsloth/qwen3.8-27b
+    apiFormat: chat-completions
+    supportedEndpoints: [chat]
+    max_input_tokens: 253952
+    max_output_tokens: 8192
+    supportsVision: true
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: unsloth/qwen3.8-27b-analysis
+    apiFormat: chat-completions
+    supportedEndpoints: [chat]
+    max_input_tokens: 253952
+    max_output_tokens: 8192
+    supportsVision: true
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: unsloth/qwen3.8-27b-documents
+    apiFormat: chat-completions
+    supportedEndpoints: [chat]
+    max_input_tokens: 258048
+    max_output_tokens: 4096
+    supportsVision: true
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: unsloth/qwen3.8-27b-coding
+    apiFormat: chat-completions
+    supportedEndpoints: [chat]
+    max_input_tokens: 253952
+    max_output_tokens: 8192
+    supportsVision: true
+    recreateForCreateOnlyChanges: true
+  - providerRef: llama-cpp
+    modelId: majentik/qwen3-embedding-4b
+    apiFormat: embeddings
+    supportedEndpoints: [embeddings]
+    max_input_tokens: 16384
+    dimensions: 2560
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
+    modelId: qwen/qwen3-reranker-0.6b
+    apiFormat: rerank
+    supportedEndpoints: [rerank]
+    max_input_tokens: 8192
+    recreateForCreateOnlyChanges: true
+  - providerRef: providerNode
     modelId: whisper/large-v3-q5_0
     apiFormat: audio-transcriptions
     supportedEndpoints: [audio-transcriptions]
@@ -143,31 +188,31 @@ omniroute_combos:
     isHidden: false
   - name: local/chat
     strategy: priority
-    models: [llamaswap/qwen3.8-27b]
+    models: [llamaswap/unsloth/qwen3.8-27b]
     config: {targetTimeoutMs: 600000}
     isActive: true
     isHidden: false
   - name: local/analysis
     strategy: priority
-    models: [llamaswap/qwen3.8-27b-analysis]
+    models: [llamaswap/unsloth/qwen3.8-27b-analysis]
     config: {targetTimeoutMs: 600000}
     isActive: true
     isHidden: false
   - name: local/document-analysis
     strategy: priority
-    models: [llamaswap/qwen3.8-27b-documents]
+    models: [llamaswap/unsloth/qwen3.8-27b-documents]
     config: {targetTimeoutMs: 600000}
     isActive: true
     isHidden: false
   - name: local/document-best
     strategy: priority
-    models: [llamaswap/qwen3.8-27b-analysis]
+    models: [llamaswap/unsloth/qwen3.8-27b-analysis]
     config: {targetTimeoutMs: 600000}
     isActive: true
     isHidden: false
   - name: local/coder
     strategy: priority
-    models: [llamaswap/qwen3.8-27b-coding]
+    models: [llamaswap/unsloth/qwen3.8-27b-coding]
     config: {targetTimeoutMs: 600000}
     isActive: true
     isHidden: false
@@ -197,7 +242,7 @@ omniroute_combos:
     isHidden: false
   - name: embedding-qwen3-4b-2560
     strategy: priority
-    models: [llama-cpp/qwen3-embedding-4b]
+    models: [llama-cpp/majentik/qwen3-embedding-4b]
     config: {targetTimeoutMs: 600000}
     isActive: true
     isHidden: false
