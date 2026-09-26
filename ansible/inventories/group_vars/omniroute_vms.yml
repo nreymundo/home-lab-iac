@@ -61,51 +61,6 @@ omniroute_provider_models:
     supportsVision: true
     recreateForCreateOnlyChanges: true
   - providerRef: providerNode
-    modelId: qwen3.8-27b
-    apiFormat: chat-completions
-    supportedEndpoints: [chat]
-    max_input_tokens: 253952
-    max_output_tokens: 8192
-    supportsVision: true
-    recreateForCreateOnlyChanges: true
-  - providerRef: providerNode
-    modelId: qwen3.8-27b-analysis
-    apiFormat: chat-completions
-    supportedEndpoints: [chat]
-    max_input_tokens: 253952
-    max_output_tokens: 8192
-    supportsVision: true
-    recreateForCreateOnlyChanges: true
-  - providerRef: providerNode
-    modelId: qwen3.8-27b-documents
-    apiFormat: chat-completions
-    supportedEndpoints: [chat]
-    max_input_tokens: 258048
-    max_output_tokens: 4096
-    supportsVision: true
-    recreateForCreateOnlyChanges: true
-  - providerRef: providerNode
-    modelId: qwen3.8-27b-coding
-    apiFormat: chat-completions
-    supportedEndpoints: [chat]
-    max_input_tokens: 253952
-    max_output_tokens: 8192
-    supportsVision: true
-    recreateForCreateOnlyChanges: true
-  - providerRef: llama-cpp
-    modelId: qwen3-embedding-4b
-    apiFormat: embeddings
-    supportedEndpoints: [embeddings]
-    max_input_tokens: 16384
-    dimensions: 2560
-    recreateForCreateOnlyChanges: true
-  - providerRef: providerNode
-    modelId: qwen3-reranker-0.6b
-    apiFormat: rerank
-    supportedEndpoints: [rerank]
-    max_input_tokens: 8192
-    recreateForCreateOnlyChanges: true
-  - providerRef: providerNode
     modelId: unsloth/qwen3.8-27b
     apiFormat: chat-completions
     supportedEndpoints: [chat]
