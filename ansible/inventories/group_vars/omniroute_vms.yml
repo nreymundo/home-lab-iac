@@ -117,14 +117,6 @@ omniroute_provider_models:
     modelId: chatterbox
     apiFormat: audio-speech
     supportedEndpoints: [audio-speech]
-  - providerRef: providerNode
-    modelId: Qwen-Image-2512-BF16-4-Step-LoRA
-    apiFormat: images-generations
-    supportedEndpoints: [images]
-  - providerRef: providerNode
-    modelId: simple-sdxl-workflow
-    apiFormat: images-generations
-    supportedEndpoints: [images]
 
 # Public names are active, visible, single-target priority combos. Slash names
 # are used for chat/Responses; bare names are used by modality handlers.
@@ -216,18 +208,6 @@ omniroute_combos:
   - name: local-tts
     strategy: priority
     models: [llamaswap/chatterbox]
-    config: {targetTimeoutMs: 600000}
-    isActive: true
-    isHidden: false
-  - name: local-image-qwen
-    strategy: priority
-    models: [llamaswap/Qwen-Image-2512-BF16-4-Step-LoRA]
-    config: {targetTimeoutMs: 600000}
-    isActive: true
-    isHidden: false
-  - name: local-image-sdxl
-    strategy: priority
-    models: [llamaswap/simple-sdxl-workflow]
     config: {targetTimeoutMs: 600000}
     isActive: true
     isHidden: false
