@@ -241,6 +241,16 @@ omniroute_api_keys:
     compressionEnabled: false
     cacheDefaultMode: bypass
     catalogScope: combos
+  - name: nextcloud
+    modelAccessMode: restricted
+    allowedModels: []
+    allowedCombos: >-
+      {{ omniroute_combos | map(attribute='name') | select('match', '^(cloud|local)/') | list }}
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: combos
   - name: open-webui-embedding
     modelAccessMode: restricted
     allowedModels: []
