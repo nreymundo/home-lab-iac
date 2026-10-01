@@ -16,7 +16,7 @@ login becomes the admin; disabling registration does not block OIDC
 just-in-time account creation. The intended human should log in first and
 verify the admin-room invite before creating the local Hermes bot account and
 issuing its token. User admission is governed by the Authentik
-`ContinuwuityUsers` group. The Hermes bot must be a local account, not an OIDC
+`continuwuity-users` group. The Hermes bot must be a local account, not an OIDC
 shadow account. Use the upstream [OIDC token guide](https://continuwuity.org/authentication/oidc#minting-tokens-for-non-oidc-accounts)
 and [admin user reference](https://continuwuity.org/reference/admin/users.html)
 for the exact commands.

@@ -1455,7 +1455,7 @@ data:
         state: present
         id: continuwuity-users
         identifiers:
-          name: "Continuwuity Users"
+          name: "continuwuity-users"
         attrs:
           is_superuser: false
           parent: null
