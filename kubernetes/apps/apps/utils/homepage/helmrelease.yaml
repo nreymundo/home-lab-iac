@@ -303,6 +303,10 @@ spec:
                 icon: discord.png
                 description: "Web instance for Discord with Steam and Plex rich presence"
                 href: https://discord1.lan.${CLUSTER_DOMAIN}
+            - Element:
+                icon: element.svg
+                description: Matrix chat client
+                href: https://element.${CLUSTER_DOMAIN}
             - Frigate:
                 icon: frigate.png
                 description: "NVR with AI detection"

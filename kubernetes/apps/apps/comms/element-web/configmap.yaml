@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/v1.32.0/configmap-v1.json
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: element-web-config
+  namespace: comms
+data:
+  config.json: |
+    {
+      "default_server_config": {
+        "m.homeserver": {
+          "base_url": "https://matrix.${CLUSTER_DOMAIN}",
+          "server_name": "matrix.${CLUSTER_DOMAIN}"
+        }
+      },
+      "brand": "Element",
+      "disable_guests": true
+    }

@@ -14,6 +14,7 @@ resources:
   - ../apps/notifications/bark
   - ../apps/notifications/apprise
   - ../apps/comms/continuwuity
+  - ../apps/comms/element-web
   - ../apps/utils/homepage
   - ../apps/utils/bambuddy
   - ../apps/utils/it-tools
