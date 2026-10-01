@@ -287,6 +287,10 @@ spec:
                 icon: bazarr.png
                 description: "Subtitle management"
                 href: https://bazarr.lan.${CLUSTER_DOMAIN}
+            - Continuwuity:
+                icon: https://raw.githubusercontent.com/continuwuity/continuwuity/main/docs/public/assets/logo.svg
+                description: "Matrix homeserver"
+                href: https://matrix.${CLUSTER_DOMAIN}
             - Dawarich:
                 icon: dawarich.png
                 description: "Location history tracker"

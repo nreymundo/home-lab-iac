@@ -138,6 +138,16 @@ spec:
             secretKeyRef:
               name: karakeep-sso-secret
               key: CLIENT_SECRET
+        - name: CONTINUWUITY_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: continuwuity-sso-secret
+              key: CLIENT_ID
+        - name: CONTINUWUITY_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: continuwuity-sso-secret
+              key: CLIENT_SECRET
         - name: HOMEPAGE_CLIENT_ID
           valueFrom:
             secretKeyRef:

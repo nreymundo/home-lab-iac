@@ -1,0 +1,123 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: continuwuity
+  namespace: comms
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsUser: 1000
+        runAsGroup: 1000
+
+    controllers:
+      main:
+        replicas: 1
+        strategy: Recreate
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=continuwuation/continuwuity registryUrl=https://forgejo.ellis.link
+              repository: forgejo.ellis.link/continuwuation/continuwuity
+              tag: v26.9.1
+            env:
+              CONTINUWUITY_SERVER_NAME: matrix.${CLUSTER_DOMAIN}
+              CONTINUWUITY_ADDRESS: 0.0.0.0
+              CONTINUWUITY_DATABASE_PATH: /var/lib/continuwuity
+              CONTINUWUITY_ALLOW_FEDERATION: "false"
+              CONTINUWUITY_ALLOW_REGISTRATION: "false"
+              CONTINUWUITY_WELL_KNOWN__CLIENT: https://matrix.${CLUSTER_DOMAIN}
+              CONTINUWUITY_OAUTH__OIDC__DISCOVERY_URL: https://sso.${CLUSTER_DOMAIN}/application/o/continuwuity/
+              CONTINUWUITY_OAUTH__OIDC__ADDITIONAL_SCOPES: '["profile", "email"]'
+              CONTINUWUITY_OAUTH__OIDC__PROMPT_FOR_LOCALPART: "false"
+              CONTINUWUITY_OAUTH__OIDC__CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: continuwuity-sso-secret
+                    key: CLIENT_ID
+              CONTINUWUITY_OAUTH__OIDC__CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: continuwuity-sso-secret
+                    key: CLIENT_SECRET
+              CONTINUWUITY_OAUTH__OIDC__PROVIDER_NAME: Authentik
+            ports:
+              - name: http
+                containerPort: 8008
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /_matrix/client/versions
+                    port: 8008
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /_matrix/client/versions
+                    port: 8008
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /_matrix/client/versions
+                    port: 8008
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 2Gi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8008
+
+    ingress:
+      main:
+        annotations:
+          external-dns.kubernetes.io/hostname: matrix.${CLUSTER_DOMAIN}
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+        hosts:
+          - host: matrix.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: continuwuity
+        advancedMounts:
+          main:
+            main:
+              - path: /var/lib/continuwuity

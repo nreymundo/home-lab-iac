@@ -13,6 +13,7 @@ resources:
   - ../apps/reddit/apollo-backend
   - ../apps/notifications/bark
   - ../apps/notifications/apprise
+  - ../apps/comms/continuwuity
   - ../apps/utils/homepage
   - ../apps/utils/bambuddy
   - ../apps/utils/it-tools
