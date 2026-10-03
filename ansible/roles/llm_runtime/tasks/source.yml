@@ -1,0 +1,170 @@
+---
+
+- name: Ensure llama.cpp parent directory exists
+  ansible.builtin.file:
+    path: "{{ llm_runtime_llama_dir | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: llm_runtime_enable_llama | bool
+
+- name: Check llama.cpp source directory
+  ansible.builtin.stat:
+    path: "{{ llm_runtime_llama_dir }}"
+  register: llm_runtime_llama_dir_stat
+  when: llm_runtime_enable_llama | bool
+
+- name: Check llama.cpp git metadata
+  ansible.builtin.stat:
+    path: "{{ llm_runtime_llama_dir }}/.git"
+  register: llm_runtime_llama_git_dir_stat
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_dir_stat.stat.exists
+
+- name: Remove unmanaged llama.cpp source directory
+  ansible.builtin.file:
+    path: "{{ llm_runtime_llama_dir }}"
+    state: absent
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_dir_stat.stat.exists
+    - not (llm_runtime_llama_git_dir_stat.stat.isdir | default(false))
+
+- name: Ensure llama.cpp support directory exists before source update
+  ansible.builtin.file:
+    path: "{{ llm_runtime_llama_dir }}/.ansible"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_update | bool
+    - llm_runtime_llama_git_dir_stat.stat.isdir | default(false)
+
+- name: Install llama grammar patch before source update
+  ansible.builtin.copy:
+    src: llama-grammar.patch
+    dest: "{{ llm_runtime_llama_patch_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_update | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+    - llm_runtime_llama_git_dir_stat.stat.isdir | default(false)
+
+- name: Check whether llama grammar patch should be reverted before source update # noqa command-instead-of-module
+  ansible.builtin.command: git apply --reverse --check {{ llm_runtime_llama_patch_path | quote }}
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  register: llm_runtime_grammar_patch_pre_update_reverse_check
+  changed_when: false
+  failed_when: false
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_update | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+    - llm_runtime_llama_git_dir_stat.stat.isdir | default(false)
+
+- name: Revert llama grammar patch before source update # noqa command-instead-of-module
+  ansible.builtin.command: git apply --reverse {{ llm_runtime_llama_patch_path | quote }}
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  register: llm_runtime_grammar_patch_pre_update_revert
+  changed_when: true
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_update | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+    - llm_runtime_llama_git_dir_stat.stat.isdir | default(false)
+    - llm_runtime_grammar_patch_pre_update_reverse_check.rc == 0
+
+- name: Clone or update llama.cpp source
+  ansible.builtin.git:
+    repo: "{{ llm_runtime_llama_repo }}"
+    dest: "{{ llm_runtime_llama_dir }}"
+    version: "{{ llm_runtime_llama_ref }}"
+    recursive: true
+    update: "{{ llm_runtime_llama_update | bool }}"
+    force: false
+    single_branch: "{{ llm_runtime_llama_single_branch }}"
+    depth: "{{ llm_runtime_llama_depth }}"
+  register: llm_runtime_llama_git
+  when: llm_runtime_enable_llama | bool
+
+- name: Ensure llama.cpp support directory exists
+  ansible.builtin.file:
+    path: "{{ llm_runtime_llama_dir }}/.ansible"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: llm_runtime_enable_llama | bool
+
+- name: Update llama.cpp submodules # noqa command-instead-of-module
+  ansible.builtin.command: git submodule update --recursive
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  register: llm_runtime_submodules
+  changed_when: llm_runtime_submodules.stdout | length > 0
+  when: llm_runtime_enable_llama | bool
+
+- name: Install llama grammar patch
+  ansible.builtin.copy:
+    src: llama-grammar.patch
+    dest: "{{ llm_runtime_llama_patch_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  register: llm_runtime_grammar_patch_file
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+
+- name: Check whether llama grammar patch is already applied # noqa command-instead-of-module
+  ansible.builtin.command: git apply --reverse --check {{ llm_runtime_llama_patch_path | quote }}
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  register: llm_runtime_grammar_patch_reverse_check
+  changed_when: false
+  failed_when: false
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+
+- name: Check whether llama grammar patch can be applied # noqa command-instead-of-module
+  ansible.builtin.command: git apply --check {{ llm_runtime_llama_patch_path | quote }}
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  register: llm_runtime_grammar_patch_forward_check
+  changed_when: false
+  failed_when: false
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+    - llm_runtime_grammar_patch_reverse_check.rc != 0
+
+- name: Apply llama grammar patch # noqa command-instead-of-module
+  ansible.builtin.command: git apply {{ llm_runtime_llama_patch_path | quote }}
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  register: llm_runtime_grammar_patch_apply
+  changed_when: true
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+    - llm_runtime_grammar_patch_reverse_check.rc != 0
+    - llm_runtime_grammar_patch_forward_check.rc == 0
+
+- name: Fail if llama grammar patch cannot be applied
+  ansible.builtin.fail:
+    msg: "llama grammar patch is neither applied nor cleanly applicable"
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_llama_apply_grammar_patch | bool
+    - llm_runtime_grammar_patch_reverse_check.rc != 0
+    - llm_runtime_grammar_patch_forward_check.rc != 0

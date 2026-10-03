@@ -1,0 +1,42 @@
+---
+- name: Ensure LLM runtime supports this OS family
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == 'RedHat'
+    fail_msg: "llm_runtime currently supports Fedora/RedHat containers only"
+
+- name: Resolve LLM runtime package list
+  ansible.builtin.set_fact:
+    llm_runtime_packages_effective: >-
+      {{
+        (llm_runtime_rocm_runtime_packages + llm_runtime_rocm_build_packages if llm_runtime_enable_rocm | bool else [])
+        + (llm_runtime_vulkan_runtime_packages + llm_runtime_vulkan_build_packages if llm_runtime_enable_vulkan | bool else [])
+        + llm_runtime_extra_packages
+      }}
+    llm_runtime_required_device_nodes: >-
+      {{
+        (['/dev/kfd'] if llm_runtime_enable_rocm | bool else [])
+        + (['/dev/dri/renderD128'] if (llm_runtime_enable_rocm | bool or llm_runtime_enable_vulkan | bool) else [])
+      }}
+
+- name: Ensure llama.cpp ROCm build has ROCm enabled
+  ansible.builtin.assert:
+    that:
+      - llm_runtime_enable_rocm | bool
+    fail_msg: "llm_runtime_enable_llama requires llm_runtime_enable_rocm because llama.cpp is built with HIP/ROCm."
+  when: llm_runtime_enable_llama | bool
+
+- name: Ensure GPU device nodes are present
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ llm_runtime_required_device_nodes }}"
+  register: llm_runtime_device_nodes
+
+- name: Assert GPU device nodes are present
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+    fail_msg: "Required GPU device node {{ item.item }} is missing"
+  loop: "{{ llm_runtime_device_nodes.results }}"
+  loop_control:
+    label: "{{ item.item }}"

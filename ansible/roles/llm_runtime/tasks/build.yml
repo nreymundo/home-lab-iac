@@ -1,0 +1,126 @@
+---
+- name: Render desired llama.cpp build marker
+  ansible.builtin.template:
+    src: build-marker.json.j2
+    dest: /tmp/llm-runtime-build-marker.json
+    owner: root
+    group: root
+    mode: "0644"
+  when: llm_runtime_enable_llama | bool
+
+- name: Check current llama.cpp build marker
+  ansible.builtin.command: cmp -s /tmp/llm-runtime-build-marker.json {{ llm_runtime_llama_marker_path | quote }}
+  register: llm_runtime_marker_cmp
+  changed_when: false
+  failed_when: false
+  when: llm_runtime_enable_llama | bool
+
+- name: Determine whether llama.cpp rebuild is required
+  ansible.builtin.set_fact:
+    llm_runtime_rebuild_required: >-
+      {{
+        llm_runtime_force_rebuild | bool
+        or llm_runtime_llama_git.changed
+        or (llm_runtime_grammar_patch_pre_update_revert.changed | default(false))
+        or (llm_runtime_grammar_patch_file.changed | default(false))
+        or (llm_runtime_grammar_patch_apply.changed | default(false))
+        or llm_runtime_marker_cmp.rc != 0
+      }}
+  when: llm_runtime_enable_llama | bool
+
+- name: Remove stale llama.cpp embedded UI assets when UI disabled
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ llm_runtime_llama_build_dir }}/tools/ui/dist"
+    - "{{ llm_runtime_llama_dir }}/tools/ui/dist"
+    - "{{ llm_runtime_llama_build_dir }}/tools/ui/.ui-stamp"
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
+    - not (llm_runtime_enable_ui | bool)
+
+- name: Configure llama.cpp ROCm/Vulkan build
+  ansible.builtin.command: >-
+    cmake -S . -B {{ llm_runtime_llama_build_dir | quote }}
+    -DGGML_HIP=ON
+    -DGGML_VULKAN={{ 'ON' if llm_runtime_enable_vulkan | bool else 'OFF' }}
+    -DCMAKE_HIP_FLAGS={{ llm_runtime_cmake_hip_flags | quote }}
+    -DAMDGPU_TARGETS={{ llm_runtime_amdgpu_targets | quote }}
+    -DCMAKE_BUILD_TYPE={{ llm_runtime_build_type | quote }}
+    -DGGML_RPC={{ 'ON' if llm_runtime_enable_rpc | bool else 'OFF' }}
+    -DLLAMA_BUILD_UI={{ 'ON' if llm_runtime_enable_ui | bool else 'OFF' }}
+    -DLLAMA_USE_PREBUILT_UI={{ 'ON' if llm_runtime_use_prebuilt_ui | bool else 'OFF' }}
+    -DROCM_PATH={{ llm_runtime_rocm_path | quote }}
+    -DHIP_PATH={{ llm_runtime_rocm_path | quote }}
+    -DHIP_PLATFORM=amd
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  changed_when: true
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
+
+- name: Build llama.cpp
+  ansible.builtin.command: >-
+    cmake --build {{ llm_runtime_llama_build_dir | quote }}
+    --config {{ llm_runtime_build_type | quote }}
+    -- -j{{ llm_runtime_build_jobs }}
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  changed_when: true
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
+
+- name: Install llama.cpp
+  ansible.builtin.command: >-
+    cmake --install {{ llm_runtime_llama_build_dir | quote }}
+    --config {{ llm_runtime_build_type | quote }}
+  args:
+    chdir: "{{ llm_runtime_llama_dir }}"
+  changed_when: true
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
+
+- name: Configure local library path
+  ansible.builtin.copy:
+    dest: /etc/ld.so.conf.d/local.conf
+    content: |
+      /usr/local/lib
+      /usr/local/lib64
+    owner: root
+    group: root
+    mode: "0644"
+  register: llm_runtime_ld_config_file
+  when: llm_runtime_enable_llama | bool
+
+- name: Copy llama.cpp shared libraries to lib64
+  ansible.builtin.shell: |
+    set -o pipefail
+    find {{ llm_runtime_llama_build_dir | quote }} -type f -name 'lib*.so*' -exec cp {} /usr/lib64/ \;
+  args:
+    executable: /bin/bash
+  changed_when: true
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool
+
+- name: Refresh dynamic linker cache
+  ansible.builtin.command: ldconfig
+  changed_when: llm_runtime_rebuild_required | bool or llm_runtime_ld_config_file.changed
+  when: llm_runtime_enable_llama | bool
+
+- name: Save llama.cpp build marker
+  ansible.builtin.copy:
+    src: /tmp/llm-runtime-build-marker.json
+    dest: "{{ llm_runtime_llama_marker_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+    remote_src: true
+  when:
+    - llm_runtime_enable_llama | bool
+    - llm_runtime_rebuild_required | bool

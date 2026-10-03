@@ -1,0 +1,38 @@
+---
+- name: Ensure NetBird directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ netbird_container_owner }}"
+    group: "{{ netbird_container_group }}"
+    mode: "0750"
+  loop:
+    - "{{ netbird_base_dir }}"
+    - "{{ netbird_base_dir }}/crowdsec"
+
+- name: Check for existing Traefik CrowdSec bouncer credentials
+  ansible.builtin.stat:
+    path: "{{ netbird_traefik_bouncer_key_file }}"
+  register: netbird_traefik_bouncer_key_stat
+
+- name: Verify Docker Compose is available
+  ansible.builtin.command: docker compose version
+  changed_when: false
+
+- name: Allow NetBird mesh proxy WireGuard traffic through UFW
+  community.general.ufw:
+    rule: allow
+    port: "{{ netbird_mesh_proxy_wireguard_port }}"
+    proto: udp
+    comment: NetBird mesh proxy WireGuard
+  when: netbird_enabled | bool
+
+- name: Check for existing NetBird configuration
+  ansible.builtin.stat:
+    path: "{{ netbird_config_file }}"
+  register: netbird_config_stat
+
+- name: Check whether NetBird bootstrap is complete
+  ansible.builtin.stat:
+    path: "{{ netbird_bootstrap_complete_file }}"
+  register: netbird_bootstrap_complete_stat
