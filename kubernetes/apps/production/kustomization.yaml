@@ -11,8 +11,8 @@ resources:
   - ../apps/automation/n8n
   - ../apps/automation/esphome-builder
   - ../apps/reddit/apollo-backend
-  - ../apps/notifications/bark
-  - ../apps/notifications/apprise
+  - ../apps/comms/bark
+  - ../apps/comms/apprise
   - ../apps/comms/continuwuity
   - ../apps/comms/discord-presence
   - ../apps/comms/element-web
