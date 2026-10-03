@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
     name: drpp-config
-    namespace: utils
+    namespace: comms
 type: Opaque
 stringData:
     config.yaml: ENC[AES256_GCM,data:ZfJyxKs0O+BM9oaOrmrXYn6ApPXvT2RSbVW5+m5/H/BH5bT1NJ2U8XC3XekClrq/yel7sc9O7h3r7pUsdGWRA3O/oCCxL+8sKMk+Vxg6knbSSd7EymQUFvlPdUUo+EShQGcXvrGYT2TRQcvdxI+5FhuMmWFjrW5LveQKlBsJjK9DZ/s0bVq/mc/iPn7eI1kPWC8sVVHhwciIYgrDZzyCb4hpic/oHmRPA1Dg4Pp+JFrUlm4SosGJ5e48lWuQ+ypxVYGb6+pf+/3KRKvCQPqb+5NP41gz63joizMPTnX7Zxn1WPT9RP2in3n8XwAa+UvFa5Ru2rJw3flo/pn1CKZRLlluyCGIpVUe9PBzslBE3KHEFekygqMuBrF3Jukf85/tDRaaeKT3P78nQ0pD7dtKSBh2F044404qt0TfRgCacQbFT9U3xLfTmze9YuOLDZa1jcSC3oXbdqhabVr1WNcEaJFhijjS73CPC5j7sB0hTbP7k7d+Lhjgwcw60SSutfXZXrKbMBStyEgiSkahZoD4J7kXl+A166CXiGlG+PjByguVUMMBrPWa82bFkwDvLZigdCLHm6FqEQEqsNBce9EbE8nJqvTGNXiEIYoEPFcOPYZh6nSF/uKR849GJ9JeLqMpFX5S/PsCkNLkcYU6popZ/lBxSCmL0fL4YPoS46Ht9vOpY09nIdhMM6gKd5OC87P5AEfQPMiPiBNa7AkqFcphrwq9gkUrUU2e0geZSHu9ZMSaHKKqZhYj1EW8QkCVPUpthGBRNg1P8CCt+Pa33hzg4Rf7LZM/uWDvnkVF4Qu3qabISDD0Xz1gDKrcmm0CBVZwGsWRSe2wd0XIdscOav9t/45jL9VT/EfnNL2Um/Bk6fKg8tWy+4IjZ+/Z8WzHQvf3yDT5vv6qeZUho2zaoN3FNg9a+TaL8dpdN99MNRaS8k+QJkTYPcV0nxVyL4aJMXatMrLXqHxMIWyVwaBoMLnFJIUt,iv:vqjvvSw5120htqp9YUAbu9qB4vQ+acF5D8coc1Sq3KI=,tag:GNgAaQMwBuDJsKMSORk1Sw==,type:str]
@@ -18,6 +18,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-02-01T18:09:37Z"
-    mac: ENC[AES256_GCM,data:JpFpZEp/XYE7ov1/eKfopMnQ3fJSNaUXrVui+O17Bs0Sqn18YjnFYVGNTQ3xrE5T/4IeFdn+KTDlaA1wQjGq/rkpEPHxKQe21idJDaKBPjXrbx+a479wbsgkc4N1AhPnuu3N/y4XjUfpJp4qEBJxNThdmNDuLjGBvwDNGO8mGzI=,iv:PORtEkPuxf8oVWYOpZ3QD3RiltnHhBnOUKPS6vtY55w=,tag:JuYlWII4yYoOb72OOx8m3Q==,type:str]
+    lastmodified: "2026-10-02T23:58:44Z"
+    mac: ENC[AES256_GCM,data:5Yqr8OQgSgo+r+hMAqA2rHtKdZyv/XUVRKEU7svNEM136QRVd+MbRkaXQmB+UH4Se4O3Cu8T23PETFet8WCopqZwu1NM1gc8Iwqd3JbSAaY2tU5HgL2T+8aKYk2DTUyNLCKAUmxOXigsthGByEZGzc9mVN//Xn/cqDVJdThstJQ=,iv:0KghxxxBjQT1Bn2khrn218q5NMYbh7efvm0tOOweRLY=,tag:HLTDAVFkUURY7NX9f6pV2A==,type:str]
     version: 3.11.0

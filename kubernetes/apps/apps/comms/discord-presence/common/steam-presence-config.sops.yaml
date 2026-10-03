@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
     name: steam-presence-config
-    namespace: utils
+    namespace: comms
 type: Opaque
 stringData:
     config.json: ENC[AES256_GCM,data:pYwCLKx6z++RoJyl8Dz8Y6fczIKee74OMulHjoXNU+DfBw4X3vpSnPlbb31lCt42Y5cQAHyDinlbm4fNnysNwFgycfx6qiblj2VkBLV18V4EOBhZHcPRFngbIfnMOA8LaTzboGfhrtldWjjrOGysiiEXuzk/nOlxmMAWE3cRWfsEM7nAJZAb6WNi/9ln+oGePkOvOpPxb9KUw/4ofEFfNrwp/6hIDe5P3GnCquo9LRbq2Egj6r+jmJC7t+wv0jKl51DTlfHJLSWh++6hT/kp4DZ5FIWdTEuIUOFGpDG34T+/+b0DwxvsD4JYFW9D7PzC6rPc5qWFXsmTTOcK7a+ZRaBlxkTp75sypNi9mMP3hQnfRXc/kvuwUPpsp2pKC69yxjJKBhLyj3/riINmJx88oG0AHyXFtvzT58F9RV3kWk1coShrghPb6fx6SBj0TyatwbfMvJavftm6NiLv/mD5Z0K6Fqi5DajF0V7ZCGicyIi+1Xq8OFMhcp1KwZhL7x1HDtRZhYrIuImV44/4QJerxalDtRsrNHcqoPnQ46V8pTAeKPJXWCdEC+LCvFhSyhRbUrV6b5FUlitMokRsCs5aHJBAoGS0Xp61hLvfhvhtr0zEbjqq/z+Vhszv68VZCbLe1jpSdy4BfEZkD73Hu/gn4uEX8nyxdwhCI6by2SA15XPDZSujRQcqjt3deH9zEgvU5FyrBdw9cb2SNHa9oMo//ntJVNGPjbTZPfll54S+CqSU8pVulDgLjGG1uzxFrIh+HoDHedhqyz8xBbbRQyoqDo2s1aqOZnRiUH00tWM7oDrUbvkS6jKgqnWM3EcONCgpupXrGzU4Gat5EAz3b/FcnY9cARw6TUHnQ2PJBDvCXsdyjifvCn0LyZkNlFnJ+ah37u9Oy2ooagX/RuMs6u7oA7etinQwYbVLdjYsFmWnTPsKfKZmPSyruxkqB3fHG7kpJKYeWWINQzoFNv/Lr7FcmMKfm7HzY5T215+d6fwWW+PlUPU9HN8ftrPFRi8ZIWcbh16nZVnsiu2AZq/qgpJckPpFjrsg4r8uSdwU66ATKZH+5icAbo3WELOaipkcYzu2OpCqLJ8XoBYnAzNLGyZXDipvpbcdajsidRHktfOw,iv:x/FiH74eryxLeNziDCvDWM9eM6YZsi7V7ZS9QXug2rA=,tag:eYF4q1SjlOLS7ibfLROwcA==,type:str]
@@ -18,6 +18,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-08-06T22:36:07Z"
-    mac: ENC[AES256_GCM,data:yG5Q5YaVUaS1XFPvEL6ujn2+5faqZOBmkR4qysCfmiqIkFlgFrRIXXqBqdeALYpd8hXVqyaZ8xcqVPH4pFMq7VzQD/w0F1lObiy4u9SeKfhuTcdZpt4itgC9Q9XLGnxl7Cc9ckEXNJgdYTOCKsOIR9c1lDJu2iu/WqnVkb76taM=,iv:/FHu8MX4m94ffecKvqRePalg9sTGGKkwpzjrPy0qe7o=,tag:Oa6PvAkneHToZqEi0OMCTg==,type:str]
+    lastmodified: "2026-10-02T23:58:45Z"
+    mac: ENC[AES256_GCM,data:Mly09MJT7vacOG4nS5izSsMCTxWDAm7rbndMNXUG3q3XzM509LqvTUHv+4pahvpi3xIYMu6tf2lbUlav+YGWrUxUTkzobEQbNkHawfHv30QIozb2MOfrcNeHy9ApbelpBjTAs2bw1MmBy9f1ES5cbaFgmwYTB8ofYbleuauUVGY=,iv:kKXFEeTp2yP6QSuF114+dZHi1R3IoDffDcnHakBWiLk=,tag:V+ypsGml62OUlqKCFWyCIA==,type:str]
     version: 3.13.3

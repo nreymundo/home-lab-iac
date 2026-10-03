@@ -14,6 +14,7 @@ resources:
   - ../apps/notifications/bark
   - ../apps/notifications/apprise
   - ../apps/comms/continuwuity
+  - ../apps/comms/discord-presence
   - ../apps/comms/element-web
   - ../apps/utils/homepage
   - ../apps/utils/bambuddy
@@ -44,7 +45,6 @@ resources:
   - ../apps/immich
   - ../apps/media/jellyplex-watched
   - ../apps/media/watchstate
-  - ../apps/utils/discord-presence
   - ../apps/media/plex-media-enrichment
   - ../apps/media/plex
   - ../apps/media/plex-exporter

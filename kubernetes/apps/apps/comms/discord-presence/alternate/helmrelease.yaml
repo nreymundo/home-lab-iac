@@ -2,8 +2,8 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: discord-presence-main
-  namespace: utils
+  name: discord-presence-alternate
+  namespace: comms
 spec:
   install:
     strategy:
@@ -194,10 +194,10 @@ spec:
       app:
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: traefik-discord-auth-chain@kubernetescrd
-          external-dns.kubernetes.io/hostname: discord1.lan.${CLUSTER_DOMAIN}
+          external-dns.kubernetes.io/hostname: discord2.lan.${CLUSTER_DOMAIN}
         className: traefik
         hosts:
-          - host: discord1.lan.${CLUSTER_DOMAIN}
+          - host: discord2.lan.${CLUSTER_DOMAIN}
             paths:
               - path: /
                 service:
@@ -211,7 +211,7 @@ spec:
         type: custom
         volumeSpec:
           persistentVolumeClaim:
-            claimName: discord-presence-main
+            claimName: discord-presence-alternate
         advancedMounts:
           kasmcord:
             kasmcord:
