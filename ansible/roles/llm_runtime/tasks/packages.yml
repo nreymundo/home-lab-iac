@@ -1,0 +1,30 @@
+---
+- name: Configure ROCm repository
+  ansible.builtin.template:
+    src: rocm.repo.j2
+    dest: "/etc/yum.repos.d/rocm-{{ llm_runtime_rocm_version }}.repo"
+    owner: root
+    group: root
+    mode: "0644"
+  when: llm_runtime_enable_rocm | bool
+
+- name: Install LLM runtime backend packages
+  ansible.builtin.dnf:
+    name: "{{ llm_runtime_packages_effective }}"
+    state: present
+    install_weak_deps: false
+    exclude:
+      - "*sdk*"
+      - "*samples*"
+      - "*-doc*"
+      - "*-docs*"
+  when: llm_runtime_packages_effective | length > 0
+
+- name: Configure ROCm shell environment
+  ansible.builtin.template:
+    src: rocm.sh.j2
+    dest: "{{ llm_runtime_rocm_env_file }}"
+    owner: root
+    group: root
+    mode: "0755"
+  when: llm_runtime_enable_rocm | bool

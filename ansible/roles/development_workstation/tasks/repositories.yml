@@ -11,19 +11,8 @@
 
 # --- HashiCorp (Terraform, Packer) ---------------------------------------
 
-- name: Download HashiCorp GPG key
-  ansible.builtin.get_url:
-    url: "{{ development_workstation_hashicorp_key_url }}"
-    dest: /tmp/development_workstation_hashicorp.asc
-    mode: "0644"
-    force: true
-
-- name: Convert HashiCorp GPG key to dearmor format
-  ansible.builtin.command:
-    cmd: >-
-      gpg --dearmor -o {{ development_workstation_hashicorp_keyring }}
-      /tmp/development_workstation_hashicorp.asc
-    creates: "{{ development_workstation_hashicorp_keyring }}"
+- name: Refresh the HashiCorp GPG key
+  ansible.builtin.import_tasks: hashicorp-key.yml
 
 - name: Add HashiCorp APT repository
   ansible.builtin.copy:
@@ -51,8 +40,10 @@
 
 - name: Add 1Password APT repository
   ansible.builtin.copy:
-    content: |
-      deb [arch={{ development_workstation_onepassword_arch }} signed-by={{ development_workstation_onepassword_keyring }}] {{ development_workstation_onepassword_repo_url }} stable main
+    content: >
+      deb [arch={{ development_workstation_onepassword_arch }}
+      signed-by={{ development_workstation_onepassword_keyring }}]
+      {{ development_workstation_onepassword_repo_url }} stable main
     dest: "{{ development_workstation_onepassword_list }}"
     mode: "0644"
   notify: Update development workstation apt cache
@@ -114,8 +105,10 @@
 
 - name: Add Syncthing APT repository
   ansible.builtin.copy:
-    content: |
-      deb [signed-by={{ development_workstation_syncthing_keyring }}] {{ development_workstation_syncthing_repo_url }} {{ development_workstation_syncthing_suite }} {{ development_workstation_syncthing_component }}
+    content: >
+      deb [signed-by={{ development_workstation_syncthing_keyring }}]
+      {{ development_workstation_syncthing_repo_url }} {{ development_workstation_syncthing_suite }}
+      {{ development_workstation_syncthing_component }}
     dest: "{{ development_workstation_syncthing_list }}"
     mode: "0644"
   notify: Update development workstation apt cache

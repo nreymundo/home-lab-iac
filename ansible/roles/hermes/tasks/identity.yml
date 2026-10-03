@@ -1,0 +1,46 @@
+---
+- name: Ensure hermes user exists
+  ansible.builtin.user:
+    name: "{{ hermes_user_name }}"
+    state: "{{ hermes_user_state }}"
+    create_home: true
+    home: "{{ hermes_user_home }}"
+    shell: "{{ hermes_user_shell }}"
+
+- name: Ensure Hermes XDG home directories exist
+  ansible.builtin.file:
+    path: "{{ hermes_user_home }}/{{ item }}"
+    state: directory
+    owner: "{{ hermes_user_name }}"
+    group: "{{ hermes_user_name }}"
+    mode: "0755"
+  loop: "{{ hermes_xdg_directories }}"
+
+- name: Install validated NOPASSWD sudoers file for hermes
+  ansible.builtin.copy:
+    dest: "{{ hermes_sudoers_file }}"
+    owner: root
+    group: root
+    mode: "{{ hermes_sudoers_file_mode }}"
+    content: |
+      # Managed by Ansible - hermes VM operator has full passwordless sudo.
+      {{ hermes_user_name }} ALL=(ALL) NOPASSWD:ALL
+    validate: 'visudo -csf %s'
+
+- name: Install polkit rule allowing hermes to restart managed Hermes units
+  ansible.builtin.copy:
+    dest: /etc/polkit-1/rules.d/50-hermes-dashboard-restart.rules
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      // Managed by Ansible - allow passwordless restart of managed Hermes units only.
+      polkit.addRule(function(action, subject) {
+          if (subject.user == "{{ hermes_user_name }}" &&
+              action.id == "org.freedesktop.systemd1.manage-units" &&
+              (action.lookup("unit") == "{{ hermes_dashboard_service_name }}.service" ||
+               action.lookup("unit") == "{{ hermes_service_name }}.service") &&
+              action.lookup("verb") == "restart") {
+              return polkit.Result.YES;
+          }
+      });

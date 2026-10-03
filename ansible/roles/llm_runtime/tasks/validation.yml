@@ -1,0 +1,24 @@
+---
+- name: Install GGUF VRAM estimator helper
+  ansible.builtin.get_url:
+    url: "{{ llm_runtime_vram_estimator_url }}"
+    dest: /usr/local/bin/gguf-vram-estimator.py
+    owner: root
+    group: root
+    mode: "0755"
+  when: llm_runtime_install_vram_estimator | bool
+
+- name: Validate ROCm can inspect devices
+  ansible.builtin.command: rocminfo
+  changed_when: false
+  when: llm_runtime_enable_rocm | bool
+
+- name: Validate llama.cpp binary is installed
+  ansible.builtin.command: llama-cli --help
+  changed_when: false
+  when: llm_runtime_enable_llama | bool
+
+- name: Validate Vulkan can inspect devices
+  ansible.builtin.command: vulkaninfo --summary
+  changed_when: false
+  when: llm_runtime_enable_vulkan | bool

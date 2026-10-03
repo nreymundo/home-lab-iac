@@ -1,0 +1,17 @@
+---
+- name: Install Hermes dashboard systemd unit
+  ansible.builtin.template:
+    src: hermes-dashboard.service.j2
+    dest: "/etc/systemd/system/{{ hermes_dashboard_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Hermes dashboard
+
+- name: Enable and start Hermes dashboard service
+  ansible.builtin.systemd_service:
+    name: "{{ hermes_dashboard_service_name }}"
+    state: "{{ hermes_dashboard_service_state }}"
+    enabled: "{{ hermes_dashboard_service_enabled }}"
+    daemon_reload: true
+  when: not ansible_check_mode

@@ -1,0 +1,74 @@
+---
+- name: Ensure native Hermes binary directory exists
+  ansible.builtin.file:
+    path: "{{ hermes_user_home }}/.local/bin"
+    state: directory
+    owner: "{{ hermes_user_name }}"
+    group: "{{ hermes_user_name }}"
+    mode: "0755"
+
+- name: Inspect native Hermes checkout
+  ansible.builtin.stat:
+    path: "{{ hermes_checkout_path }}"
+  register: hermes_checkout_stat
+
+- name: Inspect native Hermes binary
+  ansible.builtin.stat:
+    path: "{{ hermes_binary_path }}"
+  register: hermes_binary_stat
+
+- name: Refuse an orphan native Hermes binary
+  ansible.builtin.assert:
+    that:
+      - hermes_checkout_stat.stat.exists or not hermes_binary_stat.stat.exists
+    fail_msg: >-
+      Hermes binary {{ hermes_binary_path }} exists without its native checkout at
+      {{ hermes_checkout_path }}; refusing to replace an existing native install.
+    quiet: true
+
+- name: Install native Hermes with the official installer
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl -fsSL {{ hermes_installer_url }} | bash -s -- --skip-setup --non-interactive
+  register: hermes_install_run
+  changed_when: hermes_install_run.rc == 0
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ hermes_user_name }}"
+  environment:
+    HOME: "{{ hermes_user_home }}"
+  when:
+    - not ansible_check_mode
+    - not hermes_binary_stat.stat.exists
+    - not hermes_checkout_stat.stat.exists
+  notify:
+    - Restart Hermes gateway
+    - Restart Hermes dashboard
+
+- name: Recheck native Hermes binary after installation
+  ansible.builtin.stat:
+    path: "{{ hermes_binary_path }}"
+  register: hermes_verified_binary
+  when:
+    - not ansible_check_mode
+    - hermes_install_run is changed
+    - not hermes_checkout_stat.stat.exists
+
+- name: Verify native Hermes binary exists after fresh installation
+  ansible.builtin.assert:
+    that:
+      - hermes_verified_binary.stat.exists
+    fail_msg: >-
+      Native Hermes installation did not create the expected binary at
+      {{ hermes_binary_path }}.
+    quiet: true
+  when:
+    - not ansible_check_mode
+    - hermes_install_run is changed
+    - not hermes_checkout_stat.stat.exists
+
+- name: Mark native Hermes installation as verified
+  ansible.builtin.set_fact:
+    hermes_install_verified: true
+  when: not ansible_check_mode

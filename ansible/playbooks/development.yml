@@ -2,6 +2,18 @@
 - name: Provision development workstations
   hosts: development_vms
   become: true
+  pre_tasks:
+    - name: Check whether the HashiCorp APT source is already configured
+      ansible.builtin.stat:
+        path: "{{ development_workstation_hashicorp_list }}"
+      register: development_workstation_hashicorp_source
+
+    - name: Refresh the HashiCorp keyring before common apt cache updates
+      ansible.builtin.import_role:
+        name: development_workstation
+        tasks_from: hashicorp-key
+        public: false
+      when: development_workstation_hashicorp_source.stat.exists
   roles:
     - common
     - ssh_hardening

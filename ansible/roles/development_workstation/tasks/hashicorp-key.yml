@@ -1,0 +1,49 @@
+---
+- name: Ensure the HashiCorp keyring directory exists
+  ansible.builtin.file:
+    path: "{{ development_workstation_hashicorp_keyring | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Ensure the development tool staging directory exists for HashiCorp keys
+  ansible.builtin.file:
+    path: "{{ development_workstation_download_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Refresh the HashiCorp keyring outside check mode
+  when: not ansible_check_mode
+  block:
+    - name: Download the official HashiCorp GPG key to staging
+      ansible.builtin.get_url:
+        url: "{{ development_workstation_hashicorp_key_url }}"
+        dest: "{{ development_workstation_download_dir }}/hashicorp.asc"
+        owner: root
+        group: root
+        mode: "0644"
+        force: true
+
+    - name: Convert the staged HashiCorp GPG key to binary format
+      ansible.builtin.command:
+        argv:
+          - gpg
+          - --batch
+          - --yes
+          - --dearmor
+          - --output
+          - "{{ development_workstation_download_dir }}/hashicorp.gpg"
+          - "{{ development_workstation_download_dir }}/hashicorp.asc"
+      changed_when: false
+
+    - name: Install the staged HashiCorp keyring
+      ansible.builtin.copy:
+        src: "{{ development_workstation_download_dir }}/hashicorp.gpg"
+        dest: "{{ development_workstation_hashicorp_keyring }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0644"

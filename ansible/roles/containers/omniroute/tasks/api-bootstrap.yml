@@ -1,0 +1,75 @@
+---
+- name: Install OmniRoute bootstrap script
+  ansible.builtin.template:
+    src: bootstrap_omniroute.py.j2
+    dest: "{{ omniroute_bootstrap_script }}"
+    owner: root
+    group: root
+    mode: "0755"
+  when: omniroute_enabled | bool
+
+- name: Render OmniRoute bootstrap configuration
+  ansible.builtin.template:
+    src: bootstrap-config.json.j2
+    dest: "{{ omniroute_bootstrap_config_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  when: omniroute_enabled | bool
+
+- name: Validate OmniRoute bootstrap Python syntax
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -m
+      - py_compile
+      - "{{ omniroute_bootstrap_script }}"
+  changed_when: false
+  when:
+    - omniroute_enabled | bool
+    - omniroute_validate_bootstrap_artifacts | bool
+    - not ansible_check_mode
+
+- name: Validate OmniRoute bootstrap JSON syntax
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -m
+      - json.tool
+      - "{{ omniroute_bootstrap_config_file }}"
+  changed_when: false
+  no_log: true
+  when:
+    - omniroute_enabled | bool
+    - omniroute_validate_bootstrap_artifacts | bool
+    - not ansible_check_mode
+
+- name: Run OmniRoute management API bootstrap
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ omniroute_bootstrap_script }}"
+      - "{{ omniroute_bootstrap_config_file }}"
+  register: omniroute_bootstrap
+  changed_when: (omniroute_bootstrap.stdout | from_json).changed
+  when:
+    - omniroute_enabled | bool
+    - not ansible_check_mode
+
+- name: Require successful OmniRoute bootstrap
+  ansible.builtin.assert:
+    that:
+      - (omniroute_bootstrap.stdout | from_json).ok
+    fail_msg: >-
+      OmniRoute bootstrap reported a failure: {{ omniroute_bootstrap.stdout }}
+  when:
+    - omniroute_enabled | bool
+    - not ansible_check_mode
+
+- name: Report OmniRoute endpoint
+  ansible.builtin.debug:
+    msg: >-
+      OmniRoute dashboard and API listen on port {{ omniroute_host_port }}
+      and are exposed through the cluster ingress.
+  when: omniroute_enabled | bool
