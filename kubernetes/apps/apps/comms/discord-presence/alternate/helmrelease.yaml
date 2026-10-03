@@ -52,6 +52,7 @@ spec:
                 python3 - <<'PY'
                 import json
                 import os
+                import shutil
 
                 path = "/home/kasm-user/.config/discord/settings.json"
                 dirpath = os.path.dirname(path)
@@ -74,6 +75,12 @@ spec:
 
                 os.chown(path, 1000, 1000)
                 os.chmod(path, 0o644)
+
+                # Rebuild Electron caches when restarting on a different cluster node.
+                for cache in ("GPUCache", "DawnGraphiteCache", "DawnWebGPUCache", "Code Cache", "Cache"):
+                    cache_path = os.path.join(dirpath, cache)
+                    if os.path.isdir(cache_path) and not os.path.islink(cache_path):
+                        shutil.rmtree(cache_path)
                 PY
                 export XDG_RUNTIME_DIR=/run/user/1000
                 exec /usr/bin/setpriv --reuid=1000 --regid=1000 --clear-groups \
