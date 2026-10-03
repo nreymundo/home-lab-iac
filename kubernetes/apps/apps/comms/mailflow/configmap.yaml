@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mailflow-nginx-config
-  namespace: utils
+  namespace: comms
 data:
   # Kubernetes port of upstream frontend/nginx.conf (its HTTP/80 server block
   # only). Traefik terminates TLS, so upstream's 443/self-signed-cert server

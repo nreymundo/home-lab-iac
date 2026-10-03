@@ -40,9 +40,8 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: mailflow
-  namespace: utils
+  namespace: comms
 spec:
-  suspend: true
   chart:
     spec:
       chart: app-template

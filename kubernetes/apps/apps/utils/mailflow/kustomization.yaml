@@ -9,5 +9,3 @@ resources:
   - mailflow-secrets.sops.yaml
   - mailflow-db-secrets.sops.yaml
   - cnpg-cluster.yaml
-  - configmap.yaml
-  - helmrelease.yaml
