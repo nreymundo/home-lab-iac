@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/cluster_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: mailflow-pg
+  namespace: comms
+  labels:
+    release: observability-kube-prometheus-stack
+spec:
+  inheritedMetadata:
+    labels:
+      recurring-job.longhorn.io/backup-daily: enabled
+      recurring-job.longhorn.io/backup-weekly: enabled
+  instances: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  monitoring:
+    enablePodMonitor: true
+  # Preserve the source capacity for cached message bodies and full-text indexes.
+  storage:
+    size: 10Gi
+    storageClass: longhorn-r2
+
+  imageName: ghcr.io/cloudnative-pg/postgresql:16
+
+  postgresql:
+    parameters:
+      wal_level: "replica"
+      archive_timeout: "21600"
+      archive_mode: "on"
+
+  # Restore the quiesced utils database into a separate PVC; never share its WAL archive.
+  bootstrap:
+    recovery:
+      source: origin
+      database: mailflow
+      owner: mailflow
+      secret:
+        name: mailflow-db-secrets
+      recoveryTarget:
+        backupID: "20261003T015951"
+        targetImmediate: true
+  externalClusters:
+    - name: origin
+      barmanObjectStore:
+        destinationPath: "s3://cloudnative-pg/mailflow"
+        endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+        serverName: "mailflow-pg-v1"
+        s3Credentials:
+          accessKeyId:
+            name: cnpg-backup-s3
+            key: ACCESS_KEY_ID
+          secretAccessKey:
+            name: cnpg-backup-s3
+            key: ACCESS_SECRET_KEY
+          region:
+            name: cnpg-backup-s3
+            key: AWS_DEFAULT_REGION
+        wal:
+          maxParallel: 8
+
+  backup:
+    barmanObjectStore:
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-backup-s3
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-backup-s3
+          key: ACCESS_SECRET_KEY
+        region:
+          name: cnpg-backup-s3
+          key: AWS_DEFAULT_REGION
+      destinationPath: "s3://cloudnative-pg/mailflow"
+      endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+      serverName: "mailflow-pg-v2"
+    retentionPolicy: "21d"
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: mailflow-pg-backup
+  namespace: comms
+spec:
+  schedule: "0 0 0 * * 0"  # Weekly Sunday at midnight
+  backupOwnerReference: self
+  cluster:
+    name: mailflow-pg
+  method: barmanObjectStore

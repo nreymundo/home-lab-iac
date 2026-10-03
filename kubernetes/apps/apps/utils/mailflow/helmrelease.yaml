@@ -42,6 +42,7 @@ metadata:
   name: mailflow
   namespace: utils
 spec:
+  suspend: true
   chart:
     spec:
       chart: app-template
