@@ -23,7 +23,6 @@ resources:
   - ../apps/utils/dawarich
   - ../apps/utils/airtrail
   - ../apps/utils/karakeep
-  - ../apps/utils/mailflow
   - ../apps/comms/mailflow
   - ../apps/nextcloud
   - ../apps/media/audiobookshelf
