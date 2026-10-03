@@ -377,6 +377,15 @@ omniroute_api_keys:
     compressionEnabled: false
     cacheDefaultMode: bypass
     catalogScope: all
+  - name: systems
+    modelAccessMode: all
+    allowedModels: []
+    allowedCombos: "{{ omniroute_combos | map(attribute='name') | list }}"
+    scopes: []
+    allowAutoCombos: false
+    compressionEnabled: false
+    cacheDefaultMode: bypass
+    catalogScope: all
   - name: omniroute-operator
     modelAccessMode: all
     allowedModels: []
