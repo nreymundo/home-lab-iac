@@ -51,6 +51,11 @@ spec:
                       key: HARDCOVER_API_KEY
                 - name: HARDCOVER_BOOKORBIT_USERNAME
                   value: nreymundo
+                - name: COMICVINE_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: bookorbit-secrets
+                      key: COMICVINE_API_KEY
                 - name: SMTP_HOST
                   value: smtp.purelymail.com
                 - name: SMTP_PORT

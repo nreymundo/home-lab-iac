@@ -15,6 +15,7 @@ const required = [
   process.env.PROWLARR_API_KEY,
   process.env.HARDCOVER_API_KEY,
   process.env.HARDCOVER_BOOKORBIT_USERNAME,
+  process.env.COMICVINE_API_KEY,
   process.env.SMTP_HOST,
   process.env.SMTP_PORT,
   process.env.SMTP_FROM_ADDRESS,
@@ -312,7 +313,7 @@ async function reconcileProwlarr(token) {
   await request(`${path}/${manager.id}/sync`, { method: 'POST', token });
 }
 
-async function reconcileHardcover(token) {
+async function reconcileMetadataAndHardcover(token) {
   // Personal settings belong to the authenticated user, not an admin-selected ID.
   const user = await request('/auth/me', { token });
   if (user.username !== process.env.HARDCOVER_BOOKORBIT_USERNAME) {
@@ -326,11 +327,19 @@ async function reconcileHardcover(token) {
     expected: [201],
   });
   if (!validation.valid) throw new Error('Hardcover API token validation failed');
-  // The metadata API merges this patch, preserving all other provider settings.
+  // The metadata API merges this patch, preserving unlisted providers and fields.
   await request('/metadata-preferences/providers', {
     method: 'PUT',
     token,
-    body: { hardcover: { enabled: true, apiKey } },
+    body: {
+      hardcover: { enabled: true, apiKey },
+      kobo: { enabled: true, country: 'us', language: 'en' },
+      audible: { enabled: true },
+      audnexus: { enabled: true },
+      librofm: { enabled: true },
+      comicvine: { enabled: true, apiKey: process.env.COMICVINE_API_KEY },
+      ranobedb: { enabled: true },
+    },
   });
   // Keep book-selection scope unchanged; enable public auto-sync without running sync/import.
   await request('/hardcover/settings', {
@@ -394,5 +403,5 @@ const libraries = await ensureLibraries(accessToken);
 for (const library of libraries) await reconcileLibraryAccess(accessToken, library);
 await reconcileProwlarr(accessToken);
 await reconcileEmail(accessToken);
-await reconcileHardcover(accessToken);
-console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, Prowlarr, SMTP, and Hardcover reconciled');
+await reconcileMetadataAndHardcover(accessToken);
+console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, Prowlarr, SMTP, metadata providers, and Hardcover reconciled');
