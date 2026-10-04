@@ -20,3 +20,30 @@ resources:
   - cnpg-cluster.yaml
   - helmrelease.yaml
   - reconcile-cronjob.yaml
+replacements:
+  - source:
+      kind: HelmRelease
+      name: bookorbit
+      fieldPath: spec.values.controllers.main.containers.main.image.repository
+    targets:
+      - select:
+          kind: CronJob
+          name: bookorbit-reconcile
+        fieldPaths:
+          - spec.jobTemplate.spec.template.spec.containers.[name=reconcile].image
+        options:
+          delimiter: ':'
+          index: 0
+  - source:
+      kind: HelmRelease
+      name: bookorbit
+      fieldPath: spec.values.controllers.main.containers.main.image.tag
+    targets:
+      - select:
+          kind: CronJob
+          name: bookorbit-reconcile
+        fieldPaths:
+          - spec.jobTemplate.spec.template.spec.containers.[name=reconcile].image
+        options:
+          delimiter: ':'
+          index: 1

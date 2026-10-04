@@ -26,7 +26,8 @@ spec:
               type: RuntimeDefault
           containers:
             - name: reconcile
-              image: ghcr.io/bookorbit/bookorbit:3.2.0
+              # Kustomize replaces the repository and tag from the HelmRelease.
+              image: bookorbit:managed
               imagePullPolicy: Always
               command:
                 - node
