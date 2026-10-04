@@ -31,7 +31,13 @@ spec:
             command:
               - sh
               - -ec
-              - mkdir -p /nas-root/libraries/reading/bookorbit/library /nas-root/libraries/reading/bookorbit/incoming /nas-root/libraries/reading/bookorbit/appdata /nas-root/libraries/reading/bookorbit/tmp
+              - >-
+                mkdir -p /nas-root/libraries/reading/bookorbit/library/comics
+                /nas-root/libraries/reading/bookorbit/library/books
+                /nas-root/libraries/reading/bookorbit/library/audiobooks
+                /nas-root/libraries/reading/bookorbit/incoming
+                /nas-root/libraries/reading/bookorbit/appdata
+                /nas-root/libraries/reading/bookorbit/tmp
         containers:
           main:
             image:
@@ -54,6 +60,11 @@ spec:
                   secretKeyRef:
                     name: bookorbit-secrets
                     key: JWT_SECRET
+              BOOK_REQUEST_ENCRYPTION_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: bookorbit-secrets
+                    key: BOOK_REQUEST_ENCRYPTION_KEY
               SETUP_BOOTSTRAP_TOKEN:
                 valueFrom:
                   secretKeyRef:
