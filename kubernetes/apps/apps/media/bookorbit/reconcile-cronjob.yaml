@@ -6,7 +6,7 @@ metadata:
   annotations:
     checkov.io/skip1: CKV_K8S_35=Management API credentials are supplied through Kubernetes Secret environment references.
 spec:
-  schedule: "*/15 * * * *"
+  schedule: "0 */6 * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 3

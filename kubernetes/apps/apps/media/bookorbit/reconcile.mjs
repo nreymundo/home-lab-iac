@@ -195,13 +195,14 @@ async function reconcileProvider(token) {
 async function ensureLibraries(token) {
   const libraries = await request('/libraries', { token });
   const desired = [
-    { name: 'Comics', icon: 'book-open', path: '/nas/library/comics' },
-    { name: 'Books', icon: 'book', path: '/nas/library/books' },
-    { name: 'Audiobooks', icon: 'headphones', path: '/nas/library/audiobooks' },
+    { name: 'Comics', icon: 'book-open', path: '/nas/library/comics', organizationMode: 'book_per_file' },
+    { name: 'Books', icon: 'book', path: '/nas/library/books', organizationMode: 'book_per_folder' },
+    { name: 'Audiobooks', icon: 'headphones', path: '/nas/library/audiobooks', organizationMode: 'book_per_folder' },
   ];
+  const autoScanCronExpression = '0 0 * * *';
   const managed = [];
-  for (const { name, icon, path } of desired) {
-    const existing = libraries.find((library) => library.name.toLowerCase() === name.toLowerCase());
+  for (const { name, icon, path, organizationMode } of desired) {
+    let existing = libraries.find((library) => library.name.toLowerCase() === name.toLowerCase());
     if (!existing) {
       managed.push(await request('/libraries', {
         method: 'POST',
@@ -211,17 +212,24 @@ async function ensureLibraries(token) {
           name,
           icon,
           folders: [path],
-          organizationMode: 'book_per_folder',
+          organizationMode,
           watch: false,
-          autoScanCronExpression: '0 */6 * * *',
+          autoScanCronExpression,
         },
         expected: [201],
       }));
       continue;
     }
     const folders = (existing.folders ?? []).map((folder) => folder.path);
-    if (folders.length !== 1 || folders[0] !== path || existing.organizationMode !== 'book_per_folder') {
+    if (folders.length !== 1 || folders[0] !== path || existing.organizationMode !== organizationMode) {
       throw new Error(`An existing ${name} library has a different folder or organization mode; refusing to modify it`);
+    }
+    if (existing.autoScanCronExpression !== autoScanCronExpression) {
+      existing = await request(`/libraries/${existing.id}`, {
+        method: 'PATCH',
+        token,
+        body: { autoScanCronExpression },
+      });
     }
     managed.push(existing);
   }
