@@ -13,6 +13,8 @@ const required = [
   process.env.OIDC_CLIENT_SECRET,
   process.env.PROWLARR_URL,
   process.env.PROWLARR_API_KEY,
+  process.env.HARDCOVER_API_KEY,
+  process.env.HARDCOVER_BOOKORBIT_USERNAME,
   process.env.SMTP_HOST,
   process.env.SMTP_PORT,
   process.env.SMTP_FROM_ADDRESS,
@@ -310,6 +312,41 @@ async function reconcileProwlarr(token) {
   await request(`${path}/${manager.id}/sync`, { method: 'POST', token });
 }
 
+async function reconcileHardcover(token) {
+  // Personal settings belong to the authenticated user, not an admin-selected ID.
+  const user = await request('/auth/me', { token });
+  if (user.username !== process.env.HARDCOVER_BOOKORBIT_USERNAME) {
+    throw new Error('Hardcover target does not match the authenticated BookOrbit account; refusing to configure it');
+  }
+  const apiKey = process.env.HARDCOVER_API_KEY;
+  const validation = await request('/hardcover/validate-token', {
+    method: 'POST',
+    token,
+    body: { token: apiKey },
+    expected: [201],
+  });
+  if (!validation.valid) throw new Error('Hardcover API token validation failed');
+  // The metadata API merges this patch, preserving all other provider settings.
+  await request('/metadata-preferences/providers', {
+    method: 'PUT',
+    token,
+    body: { hardcover: { enabled: true, apiKey } },
+  });
+  // Keep book-selection scope unchanged; enable public auto-sync without running sync/import.
+  await request('/hardcover/settings', {
+    method: 'PATCH',
+    token,
+    body: {
+      apiToken: apiKey,
+      enabled: true,
+      autoSyncOnStatusChange: true,
+      autoSyncOnProgressUpdate: true,
+      autoSyncOnRatingChange: true,
+      privacySettingId: 1,
+    },
+  });
+}
+
 async function reconcileEmail(token) {
   // Roll out the app's EMAIL_ENCRYPTION_KEY before provisioning SMTP passwords.
   const path = '/email/providers';
@@ -357,4 +394,5 @@ const libraries = await ensureLibraries(accessToken);
 for (const library of libraries) await reconcileLibraryAccess(accessToken, library);
 await reconcileProwlarr(accessToken);
 await reconcileEmail(accessToken);
-console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, Prowlarr, and SMTP reconciled');
+await reconcileHardcover(accessToken);
+console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, Prowlarr, SMTP, and Hardcover reconciled');
