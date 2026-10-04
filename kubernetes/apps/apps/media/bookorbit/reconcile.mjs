@@ -11,6 +11,13 @@ const required = [
   process.env.OIDC_ISSUER_URI,
   process.env.OIDC_CLIENT_ID,
   process.env.OIDC_CLIENT_SECRET,
+  process.env.PROWLARR_URL,
+  process.env.PROWLARR_API_KEY,
+  process.env.SMTP_HOST,
+  process.env.SMTP_PORT,
+  process.env.SMTP_FROM_ADDRESS,
+  process.env.SMTP_USERNAME,
+  process.env.SMTP_PASSWORD,
 ];
 if (required.some((value) => !value)) throw new Error('Required reconciliation configuration is missing');
 
@@ -47,7 +54,7 @@ const adminPermissions = [
   'view_audit_log',
   'notification_access',
 ];
-const userPermissions = ['library_download', 'opds_access'];
+const userPermissions = ['library_download', 'opds_access', 'email_send'];
 const desiredMappings = new Map([
   ...adminPermissions.map((permission) => [`bookorbit-admin:${permission}`, permission]),
   ...userPermissions.map((permission) => [`bookorbit-user:${permission}`, permission]),
@@ -124,6 +131,7 @@ async function reconcileProvider(token) {
   const providers = await request('/app-settings/oidc/providers', { token });
   const provider = {
     displayName: 'Authentik',
+    iconUrl: 'https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/authentik.svg',
     enabled: true,
     issuerUri: process.env.OIDC_ISSUER_URI,
     clientId: process.env.OIDC_CLIENT_ID,
@@ -187,13 +195,14 @@ async function reconcileProvider(token) {
 async function ensureLibraries(token) {
   const libraries = await request('/libraries', { token });
   const desired = [
-    { name: 'Comics', icon: 'book-open', path: '/nas/library/comics' },
-    { name: 'Books', icon: 'book', path: '/nas/library/books' },
-    { name: 'Audiobooks', icon: 'headphones', path: '/nas/library/audiobooks' },
+    { name: 'Comics', icon: 'book-open', path: '/nas/library/comics', organizationMode: 'book_per_file' },
+    { name: 'Books', icon: 'book', path: '/nas/library/books', organizationMode: 'book_per_folder' },
+    { name: 'Audiobooks', icon: 'headphones', path: '/nas/library/audiobooks', organizationMode: 'book_per_folder' },
   ];
+  const autoScanCronExpression = '0 0 * * *';
   const managed = [];
-  for (const { name, icon, path } of desired) {
-    const existing = libraries.find((library) => library.name.toLowerCase() === name.toLowerCase());
+  for (const { name, icon, path, organizationMode } of desired) {
+    let existing = libraries.find((library) => library.name.toLowerCase() === name.toLowerCase());
     if (!existing) {
       managed.push(await request('/libraries', {
         method: 'POST',
@@ -203,19 +212,34 @@ async function ensureLibraries(token) {
           name,
           icon,
           folders: [path],
-          organizationMode: 'book_per_folder',
+          organizationMode,
           watch: false,
-          autoScanCronExpression: '0 */6 * * *',
+          autoScanCronExpression,
         },
         expected: [201],
       }));
       continue;
     }
     const folders = (existing.folders ?? []).map((folder) => folder.path);
-    if (folders.length !== 1 || folders[0] !== path || existing.organizationMode !== 'book_per_folder') {
+    if (folders.length !== 1 || folders[0] !== path || existing.organizationMode !== organizationMode) {
       throw new Error(`An existing ${name} library has a different folder or organization mode; refusing to modify it`);
     }
+    if (existing.autoScanCronExpression !== autoScanCronExpression) {
+      existing = await request(`/libraries/${existing.id}`, {
+        method: 'PATCH',
+        token,
+        body: { autoScanCronExpression },
+      });
+    }
     managed.push(existing);
+  }
+  // This list is authoritative: deleting other libraries also removes their
+  // catalog data (and downloaded media for podcast libraries) through BookOrbit.
+  const managedIds = new Set(managed.map((library) => library.id));
+  for (const library of libraries) {
+    if (!managedIds.has(library.id)) {
+      await request(`/libraries/${library.id}`, { method: 'DELETE', token, expected: [204] });
+    }
   }
   return managed;
 }
@@ -261,6 +285,65 @@ async function reconcileLibraryAccess(token, library) {
   }
 }
 
+async function reconcileProwlarr(token) {
+  const path = '/admin/request-indexer-managers';
+  const { managers } = await request(path, { token });
+  const configuration = {
+    name: 'Prowlarr',
+    enabled: true,
+    baseUrl: process.env.PROWLARR_URL,
+    credential: process.env.PROWLARR_API_KEY,
+    allowPrivateAddress: true,
+    syncNewIndexers: true,
+  };
+  const existing = managers.find((manager) => manager.name.toLowerCase() === 'prowlarr');
+  const manager = existing
+    ? await request(`${path}/${existing.id}`, { method: 'PUT', token, body: configuration })
+    : await request(path, {
+      method: 'POST',
+      token,
+      body: { type: 'prowlarr', ...configuration },
+      expected: [201],
+    });
+  // Create/update attempts a sync but suppresses failures; this explicit sync
+  // makes an unreachable manager or invalid key fail the reconciliation job.
+  await request(`${path}/${manager.id}/sync`, { method: 'POST', token });
+}
+
+async function reconcileEmail(token) {
+  // Roll out the app's EMAIL_ENCRYPTION_KEY before provisioning SMTP passwords.
+  const path = '/email/providers';
+  const providers = await request(path, { token });
+  const configuration = {
+    name: 'Purelymail',
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    username: process.env.SMTP_USERNAME,
+    password: process.env.SMTP_PASSWORD,
+    fromName: 'BookOrbit',
+    fromAddress: process.env.SMTP_FROM_ADDRESS,
+    auth: true,
+    ssl: false,
+    startTls: true,
+    tlsRejectUnauthorized: true,
+  };
+  const existing = providers.find((provider) => provider.name === configuration.name);
+  let provider = existing
+    ? await request(`${path}/${existing.id}`, { method: 'PUT', token, body: configuration })
+    : await request(path, { method: 'POST', token, body: configuration, expected: [201] });
+  const connection = await request(`${path}/${provider.id}/test`, { method: 'POST', token });
+  if (!connection.success) throw new Error('SMTP connection test failed');
+  if (!provider.isShared) {
+    provider = await request(`${path}/${provider.id}/share`, { method: 'PATCH', token });
+  }
+  if (!provider.isDefault) {
+    provider = await request(`${path}/${provider.id}/default`, { method: 'PATCH', token });
+  }
+  if (!provider.isSystemProvider) {
+    await request(`${path}/${provider.id}/system`, { method: 'PATCH', token });
+  }
+}
+
 await waitForHealth();
 await ensureBootstrap();
 const accessToken = await authenticate();
@@ -272,4 +355,6 @@ await request('/app-settings/allow_registration', {
 await reconcileProvider(accessToken);
 const libraries = await ensureLibraries(accessToken);
 for (const library of libraries) await reconcileLibraryAccess(accessToken, library);
-console.log('BookOrbit OIDC provider, group mappings, registration policy, libraries, and library access reconciled');
+await reconcileProwlarr(accessToken);
+await reconcileEmail(accessToken);
+console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, Prowlarr, and SMTP reconciled');

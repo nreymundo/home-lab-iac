@@ -6,7 +6,7 @@ metadata:
   annotations:
     checkov.io/skip1: CKV_K8S_35=Management API credentials are supplied through Kubernetes Secret environment references.
 spec:
-  schedule: "*/15 * * * *"
+  schedule: "0 */6 * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 3
@@ -26,7 +26,8 @@ spec:
               type: RuntimeDefault
           containers:
             - name: reconcile
-              image: ghcr.io/bookorbit/bookorbit:3.2.0
+              # Kustomize replaces the repository and tag from the HelmRelease.
+              image: bookorbit:managed
               imagePullPolicy: Always
               command:
                 - node
@@ -36,6 +37,29 @@ spec:
                   value: http://bookorbit.media.svc.cluster.local:3000
                 - name: OIDC_ISSUER_URI
                   value: https://sso.${CLUSTER_DOMAIN}/application/o/bookorbit/
+                - name: PROWLARR_URL
+                  value: http://prowlarr.media.svc.cluster.local:9696
+                - name: PROWLARR_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: prowlarr-secrets
+                      key: API_KEY
+                - name: SMTP_HOST
+                  value: smtp.purelymail.com
+                - name: SMTP_PORT
+                  value: "587"
+                - name: SMTP_FROM_ADDRESS
+                  value: bookorbit@${CLUSTER_DOMAIN}
+                - name: SMTP_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: bookorbit-secrets
+                      key: SMTP_USERNAME
+                - name: SMTP_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: bookorbit-secrets
+                      key: SMTP_PASSWORD
                 - name: BOOTSTRAP_USERNAME
                   valueFrom:
                     secretKeyRef:

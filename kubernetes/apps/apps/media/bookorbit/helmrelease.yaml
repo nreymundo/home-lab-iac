@@ -65,6 +65,11 @@ spec:
                   secretKeyRef:
                     name: bookorbit-secrets
                     key: BOOK_REQUEST_ENCRYPTION_KEY
+              EMAIL_ENCRYPTION_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: bookorbit-secrets
+                    key: EMAIL_ENCRYPTION_KEY
               SETUP_BOOTSTRAP_TOKEN:
                 valueFrom:
                   secretKeyRef:
