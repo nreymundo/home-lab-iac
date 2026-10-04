@@ -49,3 +49,26 @@ and explicit apply authorization.
 A successful backup Job proves authentication and archive creation;
 `pg_restore --list` on a read-only NFS mount proves the archive is readable.
 Periodically restore into a disposable PostgreSQL instance to prove recovery.
+
+## Hindsight workload limits
+
+The [Hindsight HelmRelease](../kubernetes/apps/apps/ai/hindsight/helmrelease.yaml)
+defines four worker slots: one reserved each for retain, consolidation, and
+mental-model refresh, plus one shared slot. Graph maintenance needs shared
+capacity; reserving every slot prevents it from running even when the worker
+is otherwise idle.
+
+Both API and worker cap reranking at 100 candidates to reduce remote reranker
+token-per-minute pressure. This trades retrieval coverage beyond the first
+100 candidates for smaller requests; the reranker model and per-document token
+limit remain unchanged.
+
+Local coding-agent clients use `"reflectTimeoutMs": 60000` in
+`~/.hindsight/coding-agent.json`. Persistent plugins pick up that setting in
+their next session. The client deadline is separate from the server's
+600-second reflect wall timeout.
+
+Operation retention remains disabled. Historical failures are not automatically
+replayed or deleted. Cancel only equivalent, parked duplicate refresh operations
+through Hindsight's operations API, preserving running work and one pending
+refresh per bank and mental model.

@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helmrelease_v2.json
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -49,6 +49,7 @@ spec:
               HINDSIGHT_API_RERANKER_PROVIDER: litellm
               HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://omniroute.external-proxy.svc.cluster.local:20128/v1
               HINDSIGHT_API_RERANKER_LITELLM_MODEL: openrouter/voyageai/rerank-2.5-lite
+              HINDSIGHT_API_RERANKER_MAX_CANDIDATES: "100"
               HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
               HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
               HINDSIGHT_API_LLM_API_KEY:
@@ -149,10 +150,12 @@ spec:
               HINDSIGHT_API_RERANKER_PROVIDER: litellm
               HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://omniroute.external-proxy.svc.cluster.local:20128/v1
               HINDSIGHT_API_RERANKER_LITELLM_MODEL: openrouter/voyageai/rerank-2.5-lite
+              HINDSIGHT_API_RERANKER_MAX_CANDIDATES: "100"
               HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
               HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
               HINDSIGHT_API_WORKER_ID: hindsight-worker-1
-              HINDSIGHT_API_WORKER_MAX_SLOTS: "3"
+              # Three reserved slots below plus one shared slot for other worker tasks.
+              HINDSIGHT_API_WORKER_MAX_SLOTS: "4"
               HINDSIGHT_API_WORKER_CONSOLIDATION_RESERVED_SLOTS: "1"
               HINDSIGHT_API_WORKER_REFRESH_MENTAL_MODEL_RESERVED_SLOTS: "1"
               HINDSIGHT_API_WORKER_RETAIN_RESERVED_SLOTS: "1"
