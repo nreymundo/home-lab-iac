@@ -217,6 +217,14 @@ async function ensureLibraries(token) {
     }
     managed.push(existing);
   }
+  // This list is authoritative: deleting other libraries also removes their
+  // catalog data (and downloaded media for podcast libraries) through BookOrbit.
+  const managedIds = new Set(managed.map((library) => library.id));
+  for (const library of libraries) {
+    if (!managedIds.has(library.id)) {
+      await request(`/libraries/${library.id}`, { method: 'DELETE', token, expected: [204] });
+    }
+  }
   return managed;
 }
 
