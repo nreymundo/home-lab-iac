@@ -13,6 +13,11 @@ const required = [
   process.env.OIDC_CLIENT_SECRET,
   process.env.PROWLARR_URL,
   process.env.PROWLARR_API_KEY,
+  process.env.SMTP_HOST,
+  process.env.SMTP_PORT,
+  process.env.SMTP_FROM_ADDRESS,
+  process.env.SMTP_USERNAME,
+  process.env.SMTP_PASSWORD,
 ];
 if (required.some((value) => !value)) throw new Error('Required reconciliation configuration is missing');
 
@@ -49,7 +54,7 @@ const adminPermissions = [
   'view_audit_log',
   'notification_access',
 ];
-const userPermissions = ['library_download', 'opds_access'];
+const userPermissions = ['library_download', 'opds_access', 'email_send'];
 const desiredMappings = new Map([
   ...adminPermissions.map((permission) => [`bookorbit-admin:${permission}`, permission]),
   ...userPermissions.map((permission) => [`bookorbit-user:${permission}`, permission]),
@@ -296,6 +301,40 @@ async function reconcileProwlarr(token) {
   await request(`${path}/${manager.id}/sync`, { method: 'POST', token });
 }
 
+async function reconcileEmail(token) {
+  // Roll out the app's EMAIL_ENCRYPTION_KEY before provisioning SMTP passwords.
+  const path = '/email/providers';
+  const providers = await request(path, { token });
+  const configuration = {
+    name: 'Purelymail',
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    username: process.env.SMTP_USERNAME,
+    password: process.env.SMTP_PASSWORD,
+    fromName: 'BookOrbit',
+    fromAddress: process.env.SMTP_FROM_ADDRESS,
+    auth: true,
+    ssl: false,
+    startTls: true,
+    tlsRejectUnauthorized: true,
+  };
+  const existing = providers.find((provider) => provider.name === configuration.name);
+  let provider = existing
+    ? await request(`${path}/${existing.id}`, { method: 'PUT', token, body: configuration })
+    : await request(path, { method: 'POST', token, body: configuration, expected: [201] });
+  const connection = await request(`${path}/${provider.id}/test`, { method: 'POST', token });
+  if (!connection.success) throw new Error('SMTP connection test failed');
+  if (!provider.isShared) {
+    provider = await request(`${path}/${provider.id}/share`, { method: 'PATCH', token });
+  }
+  if (!provider.isDefault) {
+    provider = await request(`${path}/${provider.id}/default`, { method: 'PATCH', token });
+  }
+  if (!provider.isSystemProvider) {
+    await request(`${path}/${provider.id}/system`, { method: 'PATCH', token });
+  }
+}
+
 await waitForHealth();
 await ensureBootstrap();
 const accessToken = await authenticate();
@@ -308,4 +347,5 @@ await reconcileProvider(accessToken);
 const libraries = await ensureLibraries(accessToken);
 for (const library of libraries) await reconcileLibraryAccess(accessToken, library);
 await reconcileProwlarr(accessToken);
-console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, and Prowlarr reconciled');
+await reconcileEmail(accessToken);
+console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, Prowlarr, and SMTP reconciled');

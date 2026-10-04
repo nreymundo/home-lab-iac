@@ -2671,6 +2671,7 @@ data:
                 groups.extend([
                     "bookorbit-user:library_download",
                     "bookorbit-user:opds_access",
+                    "bookorbit-user:email_send",
                 ])
             return {"groups": groups}
 
