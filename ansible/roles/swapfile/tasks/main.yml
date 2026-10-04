@@ -17,7 +17,9 @@
   register: swapfile_findmnt
   changed_when: false
   check_mode: false
-  when: swapfile_enabled | bool
+  when:
+    - swapfile_enabled | bool
+    - not swapfile_proxmox_policy | bool
 
 - name: Check swapfile attributes
   ansible.builtin.command:
@@ -37,9 +39,14 @@
       {{
         not swapfile_stat.stat.exists or
         swapfile_stat.stat.size | int != swapfile_size_bytes | int or
-        (swapfile_findmnt.stdout | trim == 'btrfs' and 'C' not in swapfile_attr_flags)
+        (
+          (
+            swapfile_proxmox_policy | bool or
+            swapfile_findmnt.stdout | default('') | trim == 'btrfs'
+          ) and 'C' not in swapfile_attr_flags
+        )
       }}
-    swapfile_fstype: "{{ swapfile_findmnt.stdout | trim }}"
+    swapfile_fstype: "{{ swapfile_findmnt.stdout | default('') | trim }}"
   vars:
     swapfile_attr_flags: >-
       {{ swapfile_attributes.stdout.split()[0]
@@ -50,7 +57,7 @@
   when:
     - swapfile_enabled | bool
     - swapfile_recreate
-    - not ansible_check_mode
+    - swapfile_proxmox_policy | bool or not ansible_check_mode
   block:
     - name: Disable swapfile
       ansible.builtin.command:
@@ -69,7 +76,7 @@
   when:
     - swapfile_enabled | bool
     - swapfile_recreate
-    - not ansible_check_mode
+    - swapfile_proxmox_policy | bool or not ansible_check_mode
   block:
     - name: Create empty swapfile
       ansible.builtin.file:
@@ -86,7 +93,7 @@
           - +C
           - "{{ swapfile_path }}"
       changed_when: false
-      when: swapfile_fstype == 'btrfs'
+      when: swapfile_proxmox_policy | bool or swapfile_fstype == 'btrfs'
 
     - name: Allocate swapfile
       ansible.builtin.command:
@@ -95,36 +102,18 @@
           - -l
           - "{{ swapfile_size }}"
           - "{{ swapfile_path }}"
-      changed_when: true
+      changed_when: not (swapfile_proxmox_policy | bool)
 
     - name: Format swapfile
       ansible.builtin.command:
         argv:
           - mkswap
           - "{{ swapfile_path }}"
-      changed_when: true
+      changed_when: not (swapfile_proxmox_policy | bool)
 
-- name: Check active swap devices
-  ansible.builtin.command:
-    argv:
-      - swapon
-      - --show=NAME
-      - --noheadings
-  register: swapfile_active_devices
-  changed_when: false
-  check_mode: false
-  when: swapfile_enabled | bool
-
-- name: Enable swapfile
-  ansible.builtin.command:
-    argv:
-      - swapon
-      - "{{ swapfile_path }}"
-  changed_when: true
-  when:
-    - swapfile_enabled | bool
-    - not ansible_check_mode
-    - swapfile_path not in swapfile_active_devices.stdout_lines
+- name: Activate swapfile before persisting it
+  ansible.builtin.import_tasks: activate.yml
+  when: not swapfile_proxmox_policy | bool
 
 - name: Ensure swapfile persists
   ansible.posix.mount:
@@ -134,6 +123,10 @@
     opts: sw
     state: present
   when: swapfile_enabled | bool
+
+- name: Activate swapfile after persisting it
+  ansible.builtin.import_tasks: activate.yml
+  when: swapfile_proxmox_policy | bool
 
 - name: Configure vm.swappiness
   ansible.posix.sysctl:
@@ -145,4 +138,17 @@
     state: present
   when:
     - swapfile_enabled | bool
+    - not swapfile_proxmox_policy | bool
     - not ansible_check_mode
+
+- name: Configure deferred Proxmox vm.swappiness
+  ansible.builtin.copy:
+    content: "vm.swappiness={{ swapfile_swappiness }}\n"
+    dest: /etc/sysctl.d/99-swappiness.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - swapfile_enabled | bool
+    - swapfile_proxmox_policy | bool
+  notify: Apply swapfile sysctl

@@ -50,12 +50,6 @@ proxmox_unraid_nfs_legacy_cron_entries:
   - "*/15 * * * * /root/mnt_unraid.sh"
 proxmox_unraid_nfs_legacy_script_path: /root/mnt_unraid.sh
 
-# --- Swap ---
-proxmox_swapfile_path: /swapfile
-proxmox_swapfile_size: 16G
-proxmox_swapfile_size_bytes: 17179869184
-proxmox_swappiness: 10
-
 # --- ZFS ARC ---
 proxmox_zfs_arc_min_bytes: 1073741824  # 1 GiB
 proxmox_zfs_arc_max_bytes: 4294967296  # 4 GiB

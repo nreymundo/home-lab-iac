@@ -1,0 +1,22 @@
+---
+- name: Check active swap devices
+  ansible.builtin.command:
+    argv:
+      - swapon
+      - --show=NAME
+      - --noheadings
+  register: swapfile_active_devices
+  changed_when: false
+  check_mode: false
+  when: swapfile_enabled | bool
+
+- name: Enable swapfile
+  ansible.builtin.command:
+    argv:
+      - swapon
+      - "{{ swapfile_path }}"
+  changed_when: true
+  when:
+    - swapfile_enabled | bool
+    - swapfile_proxmox_policy | bool or not ansible_check_mode
+    - swapfile_path not in swapfile_active_devices.stdout_lines
