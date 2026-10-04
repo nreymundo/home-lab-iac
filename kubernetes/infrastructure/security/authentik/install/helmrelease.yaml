@@ -83,6 +83,16 @@ spec:
             secretKeyRef:
               name: komga-sso-secret
               key: CLIENT_SECRET
+        - name: BOOKORBIT_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: bookorbit-sso-secret
+              key: CLIENT_ID
+        - name: BOOKORBIT_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: bookorbit-sso-secret
+              key: CLIENT_SECRET
         - name: GITEA_CLIENT_ID
           valueFrom:
             secretKeyRef:

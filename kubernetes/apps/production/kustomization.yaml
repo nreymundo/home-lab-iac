@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ../apps/storage/garage-webui
   - ../apps/media/komga
+  - ../apps/media/bookorbit
   - ../apps/media/tautulli
   - ../apps/external-proxy
   - ../apps/external-observability/opnsense-exporter

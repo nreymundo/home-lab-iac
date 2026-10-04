@@ -13,6 +13,7 @@ resources:
   - audiobookshelf-sso-secret.sops.yaml
   - grafana-sso-secret.sops.yaml
   - komga-sso-secret.sops.yaml
+  - bookorbit-sso-secret.sops.yaml
   - gitea-sso-secret.sops.yaml
   - immich-sso-secret.sops.yaml
   - paperless-sso-secret.sops.yaml
