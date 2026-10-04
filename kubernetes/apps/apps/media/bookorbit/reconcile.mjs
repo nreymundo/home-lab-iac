@@ -11,6 +11,8 @@ const required = [
   process.env.OIDC_ISSUER_URI,
   process.env.OIDC_CLIENT_ID,
   process.env.OIDC_CLIENT_SECRET,
+  process.env.PROWLARR_URL,
+  process.env.PROWLARR_API_KEY,
 ];
 if (required.some((value) => !value)) throw new Error('Required reconciliation configuration is missing');
 
@@ -269,6 +271,31 @@ async function reconcileLibraryAccess(token, library) {
   }
 }
 
+async function reconcileProwlarr(token) {
+  const path = '/admin/request-indexer-managers';
+  const { managers } = await request(path, { token });
+  const configuration = {
+    name: 'Prowlarr',
+    enabled: true,
+    baseUrl: process.env.PROWLARR_URL,
+    credential: process.env.PROWLARR_API_KEY,
+    allowPrivateAddress: true,
+    syncNewIndexers: true,
+  };
+  const existing = managers.find((manager) => manager.name.toLowerCase() === 'prowlarr');
+  const manager = existing
+    ? await request(`${path}/${existing.id}`, { method: 'PUT', token, body: configuration })
+    : await request(path, {
+      method: 'POST',
+      token,
+      body: { type: 'prowlarr', ...configuration },
+      expected: [201],
+    });
+  // Create/update attempts a sync but suppresses failures; this explicit sync
+  // makes an unreachable manager or invalid key fail the reconciliation job.
+  await request(`${path}/${manager.id}/sync`, { method: 'POST', token });
+}
+
 await waitForHealth();
 await ensureBootstrap();
 const accessToken = await authenticate();
@@ -280,4 +307,5 @@ await request('/app-settings/allow_registration', {
 await reconcileProvider(accessToken);
 const libraries = await ensureLibraries(accessToken);
 for (const library of libraries) await reconcileLibraryAccess(accessToken, library);
-console.log('BookOrbit OIDC provider, group mappings, registration policy, libraries, and library access reconciled');
+await reconcileProwlarr(accessToken);
+console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, and Prowlarr reconciled');

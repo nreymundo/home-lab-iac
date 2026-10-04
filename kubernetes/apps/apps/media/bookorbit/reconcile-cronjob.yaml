@@ -36,6 +36,13 @@ spec:
                   value: http://bookorbit.media.svc.cluster.local:3000
                 - name: OIDC_ISSUER_URI
                   value: https://sso.${CLUSTER_DOMAIN}/application/o/bookorbit/
+                - name: PROWLARR_URL
+                  value: http://prowlarr.media.svc.cluster.local:9696
+                - name: PROWLARR_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: prowlarr-secrets
+                      key: API_KEY
                 - name: BOOTSTRAP_USERNAME
                   valueFrom:
                     secretKeyRef:
