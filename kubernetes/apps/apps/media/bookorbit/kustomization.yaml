@@ -9,6 +9,9 @@ configMapGenerator:
   - name: bookorbit-reconcile
     files:
       - reconcile.mjs
+    options:
+      annotations:
+        kustomize.toolkit.fluxcd.io/substitute: disabled
 generatorOptions:
   disableNameSuffixHash: true
 resources:
