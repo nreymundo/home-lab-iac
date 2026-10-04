@@ -137,7 +137,9 @@ async function reconcileProvider(token) {
     },
     autoProvision: {
       enabled: true,
-      allowLocalLinking: false,
+      // Authentik is the sole trusted issuer; linking matches its preferred_username,
+      // not an arbitrary email address. Local self-registration is disabled below.
+      allowLocalLinking: true,
       defaultPermissionNames: [],
     },
   };
@@ -182,42 +184,53 @@ async function reconcileProvider(token) {
   }
 }
 
-async function ensureReadingLibrary(token) {
+async function ensureLibraries(token) {
   const libraries = await request('/libraries', { token });
-  const reading = libraries.find((library) => library.name === 'Reading');
-  if (!reading) {
-    return request('/libraries', {
-      method: 'POST',
-      token,
-      body: {
-        type: 'books',
-        name: 'Reading',
-        icon: 'book',
-        folders: ['/nas/library'],
-        watch: false,
-        autoScanCronExpression: '0 */6 * * *',
-      },
-      expected: [201],
-    });
+  const desired = [
+    { name: 'Comics', icon: 'book-open', path: '/nas/library/comics' },
+    { name: 'Books', icon: 'book', path: '/nas/library/books' },
+    { name: 'Audiobooks', icon: 'headphones', path: '/nas/library/audiobooks' },
+  ];
+  const managed = [];
+  for (const { name, icon, path } of desired) {
+    const existing = libraries.find((library) => library.name.toLowerCase() === name.toLowerCase());
+    if (!existing) {
+      managed.push(await request('/libraries', {
+        method: 'POST',
+        token,
+        body: {
+          type: 'books',
+          name,
+          icon,
+          folders: [path],
+          organizationMode: 'book_per_folder',
+          watch: false,
+          autoScanCronExpression: '0 */6 * * *',
+        },
+        expected: [201],
+      }));
+      continue;
+    }
+    const folders = (existing.folders ?? []).map((folder) => folder.path);
+    if (folders.length !== 1 || folders[0] !== path || existing.organizationMode !== 'book_per_folder') {
+      throw new Error(`An existing ${name} library has a different folder or organization mode; refusing to modify it`);
+    }
+    managed.push(existing);
   }
-  const folders = (reading.folders ?? []).map((folder) => folder.path);
-  if (folders.length !== 1 || folders[0] !== '/nas/library') {
-    throw new Error('An existing Reading library has a different folder; refusing to modify it');
-  }
-  return reading;
+  return managed;
 }
 
-async function reconcileReadingAccess(token, reading) {
+async function reconcileLibraryAccess(token, library) {
   const defaults = await request('/app-settings/default-library-access', { token });
-  if (!defaults.libraryIds.includes(reading.id)) {
+  if (!defaults.libraryIds.includes(library.id)) {
     await request('/app-settings/default-library-access', {
       method: 'PUT',
       token,
-      body: { libraryIds: [...defaults.libraryIds, reading.id] },
+      body: { libraryIds: [...defaults.libraryIds, library.id] },
     });
   }
 
-  const accessPath = `/libraries/${reading.id}/access`;
+  const accessPath = `/libraries/${library.id}/access`;
   const access = await request(accessPath, { token });
   const accessByUser = new Map(access.map((entry) => [entry.userId, entry.accessLevel]));
   const pageSize = 100;
@@ -251,7 +264,12 @@ async function reconcileReadingAccess(token, reading) {
 await waitForHealth();
 await ensureBootstrap();
 const accessToken = await authenticate();
+await request('/app-settings/allow_registration', {
+  method: 'PATCH',
+  token: accessToken,
+  body: { value: 'false' },
+});
 await reconcileProvider(accessToken);
-const reading = await ensureReadingLibrary(accessToken);
-await reconcileReadingAccess(accessToken, reading);
-console.log('BookOrbit OIDC provider, group mappings, Reading library, and library access reconciled');
+const libraries = await ensureLibraries(accessToken);
+for (const library of libraries) await reconcileLibraryAccess(accessToken, library);
+console.log('BookOrbit OIDC provider, group mappings, registration policy, libraries, and library access reconciled');
