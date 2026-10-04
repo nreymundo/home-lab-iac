@@ -288,6 +288,7 @@ spec:
                 description: "Subtitle management"
                 href: https://bazarr.lan.${CLUSTER_DOMAIN}
             - BookOrbit:
+                icon: https://raw.githubusercontent.com/bookorbit/bookorbit/main/docs/images/bookorbit-icon.png
                 description: "Self-hosted reading library"
                 href: https://bookorbit.lan.${CLUSTER_DOMAIN}
             - Continuwuity:

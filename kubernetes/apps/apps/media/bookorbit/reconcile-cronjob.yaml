@@ -26,8 +26,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: reconcile
-              # Pinned to the patched upstream commit until its next stable release.
-              image: ghcr.io/bookorbit/bookorbit:sha-8fecae94e652
+              image: ghcr.io/bookorbit/bookorbit:3.2.0
               imagePullPolicy: Always
               command:
                 - node

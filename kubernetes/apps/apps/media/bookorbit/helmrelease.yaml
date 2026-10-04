@@ -35,10 +35,9 @@ spec:
         containers:
           main:
             image:
-              # Pinned to the patched upstream commit until its next stable release.
               # renovate: datasource=docker depName=bookorbit/bookorbit registryUrl=https://ghcr.io
               repository: ghcr.io/bookorbit/bookorbit
-              tag: sha-8fecae94e652
+              tag: "3.2.0"
             env:
               TZ: Europe/Berlin
               APP_URL: https://bookorbit.lan.${CLUSTER_DOMAIN}
