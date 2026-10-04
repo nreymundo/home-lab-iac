@@ -55,12 +55,16 @@
     - nfs
 
 - name: Configure swap
-  ansible.builtin.include_tasks:
-    file: swap.yml
+  ansible.builtin.include_role:
+    name: swapfile
+    public: false
     apply:
       tags:
         - storage
         - swap
+  vars:
+    swapfile_enabled: true
+    swapfile_proxmox_policy: true
   tags:
     - storage
     - swap

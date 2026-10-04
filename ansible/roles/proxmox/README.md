@@ -7,7 +7,7 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 
 - Kernel command-line parameters for systemd-boot and GRUB hosts.
 - GPU passthrough module loading, VFIO binding, and driver blacklisting.
-- Swapfile creation and swappiness configuration.
+- Swapfile creation and swappiness configuration through the shared `swapfile` role.
 - Power tuning through an optional boot-time systemd unit.
 - ZFS thin-provisioning audit and optional enforcement.
 - ZFS ARC limits.
@@ -26,7 +26,8 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 - `proxmox_gpu_passthrough_cleanup`: remove passthrough files when passthrough is disabled.
 - `proxmox_host_directories`: common directories created on every Proxmox host.
 - `proxmox_extra_host_directories`: host-specific directories appended to `proxmox_host_directories`.
-- `proxmox_swapfile_path`, `proxmox_swapfile_size`, `proxmox_swapfile_size_bytes`: swapfile settings.
+- `swapfile_path`, `swapfile_size`, `swapfile_size_bytes`, `swapfile_swappiness`: shared swapfile settings.
+  Defaults remain `/swapfile`, `16G`, `17179869184` bytes, and `10`.
 - `proxmox_zfs_thin_pools`: ZFS pools audited for non-thin refreservations.
 - `proxmox_zfs_thin_enforce`: set `refreservation=none` for discovered datasets. Enabled for the
   `proxmox` inventory group.
@@ -99,6 +100,14 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
 ## Operational Notes
 
 Kernel parameter, module, initramfs, and ZFS ARC changes usually require a reboot to take effect.
+
+The Proxmox role enables the shared `swapfile` role at its existing `storage` / `swap`
+task position with `swapfile_proxmox_policy: true`. This policy preserves the
+unconditional NoCOW requirement, persistence in `/etc/fstab` before activation,
+and the root-owned `0644` swappiness file applied by a deferred `sysctl --system`
+handler. Creation reporting and check-mode predictions also remain unchanged.
+The default swapfile policy used by laptops retains filesystem-aware NoCOW,
+activation before persistence, and immediate swappiness application.
 
 Email notifications are cluster-wide (pmxcfs) and applied once per run through
 `pvesh`. Enable them by filling and encrypting `ansible/secrets/proxmox.sops.yml`

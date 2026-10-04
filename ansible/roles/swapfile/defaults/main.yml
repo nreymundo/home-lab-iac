@@ -4,3 +4,5 @@ swapfile_path: /swapfile
 swapfile_size: 16G
 swapfile_size_bytes: 17179869184
 swapfile_swappiness: 10
+# Enable Proxmox-specific swapfile ordering and policy when included by Proxmox.
+swapfile_proxmox_policy: false
