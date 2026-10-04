@@ -1,3 +1,7 @@
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 const baseUrl = new URL(process.env.BOOKORBIT_API_URL ?? 'http://bookorbit.media.svc.cluster.local:3000');
 const bootstrap = {
   username: process.env.BOOTSTRAP_USERNAME,
@@ -13,6 +17,12 @@ const required = [
   process.env.OIDC_CLIENT_SECRET,
   process.env.PROWLARR_URL,
   process.env.PROWLARR_API_KEY,
+  process.env.SABNZBD_URL,
+  process.env.SABNZBD_API_KEY,
+  process.env.BOOKORBIT_PLUGIN_ROOT,
+  process.env.HARDCOVER_API_KEY,
+  process.env.HARDCOVER_BOOKORBIT_USERNAME,
+  process.env.COMICVINE_API_KEY,
   process.env.SMTP_HOST,
   process.env.SMTP_PORT,
   process.env.SMTP_FROM_ADDRESS,
@@ -64,16 +74,17 @@ async function request(
   path,
   { method = 'GET', token, headers = {}, body, expected = [200], expectJson = true } = {},
 ) {
+  const multipart = body instanceof FormData;
   let response;
   try {
     response = await fetch(new URL(`/api/v1${path}`, baseUrl), {
       method,
       headers: {
-        ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+        ...(body === undefined || multipart ? {} : { 'content-type': 'application/json' }),
         ...(token ? { authorization: `Bearer ${token}` } : {}),
         ...headers,
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
       signal: AbortSignal.timeout(20_000),
     });
   } catch {
@@ -310,6 +321,154 @@ async function reconcileProwlarr(token) {
   await request(`${path}/${manager.id}/sync`, { method: 'POST', token });
 }
 
+async function reconcileSabnzbd(token) {
+  const path = '/admin/download-clients';
+  const { clients } = await request(path, { token });
+  const configuration = {
+    name: 'SABnzbd',
+    enabled: true,
+    priority: 1,
+    baseUrl: process.env.SABNZBD_URL,
+    // BookOrbit stores API-key client credentials in its password field.
+    password: process.env.SABNZBD_API_KEY,
+    category: 'books',
+    useHardlinks: false,
+    allowPrivateAddress: true,
+    pathMappings: [{ remotePath: '/data/usenet/books', localPath: '/data/usenet/books' }],
+  };
+  const existing = clients.find((client) => client.name.toLowerCase() === 'sabnzbd');
+  if (existing && existing.adapterType !== 'sabnzbd') {
+    throw new Error('An existing SABnzbd client has a different adapter type; refusing to modify it');
+  }
+  const client = existing
+    ? await request(`${path}/${existing.id}`, { method: 'PUT', token, body: configuration })
+    : await request(path, {
+      method: 'POST',
+      token,
+      body: { adapterType: 'sabnzbd', ...configuration },
+      expected: [201],
+    });
+  const connection = await request(`${path}/${client.id}/test`, { method: 'POST', token });
+  if (!connection.success) throw new Error('SABnzbd connection test failed');
+}
+
+async function reconcileOpenLibraryPlugins(token) {
+  // Updating this revision and the file hashes is an explicit Git change, not a moving branch fetch.
+  const revision = '7cfab2dd0779237a504ee06df07437c483e168b5';
+  const desired = [
+    {
+      type: 'librivox',
+      name: 'LibriVox',
+      baseUrl: 'https://librivox.org',
+      sha256: 'f73649a5e6da502ef2e9e2a4d0d6ec7d2b155feb1d9fe5069302cd3693727ac8',
+    },
+    {
+      type: 'project-gutenberg',
+      name: 'Project Gutenberg',
+      baseUrl: 'https://www.gutenberg.org',
+      sha256: 'd73e097dd582ad07af6abfe95af09fe1a98eeecd65020e17562b3d05e00a18c1',
+    },
+  ];
+  const path = '/admin/request-indexers';
+  const { adapters } = await request(`${path}/adapters`, { token });
+  const { updates } = await request(`${path}/plugins/updates`, { token });
+  for (const plugin of desired) {
+    // Disable any existing moving update channel before restoring the pinned source.
+    if (updates.find((update) => update.type === plugin.type)?.autoUpdate) {
+      await request(`${path}/plugins/${plugin.type}/auto-update`, {
+        method: 'PUT', token, body: { enabled: false },
+      });
+    }
+    let installed;
+    try {
+      installed = await readFile(join(process.env.BOOKORBIT_PLUGIN_ROOT, plugin.type, 'index.mjs'));
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw new Error(`Cannot read the installed ${plugin.name} plugin`);
+    }
+    const digest = installed ? createHash('sha256').update(installed).digest('hex') : undefined;
+    if (digest !== plugin.sha256 || !adapters.some((adapter) => adapter.type === plugin.type)) {
+      const url = `https://raw.githubusercontent.com/orbit-plugins/bookorbit-open-plugins/${revision}/indexers/${plugin.type}/index.mjs`;
+      let source;
+      try {
+        const response = await fetch(url, { signal: AbortSignal.timeout(20_000), redirect: 'error' });
+        if (!response.ok) throw new Error();
+        source = await response.text();
+      } catch {
+        throw new Error(`Failed to fetch the pinned ${plugin.name} plugin`);
+      }
+      if (createHash('sha256').update(source).digest('hex') !== plugin.sha256) {
+        throw new Error(`The pinned ${plugin.name} plugin failed its SHA-256 check`);
+      }
+      const upload = new FormData();
+      upload.set('file', new Blob([source], { type: 'text/javascript' }), 'index.mjs');
+      const result = await request(`${path}/plugins`, { method: 'POST', token, body: upload, expected: [201] });
+      if (!result.active || result.type !== plugin.type) throw new Error(`The ${plugin.name} plugin did not activate`);
+      // New installs default to manual updates; explicitly keep the Git pin authoritative.
+      await request(`${path}/plugins/${plugin.type}/auto-update`, {
+        method: 'PUT', token, body: { enabled: false },
+      });
+    }
+  }
+  const { indexers } = await request(path, { token });
+  for (const plugin of desired) {
+    const existing = indexers.find((indexer) => indexer.name.toLowerCase() === plugin.name.toLowerCase());
+    if (existing && existing.adapterType !== plugin.type) {
+      throw new Error(`An existing ${plugin.name} indexer has a different adapter type; refusing to modify it`);
+    }
+    const configuration = { name: plugin.name, enabled: true, baseUrl: plugin.baseUrl, allowPrivateAddress: false };
+    if (existing) {
+      await request(`${path}/${existing.id}`, { method: 'PUT', token, body: configuration });
+    } else {
+      await request(path, {
+        method: 'POST', token, body: { adapterType: plugin.type, ...configuration }, expected: [201],
+      });
+    }
+  }
+}
+
+async function reconcileMetadataAndHardcover(token) {
+  // Personal settings belong to the authenticated user, not an admin-selected ID.
+  const user = await request('/auth/me', { token });
+  if (user.username !== process.env.HARDCOVER_BOOKORBIT_USERNAME) {
+    throw new Error('Hardcover target does not match the authenticated BookOrbit account; refusing to configure it');
+  }
+  const apiKey = process.env.HARDCOVER_API_KEY;
+  const validation = await request('/hardcover/validate-token', {
+    method: 'POST',
+    token,
+    body: { token: apiKey },
+    expected: [201],
+  });
+  if (!validation.valid) throw new Error('Hardcover API token validation failed');
+  // The metadata API merges this patch, preserving unlisted providers and fields.
+  await request('/metadata-preferences/providers', {
+    method: 'PUT',
+    token,
+    body: {
+      hardcover: { enabled: true, apiKey },
+      kobo: { enabled: true, country: 'us', language: 'en' },
+      audible: { enabled: true },
+      audnexus: { enabled: true },
+      librofm: { enabled: true },
+      comicvine: { enabled: true, apiKey: process.env.COMICVINE_API_KEY },
+      ranobedb: { enabled: true },
+    },
+  });
+  // Keep book-selection scope unchanged; enable public auto-sync without running sync/import.
+  await request('/hardcover/settings', {
+    method: 'PATCH',
+    token,
+    body: {
+      apiToken: apiKey,
+      enabled: true,
+      autoSyncOnStatusChange: true,
+      autoSyncOnProgressUpdate: true,
+      autoSyncOnRatingChange: true,
+      privacySettingId: 1,
+    },
+  });
+}
+
 async function reconcileEmail(token) {
   // Roll out the app's EMAIL_ENCRYPTION_KEY before provisioning SMTP passwords.
   const path = '/email/providers';
@@ -356,5 +515,8 @@ await reconcileProvider(accessToken);
 const libraries = await ensureLibraries(accessToken);
 for (const library of libraries) await reconcileLibraryAccess(accessToken, library);
 await reconcileProwlarr(accessToken);
+await reconcileSabnzbd(accessToken);
+await reconcileOpenLibraryPlugins(accessToken);
 await reconcileEmail(accessToken);
-console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, Prowlarr, and SMTP reconciled');
+await reconcileMetadataAndHardcover(accessToken);
+console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, Prowlarr, SABnzbd, pinned open-library plugins, SMTP, metadata providers, and Hardcover reconciled');

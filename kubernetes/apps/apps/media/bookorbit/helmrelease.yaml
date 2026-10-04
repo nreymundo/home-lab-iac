@@ -155,6 +155,8 @@ spec:
             main:
               - path: /nas
                 subPath: libraries/reading/bookorbit
+              - path: /data/usenet/books
+                subPath: usenet/books
       tmp:
         type: emptyDir
         medium: Memory
