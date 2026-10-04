@@ -13,6 +13,8 @@ const required = [
   process.env.OIDC_CLIENT_SECRET,
   process.env.PROWLARR_URL,
   process.env.PROWLARR_API_KEY,
+  process.env.SABNZBD_URL,
+  process.env.SABNZBD_API_KEY,
   process.env.HARDCOVER_API_KEY,
   process.env.HARDCOVER_BOOKORBIT_USERNAME,
   process.env.COMICVINE_API_KEY,
@@ -313,6 +315,37 @@ async function reconcileProwlarr(token) {
   await request(`${path}/${manager.id}/sync`, { method: 'POST', token });
 }
 
+async function reconcileSabnzbd(token) {
+  const path = '/admin/download-clients';
+  const { clients } = await request(path, { token });
+  const configuration = {
+    name: 'SABnzbd',
+    enabled: true,
+    priority: 1,
+    baseUrl: process.env.SABNZBD_URL,
+    // BookOrbit stores API-key client credentials in its password field.
+    password: process.env.SABNZBD_API_KEY,
+    category: 'books',
+    useHardlinks: false,
+    allowPrivateAddress: true,
+    pathMappings: [{ remotePath: '/data/usenet/books', localPath: '/data/usenet/books' }],
+  };
+  const existing = clients.find((client) => client.name.toLowerCase() === 'sabnzbd');
+  if (existing && existing.adapterType !== 'sabnzbd') {
+    throw new Error('An existing SABnzbd client has a different adapter type; refusing to modify it');
+  }
+  const client = existing
+    ? await request(`${path}/${existing.id}`, { method: 'PUT', token, body: configuration })
+    : await request(path, {
+      method: 'POST',
+      token,
+      body: { adapterType: 'sabnzbd', ...configuration },
+      expected: [201],
+    });
+  const connection = await request(`${path}/${client.id}/test`, { method: 'POST', token });
+  if (!connection.success) throw new Error('SABnzbd connection test failed');
+}
+
 async function reconcileMetadataAndHardcover(token) {
   // Personal settings belong to the authenticated user, not an admin-selected ID.
   const user = await request('/auth/me', { token });
@@ -402,6 +435,7 @@ await reconcileProvider(accessToken);
 const libraries = await ensureLibraries(accessToken);
 for (const library of libraries) await reconcileLibraryAccess(accessToken, library);
 await reconcileProwlarr(accessToken);
+await reconcileSabnzbd(accessToken);
 await reconcileEmail(accessToken);
 await reconcileMetadataAndHardcover(accessToken);
-console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, Prowlarr, SMTP, metadata providers, and Hardcover reconciled');
+console.log('BookOrbit OIDC, registration policy, authoritative libraries, library access, Prowlarr, SABnzbd, SMTP, metadata providers, and Hardcover reconciled');

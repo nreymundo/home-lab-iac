@@ -44,6 +44,13 @@ spec:
                     secretKeyRef:
                       name: prowlarr-secrets
                       key: API_KEY
+                - name: SABNZBD_URL
+                  value: http://sabnzbd.media.svc.cluster.local:8080
+                - name: SABNZBD_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: sabnzbd-secrets
+                      key: API_KEY
                 - name: HARDCOVER_API_KEY
                   valueFrom:
                     secretKeyRef:
