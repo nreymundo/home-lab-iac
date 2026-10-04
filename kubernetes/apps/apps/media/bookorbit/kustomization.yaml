@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: media
+components:
+  - ../../../../components/bjw-s-defaults
+  - ../../../../components/ingress/traefik-base
+configMapGenerator:
+  - name: bookorbit-reconcile
+    files:
+      - reconcile.mjs
+generatorOptions:
+  disableNameSuffixHash: true
+resources:
+  - bookorbit-secrets.sops.yaml
+  - bookorbit-db-secrets.sops.yaml
+  - cnpg-cluster.yaml
+  - helmrelease.yaml
+  - reconcile-cronjob.yaml
