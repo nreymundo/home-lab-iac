@@ -131,6 +131,7 @@ async function reconcileProvider(token) {
   const providers = await request('/app-settings/oidc/providers', { token });
   const provider = {
     displayName: 'Authentik',
+    iconUrl: 'https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/authentik.svg',
     enabled: true,
     issuerUri: process.env.OIDC_ISSUER_URI,
     clientId: process.env.OIDC_CLIENT_ID,

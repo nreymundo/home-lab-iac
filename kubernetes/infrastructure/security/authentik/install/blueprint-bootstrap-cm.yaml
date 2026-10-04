@@ -2694,6 +2694,8 @@ data:
           redirect_uris:
             - url: "https://bookorbit.lan.${CLUSTER_DOMAIN}/oauth2-callback"
               matching_mode: strict
+            - url: "bookorbit://oauth2-callback"
+              matching_mode: strict
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
