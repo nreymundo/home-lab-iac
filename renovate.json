@@ -53,11 +53,11 @@
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
     },
     {
-      "description": "Keep Jellyfin on stable semver tags",
+      "description": "Keep Jellyfin on stable semver tags, excluding legacy calendar-version tags",
       "matchDatasources": ["docker"],
       "matchDepNames": ["linuxserver/jellyfin"],
       "matchPackageNames": ["linuxserver/jellyfin", "lscr.io/linuxserver/jellyfin"],
-      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
+      "allowedVersions": "/^\\d{1,2}\\.\\d+\\.\\d+$/"
     },
     {
       "description": "Keep Tautulli on stable semver tags",
