@@ -43,7 +43,7 @@ spec:
             image:
               # renovate: datasource=docker depName=bookorbit/bookorbit registryUrl=https://ghcr.io
               repository: ghcr.io/bookorbit/bookorbit
-              tag: "3.2.0"
+              tag: "3.3.0"
             env:
               TZ: Europe/Berlin
               APP_URL: https://bookorbit.lan.${CLUSTER_DOMAIN}
