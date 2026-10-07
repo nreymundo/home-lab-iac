@@ -1,0 +1,5 @@
+---
+- name: Install bare-metal hardware diagnostics
+  ansible.builtin.package:
+    name: powertop
+    state: present

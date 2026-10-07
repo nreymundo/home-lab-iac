@@ -1,0 +1,46 @@
+---
+- name: Select release-specific GPU package list
+  ansible.builtin.set_fact:
+    host_hardware_gpu_packages: >-
+      {{ (host_hardware_package_maps[ansible_distribution_release].intel_gpu if 'intel' in host_hardware_selected_gpu_profiles else [])
+       + (host_hardware_package_maps[ansible_distribution_release].amd_gpu if 'amd' in host_hardware_selected_gpu_profiles else []) }}
+  changed_when: false
+
+- name: Enable Ubuntu universe and multiverse repositories additively
+  ansible.builtin.deb822_repository:
+    name: "host-hardware-{{ item.name }}"
+    types: [deb]
+    uris: "{{ item.uri }}"
+    suites: "{{ item.suites }}"
+    components: [universe, multiverse]
+    signed_by: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+    state: present
+    enabled: true
+  loop:
+    - name: archive
+      uri: http://archive.ubuntu.com/ubuntu
+      suites:
+        - "{{ ansible_distribution_release }}"
+        - "{{ ansible_distribution_release }}-updates"
+    - name: security
+      uri: http://security.ubuntu.com/ubuntu
+      suites:
+        - "{{ ansible_distribution_release }}-security"
+  when:
+    - host_hardware_enable_universe | bool
+    - host_hardware_gpu_packages | length > 0
+
+- name: Refresh apt metadata when hardware repositories are enabled
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when:
+    - host_hardware_enable_universe | bool
+    - host_hardware_gpu_packages | length > 0
+
+- name: Install selected GPU packages
+  ansible.builtin.apt:
+    name: "{{ host_hardware_gpu_packages | unique | list }}"
+    state: present
+    update_cache: false
+  when: host_hardware_gpu_packages | length > 0

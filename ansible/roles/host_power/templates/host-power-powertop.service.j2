@@ -1,0 +1,14 @@
+[Unit]
+Description=Apply opt-in powertop auto-tune
+{% if host_power_backend != 'none' %}After=host-power-policy.service
+Requires=host-power-policy.service
+{% else %}After=local-fs.target
+{% endif %}
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/powertop --auto-tune
+
+[Install]
+WantedBy=multi-user.target

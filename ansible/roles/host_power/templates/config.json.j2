@@ -1,0 +1,9 @@
+{{ {
+  'backend': host_power_backend,
+  'profile': host_power_profile,
+  'cpu_governor': host_power_cpu_governor,
+  'cpu_epp': host_power_cpu_epp,
+  'cpu_boost': host_power_cpu_boost,
+  'platform_profile': host_power_platform_profile,
+  'rapl_limits': host_power_rapl_limits
+} | to_nice_json }}

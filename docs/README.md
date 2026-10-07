@@ -8,6 +8,8 @@ and security practices live at the repository root.
 - [kubernetes-bootstrap.md](kubernetes-bootstrap.md) — bootstrap and restore
   runbook for the Flux-managed cluster, including registry, secrets, PVC, and
   CNPG recovery paths.
+- [ubuntu-host-provisioning.md](ubuntu-host-provisioning.md) — unfinished Ubuntu
+  provisioning checkpoint, decisions, local evidence and remaining work.
 - [opencode.md](opencode.md) — how repository-specific OpenCode skills are
   kept in `.opencode/skills/`.
 

@@ -1,0 +1,13 @@
+---
+host_hardware_gpu_profiles:
+  - auto
+host_hardware_extra_packages: []
+host_hardware_gpu_users: []
+host_hardware_validate_gpu: false
+host_hardware_enable_universe: true
+host_hardware_install_diagnostics: true
+host_hardware_physical: "{{ ansible_virtualization_role | default('NA') != 'guest' }}"
+host_hardware_gpu_sysfs_root: /sys/bus/pci/devices
+host_hardware_render_root: /dev/dri
+host_hardware_validate_opencl: false
+host_hardware_validate_vulkan: false

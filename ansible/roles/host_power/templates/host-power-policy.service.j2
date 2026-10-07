@@ -1,0 +1,13 @@
+[Unit]
+Description=Apply host power policy
+After=local-fs.target{% if host_power_backend == 'power-profiles-daemon' %} power-profiles-daemon.service{% endif %}
+{% if host_power_backend == 'power-profiles-daemon' %}Wants=power-profiles-daemon.service
+{% endif %}
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/libexec/host-power --config /etc/host-power.json
+
+[Install]
+WantedBy=multi-user.target

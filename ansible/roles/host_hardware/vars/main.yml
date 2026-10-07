@@ -1,0 +1,46 @@
+---
+host_hardware_package_maps:
+  noble:
+    baseline:
+      - linux-firmware
+    intel_cpu:
+      - intel-microcode
+    amd_cpu:
+      - amd64-microcode
+    diagnostics:
+      - pciutils
+      - vainfo
+      - clinfo
+      - vulkan-tools
+      - lm-sensors
+      - radeontop
+    intel_gpu:
+      - mesa-vulkan-drivers
+      - intel-media-va-driver-non-free
+      - intel-opencl-icd
+    amd_gpu:
+      - mesa-vulkan-drivers
+      - mesa-va-drivers
+      - mesa-opencl-icd
+  resolute:
+    baseline:
+      - linux-firmware
+    intel_cpu:
+      - intel-microcode
+    amd_cpu:
+      - amd64-microcode
+    diagnostics:
+      - pciutils
+      - vainfo
+      - clinfo
+      - vulkan-tools
+      - lm-sensors
+      - radeontop
+    intel_gpu:
+      - mesa-vulkan-drivers
+      - intel-media-va-driver-non-free
+      - intel-opencl-icd
+    amd_gpu:
+      - mesa-vulkan-drivers
+      - mesa-libgallium
+      - mesa-opencl-icd
