@@ -1,0 +1,29 @@
+# Managed by Ansible. Retain unrelated and installer-critical kernel arguments.
+common_kernel_add={{ (common_grub_add | join(' ')) | to_json }}
+common_kernel_remove_keys={{ (common_grub_remove | map('regex_replace', '=.*$', '') | unique | join(' ')) | to_json }}
+{% set additions = namespace(tokens=[]) %}
+{% for token in common_grub_add %}
+{% set key = token.split('=', 1)[0] %}
+{% set later_keys = common_grub_add[loop.index:] | map('regex_replace', '=.*$', '') | list %}
+{% if key not in later_keys %}{% set additions.tokens = additions.tokens + [token] %}{% endif %}
+{% endfor %}
+common_kernel_add_unique={{ (additions.tokens | join(' ')) | to_json }}
+common_kernel_add_keys={{ (additions.tokens | map('regex_replace', '=.*$', '') | join(' ')) | to_json }}
+common_kernel_result=""
+common_kernel_noglob_was_set=false
+case $- in *f*) common_kernel_noglob_was_set=true ;; esac
+set -f
+for common_kernel_token in $GRUB_CMDLINE_LINUX_DEFAULT; do
+  common_kernel_key=${common_kernel_token%%=*}
+  case " $common_kernel_remove_keys $common_kernel_add_keys " in
+    *" $common_kernel_key "*) continue ;;
+  esac
+  common_kernel_result="${common_kernel_result:+$common_kernel_result }$common_kernel_token"
+done
+for common_kernel_token in $common_kernel_add_unique; do
+  common_kernel_result="${common_kernel_result:+$common_kernel_result }$common_kernel_token"
+done
+GRUB_CMDLINE_LINUX_DEFAULT="$common_kernel_result"
+if [ "$common_kernel_noglob_was_set" = false ]; then set +f; fi
+unset common_kernel_add common_kernel_add_unique common_kernel_remove_keys common_kernel_add_keys
+unset common_kernel_result common_kernel_token common_kernel_key common_kernel_noglob_was_set

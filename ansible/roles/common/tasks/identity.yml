@@ -1,4 +1,16 @@
 ---
+- name: Ensure managed administrator account exists
+  ansible.builtin.user:
+    name: "{{ common_user }}"
+    state: present
+    create_home: true
+    shell: "{{ common_user_shell }}"
+    groups: "{{ common_user_groups | join(',') if common_user_groups | length > 0 else omit }}"
+    append: true
+  when: common_manage_user | bool
+  tags:
+    - base
+
 - name: Set hostname via hostnamectl
   ansible.builtin.command: hostnamectl set-hostname "{{ inventory_hostname }}"
   when:

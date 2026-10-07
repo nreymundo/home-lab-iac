@@ -2,19 +2,51 @@
 # Common role - shared host bootstrap entrypoint.
 
 - name: Run common preflight tasks
-  ansible.builtin.include_tasks: preflight.yml
+  ansible.builtin.include_tasks:
+    file: preflight.yml
+    apply:
+      tags:
+        - base
+        - packages
+        - boot
+  tags:
+    - base
+    - packages
+    - boot
 
 - name: Run common identity tasks
-  ansible.builtin.include_tasks: identity.yml
+  ansible.builtin.include_tasks:
+    file: identity.yml
+    apply:
+      tags:
+        - base
+  tags:
+    - base
 
 - name: Configure system log retention
-  ansible.builtin.include_tasks: journald.yml
+  ansible.builtin.include_tasks:
+    file: journald.yml
+    apply:
+      tags:
+        - base
+  tags:
+    - base
   when: common_manage_journald | bool
 
 - name: Run Debian/Ubuntu specific tasks
-  ansible.builtin.include_tasks: os-debian.yml
+  ansible.builtin.include_tasks:
+    file: os-debian.yml
+  tags:
+    - base
+    - packages
+    - boot
   when: ansible_os_family == 'Debian'
 
 - name: Run Fedora/RedHat specific tasks
-  ansible.builtin.include_tasks: os-fedora.yml
+  ansible.builtin.include_tasks:
+    file: os-fedora.yml
+  tags:
+    - base
+    - packages
+    - boot
   when: ansible_os_family == 'RedHat'

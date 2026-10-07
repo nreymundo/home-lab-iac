@@ -1,0 +1,5 @@
+# Managed by Ansible. Lexically first so these values win OpenSSH's first-value
+# semantics over Ubuntu/cloud-init drop-ins.
+{% for setting, value in ssh_hardening_sshd_settings_effective.items() %}
+{{ setting }} {{ value }}
+{% endfor %}

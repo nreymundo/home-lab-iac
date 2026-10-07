@@ -7,6 +7,8 @@
     state: enabled
   loop: "{{ (common_copr_repos | default([])) + (common_copr_extra_repos | default([])) }}"
   when: ((common_copr_repos | default([])) + (common_copr_extra_repos | default([]))) | length > 0
+  tags:
+    - packages
 
 - name: Update dnf cache and upgrade packages
   ansible.builtin.dnf:
@@ -14,24 +16,41 @@
     state: latest  # noqa: package-latest
     update_cache: true
   when: common_run_upgrade | bool
+  tags:
+    - packages
+
+- name: Configure managed sudo policy
+  ansible.builtin.include_tasks:
+    file: sudo.yml
+    apply:
+      tags:
+        - base
+  tags:
+    - base
 
 - name: Install common packages
   ansible.builtin.dnf:
     name: "{{ common_packages }}"
     state: present
   when: common_packages | length > 0
+  tags:
+    - packages
 
 - name: Install host-specific packages
   ansible.builtin.dnf:
     name: "{{ common_extra_packages }}"
     state: present
   when: common_extra_packages | default([]) | length > 0
+  tags:
+    - packages
 
 - name: Install Mosh
   ansible.builtin.dnf:
     name: mosh
     state: present
   when: common_enable_mosh | bool
+  tags:
+    - packages
 
 # NTP via Chrony
 - name: Ensure chrony is installed
@@ -39,6 +58,8 @@
     name: chrony
     state: present
   when: common_ntp_servers | length > 0
+  tags:
+    - packages
 
 - name: Configure chrony NTP servers
   ansible.builtin.template:
@@ -49,6 +70,8 @@
     mode: "0644"
   when: common_ntp_servers | length > 0
   notify: Restart chronyd
+  tags:
+    - base
 
 - name: Ensure chronyd service is enabled and started
   ansible.builtin.systemd:
@@ -58,9 +81,17 @@
   when:
     - common_ntp_servers | length > 0
     - not ansible_check_mode
+  tags:
+    - base
 
 - name: Include fstrim timer management tasks
-  ansible.builtin.include_tasks: fstrim.yml
+  ansible.builtin.include_tasks:
+    file: fstrim.yml
+    apply:
+      tags:
+        - base
+  tags:
+    - base
 
 # NetworkManager configuration
 - name: Configure NetworkManager ethernet connections
@@ -75,6 +106,8 @@
     - common_nm_connections | default([]) | length > 0
     - item.type == 'ethernet'
   notify: Reload NetworkManager connections
+  tags:
+    - base
 
 - name: Configure NetworkManager VLAN connections
   ansible.builtin.template:
@@ -88,6 +121,8 @@
     - common_nm_connections | default([]) | length > 0
     - item.type == 'vlan'
   notify: Reload NetworkManager connections
+  tags:
+    - base
 
 # Automatic updates via dnf-automatic
 - name: Install dnf-automatic
@@ -95,6 +130,8 @@
     name: dnf-automatic
     state: present
   when: common_enable_unattended_upgrades | bool
+  tags:
+    - packages
 
 - name: Configure dnf-automatic
   ansible.builtin.template:
@@ -104,6 +141,8 @@
     group: root
     mode: "0644"
   when: common_enable_unattended_upgrades | bool
+  tags:
+    - base
 
 - name: Ensure dnf-automatic timer override directory exists
   ansible.builtin.file:
@@ -113,6 +152,8 @@
     group: root
     mode: "0755"
   when: common_enable_unattended_upgrades | bool
+  tags:
+    - base
 
 - name: Configure dnf-automatic timer schedule
   ansible.builtin.template:
@@ -123,6 +164,8 @@
     mode: "0644"
   when: common_enable_unattended_upgrades | bool
   notify: Reload systemd daemon
+  tags:
+    - base
 
 - name: Enable dnf-automatic timer
   ansible.builtin.systemd:
@@ -133,6 +176,8 @@
   when:
     - common_enable_unattended_upgrades | bool
     - not ansible_check_mode
+  tags:
+    - base
 
 - name: Disable dnf-automatic timer
   ansible.builtin.systemd:
@@ -142,6 +187,8 @@
   when:
     - not common_enable_unattended_upgrades | bool
     - "'dnf-automatic.timer' in ansible_facts.services"
+  tags:
+    - base
 
 # Firewalld management
 - name: Stop and mask firewalld
@@ -151,6 +198,8 @@
     masked: true
     enabled: false
   when: common_mask_firewalld | bool
+  tags:
+    - base
 
 # Bootloader kernel parameters via grubby
 - name: Merge desired kernel parameter lists
@@ -161,12 +210,16 @@
     common_kernel_params_remove_merged: >-
       {{ (common_kernel_params_base_remove | default([]))
          + (common_kernel_params_remove | default([])) }}
+  tags:
+    - boot
 
 - name: Build combined kernel param list
   ansible.builtin.set_fact:
     common_kernel_params_all: >-
       {{ common_kernel_params_add_merged
          + common_kernel_params_remove_merged }}
+  tags:
+    - boot
 
 - name: Validate kernel params do not touch protected keys
   vars:
@@ -179,6 +232,8 @@
       (matches {{ common_kernel_params_protected_regex }})
   loop: "{{ common_kernel_params_all }}"
   when: common_kernel_params_all | length > 0
+  tags:
+    - boot
 
 - name: Read current kernel parameters via grubby
   ansible.builtin.command:
@@ -187,6 +242,8 @@
   changed_when: false
   failed_when: false
   when: common_kernel_params_all | length > 0
+  tags:
+    - boot
 
 - name: Parse current kernel parameters
   ansible.builtin.set_fact:
@@ -203,6 +260,8 @@
       {%- endfor -%}
       {{ result }}
   when: common_kernel_params_all | length > 0
+  tags:
+    - boot
 
 - name: Build current kernel parameter sets
   ansible.builtin.set_fact:
@@ -234,6 +293,8 @@
         {{ intersection }}
       {%- endif -%}
   when: common_kernel_params_all | length > 0
+  tags:
+    - boot
 
 - name: Normalize kernel param adds
   ansible.builtin.set_fact:
@@ -253,6 +314,8 @@
       {%- endfor -%}
       {{ ns.result }}
   when: common_kernel_params_all | length > 0
+  tags:
+    - boot
 
 - name: Build kernel parameter keys
   ansible.builtin.set_fact:
@@ -269,6 +332,8 @@
          | map('regex_replace', '=.*$', '')
          | list }}
   when: common_kernel_params_all | length > 0
+  tags:
+    - boot
 
 - name: Build kernel parameter change sets
   ansible.builtin.set_fact:
@@ -292,6 +357,8 @@
       {%- endfor -%}
       {{ to_remove }}
   when: common_kernel_params_all | length > 0
+  tags:
+    - boot
 
 - name: Remove kernel parameters
   ansible.builtin.command:
@@ -301,6 +368,8 @@
   when:
     - common_kernel_params_all | length > 0
     - common_kernel_params_remove_needed | default([]) | length > 0
+  tags:
+    - boot
 
 - name: Add kernel parameters
   ansible.builtin.command:
@@ -310,3 +379,5 @@
   when:
     - common_kernel_params_all | length > 0
     - common_kernel_params_add_needed | default([]) | length > 0
+  tags:
+    - boot

@@ -1,0 +1,34 @@
+---
+- name: Install sudo before validating managed sudo policy
+  ansible.builtin.package:
+    name: sudo
+    state: present
+  when:
+    - common_manage_user | bool
+    - common_passwordless_sudo | bool
+  tags:
+    - packages
+
+- name: Install validated passwordless sudo policy
+  ansible.builtin.copy:
+    dest: "{{ common_sudoers_file }}"
+    owner: root
+    group: root
+    mode: "0440"
+    content: |
+      # Managed by Ansible - common role administrator policy.
+      {{ common_user }} ALL=(ALL) NOPASSWD:ALL
+    validate: 'visudo -csf %s'
+  when:
+    - common_manage_user | bool
+    - common_passwordless_sudo | bool
+  tags:
+    - base
+
+- name: Remove disabled common role sudo policy
+  ansible.builtin.file:
+    path: "{{ common_sudoers_file }}"
+    state: absent
+  when: not common_passwordless_sudo | bool
+  tags:
+    - base

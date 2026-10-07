@@ -1,0 +1,52 @@
+---
+- name: Combine requested Ubuntu kernel parameter changes
+  ansible.builtin.set_fact:
+    common_grub_add: "{{ (common_kernel_params_base_add | default([])) + (common_kernel_params_add | default([])) }}"
+    common_grub_remove: "{{ (common_kernel_params_base_remove | default([])) + (common_kernel_params_remove | default([])) }}"
+  tags:
+    - boot
+
+- name: Validate Ubuntu kernel parameter changes
+  ansible.builtin.assert:
+    that:
+      - item is string
+      - item | length > 0
+      - item is match('^[A-Za-z0-9_.:-]+(=[A-Za-z0-9_.,:/+-]*)?$')
+      - item is not match('^(root|init|systemd\.unit|resume|cryptdevice|BOOT_IMAGE)(=|$)|^rd\.[^=]*(=|$)')
+    fail_msg: "Refusing invalid or protected kernel parameter '{{ item }}'."
+  loop: "{{ common_grub_add + common_grub_remove }}"
+  tags:
+    - boot
+
+- name: Install managed Ubuntu GRUB kernel parameter drop-in
+  ansible.builtin.template:
+    src: 99-ansible-kernel-params.cfg.j2
+    dest: /etc/default/grub.d/99-ansible-kernel-params.cfg
+    owner: root
+    group: root
+    mode: "0644"
+  register: common_grub_configuration
+  notify:
+    - Update grub
+    - Mark GRUB reboot required
+  when: common_grub_add | length > 0 or common_grub_remove | length > 0
+  tags:
+    - boot
+
+- name: Remove managed Ubuntu GRUB drop-in when no parameters are requested
+  ansible.builtin.file:
+    path: /etc/default/grub.d/99-ansible-kernel-params.cfg
+    state: absent
+  when: common_grub_add | length == 0 and common_grub_remove | length == 0
+  register: common_grub_configuration_removed
+  notify:
+    - Update grub
+    - Mark GRUB reboot required
+  tags:
+    - boot
+
+- name: Mark reboot required after GRUB configuration changes
+  ansible.builtin.set_fact:
+    common_grub_configuration_changed: "{{ (common_grub_configuration.changed | default(false)) or (common_grub_configuration_removed.changed | default(false)) }}"
+  tags:
+    - boot
