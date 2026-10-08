@@ -1,12 +1,5 @@
 ---
-- name: Provision headless laptop hosts
-  hosts: headless_laptops
-  become: true
-  roles:
-    - common
-    - ssh_hardening
-    - homebrew
-    - docker
-    - nodejs_runtime
-    - swapfile
-    - headless_laptop
+- name: Provision headless laptops through the unified entrypoint
+  ansible.builtin.import_playbook: ubuntu.yml
+  vars:
+    ubuntu_target_hosts: headless_laptops

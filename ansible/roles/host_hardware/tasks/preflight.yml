@@ -1,0 +1,57 @@
+---
+- name: Require supported Ubuntu release
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Ubuntu'
+      - ansible_distribution_release in host_hardware_package_maps
+    fail_msg: "host_hardware supports Ubuntu 24.04 (noble) and 26.04 (resolute)."
+
+- name: Validate requested GPU profiles
+  ansible.builtin.assert:
+    that:
+      - host_hardware_gpu_profiles | type_debug == 'list'
+      - (host_hardware_gpu_profiles | difference(['auto', 'intel', 'amd']) | length) == 0
+      - "'auto' not in host_hardware_gpu_profiles or host_hardware_gpu_profiles | length == 1"
+    fail_msg: "host_hardware_gpu_profiles accepts ['auto'], [], or an explicit combination of intel and amd."
+
+- name: Discover display-class PCI devices from sysfs
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -c
+      - |
+        import glob, json, os
+        devices = []
+        for path in glob.glob(os.path.join({{ host_hardware_gpu_sysfs_root | to_json }}, '*')):
+            try:
+                pci_class = open(os.path.join(path, 'class'), encoding='ascii').read().strip().lower()
+                vendor = open(os.path.join(path, 'vendor'), encoding='ascii').read().strip().lower()
+                device = open(os.path.join(path, 'device'), encoding='ascii').read().strip().lower()
+            except OSError:
+                continue
+            if pci_class[2:6] in ('0300', '0302', '0380'):
+                bdf = os.path.basename(path)
+                driver = os.path.basename(os.path.realpath(os.path.join(path, 'driver'))) if os.path.exists(os.path.join(path, 'driver')) else None
+                devices.append({'bdf': bdf, 'class': pci_class, 'vendor_id': vendor, 'device_id': device, 'driver': driver})
+        print(json.dumps(devices))
+  register: host_hardware_gpu_discovery
+  changed_when: false
+  check_mode: false
+
+- name: Set detected hardware facts
+  ansible.builtin.set_fact:
+    host_hardware_gpu_devices: "{{ host_hardware_gpu_discovery.stdout | from_json }}"
+    host_hardware_detected_gpu_vendors: >-
+      {{ (host_hardware_gpu_discovery.stdout | from_json | map(attribute='vendor_id') | map('regex_replace', '^0x', '') | unique | list) }}
+    host_hardware_selected_gpu_profiles: >-
+      {{ (['intel'] if host_hardware_gpu_profiles == ['auto'] and '0x8086' in (host_hardware_gpu_discovery.stdout | from_json | map(attribute='vendor_id') | list) else [])
+         + (['amd'] if host_hardware_gpu_profiles == ['auto'] and '0x1002' in (host_hardware_gpu_discovery.stdout | from_json | map(attribute='vendor_id') | list) else [])
+         if host_hardware_gpu_profiles == ['auto'] else host_hardware_gpu_profiles }}
+  changed_when: false
+
+- name: Set physical CPU profile from gathered processor facts
+  ansible.builtin.set_fact:
+    host_hardware_cpu_vendor: >-
+      {{ 'intel' if (ansible_processor | join(' ') | lower is search('genuineintel|intel'))
+         else ('amd' if (ansible_processor | join(' ') | lower is search('authenticamd|amd')) else 'unknown') }}
+  changed_when: false

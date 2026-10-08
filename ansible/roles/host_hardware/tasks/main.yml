@@ -1,0 +1,77 @@
+---
+- name: Run host hardware preflight
+  ansible.builtin.include_tasks:
+    file: preflight.yml
+    apply:
+      tags:
+        - hardware
+        - gpu
+        - packages
+  tags:
+    - hardware
+    - gpu
+    - packages
+
+- name: Prepare hardware repositories
+  ansible.builtin.include_tasks:
+    file: repositories.yml
+    apply:
+      tags: [hardware, gpu, packages]
+  tags: [hardware, gpu, packages]
+
+- name: Install physical-host diagnostics
+  ansible.builtin.include_tasks:
+    file: physical.yml
+    apply:
+      tags:
+        - hardware
+        - packages
+  tags:
+    - hardware
+    - packages
+  when: host_hardware_physical | bool
+
+- name: Configure KVM guest integration
+  ansible.builtin.include_tasks:
+    file: guest.yml
+    apply:
+      tags:
+        - hardware
+        - packages
+  tags:
+    - hardware
+    - packages
+  when:
+    - ansible_virtualization_role | default('NA') == 'guest'
+    - ansible_virtualization_type | default('') in ['kvm', 'QEMU']
+
+- name: Configure host hardware packages
+  ansible.builtin.include_tasks:
+    file: packages.yml
+    apply:
+      tags:
+        - packages
+        - hardware
+  tags:
+    - packages
+    - hardware
+
+- name: Configure selected GPU packages
+  ansible.builtin.include_tasks:
+    file: gpu-packages.yml
+    apply:
+      tags:
+        - gpu
+        - packages
+  tags:
+    - gpu
+    - packages
+
+- name: Configure GPU userspace and report detected devices
+  ansible.builtin.include_tasks:
+    file: gpu.yml
+    apply:
+      tags:
+        - gpu
+  tags:
+    - gpu

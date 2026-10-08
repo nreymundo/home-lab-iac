@@ -1,0 +1,9 @@
+---
+# Hand-maintained grouping only. VM identities remain Terraform-owned.
+all:
+  children:
+    ubuntu_hosts:
+      children:
+        all_vms: {}
+        headless_laptops: {}
+        ubuntu_baremetal: {}

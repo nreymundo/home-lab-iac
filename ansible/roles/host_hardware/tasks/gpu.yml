@@ -1,0 +1,93 @@
+---
+- name: Ensure GPU access groups exist
+  ansible.builtin.group:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - render
+    - video
+  when: host_hardware_gpu_users | length > 0
+
+- name: Add configured users to GPU access groups
+  ansible.builtin.user:
+    name: "{{ item.0 }}"
+    groups: "{{ item.1 }}"
+    append: true
+  loop: "{{ host_hardware_gpu_users | product(['render', 'video']) | list }}"
+  when: host_hardware_gpu_users | length > 0
+
+- name: Discover stable DRM render nodes and their PCI paths
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -c
+      - |
+        import glob, json, os
+        root = {{ host_hardware_render_root | to_json }}
+        found = []
+        for link in glob.glob(os.path.join(root, 'by-path', 'pci-*-render')):
+            found.append({'path': os.path.realpath(link), 'stable_path': link, 'pci_path': os.path.basename(link)})
+        print(json.dumps(found))
+  register: host_hardware_render_discovery
+  changed_when: false
+  check_mode: false
+
+- name: Report GPU detection and runtime binding
+  ansible.builtin.debug:
+    msg:
+      detected_pci_devices: "{{ host_hardware_gpu_devices }}"
+      detected_pci_vendor_ids: "{{ host_hardware_detected_gpu_vendors }}"
+      selected_profiles: "{{ host_hardware_selected_gpu_profiles }}"
+      render_nodes: "{{ host_hardware_render_discovery.stdout | from_json }}"
+      acceleration_asserted: false
+
+- name: Require a render device for requested GPU validation
+  ansible.builtin.assert:
+    that:
+      - host_hardware_selected_gpu_profiles | length > 0
+      - host_hardware_render_discovery.stdout | from_json | length > 0
+    fail_msg: GPU validation was requested but no selected GPU profile or stable DRM render device exists.
+  when: host_hardware_validate_gpu | bool
+
+- name: Validate selected GPU acceleration with headless VAAPI
+  ansible.builtin.command:
+    argv:
+      - vainfo
+      - --display
+      - drm
+      - --device
+      - "{{ item.stable_path }}"
+  loop: "{{ host_hardware_render_discovery.stdout | from_json }}"
+  changed_when: false
+  when:
+    - host_hardware_validate_gpu | bool
+    - host_hardware_selected_gpu_profiles | length > 0
+    - ansible_virtualization_role | default('NA') == 'host' or host_hardware_gpu_devices | length > 0
+  tags:
+    - gpu
+
+- name: Validate OpenCL runtime when explicitly requested
+  ansible.builtin.command:
+    argv: [clinfo]
+  environment:
+    RUSTICL_ENABLE: "{{ 'radeonsi' if 'amd' in host_hardware_selected_gpu_profiles else '' }}"
+  changed_when: false
+  when:
+    - host_hardware_validate_gpu | bool
+    - host_hardware_validate_opencl | bool
+    - host_hardware_selected_gpu_profiles | length > 0
+    - host_hardware_gpu_devices | length > 0
+  tags:
+    - gpu
+
+- name: Validate Vulkan runtime when explicitly requested
+  ansible.builtin.command:
+    argv: [vulkaninfo, --summary]
+  changed_when: false
+  when:
+    - host_hardware_validate_gpu | bool
+    - host_hardware_validate_vulkan | bool
+    - host_hardware_selected_gpu_profiles | length > 0
+    - host_hardware_gpu_devices | length > 0
+  tags:
+    - gpu

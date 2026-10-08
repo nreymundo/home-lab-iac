@@ -1,0 +1,14 @@
+---
+- name: Select release-specific GPU package list
+  ansible.builtin.set_fact:
+    host_hardware_gpu_packages: >-
+      {{ (host_hardware_package_maps[ansible_distribution_release].intel_gpu if 'intel' in host_hardware_selected_gpu_profiles else [])
+       + (host_hardware_package_maps[ansible_distribution_release].amd_gpu if 'amd' in host_hardware_selected_gpu_profiles else []) }}
+  changed_when: false
+
+- name: Install selected GPU packages
+  ansible.builtin.apt:
+    name: "{{ host_hardware_gpu_packages | unique | list }}"
+    state: present
+    update_cache: false
+  when: host_hardware_gpu_packages | length > 0

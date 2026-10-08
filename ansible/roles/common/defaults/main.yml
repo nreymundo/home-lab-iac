@@ -1,8 +1,23 @@
 ---
 common_user: "pi"
+common_manage_user: false
+common_user_groups: []
+common_user_shell: /bin/bash
+common_passwordless_sudo: false
+common_sudoers_file: /etc/sudoers.d/90-common-user
 common_enable_unattended_upgrades: true
 common_unattended_upgrades_auto_reboot: false
 common_unattended_upgrades_reboot_time: "06:00"
+# Ubuntu is the default; other distributions override origins in inventory.
+common_unattended_upgrades_origins:
+  - "origin=Ubuntu,archive=${distro_codename}-security"
+  - "origin=Ubuntu,archive=${distro_codename}-updates"
+common_unattended_upgrades_blacklist: []
+common_apt_update_interval: 1
+common_apt_unattended_upgrade_interval: 1
+common_apt_autoclean_interval: 7
+common_apt_daily_timer_schedule: ""
+common_apt_daily_upgrade_timer_schedule: ""
 common_run_upgrade: true
 common_lock_root_password: false
 
@@ -10,6 +25,7 @@ common_lock_root_password: false
 common_enable_fstrim: true
 common_fstrim_timer_schedule: "04:00:00"
 
+common_group_packages: []
 common_extra_packages: []
 
 # Install the Mosh server package via the OS-native package manager.
@@ -60,3 +76,6 @@ common_kernel_params_base_add: []
 common_kernel_params_base_remove: []
 common_kernel_params_add: []
 common_kernel_params_remove: []
+
+# Ubuntu/Debian GRUB managed parameters. No changes are made when all lists are empty.
+common_reboot_required: false

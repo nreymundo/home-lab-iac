@@ -1,0 +1,37 @@
+---
+- name: Install deb822 repository prerequisite
+  ansible.builtin.apt:
+    name: python3-debian
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: host_hardware_enable_universe | bool
+
+- name: Enable Ubuntu universe and multiverse repositories additively
+  ansible.builtin.deb822_repository:
+    name: "host-hardware-{{ item.name }}"
+    types: [deb]
+    uris: "{{ item.uri }}"
+    suites: "{{ item.suites }}"
+    components: [universe, multiverse]
+    signed_by: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+    state: present
+    enabled: true
+  register: host_hardware_sources
+  loop:
+    - name: archive
+      uri: http://archive.ubuntu.com/ubuntu
+      suites:
+        - "{{ ansible_distribution_release }}"
+        - "{{ ansible_distribution_release }}-updates"
+    - name: security
+      uri: http://security.ubuntu.com/ubuntu
+      suites:
+        - "{{ ansible_distribution_release }}-security"
+  when: host_hardware_enable_universe | bool
+
+- name: Refresh apt metadata when hardware repositories are enabled
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: "{{ 0 if host_hardware_sources.changed else 3600 }}"
+  when: host_hardware_enable_universe | bool

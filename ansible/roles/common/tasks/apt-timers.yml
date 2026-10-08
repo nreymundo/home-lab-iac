@@ -1,0 +1,49 @@
+---
+- name: Ensure APT timer override directories exist
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ item }}.d"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - apt-daily.timer
+    - apt-daily-upgrade.timer
+  when: >-
+    (item == 'apt-daily.timer' and common_apt_daily_timer_schedule | length > 0)
+    or (item == 'apt-daily-upgrade.timer' and common_apt_daily_upgrade_timer_schedule | length > 0)
+
+- name: Configure optional APT timer schedules
+  ansible.builtin.copy:
+    content: |
+      # Managed by Ansible. Do not edit manually.
+      [Timer]
+      OnCalendar=
+      OnCalendar={{ item.schedule }}
+      Persistent=true
+    dest: "/etc/systemd/system/{{ item.timer }}.d/90-ansible-common-schedule.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - timer: apt-daily.timer
+      schedule: "{{ common_apt_daily_timer_schedule }}"
+    - timer: apt-daily-upgrade.timer
+      schedule: "{{ common_apt_daily_upgrade_timer_schedule }}"
+  when: item.schedule | length > 0
+  notify: Reload systemd daemon
+
+- name: Remove unset APT timer schedule overrides
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ item.timer }}.d/90-ansible-common-schedule.conf"
+    state: absent
+  loop:
+    - timer: apt-daily.timer
+      schedule: "{{ common_apt_daily_timer_schedule }}"
+    - timer: apt-daily-upgrade.timer
+      schedule: "{{ common_apt_daily_upgrade_timer_schedule }}"
+  when: item.schedule | length == 0
+  notify: Reload systemd daemon
+
+- name: Flush handlers to apply APT timer schedule changes
+  ansible.builtin.meta: flush_handlers

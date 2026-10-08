@@ -1,0 +1,24 @@
+---
+- name: Select release-specific hardware package lists
+  ansible.builtin.set_fact:
+    host_hardware_package_map: "{{ host_hardware_package_maps[ansible_distribution_release] }}"
+  changed_when: false
+
+- name: Compose unique hardware package set
+  ansible.builtin.set_fact:
+    host_hardware_packages: >-
+      {{ (host_hardware_package_map.baseline
+       + (host_hardware_package_map.intel_cpu if host_hardware_physical | bool and host_hardware_cpu_vendor == 'intel' else [])
+       + (host_hardware_package_map.amd_cpu if host_hardware_physical | bool and host_hardware_cpu_vendor == 'amd' else [])
+       + (host_hardware_package_map.diagnostics if host_hardware_install_diagnostics | bool else [])
+       + host_hardware_extra_packages) | unique | list }}
+  changed_when: false
+
+- name: Install hardware package set
+  ansible.builtin.apt:
+    name: "{{ host_hardware_packages }}"
+    state: present
+    update_cache: false
+  when: host_hardware_packages | length > 0
+  tags:
+    - packages

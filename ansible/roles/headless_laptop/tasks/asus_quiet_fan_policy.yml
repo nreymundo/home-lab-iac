@@ -38,7 +38,9 @@
   when: headless_laptop_asus_quiet_fan_sysfs.rc != 0
 
 - name: Install ASUS quiet fan policy
-  when: headless_laptop_asus_quiet_fan_sysfs.rc == 0
+  when:
+    - headless_laptop_asus_quiet_fan_policy_enabled | bool
+    - headless_laptop_asus_quiet_fan_sysfs.rc == 0
   block:
     - name: Install ASUS quiet fan policy helper
       ansible.builtin.template:
@@ -78,3 +80,31 @@
         state: started
       changed_when: false
       when: not ansible_check_mode
+
+- name: Inspect disabled ASUS fan policy units
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/{{ item }}"
+  loop: [asus-quiet-fan-policy.timer, asus-quiet-fan-policy.service]
+  register: headless_laptop_fan_units
+  when: not headless_laptop_asus_quiet_fan_policy_enabled | bool
+
+- name: Stop disabled ASUS fan policy
+  ansible.builtin.systemd:
+    name: "{{ item.item }}"
+    state: stopped
+    enabled: false
+  loop: "{{ headless_laptop_fan_units.results }}"
+  when:
+    - not headless_laptop_asus_quiet_fan_policy_enabled | bool
+    - item.stat.exists
+
+- name: Remove disabled ASUS fan policy files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /usr/local/sbin/asus-quiet-fan-policy
+    - /etc/systemd/system/asus-quiet-fan-policy.service
+    - /etc/systemd/system/asus-quiet-fan-policy.timer
+  when: not headless_laptop_asus_quiet_fan_policy_enabled | bool
+  notify: Reload headless laptop systemd

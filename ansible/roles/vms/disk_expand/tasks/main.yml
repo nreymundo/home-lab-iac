@@ -16,10 +16,10 @@
       register: disk_expand_rootfs_growpart
       changed_when: >-
         'NOCHANGE' not in (disk_expand_rootfs_growpart.stdout | default('') | upper)
-      failed_when:
-        - disk_expand_rootfs_growpart.rc not in [0, 1]
-        - disk_expand_rootfs_growpart.rc == 1 and
-          'NOCHANGE' not in (disk_expand_rootfs_growpart.stdout | default('') | upper)
+      failed_when: >-
+        disk_expand_rootfs_growpart.rc not in [0, 1] or
+        (disk_expand_rootfs_growpart.rc == 1 and
+         'NOCHANGE' not in (disk_expand_rootfs_growpart.stdout | default('') | upper))
 
     - name: Resize physical volume to use expanded partition
       ansible.builtin.command: >-

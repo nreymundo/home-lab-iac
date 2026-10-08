@@ -1,0 +1,27 @@
+---
+common_user: "{{ ansible_user }}"
+common_manage_user: true
+common_user_groups: [sudo]
+common_passwordless_sudo: true
+common_run_upgrade: false
+common_enable_unattended_upgrades: true
+common_unattended_upgrades_auto_reboot: false
+common_manage_journald: true
+
+ssh_hardening_user: "{{ common_user }}"
+ssh_hardening_sshd_settings:
+  PermitRootLogin: "no"
+  PasswordAuthentication: "no"
+  KbdInteractiveAuthentication: "no"
+  UsePAM: "yes"
+
+host_hardware_gpu_users: ["{{ common_user }}"]
+# Installation toggles retain explicitly selected settings in child groups.
+homebrew_install_enabled: false
+docker_install_enabled: false
+nodejs_runtime_install_enabled: false
+swapfile_enabled: false
+ufw_install_enabled: false
+ufw_allow_ssh: true
+fail2ban_install_enabled: false
+cockpit_enabled: false

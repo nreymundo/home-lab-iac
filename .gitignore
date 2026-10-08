@@ -85,6 +85,7 @@ local
 
 # Local agent planning artifacts
 .sisyphus/
+.slim/deepwork/
 
 # BEGIN oh-my-opencode-slim worktrees
 .slim/worktrees/
