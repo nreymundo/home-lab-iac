@@ -35,14 +35,20 @@ Image pulls resolve in two layers:
 
 ### Bring-Up
 
-The K3s playbook (`ansible/playbooks/k3s_cluster.yml`) enables the embedded
+The K3s role enables the embedded
 registry by default (`k3s_embedded_registry_enabled: true`) and renders
 `/etc/rancher/k3s/registries.yaml` on each node. Direct upstream fallback is also
 on by default, so no extra vars are required:
 
 ```bash
-ansible-playbook ansible/playbooks/k3s_cluster.yml
+cd ansible
+ansible-playbook playbooks/k3s_bootstrap.yml
 ```
+
+Use `playbooks/k3s_cluster.yml --limit <new-server>` for an existing-cluster
+join. Fresh bootstrap is explicit and rejects existing datastores. See
+[K3s provisioning](k3s-provisioning.md) for host/storage preparation,
+administrative access and rolling upgrades.
 
 Mirror configuration is the wildcard `k3s_registry_mirrors: { "*": {} }` in
 `ansible/roles/k3s/defaults/main.yml`, which lets the embedded registry intercept

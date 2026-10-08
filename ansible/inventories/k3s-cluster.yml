@@ -8,3 +8,4 @@ all:
         k3s_server:
           children:
             k3s_nodes: {}
+            k3s_baremetal: {}

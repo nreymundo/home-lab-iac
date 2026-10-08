@@ -1,0 +1,4 @@
+---
+k3s_admin_host: k3s-node-02
+k3s_bootstrap_host: k3s-node-02
+swapfile_enabled: false

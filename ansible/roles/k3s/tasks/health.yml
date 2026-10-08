@@ -1,0 +1,49 @@
+---
+- name: Construct delegated kubectl arguments
+  ansible.builtin.set_fact:
+    k3s_kubectl_argv:
+      - /usr/local/bin/k3s
+      - kubectl
+      - --kubeconfig=/etc/rancher/k3s/k3s.yaml
+      - "--server={{ k3s_control_url }}"
+      - --request-timeout=20s
+
+- name: Wait for API readiness including the datastore check
+  ansible.builtin.command:
+    argv: "{{ k3s_kubectl_argv + ['get', '--raw=/readyz'] }}"
+  delegate_to: "{{ k3s_control_host }}"
+  register: k3s_api_health
+  changed_when: false
+  check_mode: false
+  until: k3s_api_health.rc == 0
+  retries: "{{ k3s_ready_retries }}"
+  delay: "{{ k3s_ready_delay }}"
+
+- name: Read cluster node readiness
+  ansible.builtin.command:
+    argv: "{{ k3s_kubectl_argv + ['get', 'nodes', '-o', 'json'] }}"
+  delegate_to: "{{ k3s_control_host }}"
+  register: k3s_cluster_nodes
+  changed_when: false
+  check_mode: false
+  until: >-
+    k3s_cluster_nodes.rc == 0 and
+    (k3s_cluster_nodes.stdout | from_json)['items'] | length > 0 and
+    ((k3s_cluster_nodes.stdout | from_json)['items'] | map(attribute='status.conditions') | flatten
+     | selectattr('type', 'equalto', 'Ready') | selectattr('status', 'equalto', 'True') | list | length)
+    == ((k3s_cluster_nodes.stdout | from_json)['items'] | length)
+  retries: "{{ k3s_ready_retries }}"
+  delay: "{{ k3s_ready_delay }}"
+
+- name: Require all registered nodes to be Ready
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - ready_conditions | length == 1
+      - ready_conditions[0].status == 'True'
+    fail_msg: "Node {{ item.metadata.name }} is not Ready; stopping selected-node maintenance."
+  vars:
+    ready_conditions: "{{ item.status.conditions | selectattr('type', 'equalto', 'Ready') | list }}"
+  loop: "{{ (k3s_cluster_nodes.stdout | from_json)['items'] }}"
+  loop_control:
+    label: "{{ item.metadata.name }}"

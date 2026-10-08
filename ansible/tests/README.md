@@ -33,6 +33,20 @@ These tests establish configuration and helper behavior. First provisioning,
 fresh SSH/sudo access, real GPU acceleration and power enforcement, service
 behavior, and reboot persistence still require target machines.
 
+K3s workflow fixtures execute the role's Ansible orchestration and temporary-file
+operations while substituting the K3s API, binary download and systemd actions.
+Host prerequisites and storage provisioning are excluded from that simulation;
+mount/filesystem guards and fstab editing have separate focused checks. These
+tests establish delegation, selected-host scope, change planning, credential
+preservation and rolling failure behaviour, not real etcd/Longhorn health. See
+[`../../docs/k3s-provisioning.md`](../../docs/k3s-provisioning.md) for the
+disposable-cluster acceptance sequence.
+
+Frozen original-role rendering fixtures also verify old-to-new compatibility for
+initial and joining servers: unchanged files, no credential-layout conversion,
+no new drop-in, and no drain/restart. Upgrade cases verify binary-only maintenance;
+check-mode cases verify metadata drift is reported without being applied.
+
 Power fixtures reproduce Linux's flat `constraint_N_*` ABI and cover PPD/RAPL,
 class symlinks, bounded traversal, preferences and drift. Composition checks use
 Ansible inventory and condition evaluation without connecting to target hosts.

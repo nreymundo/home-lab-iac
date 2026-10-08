@@ -1,10 +1,9 @@
 ---
-- name: Provision K3s HA Cluster
-  hosts: k3s_cluster
+- name: Join or reconcile selected K3s servers
+  hosts: k3s_server
   become: true
   gather_facts: true
+  serial: 1
+  any_errors_fatal: true
   roles:
-    - common
-    - ssh_hardening
-    - { role: secondary_disk, when: "'k3s_nodes' in group_names" }
     - k3s

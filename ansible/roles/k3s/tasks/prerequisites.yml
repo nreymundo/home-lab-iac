@@ -1,0 +1,94 @@
+---
+- name: Install Kubernetes and Longhorn host dependencies
+  ansible.builtin.apt:
+    name: "{{ k3s_dependency_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Persist Kubernetes kernel modules
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/k3s.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      overlay
+      br_netfilter
+
+- name: Load Kubernetes kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: [overlay, br_netfilter]
+
+- name: Apply Kubernetes network sysctls
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_file: /etc/sysctl.d/k3s.conf
+    sysctl_set: true
+    reload: true
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.ipv4.ip_forward
+
+- name: Disable persistent fstab swap entries
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^([ \t]*[^#\s]\S*[ \t]+\S+[ \t]+swap[ \t]+.*)$'
+    replace: '# K3s disables swap: \1'
+  register: k3s_fstab_swap
+
+- name: Read active swap devices
+  ansible.builtin.command: swapon --show --noheadings --output NAME
+  register: k3s_active_swap
+  changed_when: false
+  check_mode: false
+
+- name: Disable active swap
+  ansible.builtin.command: swapoff --all
+  when: k3s_active_swap.stdout | trim | length > 0
+  changed_when: true
+
+- name: Reload systemd after persistent swap changes
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: k3s_fstab_swap.changed # noqa: no-handler -- reload before checking remaining swap providers
+
+- name: Check independently enabled swap units # noqa: command-instead-of-module -- query unit-file state
+  ansible.builtin.command: systemctl list-unit-files --type=swap --state=enabled,enabled-runtime,generated --no-legend --no-pager
+  register: k3s_enabled_swap_units
+  changed_when: false
+  check_mode: false
+
+- name: Require independent swap providers to be disabled
+  ansible.builtin.assert:
+    that:
+      - k3s_enabled_swap_units.stdout | trim | length == 0
+    fail_msg: Disable explicitly enabled swap units or zram providers before enrollment; fstab swap is managed by K3s.
+
+- name: Enable iSCSI support
+  ansible.builtin.systemd_service:
+    name: iscsid
+    state: started
+    enabled: true
+
+- name: Inspect host services for Longhorn multipath policy
+  ansible.builtin.service_facts:
+  when: k3s_disable_multipathd | bool
+
+- name: Disable multipathd on dedicated Longhorn hosts
+  ansible.builtin.systemd_service:
+    name: multipathd.service
+    state: stopped
+    enabled: false
+    masked: true
+  when:
+    - k3s_disable_multipathd | bool
+    - "'multipathd.service' in ansible_facts.services"
+
+- name: Apply Kubernetes OS tuning
+  ansible.builtin.include_tasks: os-tuning.yml
+  when: k3s_os_tuning_enabled | bool

@@ -1,0 +1,3 @@
+---
+# Existing Terraform VMs have a dedicated Longhorn disk.
+k3s_storage_mode: managed

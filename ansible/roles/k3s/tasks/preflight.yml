@@ -1,0 +1,102 @@
+---
+- name: Validate supported server inputs
+  ansible.builtin.assert:
+    that:
+      - inventory_hostname in groups.get('k3s_server', [])
+      - ansible_distribution == 'Ubuntu'
+      - ansible_distribution_release in ['noble', 'resolute']
+      - ansible_architecture in ['x86_64', 'aarch64']
+      - k3s_operation in ['reconcile', 'bootstrap', 'upgrade']
+      - k3s_storage_mode in ['manual', 'managed']
+      - k3s_storage_path == '/var/lib/longhorn'
+      - k3s_iface | length > 0
+      - not (swapfile_enabled | default(false) | bool)
+      - k3s_version is match('^v[0-9]+\.[0-9]+\.[0-9]+\+k3s[0-9]+$')
+      - k3s_amd64_checksum is match('^[a-f0-9]{64}$')
+      - k3s_arm64_checksum is match('^[a-f0-9]{64}$')
+    fail_msg: Check Ubuntu release, server membership, storage mode, version/checksums and host-level swapfile_enabled=false.
+
+- name: Inspect local K3s state
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - /usr/local/bin/k3s
+    - /var/lib/rancher/k3s/server/db
+    - /var/lib/rancher/k3s/server/db/etcd
+    - /etc/systemd/system/k3s.service
+  register: k3s_local_state
+
+- name: Classify local server state
+  ansible.builtin.set_fact:
+    k3s_binary_exists: "{{ k3s_local_state.results[0].stat.exists }}"
+    k3s_existing_server: "{{ k3s_local_state.results[2].stat.exists }}"
+
+- name: Reject ambiguous datastore state and unintended bootstrap
+  ansible.builtin.assert:
+    that:
+      - not k3s_local_state.results[1].stat.exists or k3s_existing_server
+      - not k3s_existing_server or (k3s_binary_exists and k3s_local_state.results[3].stat.exists)
+      - k3s_operation != 'bootstrap' or not k3s_local_state.results[1].stat.exists
+      - k3s_operation != 'bootstrap' or inventory_hostname == k3s_bootstrap_host
+      - k3s_operation != 'upgrade' or k3s_existing_server
+    fail_msg: >-
+      Bootstrap requires a fresh datastore; upgrade requires an existing embedded-etcd server.
+      Resolve partial/SQLite installations explicitly. This role never resets cluster data.
+
+- name: Read installed K3s version
+  ansible.builtin.command: /usr/local/bin/k3s --version
+  register: k3s_installed_version_output
+  changed_when: false
+  check_mode: false
+  when: k3s_binary_exists
+
+- name: Determine installed release
+  ansible.builtin.set_fact:
+    k3s_installed_version: "{{ k3s_installed_version_output.stdout.split()[2] if k3s_binary_exists else '' }}"
+
+- name: Require deliberate supported version transitions
+  ansible.builtin.assert:
+    that:
+      - k3s_operation == 'upgrade' or not k3s_existing_server or k3s_installed_version == k3s_version
+      - k3s_operation != 'upgrade' or target_release is version(installed_release, '>=')
+      - k3s_operation != 'upgrade' or target_release.split('.')[0] == installed_release.split('.')[0]
+      - k3s_operation != 'upgrade' or (target_release.split('.')[1] | int) - (installed_release.split('.')[1] | int) <= 1
+      - >-
+        k3s_operation != 'upgrade' or target_release != installed_release or
+        (k3s_version.split('+k3s')[1] | int) >= (k3s_installed_version.split('+k3s')[1] | int)
+    fail_msg: Use k3s_upgrade.yml for version changes; downgrades and skipped minor releases are not supported.
+  vars:
+    target_release: "{{ k3s_version.split('+')[0] | regex_replace('^v', '') }}"
+    installed_release: "{{ k3s_installed_version.split('+')[0] | regex_replace('^v', '') }}"
+
+- name: Require cgroups v2
+  ansible.builtin.command: stat -fc %T /sys/fs/cgroup
+  register: k3s_cgroup_fs
+  changed_when: false
+  check_mode: false
+  failed_when: k3s_cgroup_fs.stdout != 'cgroup2fs'
+
+- name: Locate removed kubelet configuration flags
+  ansible.builtin.command:
+    argv:
+      - grep
+      - --recursive
+      - --files-with-matches
+      - --fixed-strings
+      - --
+      - pod-infra-container-image
+      - /etc/rancher/k3s
+      - /etc/systemd/system/k3s.service
+      - /etc/systemd/system/k3s.service.d
+      - /etc/default/k3s
+      - /etc/sysconfig/k3s
+  register: k3s_removed_flags
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Reject removed kubelet flags before changing a server
+  ansible.builtin.assert:
+    that:
+      - k3s_removed_flags.stdout | trim | length == 0
+    fail_msg: Remove pod-infra-container-image from the reported configuration files before Kubernetes v1.35+.

@@ -1,360 +1,51 @@
 ---
-- name: Install K3s dependencies (Debian/Ubuntu)
-  ansible.builtin.apt:
-    name: "{{ k3s_dependency_packages }}"
-    state: present
-    update_cache: true
-  when: ansible_os_family == 'Debian'
+- name: Validate the selected server and operation
+  ansible.builtin.import_tasks: preflight.yml
 
-- name: Install K3s dependencies (Fedora/RedHat)
-  ansible.builtin.dnf:
-    name: "{{ k3s_dependency_packages }}"
-    state: present
-    update_cache: true
-  when: ansible_os_family == 'RedHat'
+- name: Read existing cluster state independently of selected targets
+  ansible.builtin.include_tasks: access.yml
+  when: k3s_operation != 'bootstrap'
 
-- name: Apply OS tuning
-  ansible.builtin.include_tasks: os-tuning.yml
-  when: k3s_os_tuning_enabled | bool
+- name: Configure cluster host prerequisites
+  ansible.builtin.import_tasks: prerequisites.yml
+  when: not k3s_existing_server
 
-- name: Enable and start iscsid service
-  ansible.builtin.systemd_service:
-    name: iscsid
-    state: started
-    enabled: true
-    daemon_reload: true
+- name: Inspect existing host prerequisites without reprovisioning
+  ansible.builtin.import_tasks: inspect-prerequisites.yml
+  when: k3s_existing_server
 
-- name: Enable cgroups for Raspberry Pi
-  when: "'rpi' in group_names"
-  block:
-    - name: Check for firmware cmdline path
-      ansible.builtin.stat:
-        path: /boot/firmware/cmdline.txt
-      register: k3s_rpi_firmware_cmdline
+- name: Prepare and validate Longhorn storage
+  ansible.builtin.import_tasks: storage.yml
 
-    - name: Set cmdline path fact
-      ansible.builtin.set_fact:
-        k3s_rpi_cmdline_path: >-
-          {{
-            '/boot/firmware/cmdline.txt' if k3s_rpi_firmware_cmdline.stat.exists else '/boot/cmdline.txt'
-          }}
+- name: Determine configuration and binary changes before draining
+  ansible.builtin.import_tasks: plan.yml
+  when: k3s_operation != 'upgrade'
 
-    - name: Ensure cgroup settings in cmdline.txt
-      ansible.builtin.lineinfile:
-        path: "{{ k3s_rpi_cmdline_path }}"
-        backrefs: true
-        regexp: '^(?!.*\b{{ item }}\b)(.*)$'
-        line: '\1 {{ item }}'
-      loop:
-        - cgroup_enable=cpuset
-        - cgroup_enable=memory
-        - cgroup_memory=1
-      notify: Reboot RPi for cgroups
-
-- name: Compute K3s seed nodes
+- name: Plan a binary-only upgrade
   ansible.builtin.set_fact:
-    k3s_seed_nodes: >-
-      {{
-        hostvars
-        | dict2items
-        | selectattr('value.k3s_is_seed', 'defined')
-        | selectattr('value.k3s_is_seed', 'equalto', true)
-        | map(attribute='key')
-        | list
-      }}
-  run_once: true
+    k3s_desired_files: []
+    k3s_configuration_changed: false
+    k3s_changed_files: []
+    k3s_binary_changed: "{{ k3s_installed_version != k3s_version }}"
+    k3s_restart_required: "{{ k3s_installed_version != k3s_version or k3s_running_version != k3s_version }}"
+  when: k3s_operation == 'upgrade'
 
-- name: Validate K3s seed node configuration
-  ansible.builtin.assert:
-    that:
-      - k3s_seed_nodes | length <= 1
-      - (groups['k3s_nodes'] | default([])) | length > 0
-    fail_msg: >-
-          Multiple K3s seed nodes found ({{ k3s_seed_nodes | join(', ') }}).
-          Ensure at least one host belongs to k3s_nodes.
-  run_once: true
+- name: Apply selected server changes
+  ansible.builtin.include_tasks: maintenance.yml
+  when: not ansible_check_mode
 
-- name: Identify K3s seed node
-  ansible.builtin.set_fact:
-    k3s_seed_host: "{{ (k3s_seed_nodes | first) | default(groups['k3s_nodes'] | first) }}"
-  run_once: true
-
-- name: Construct K3s node label arguments
-  ansible.builtin.set_fact:
-    k3s_node_label_args: >-
-      {% for key, value in (k3s_node_labels | default({})).items() -%}
-      --node-label {{ key }}={{ value }} {{ ' ' }}{%- endfor %}
-
-- name: Ensure K3s interface is set
-  ansible.builtin.assert:
-    that:
-      - (k3s_iface | default('')) | length > 0
-    fail_msg: "k3s_iface is empty; set it to the interface carrying k3s_node_ip"
-
-- name: Create K3s installation directory
-  ansible.builtin.file:
-    path: /usr/local/bin
-    state: directory
-    mode: "0755"
-  become: true
-
-- name: Create K3s configuration directory
-  ansible.builtin.file:
-    path: /etc/rancher/k3s
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-  become: true
-
-- name: Check for existing node-local registries config
-  ansible.builtin.stat:
-    path: /etc/rancher/k3s/registries.yaml
-  register: k3s_existing_registries_stat
-  become: true
-
-- name: Preserve existing node-local registries configs block
-  when: k3s_existing_registries_stat.stat.exists | bool
-  block:
-    - name: Read existing node-local registries config
-      ansible.builtin.slurp:
-        src: /etc/rancher/k3s/registries.yaml
-      register: k3s_existing_registries_raw
-      become: true
-      no_log: true
-
-    - name: Parse and select preserved configs block
-      ansible.builtin.set_fact:
-        k3s_preserved_configs: >-
-          {{
-            (k3s_existing_registries_raw.content
-              | b64decode
-              | from_yaml
-              | default({}, true)).configs
-            | default({}, true)
-          }}
-      no_log: true
-
-  rescue:
-    - name: Fallback to mirrors-only on unreadable/empty/malformed registries.yaml
-      ansible.builtin.set_fact:
-        k3s_preserved_configs: {}
-      no_log: true
-
-- name: Default preserved configs to empty when no existing registries.yaml
-  ansible.builtin.set_fact:
-    k3s_preserved_configs: {}
-  no_log: true
-  when: not (k3s_existing_registries_stat.stat.exists | bool)
-
-- name: Configure K3s registry mirrors
-  ansible.builtin.template:
-    src: registries.yaml.j2
-    dest: /etc/rancher/k3s/registries.yaml
-    owner: root
-    group: root
-    mode: "0600"
-  become: true
-  diff: false
-  no_log: true
-  notify: Restart k3s
-
-- name: Report registry config preservation
+- name: Report planned server maintenance
   ansible.builtin.debug:
-    msg: >-
-      Registry mirrors applied. Any existing node-local `configs:` block
-      (including manual Docker Hub auth) is retained through this render;
-      configure Docker Hub auth manually only on nodes where it is absent.
+    msg:
+      operation: "{{ k3s_operation }}"
+      new_server: "{{ not k3s_existing_server }}"
+      restart_required: "{{ k3s_restart_required }}"
+      configuration_changes: "{{ k3s_changed_files }}"
+  when: ansible_check_mode
 
-- name: Download K3s binary
-  ansible.builtin.import_tasks: download_binary.yml
-- name: Create K3s symlink
-  ansible.builtin.file:
-    src: /usr/local/bin/k3s
-    dest: /usr/local/bin/kubectl
-    state: link
-  become: true
-
-- name: Install K3s on Seed Node
-  when: inventory_hostname == k3s_seed_host
-  block:
-    - name: Create K3s systemd service
-      ansible.builtin.template:
-        src: k3s.service.j2
-        dest: /etc/systemd/system/k3s.service
-        mode: "0644"
-      become: true
-      vars:
-        k3s_exec_args: >
-          server
-          --cluster-init
-          --node-ip {{ k3s_node_ip }}
-          --flannel-iface {{ k3s_iface }}
-          --write-kubeconfig-mode 644
-          --tls-san {{ k3s_api_vip }}
-          {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
-          --disable traefik
-          --disable metrics-server
-          --disable servicelb
-          {{ k3s_node_label_args | trim }}
-      notify: Restart k3s
-
-    - name: Enable and start K3s service (Seed)
-      ansible.builtin.systemd_service:
-        name: k3s
-        state: started
-        enabled: true
-        daemon_reload: true
-      become: true
-
-    - name: Wait for K3s to be ready
-      ansible.builtin.command: /usr/local/bin/k3s kubectl get nodes
-      register: k3s_ready
-      until: k3s_ready.rc == 0
-      retries: 30
-      delay: 5
-      changed_when: false
-
-    - name: Get K3s token
-      ansible.builtin.slurp:
-        src: /var/lib/rancher/k3s/server/node-token
-      register: k3s_token_b64
-      changed_when: false
-      when: not ansible_check_mode
-      no_log: true
-
-    - name: Fail when K3s token is unavailable
-      ansible.builtin.fail:
-        msg: Unable to retrieve K3s cluster token from seed node
-      when:
-        - not ansible_check_mode
-        - (k3s_token_b64 is failed) or (k3s_token_b64.content is not defined)
-
-    - name: Register token fact
-      ansible.builtin.set_fact:
-        k3s_cluster_token: "{{ k3s_token_b64.content | b64decode | trim }}"
-      when:
-        - not ansible_check_mode
-        - k3s_token_b64.content is defined
-        - k3s_token_b64 is succeeded
-      no_log: true
-
-    - name: Set K3s token placeholder for check mode
-      ansible.builtin.set_fact:
-        k3s_cluster_token: check-mode-token
-      when: ansible_check_mode
-      no_log: true
-
-    - name: Fetch Kubeconfig to ansible directory
-      ansible.builtin.fetch:
-        src: /etc/rancher/k3s/k3s.yaml
-        dest: "{{ playbook_dir }}/../k3s.yaml"
-        flat: true
-      when: not ansible_check_mode
-
-    - name: Update Kubeconfig server address
-      ansible.builtin.replace:
-        path: "{{ playbook_dir }}/../k3s.yaml"
-        regexp: 'https://127.0.0.1:6443'
-        replace: "https://{{ k3s_api_vip }}:6443"
-      delegate_to: localhost
-      become: false
-      when: not ansible_check_mode
-
-- name: Validate K3s token is available on secondary nodes
-  ansible.builtin.assert:
-    that:
-      - hostvars[k3s_seed_host]['k3s_cluster_token'] is defined
-      - hostvars[k3s_seed_host]['k3s_cluster_token'] | length > 0
-    fail_msg: >-
-          K3s cluster token is not available from seed node {{ k3s_seed_host }}.
-          Ensure seed node installation succeeded.
-  when: inventory_hostname != k3s_seed_host
-
-- name: Distribute K3s token to other nodes
-  ansible.builtin.set_fact:
-    k3s_cluster_token: "{{ hostvars[k3s_seed_host]['k3s_cluster_token'] }}"
-    k3s_seed_ip: "{{ hostvars[k3s_seed_host]['ansible_host'] }}"
-  when: inventory_hostname != k3s_seed_host
-  no_log: true
-
-- name: Install K3s on Secondary Nodes
-  when: inventory_hostname != k3s_seed_host
-  block:
-    - name: Wait for Seed Node API
-      ansible.builtin.wait_for:
-        host: "{{ k3s_seed_ip }}"
-        port: 6443
-        timeout: 600
-
-    - name: Create K3s systemd service
-      ansible.builtin.template:
-        src: k3s.service.j2
-        dest: /etc/systemd/system/k3s.service
-        mode: "0644"
-      become: true
-      vars:
-        k3s_exec_args: >
-          server
-          --server https://{{ k3s_api_vip }}:6443
-          --token {{ k3s_cluster_token }}
-          --node-ip {{ k3s_node_ip }}
-          --flannel-iface {{ k3s_iface }}
-          --tls-san {{ k3s_api_vip }}
-          {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
-          --disable traefik
-          --disable metrics-server
-          --disable servicelb
-          {{ k3s_node_label_args | trim }}
-      notify: Restart k3s
-
-    - name: Enable and start K3s service (Secondary)
-
-      ansible.builtin.systemd_service:
-        name: k3s
-        state: started
-        enabled: true
-        daemon_reload: true
-      become: true
-
-- name: Reconcile Node Taints
+- name: Preview selected existing node metadata changes
+  ansible.builtin.include_tasks: metadata.yml
   when:
-    - not ansible_check_mode
-  run_once: true
-  delegate_to: "{{ k3s_seed_host }}"
-  become: true
-  block:
-    - name: Wait for node to be registered
-      ansible.builtin.command: >-
-        /usr/local/bin/k3s kubectl get node {{ item }}
-        -o jsonpath='{.metadata.name}'
-      register: _k3s_node_check
-      until: _k3s_node_check.rc == 0
-      retries: 60
-      delay: 2
-      loop: "{{ groups['k3s_cluster'] }}"
-      changed_when: false
-
-    - name: Apply workload taints
-      ansible.builtin.command: >-
-        /usr/local/bin/k3s kubectl taint node {{ item }}
-        workloads=disabled:NoSchedule --overwrite
-      loop: "{{ groups['k3s_cluster'] }}"
-      when: not (hostvars[item]['k3s_allow_workloads'] | default(true) | bool)
-      register: k3s_taint_add
-      changed_when: "'tainted' in k3s_taint_add.stdout"
-      failed_when:
-        - k3s_taint_add.rc != 0
-        - "'already has' not in k3s_taint_add.stderr"
-
-    - name: Remove workload taints
-      ansible.builtin.command: >-
-        /usr/local/bin/k3s kubectl taint node {{ item }}
-        workloads=disabled:NoSchedule-
-      loop: "{{ groups['k3s_cluster'] }}"
-      when: (hostvars[item]['k3s_allow_workloads'] | default(true) | bool)
-      register: k3s_taint_remove
-      changed_when: "'untainted' in k3s_taint_remove.stdout"
-      failed_when:
-        - k3s_taint_remove.rc != 0
-        - "'not found' not in k3s_taint_remove.stderr"
+    - ansible_check_mode
+    - k3s_existing_server
+    - k3s_operation != 'upgrade'
