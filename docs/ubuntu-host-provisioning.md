@@ -5,7 +5,7 @@
 Implementation resumed on 2026-10-08 in `feat/ubuntu-host-provisioning` (PR #1407).
 The unified entrypoint, inventory grouping, hardware/power corrections, laptop
 extraction and optional Cockpit composition are implemented. This remains a
-**draft pending target validation**. No target machines have been provisioned,
+**implementation pending target validation**. No target machines have been provisioned,
 rebooted or changed by this implementation session.
 
 The earlier checkpoint is preserved in commit `b7e06c87`. Its incorrect nested
@@ -50,10 +50,10 @@ Existing VM and G14 automatic-reboot settings are now false.
 The shared role defaults allow only Ubuntu security and stable-release updates.
 Proxmox explicitly overrides the origins with Debian base, `-security` and
 `-updates` repositories; unattended upgrades remain disabled there. Proxmox/vendor
-repositories are not added to that automatic policy. A Pi running Ubuntu can use
-the defaults. For Raspberry Pi OS or another distribution, override
-`common_unattended_upgrades_origins` in its host/group inventory to match the
-installed OS repositories before enabling unattended updates.
+repositories are not added to that automatic policy. The `rpi` group explicitly
+retains its previous Debian, Debian-Security, Raspbian and Raspberry Pi Foundation
+origins. A Pi installed with Ubuntu instead needs a host override selecting the
+Ubuntu origins; origin policy follows the installed OS, not the hardware model.
 
 Package composition is explicit: `common_packages` provides the baseline,
 `common_group_packages` holds additive group requirements (e.g. VM `nfs-common`),
@@ -179,13 +179,13 @@ EPP choice rejection, PPD plus caps, read-only checks, drift, quantized readback
 policy ownership transitions, unit whitespace, Cockpit source cleanup, fleet
 precedence, target wrappers and the original baseline tests.
 
-Local validation uses Python 3.12.14, ansible-core 2.21.3, ansible-lint 26.8.0,
-ansible.posix 2.2.2 and community.general 13.3.0. Full role/playbook lint and all
-19 playbook syntax checks pass. The local environment prohibits Unix sockets,
-so Ansible 2.21's RPC manager prevents six execution-based fixture tests from
-starting. The remaining 40 tests pass, including all power and composition tests.
-The full 46-test suite is wired into the PR's CI; consult that run for its result.
-Local fixture failures are an environment limitation, not a claim of passing tests.
+Fresh local validation uses Python 3.14.7 and ansible-core 2.21.5. Full
+role/playbook lint and all 19 playbook syntax checks pass. The earlier local
+Unix-socket restriction is absent in this environment: all execution-based
+fixtures run, including temporary-root lifecycle and SSH assertion tests.
+All 47 tests pass locally, with no skips. The complete suite also checks Pi update origins through the resolved inventory
+and rendered APT configuration. CI runs the suite using the versions pinned in
+`.github/workflows/ci.yml`; consult the latest PR run for remote results.
 
 Before rollout, establish actual host identities, installation state, the Intel
 mini-PC CPU/GPU SKU, per-host policy/limits and management access. Validate on a

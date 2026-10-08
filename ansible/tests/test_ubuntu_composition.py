@@ -67,6 +67,23 @@ class UbuntuCompositionTests(unittest.TestCase):
             self.assertNotIn("pve3", result.stdout)
             self.assertEqual("g14-2022" in result.stdout, target == "headless_laptops")
 
+    def test_rendered_pi_update_origins_preserve_non_ubuntu_repositories(self):
+        defaults = read_yaml("roles/common/defaults/main.yml")
+        template = (ROOT / "roles/common/templates/50unattended-upgrades.j2").read_text()
+        values = {**defaults, **self.inventory["_meta"]["hostvars"]["main-rpi4"]}
+        config = render(template, values)
+        for origin in [
+            "origin=Debian,codename=${distro_codename},label=Debian",
+            "origin=Debian,codename=${distro_codename},label=Debian-Security",
+            "origin=Raspbian,codename=${distro_codename},label=Raspbian",
+            "origin=Raspberry Pi Foundation,codename=${distro_codename},label=Raspberry Pi Foundation",
+        ]:
+            self.assertIn(f'"{origin}";', config)
+        self.assertNotIn("origin=Ubuntu", config)
+        ubuntu_config = render(template, {**defaults, **self.inventory["_meta"]["hostvars"]["k3s-node-01"]})
+        self.assertIn('"origin=Ubuntu,archive=${distro_codename}-security";', ubuntu_config)
+        self.assertNotIn("origin=Raspbian", ubuntu_config)
+
     def test_optional_role_conditions_and_tags(self):
         roles = read_yaml("playbooks/ubuntu.yml")[0]["roles"]
         for role_name, toggle in [("nodejs_runtime", "nodejs_runtime_install_enabled"), ("docker", "docker_install_enabled"), ("ufw", "ufw_install_enabled"), ("fail2ban", "fail2ban_install_enabled"), ("disk_expand", "disk_expand_rootfs_expand")]:

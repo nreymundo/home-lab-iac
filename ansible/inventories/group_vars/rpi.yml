@@ -2,6 +2,13 @@
 # Common role overrides for Raspberry Pi hosts. Full list in roles/common/defaults/main.yml.
 common_user: "{{ ansible_user | default('pi') }}"
 
+# Preserve the Debian/Raspberry Pi OS origins previously provided by common.
+common_unattended_upgrades_origins:
+  - "origin=Debian,codename=${distro_codename},label=Debian"
+  - "origin=Debian,codename=${distro_codename},label=Debian-Security"
+  - "origin=Raspbian,codename=${distro_codename},label=Raspbian"
+  - "origin=Raspberry Pi Foundation,codename=${distro_codename},label=Raspberry Pi Foundation"
+
 # Packages installed on every Raspberry Pi host (list replaces role defaults).
 common_packages:
   - curl
