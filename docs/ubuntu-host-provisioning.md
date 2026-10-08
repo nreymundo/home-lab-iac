@@ -107,9 +107,9 @@ sources needs UFW already installed. Distribution validation always runs.
 
 See the [hardware API](../ansible/roles/host_hardware/README.md) and
 [power API](../ansible/roles/host_power/README.md) for all variables.
-Hardware repositories are prepared using Ubuntu's native component-management
-tool before hardware packages. Existing mirrors and signing settings are retained;
-the repository editor runs only when components are missing.
+Hardware repositories are prepared using Ubuntu's APT source library before
+hardware packages. Existing mirrors and signing settings are retained;
+source files are written only when components are missing.
 Requested GPU validation fails when no stable render device exists;
 package installation alone does not establish working acceleration.
 

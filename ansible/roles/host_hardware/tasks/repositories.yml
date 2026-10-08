@@ -1,46 +1,24 @@
 ---
-- name: Install Ubuntu repository management tools
+- name: Install Ubuntu APT source library
   ansible.builtin.apt:
-    name: software-properties-common
+    name: python3-apt
     state: present
     update_cache: true
     cache_valid_time: 3600
-  when: host_hardware_enable_universe | bool
-
-- name: Check for missing components in existing Ubuntu repositories
-  ansible.builtin.command:
-    argv:
-      - /usr/bin/add-apt-repository
-      - --dry-run
-      - --yes
-      - --no-update
-      - --component
-      - universe
-      - --component
-      - multiverse
-  environment:
-    LC_ALL: C
-  register: host_hardware_source_probe
-  changed_when: false
+  register: host_hardware_apt_library
   when: host_hardware_enable_universe | bool
 
 - name: Enable missing components in existing Ubuntu repositories
   ansible.builtin.command:
-    argv:
-      - /usr/bin/add-apt-repository
-      - --yes
-      - --no-update
-      - --component
-      - universe
-      - --component
-      - multiverse
-  environment:
-    LC_ALL: C
+    argv: >-
+      {{ ['/usr/bin/python3', '-c', lookup('ansible.builtin.file', 'enable_ubuntu_components.py')]
+         + (['--check'] if ansible_check_mode else []) }}
   register: host_hardware_sources
-  changed_when: "'Added ' in host_hardware_sources.stdout"
+  changed_when: (host_hardware_sources.stdout | from_json).changed
+  check_mode: false
   when:
     - host_hardware_enable_universe | bool
-    - "'Added ' in host_hardware_source_probe.stdout | default('')"
+    - not ansible_check_mode or not host_hardware_apt_library.changed
 
 - name: Refresh apt metadata when hardware repositories are enabled
   ansible.builtin.apt:
