@@ -57,15 +57,25 @@ class UbuntuCompositionTests(unittest.TestCase):
         self.assertIn("nfs-common", hosts["k3s-node-01"]["common_group_packages"])
         self.assertIn("intel-gpu-tools", hosts["k3s-node-01"]["common_extra_packages"])
 
-    def test_wrappers_preserve_target_sets(self):
-        for name, target in [("ubuntu_vms", "all_vms"), ("headless_laptops", "headless_laptops")]:
-            wrapper = read_yaml(f"playbooks/{name}.yml")[0]
-            self.assertEqual(wrapper["ansible.builtin.import_playbook"], "ubuntu.yml")
-            self.assertEqual(wrapper["vars"]["ubuntu_target_hosts"], target)
-            result = subprocess.run(["ansible-playbook", str(ROOT / f"playbooks/{name}.yml"), "--list-hosts"], env=ENV, capture_output=True, text=True)
-            self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertNotIn("pve3", result.stdout)
-            self.assertEqual("g14-2022" in result.stdout, target == "headless_laptops")
+    def test_unified_playbook_limits_preserve_target_sets(self):
+        def group_hosts(name):
+            group = self.inventory[name]
+            hosts = set(group.get("hosts", []))
+            for child in group.get("children", []):
+                hosts.update(group_hosts(child))
+            return hosts
+
+        for target in ["all_vms", "headless_laptops"]:
+            with self.subTest(target=target):
+                result = subprocess.run(
+                    ["ansible-playbook", str(ROOT / "playbooks/ubuntu.yml"), "--limit", target, "--list-hosts"],
+                    env=ENV, capture_output=True, text=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                actual = {line.strip() for line in result.stdout.splitlines() if line.startswith("      ")}
+                expected = group_hosts(target)
+                self.assertTrue(expected)
+                self.assertEqual(actual, expected)
 
     def test_rendered_pi_update_origins_preserve_non_ubuntu_repositories(self):
         defaults = read_yaml("roles/common/defaults/main.yml")
