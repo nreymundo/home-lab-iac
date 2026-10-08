@@ -209,13 +209,14 @@ jobs:
       - name: Run ansible-lint
         run: ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint --project-dir ansible ansible/playbooks/ ansible/roles/
 
-      - name: Install offline SSH validation tools
+      - name: Install offline host validation tools
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y openssh-server
+          sudo apt-get install --no-install-recommends -y openssh-server software-properties-common
           sudo install -d -m 0755 /run/sshd
           command -v sshd
           command -v ssh-keygen
+          command -v add-apt-repository
 
       - name: Run offline Ansible host tests
         run: python -m unittest discover -s ansible/tests -v

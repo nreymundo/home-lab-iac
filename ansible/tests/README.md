@@ -17,6 +17,12 @@ host key and inspect temporary configurations with `sshd -T`; they never open
 an SSH listener or connect to a host. Missing OpenSSH tools skip these tests
 locally; CI installs and checks the tools so that coverage runs there.
 
+Repository tests require Ubuntu's `software-properties-common` and system Python.
+They run the real `add-apt-repository` with an isolated `APT_CONFIG`, temporary
+source files and `--no-update`, exercising deb822 and legacy sources, missing
+components, third-party preservation and idempotence. They skip on controllers
+without that Ubuntu tool; CI installs it and runs them.
+
 Fixtures use temporary directories for rendered configuration, file lifecycle
 checks, and simulated hardware interfaces. Local Ansible fixtures execute
 assertions or redirect file operations into those directories. They do not run
