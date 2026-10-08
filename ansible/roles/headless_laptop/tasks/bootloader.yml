@@ -1,26 +1,12 @@
 ---
-- name: Remove legacy headless laptop GRUB drop-ins
+# common now owns all requested kernel arguments.
+- name: Remove superseded headless laptop GRUB drop-ins
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
-  loop: "{{ headless_laptop_grub_cmdline_legacy_dropins }}"
-  notify: Update grub
-
-- name: Configure headless laptop GRUB kernel parameters
-  ansible.builtin.copy:
-    dest: "{{ headless_laptop_grub_cmdline_dropin_path }}"
-    owner: root
-    group: root
-    mode: "0644"
-    content: |
-      headless_laptop_cmdline=""
-      for token in $GRUB_CMDLINE_LINUX_DEFAULT; do
-        case "$token" in
-          crashkernel=*) ;;
-          *) headless_laptop_cmdline="${headless_laptop_cmdline:+$headless_laptop_cmdline }$token" ;;
-        esac
-      done
-      GRUB_CMDLINE_LINUX_DEFAULT="$headless_laptop_cmdline {{ headless_laptop_grub_cmdline_linux_default | join(' ') }}"
-      unset headless_laptop_cmdline token
-  notify: Update grub
-  when: headless_laptop_grub_cmdline_linux_default | length > 0
+  loop:
+    - /etc/default/grub.d/99-headless-laptop.cfg
+    - /etc/default/grub.d/zz-headless-laptop.cfg
+  notify:
+    - Update grub
+    - Mark GRUB reboot required

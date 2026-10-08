@@ -1,227 +1,209 @@
-# Unified Ubuntu host provisioning — implementation checkpoint
+# Unified Ubuntu host provisioning
 
 ## Status
 
-Paused at the user's request on 2026-10-08. Branch:
-`feat/ubuntu-host-provisioning`. This is an **unfinished draft**, not a completed
-provisioning workflow. No target machines were provisioned or changed.
+Implementation resumed on 2026-10-08 in `feat/ubuntu-host-provisioning` (PR #1407).
+The unified entrypoint, inventory grouping, hardware/power corrections, laptop
+extraction and optional Cockpit composition are implemented. This remains a
+**draft pending target validation**. No target machines have been provisioned,
+rebooted or changed by this implementation session.
 
-The reusable baseline passed its review gate. Hardware and power roles are
-present, but their review gate has not run. The power role has known blocking
-execution defects listed below. **`ansible/playbooks/ubuntu.yml` does not exist
-yet**, and neither new role is wired into an existing provisioning playbook.
+The earlier checkpoint is preserved in commit `b7e06c87`. Its incorrect nested
+RAPL fixtures and missing entrypoint are superseded by the implementation below.
 
-## Goal and agreed design
+## Scope and ownership
 
-Provide one thin Ubuntu provisioning playbook for manually installed Ubuntu
-Server 24.04/26.04 systems: bare metal, Proxmox VMs, and headless laptops.
-Ubuntu 26.04 is the intended installation for the incoming physical machines.
-Inventory expresses intent; discovered hardware determines capabilities.
+One thin playbook configures manually installed Ubuntu Server 24.04 (`noble`)
+or 26.04 (`resolute`) systems: bare metal, Proxmox VMs and headless laptops.
+Ubuntu 26.04 is intended for the incoming physical machines. Inventory expresses
+intent; gathered distribution facts and independently detected PCI GPUs determine
+capabilities. `node_os` in generated VM inventory is a login username, not an OS
+identifier.
 
-| Owner | Agreed responsibility |
+| Owner | Responsibility |
 | --- | --- |
-| `common` | Accounts, validated passwordless sudo, baseline/extra packages, identity, time, updates, logs, trim and Ubuntu boot parameters |
-| `ssh_hardening` | Authorized keys, effective SSH policy and restart |
-| `host_hardware` | CPU firmware/microcode, independently discovered Intel/AMD GPUs, hardware packages, diagnostics and guest integration |
-| `host_power` | One CPU policy owner, optional governor/EPP/boost/platform profile, powertop and explicit numeric caps |
-| `headless_laptop` | Lid/sleep behavior, charging threshold and ASUS fan controls |
-| `cockpit` | Optional per-host web console, default disabled |
-| Existing optional roles | UFW, fail2ban, Homebrew, Docker, Node.js, swap and explicit-layout VM disk expansion |
+| `common` | Administrator, validated passwordless sudo, baseline/group/host packages, identity, time, updates, logs, trim and Ubuntu boot parameters |
+| `ssh_hardening` | Authorized keys, effective key-only SSH policy and restart |
+| `host_hardware` | CPU microcode, firmware, Intel/AMD PCI GPU discovery, release-specific packages, diagnostics and KVM guest agent |
+| `host_power` | One CPU policy backend, optional governor/EPP/boost/platform profile, explicit named powercap limits and optional powertop |
+| `headless_laptop` | Lid/sleep behavior, charging threshold and ASUS fan curves |
+| `cockpit` | Default-off per-host console, selected extensions, socket/package and firewall-rule lifecycle |
+| Existing optional roles | UFW, fail2ban, Homebrew, Docker, Node.js, swap and explicitly configured VM disk expansion |
 
-The intended Ubuntu fleet defaults are:
+Generic host configuration remains separate from K3s installation, cluster
+membership, hypervisor passthrough, ROCm and data migration.
 
-- Unattended security and regular updates enabled; automatic reboots disabled.
-- Distribution upgrades during provisioning disabled unless requested.
-- Key-only SSH and no direct root SSH login; designated administrator gets
-  passwordless sudo. Existing shared-role consumers retain their explicit policy.
-- Baseline, hardware and extra packages compose explicitly instead of replacing
-  one another through inventory precedence.
-- Empty boot-parameter additions/removals, unset numeric caps, and opt-in
-  powertop auto-tuning.
-- Cockpit disabled; firewall/fail2ban and disk expansion explicitly selected.
-- No automatic provisioning reboot; report the pending requirement.
+## Inventory and defaults
 
-These are **planned fleet defaults**, not all active defaults today. Existing
-`all_vms` and G14 automatic-reboot overrides still need consolidation. Generic
-system setup stays separate from K3s installation and cluster membership.
+`ansible/inventories/ubuntu.yml` is a hand-maintained aggregate of `all_vms`,
+`headless_laptops` and the empty `ubuntu_baremetal` group. Load the inventory
+**directory**, not the aggregate alone: generated files provide VM identities.
+Terraform-owned inventory was not edited. `pve3` remains a Proxmox host; no
+future machine hostname, IP address, GPU SKU or wattage was invented.
 
-## Implemented
+Fleet defaults in `group_vars/ubuntu_hosts.yml` enable unattended security and
+regular updates, disable provisioning dist-upgrades and automatic reboots,
+manage the designated administrator with validated NOPASSWD sudo, and require
+key-only SSH without direct root login. Group/host overrides remain possible.
+Existing VM and G14 automatic-reboot settings are now false.
 
-### Reviewed baseline
+Package composition is explicit: `common_packages` provides the baseline,
+`common_group_packages` holds additive group requirements (e.g. VM `nfs-common`),
+and `common_extra_packages` holds host additions. Hardware packages compose
+separately, with `host_hardware_extra_packages` as their extension point.
+GPU/boot/CPU policy settings have moved out of the laptop role. G14 retains its
+power-saver PPD profile, charge threshold, fan percentage and selected tools.
+Its ASUS helper only reads the platform profile; it never changes PPD's policy.
+Disabling the fan policy stops/removes its timer and helper; firmware fan state
+may need a profile change or reboot to return to defaults.
 
-Initial commit: `54d4c081` — `feat(ansible): add reusable Ubuntu host baseline`.
+## Running
 
-- Optional managed administrator (`common_manage_user`, default false), groups
-  and shell; preserve existing account passwords.
-- Optional passwordless sudo (`common_passwordless_sudo`, default false), using
-  a role-owned file validated with `visudo`; disabling removes that file.
-- Refresh APT metadata even when distribution upgrades are disabled.
-- Configurable unattended-upgrade origins, blacklist and periodic intervals;
-  disabling updates writes the periodic configuration as well as managing the
-  service.
-- Optional `common_apt_daily_timer_schedule` and
-  `common_apt_daily_upgrade_timer_schedule`, both empty by default. Their
-  `90-ansible-common-schedule.conf` drop-ins preserve administrator `override.conf`
-  files and are removed when unset. Vendor randomized delay is not overridden.
-- Ubuntu GRUB parameter additions/removals via a managed drop-in, preserving
-  unrelated arguments. Protected keys are rejected; later additions replace
-  earlier values for the same key. Clearing the lists removes the managed file.
-- `update-grub` notification and a `/run` reboot-pending marker retained until
-  reboot; ordinary package reboot requirements also contribute to the fact.
-- Debian SSH drop-in and early Include, syntax validation, actual `sshd -T`
-  policy checks, normalized OpenSSH aliases, and idempotent hushlogin creation.
-- `base`, `packages` and `boot` tag isolation with reachable preflight tasks.
-
-The baseline review found and corrected shell-option leakage from the GRUB
-fragment, SSH alias comparison failures, an invalid copy argument, protected-key
-bypasses, empty-list lifecycle gaps, broad tag inheritance and ownership of APT
-overrides. Regression coverage exercises the relevant behavior.
-
-**Existing-host effect:** previously dormant `common_kernel_params_add` in
-`inventories/host_vars/k3s-node-01.yml` now has an Ubuntu implementation. A later
-common-role run can activate its IOMMU/i915 flags and require a reboot. That
-inventory's old “placeholder” comment still needs updating during integration.
-
-### Hardware role — implemented, review pending
-
-See [`host_hardware` API](../ansible/roles/host_hardware/README.md).
-
-- Physical/guest selection, CPU vendor microcode, firmware and diagnostics.
-- Independent PCI display-device discovery for Intel/AMD, including GPUs visible
-  inside VMs; no GPU assumption based on CPU vendor.
-- Ubuntu release-specific package maps, additive package composition and
-  universe/multiverse sources.
-- KVM QEMU guest agent, optional render/video group membership and opt-in
-  headless GPU diagnostics.
-- Five offline tests covering fake PCI discovery, release maps, no-GPU guests,
-  explicit profile disabling and tag selection.
-
-No hypervisor passthrough/VFIO configuration or ROCm stack is introduced.
-
-### Power role — initial scaffold with known defects
-
-See [`host_power` intended API](../ansible/roles/host_power/README.md).
-
-The role has `none`, `sysfs` and `power-profiles-daemon` backend inputs, optional
-powertop, persistent unit templates, a Python helper and nine fixture tests.
-Numeric limits are unset by default. This implementation is **not ready to run**:
-
-| Known issue | Required next change |
-| --- | --- |
-| RAPL discovery uses invented `constraint_N/name` directories | Use the real flat ABI: `constraint_N_name`, `constraint_N_power_limit_uw`, `constraint_N_time_window_us`, and matching bounds. Correct the fixtures first. |
-| Powercap traversal follows arbitrary directory/symlink children | Restrict traversal to powercap zones/control types; avoid escaping through `device`/`subsystem`; test cycles and class symlinks. |
-| Helper destination parent is not created | Ensure `/usr/local/libexec` exists before copying the executable. |
-| PPD branch ignores requested RAPL limits | Validate and apply caps with the selected backend, or explicitly reject unsupported combinations; never silently ignore requests. |
-| An unchanged active oneshot does not reconverge runtime drift | Invoke/report the helper on normal runs with accurate changed state, retaining boot persistence. |
-| Competing-service failures are suppressed | Filter present services and surface real stop/disable failures; verify a single policy owner. |
-| PPD-to-none transition does not fully relinquish managed PPD policy | Track the previously managed backend and stop its enforcement without touching never-managed services. |
-| EPP choices and platform-profile choice discovery need correction | Validate advertised preferences before writes; use `platform_profile_choices`. |
-
-Also validate unit rendering with Ansible's Jinja whitespace settings, unit
-ordering, backend transitions, quantized readback and all requested controls
-before mutation. Clearing sysfs policy cannot promise immediate restoration of
-firmware defaults; document when a reboot is required.
-
-**Important test limitation:** the current RAPL tests pass against the same
-incorrect directory layout as the helper. Their green result does not establish
-compatibility with Linux powercap. The correction was identified but no edits
-to implement it were made before this checkpoint.
-
-### Offline CI
-
-The existing Ansible CI job now also installs/checks OpenSSH validation tools and
-runs `python -m unittest discover -s ansible/tests -v`. Fixture behavior and
-requirements are documented in [`ansible/tests/README.md`](../ansible/tests/README.md).
-
-## Not implemented yet
-
-1. **Finish and review hardware/power** using the defects above as the first
-   work item. The stage-two review gate is still pending.
-2. **Unified entrypoint and inventory:** add `playbooks/ubuntu.yml`, the
-   hand-maintained Ubuntu aggregate and fleet group variables. Reuse generated
-   VM groups without editing Terraform-owned inventories. Convert existing
-   VM/laptop entrypoints into compatibility wrappers preserving their targets.
-3. **Consolidate current settings:** resolve `all_vms`/G14 reboot overrides,
-   preserve explicitly enabled tools, provide optional Node.js orchestration,
-   and avoid package-list replacement. `node_os` in VM inventory is a login
-   username, not a reliable OS identifier; use gathered distribution facts.
-4. **Laptop extraction:** move generic graphics, boot and CPU policy ownership
-   into shared roles; retain charging/lid/ASUS behavior. The current ASUS fan
-   helper repeatedly writes platform profile, so separate that from PPD's
-   policy ownership. Update G14 variables to the new API.
-5. **Cockpit:** implement default-off package/socket lifecycle and selected
-   extensions, including managed firewall access. Use per-host consoles: the
-   old multi-host switcher is deprecated. Avoid implicitly installing
-   NetworkManager integration on Netplan/networkd systems. Native browser login
-   uses a local password; SSH key authentication and passwordless sudo are
-   separate settings. Document SSH-based Cockpit Client access where relevant.
-6. **Optional role composition:** wire UFW/fail2ban, Homebrew/Docker/Node.js/swap
-   and explicit-layout disk expansion into the same entrypoint.
-7. **Final integration evidence:** inventory target/precedence checks, full tag
-   routing, optional-feature transitions, compatibility wrappers, final review,
-   and updated usage examples once the entrypoint exists.
-
-No future hostname/IP or numeric wattage setting has been invented. `pve3`
-remains an active Proxmox inventory member until it is actually migrated.
-
-## Local verification at this checkpoint
-
-Checks used an isolated environment matching CI's Python major/minor and pinned
-Ansible tools: Python 3.12.15, ansible-core 2.21.3, ansible-lint 26.8.0. Earlier
-baseline checks also passed on the controller's Python 3.14/Ansible 2.21.4.
-
-| Check | Result |
-| --- | --- |
-| Offline unittest discovery | 27 passed: 13 baseline, 5 hardware, 9 power; RAPL fixture limitation above applies |
-| Full Ansible role/playbook lint | Passed, 277 files processed, zero failures/warnings |
-| All 18 existing playbook syntax checks | Passed |
-| Temporary playbook including both new roles, syntax only | Passed |
-| Applicable pre-commit checks | Passed on all checkpoint files; commit hooks also run when committing |
-| Whitespace/diff checks | Passed |
-
-The combined test run emits a harmless Ansible plugin-loader “already configured”
-warning because multiple test modules initialize it. No test was skipped.
-
-Repeat from the repository root with the documented dependencies installed:
+From the repository root, with the pinned Ansible dependencies and collections
+installed (versions in `.github/workflows/ci.yml`):
 
 ```sh
-python -m unittest discover -s ansible/tests -v
-ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint --project-dir ansible ansible/playbooks/ ansible/roles/
-ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/ubuntu_vms.yml --syntax-check
-git diff --check
+# Read-only inventory and target inspection; no remote connection.
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-inventory --graph ubuntu_hosts
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/ubuntu.yml --list-hosts
+
+# Provision one installed host after verifying its inventory and bootstrap access.
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/ubuntu.yml --limit g14-2022
 ```
 
-`--check` against actual inventory is a live operation and was **not** run.
-No provisioning, real SSH reconnect, service transitions, GPU acceleration,
-power enforcement or reboot-persistence claim has been validated on targets.
+The command above is a real provisioning operation. `--check` also connects to
+hosts, gathers facts and runs selected read-only discovery commands; it is not
+an offline test or a substitute for first-run validation. Existing SSH key
+discovery still requires the configured 1Password service account. For bootstrap
+using a different login, set the intended `common_user` explicitly and supply
+working privilege escalation (`--ask-become-pass` when needed).
 
-## Physical rollout and later cluster work
+`ubuntu_vms.yml` and `headless_laptops.yml` are compatibility wrappers retaining
+exactly their prior target groups. Application-specific playbooks remain
+separate. Use the directory inventory so fleet defaults are loaded for wrappers.
 
-Before first provisioning, establish actual host identities, installation state,
-the Intel mini-PC's CPU/GPU SKU, per-host power policy/limits and management
-access. The G14 was unreachable during planning. Validate on a disposable VM,
-then one physical host: first run, unchanged rerun, fresh SSH plus `sudo -n true`,
-reboot persistence, optional-feature enable/disable, GPU diagnostics, actual
-powercap readback, and laptop lid/charging/fan behavior.
+| Tags | Scope |
+| --- | --- |
+| `base`, `packages`, `boot`, `ssh` | Common baseline, package installation, kernel arguments/reboot reporting, SSH policy |
+| `hardware`, `gpu` | CPU/guest setup; GPU packages, group access and optional diagnostics |
+| `power`, `preflight` | Power lifecycle; power input validation |
+| `laptop` | Lid, sleep, charge threshold and ASUS fan policy |
+| `homebrew`, `docker`, `nodejs`, `swap`, `disk` | Explicitly selected optional tools/storage behavior |
+| `firewall`, `fail2ban`, `cockpit` | Explicit firewall/service configuration and console lifecycle |
 
-Repurposing `pve3` first requires relocating its current K3s/dev/OmniRoute VMs,
-LLM/Garage/Photon containers and host-mounted data. Garage is both cluster backup
-storage and the Terraform S3 backend; its relocation is unresolved.
+Narrow tags assume prerequisites were provisioned already. For example, GPU
+user membership needs an existing account, and `--tags cockpit` with firewall
+sources needs UFW already installed. Distribution validation always runs.
 
-K3s prerequisites, swap disabling for cluster members, manual
-`/var/lib/longhorn` mount/filesystem verification, limited joins, workload/GPU
-placement and VM retirement belong to the later cluster migration. The proposed
-rolling replacement keeps the existing cluster and can temporarily use four
-servers while replacing one of three. None of that migration is implemented
-here; Terraform and Kubernetes desired state are unchanged.
+## Hardware and power
+
+See the [hardware API](../ansible/roles/host_hardware/README.md) and
+[power API](../ansible/roles/host_power/README.md) for all variables.
+Hardware repositories and their Python prerequisite are prepared before hardware
+packages. Requested GPU validation now fails when no stable render device exists;
+package installation alone does not establish working acceleration.
+
+Power defaults to `none`; all numeric caps are unset. Select either `sysfs` or
+`power-profiles-daemon`. PPD rejects direct governor/EPP/boost/platform-profile
+inputs but accepts independently validated RAPL caps. Powertop tuning is opt-in.
+
+The helper uses the Linux flat `constraint_N_*` ABI. Discovery follows powercap
+zones/control types and deduplicates class symlinks; it does not recurse through
+`device`, `subsystem` or arbitrary directories. Named constraints, advertised
+bounds and available CPU preferences are checked before control writes. Duplicate
+constraints fail explicitly. Reports contain requested/effective values and
+whether a write was needed; powercap hardware can quantize numeric values.
+Quantized values differing from the request can cause another write on a rerun.
+
+The role creates the helper directory, enables boot persistence, and reconverges
+runtime drift on normal Ansible runs even when files are unchanged. It stops only
+present competing services and surfaces real service failures. A previous managed
+PPD backend is stopped/disabled when relinquished; `none` does not stop a
+never-managed PPD installation. Removing sysfs controls or changing backends does
+not promise immediate restoration of firmware defaults: schedule a reboot when
+needed. No provisioning task reboots automatically. Helpers do not provide
+transactional rollback for a hardware write that fails part-way through.
+
+## Optional features
+
+Homebrew/Docker honor their existing `*_install_enabled` variables. Node.js uses
+`nodejs_runtime_install_enabled` (enabled for G14 and the development VM).
+These installation toggles opt out of management; they do not uninstall tools.
+`swapfile_enabled` retains the existing role's enable-only semantics; disabling
+it does not remove active swap. Cluster swap policy remains later migration work.
+
+UFW/fail2ban are selected via their `*_install_enabled` variables. Keep installation
+management enabled and set `ufw_enabled`/`fail2ban_enabled` false to stop enforcement.
+Existing explicitly selected VM firewall settings are preserved.
+
+Disk expansion remains opt-in through `disk_expand_rootfs_expand` and the
+explicit device/partition/VG/LV layout in `all_vms`. It consumes the VG's free
+space for root. Do not enable it for a bare-metal disk layout with reserved
+Longhorn capacity. A non-NOCHANGE `growpart` failure now aborts correctly.
+
+Cockpit defaults off. Example host overrides:
+
+```yaml
+cockpit_enabled: true
+cockpit_extensions: [cockpit-storaged]
+# Optional; requires ufw_install_enabled: true and ufw_enabled: true.
+cockpit_ufw_sources: [192.168.10.0/24]
+```
+
+The role installs `cockpit-ws`, `cockpit-bridge` and `cockpit-system` without
+recommended packages; it does not implicitly install NetworkManager integration
+on Netplan/networkd machines. Explicitly selecting `cockpit-networkmanager` changes
+that choice. Removed extensions and previously managed firewall sources are
+removed on subsequent runs. Disabling a previously managed console stops its
+socket/service, removes its managed packages/rules and clears its state file.
+A never-managed Cockpit installation is left alone when the feature is off.
+
+Use the individual host's HTTPS port 9090. Native web login needs a local account
+password; SSH keys and NOPASSWD sudo do not create one. Account management leaves
+existing passwords unchanged. Cockpit Client can connect over SSH using the
+host's `cockpit-bridge`; the old web multi-host switcher is deprecated. See the
+[Cockpit role README](../ansible/roles/cockpit/README.md).
+
+## Validation evidence and rollout gate
+
+Offline regressions cover the real flat powercap layout, class aliases/cycles,
+EPP choice rejection, PPD plus caps, read-only checks, drift, quantized readback,
+policy ownership transitions, unit whitespace, Cockpit source cleanup, fleet
+precedence, target wrappers and the original baseline tests.
+
+Local validation uses Python 3.12.14, ansible-core 2.21.3, ansible-lint 26.8.0,
+ansible.posix 2.2.2 and community.general 13.3.0. Full role/playbook lint and all
+19 playbook syntax checks pass. The local environment prohibits Unix sockets,
+so Ansible 2.21's RPC manager prevents six execution-based fixture tests from
+starting. The remaining 40 tests pass, including all power and composition tests.
+The full 46-test suite is wired into the PR's CI; consult that run for its result.
+Local fixture failures are an environment limitation, not a claim of passing tests.
+
+Before rollout, establish actual host identities, installation state, the Intel
+mini-PC CPU/GPU SKU, per-host policy/limits and management access. Validate on a
+disposable VM, then one physical host: first run, unchanged rerun, fresh SSH plus
+`sudo -n true`, reboot persistence, feature enable/disable, GPU diagnostics, actual
+powercap readback and laptop lid/charging/fan behavior. No live provisioning,
+fresh SSH, GPU acceleration, power enforcement or reboot-persistence result is
+claimed here.
+
+## Later cluster work
+
+Repurposing `pve3` requires relocating its K3s/dev/OmniRoute VMs,
+LLM/Garage/Photon containers and host-mounted data. Garage also stores cluster
+backups and the Terraform S3 backend; its relocation is unresolved.
+
+K3s prerequisites, cluster swap policy, manual `/var/lib/longhorn` filesystem
+verification, limited joins, workload/GPU placement and VM retirement belong to
+that later migration. The proposed rolling replacement retains the cluster and
+can temporarily use four servers while replacing one of three. Terraform and
+Kubernetes desired state are unchanged.
 
 ## References
 
 - [Linux powercap ABI](https://docs.kernel.org/power/powercap/powercap.html)
 - [Ubuntu package catalogue](https://packages.ubuntu.com/)
-- [Mesa Rusticl device enablement](https://docs.mesa3d.org/rusticl.html)
+- [Mesa Rusticl](https://docs.mesa3d.org/rusticl.html)
+- [Cockpit authentication](https://cockpit-project.org/guide/latest/authentication.html)
 - [Cockpit multi-host deprecation](https://cockpit-project.org/blog/cockpit-322.html)
 - [Ansible local rules](../ansible/AGENTS.md)
-
-The next session should start with this document and the role READMEs. The
-untracked orchestration progress file is not required to resume the work.

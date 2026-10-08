@@ -3,7 +3,7 @@
 
 import argparse
 import json
-import os
+import re
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 import subprocess
@@ -47,7 +47,15 @@ def finite_positive(value, label, scale):
 def discover_zones(powercap):
     matches = []
     seen = set()
-    pending = list(powercap.iterdir()) if powercap.exists() else []
+    pending = []
+    if powercap.exists():
+        for path in powercap.iterdir():
+            if re.fullmatch(r"[A-Za-z0-9_-]+(?::[0-9]+)+", path.name):
+                pending.append(path)
+            elif path.name not in {"device", "subsystem", "power"} and (path / "enabled").is_file():
+                # Control types contain zones but have no zone name themselves.
+                pending.extend(child for child in path.iterdir()
+                               if re.fullmatch(re.escape(path.name) + r"(?::[0-9]+)+", child.name))
     while pending:
         path = pending.pop()
         try:
@@ -61,10 +69,11 @@ def discover_zones(powercap):
             name_file = path / "name"
             if name_file.is_file():
                 name = read(name_file)
-                if name.startswith("package-"):
-                    matches.append((name, path))
-            pending.extend(path.iterdir())
-        except OSError as error:
+                matches.append((name, path))
+            # Follow only zone names, never device/subsystem/power back-links.
+            pending.extend(child for child in path.iterdir()
+                           if re.fullmatch(r"[A-Za-z0-9_-]+(?::[0-9]+)+", child.name))
+        except (OSError, RuntimeError) as error:
             raise PowerError(f"Cannot discover powercap sysfs under {path}: {error}") from error
     return matches
 
@@ -73,10 +82,12 @@ def validate_rapl(entries, powercap):
     if not isinstance(entries, list):
         raise PowerError("rapl_limits must be a list")
     plans = []
-    zone_matches = discover_zones(powercap)
+    zone_matches = discover_zones(powercap) if entries else []
     for entry in entries:
         if not isinstance(entry, dict):
             raise PowerError("Each RAPL limit must be a mapping")
+        if set(entry) - {"zone", "constraint", "power_limit_w", "time_window_s"}:
+            raise PowerError("Unknown RAPL limit fields")
         zone_name = entry.get("zone")
         constraint_name = entry.get("constraint")
         if not isinstance(zone_name, str) or not zone_name or not isinstance(constraint_name, str) or not constraint_name:
@@ -85,32 +96,33 @@ def validate_rapl(entries, powercap):
         if len(zones) != 1:
             raise PowerError(f"RAPL zone {zone_name!r} is {'missing' if not zones else 'ambiguous'}")
         zone = zones[0]
-        constraint_dirs = []
-        for path in zone.glob("constraint_*"):
-            name_file = path / "name"
-            if name_file.is_file() and read(name_file) == constraint_name:
-                constraint_dirs.append(path)
-        if len(constraint_dirs) != 1:
-            raise PowerError(f"RAPL constraint {constraint_name!r} in zone {zone_name!r} is {'missing' if not constraint_dirs else 'ambiguous'}")
-        constraint = constraint_dirs[0]
+        if (zone / "enabled").is_file() and read(zone / "enabled") != "1":
+            raise PowerError(f"RAPL zone {zone_name!r} is disabled")
+        constraint_names = []
+        for path in zone.glob("constraint_*_name"):
+            if re.fullmatch(r"constraint_[0-9]+_name", path.name) and read(path) == constraint_name:
+                constraint_names.append(path.name.removesuffix("name"))
+        if len(constraint_names) != 1:
+            raise PowerError(f"RAPL constraint {constraint_name!r} in zone {zone_name!r} is {'missing' if not constraint_names else 'ambiguous'}")
+        constraint = constraint_names[0]
         requested = finite_positive(entry.get("power_limit_w"), "power_limit_w", 1_000_000)
-        limit_path = constraint / "power_limit_uw"
+        limit_path = zone / (constraint + "power_limit_uw")
         if not limit_path.is_file() or not writable(limit_path):
             raise PowerError(f"RAPL power limit is missing or read-only: {limit_path}")
-        lower = constraint / "min_power_uw"
-        upper = constraint / "max_power_uw"
+        lower = zone / (constraint + "min_power_uw")
+        upper = zone / (constraint + "max_power_uw")
         if lower.is_file() and requested < int(read(lower)):
             raise PowerError(f"RAPL power limit {requested} is below hardware minimum {read(lower)}")
         if upper.is_file() and requested > int(read(upper)):
             raise PowerError(f"RAPL power limit {requested} exceeds hardware maximum {read(upper)}")
-        time_path = constraint / "time_window_us"
+        time_path = zone / (constraint + "time_window_us")
         time_value = None
         if "time_window_s" in entry:
             time_value = finite_positive(entry["time_window_s"], "time_window_s", 1_000_000)
             if not time_path.is_file() or not writable(time_path):
                 raise PowerError(f"RAPL time window is missing or read-only: {time_path}")
-            lower = constraint / "min_time_window_us"
-            upper = constraint / "max_time_window_us"
+            lower = zone / (constraint + "min_time_window_us")
+            upper = zone / (constraint + "max_time_window_us")
             if lower.is_file() and time_value < int(read(lower)):
                 raise PowerError(f"RAPL time window {time_value} is below hardware minimum {read(lower)}")
             if upper.is_file() and time_value > int(read(upper)):
@@ -118,6 +130,9 @@ def validate_rapl(entries, powercap):
         plans.append((limit_path, str(requested)))
         if time_value is not None:
             plans.append((time_path, str(time_value)))
+    paths = [path.resolve() for path, _ in plans]
+    if len(paths) != len(set(paths)):
+        raise PowerError("Duplicate RAPL constraint requests")
     return plans
 
 
@@ -128,7 +143,7 @@ def discover_control(root, relative, label, requested, choices=None):
     if not path.is_file() or not writable(path):
         raise PowerError(f"Requested {label} is unsupported or read-only: {path}")
     if choices is not None:
-        available = path.parent / "available_platform_profiles" if label == "platform profile" else path.parent / "scaling_available_governors"
+        available = path.parent / choices
         if available.is_file() and requested not in read(available).split():
             raise PowerError(f"Requested {label} {requested!r} is unavailable; choices: {read(available)}")
     return [(path, str(requested))]
@@ -140,9 +155,9 @@ def sysfs_plan(config, root):
     policies = sorted(path for path in cpufreq.glob("policy*") if path.is_dir())
     for policy in policies:
         if config.get("cpu_governor"):
-            plans.extend(discover_control(policy, "scaling_governor", "CPU governor", config["cpu_governor"], True))
+            plans.extend(discover_control(policy, "scaling_governor", "CPU governor", config["cpu_governor"], "scaling_available_governors"))
         if config.get("cpu_epp"):
-            plans.extend(discover_control(policy, "energy_performance_preference", "CPU EPP", config["cpu_epp"]))
+            plans.extend(discover_control(policy, "energy_performance_preference", "CPU EPP", config["cpu_epp"], "energy_performance_available_preferences"))
     if config.get("cpu_governor") and not policies:
         raise PowerError("Requested CPU governor but no cpufreq policy paths were found")
     if config.get("cpu_epp") and not policies:
@@ -162,7 +177,7 @@ def sysfs_plan(config, root):
     profile = config.get("platform_profile", "")
     if profile:
         path = root / "firmware/acpi/platform_profile"
-        plans.extend(discover_control(root, "firmware/acpi/platform_profile", "platform profile", profile, True))
+        plans.extend(discover_control(root, "firmware/acpi/platform_profile", "platform profile", profile, "platform_profile_choices"))
         choices_path = path.parent / "platform_profile_choices"
         if choices_path.is_file() and profile not in read(choices_path).split():
             raise PowerError(f"Requested platform profile {profile!r} is unavailable; choices: {read(choices_path)}")
@@ -172,28 +187,42 @@ def sysfs_plan(config, root):
 
 def apply_plan(plans, check=False):
     report = []
-    for item in plans:
-        path, wanted = item[0], item[1]
-        before = read(path)
+    # Pre-read the entire plan before the first write as well.
+    initial = [(path, wanted, read(path)) for path, wanted in plans]
+    for path, wanted, before in initial:
         if not check and before != str(wanted):
             try:
                 path.write_text(f"{wanted}\n")
             except OSError as error:
                 raise PowerError(f"Cannot write {path}: {error}") from error
         effective = before if check or before == str(wanted) else read(path)
-        report.append({"path": str(path), "requested": str(wanted), "effective": effective})
+        if not check and effective != str(wanted) and not re.fullmatch(r"constraint_[0-9]+_(power_limit_uw|time_window_us)", path.name):
+            raise PowerError(f"Readback {effective!r} differs from requested {wanted!r} for {path}")
+        report.append({"path": str(path), "requested": str(wanted), "effective": effective, "changed": before != str(wanted)})
     return report
 
 
 def apply(config, root=Path("/sys"), check=False, powerprofilesctl="/usr/bin/powerprofilesctl"):
-    if config.get("backend") == "power-profiles-daemon":
-        result = subprocess.run([powerprofilesctl, "get"], check=True, capture_output=True, text=True).stdout.strip()
+    backend = config.get("backend")
+    if backend == "power-profiles-daemon":
+        if any(config.get(key) for key in ("cpu_governor", "cpu_epp", "platform_profile")) or config.get("cpu_boost") is not None:
+            raise PowerError("PPD and sysfs CPU controls are mutually exclusive")
+        # Validate every cap before a profile or sysfs mutation.
+        plans = validate_rapl(config.get("rapl_limits", []), root / "class/powercap")
         requested = config.get("profile", "balanced")
-        if result != requested and not check:
-            subprocess.run([powerprofilesctl, "set", requested], check=True)
+        available = subprocess.run([powerprofilesctl, "list"], check=True, capture_output=True, text=True).stdout
+        profiles = re.findall(r"^\s*\*?\s*(power-saver|balanced|performance):", available, re.MULTILINE)
+        if requested not in profiles:
+            raise PowerError(f"Requested PPD profile {requested!r} is unavailable")
+        before = subprocess.run([powerprofilesctl, "get"], check=True, capture_output=True, text=True).stdout.strip()
+        result = before
+        if before != requested and not check:
+            subprocess.run([powerprofilesctl, "set", requested], check=True, capture_output=True, text=True)
             result = subprocess.run([powerprofilesctl, "get"], check=True, capture_output=True, text=True).stdout.strip()
-        return [{"control": "profile", "requested": requested, "effective": result}]
-    if config.get("backend") != "sysfs":
+            if result != requested:
+                raise PowerError(f"PPD profile readback {result!r} differs from {requested!r}")
+        return [{"control": "profile", "requested": requested, "effective": result, "changed": before != requested}] + apply_plan(plans, check)
+    if backend != "sysfs":
         raise PowerError("backend must be sysfs or power-profiles-daemon")
     return apply_plan(sysfs_plan(config, root), check)
 

@@ -1,12 +1,5 @@
 # `host_power`
 
-**Unfinished checkpoint:** this role has known execution defects, including an
-incorrect RAPL sysfs layout in both helper and fixtures. It is not wired into a
-provisioning playbook. The API below describes intent; see the
-[checkpoint and blocking fixes](../../../../docs/ubuntu-host-provisioning.md#power-role--initial-scaffold-with-known-defects)
-before continuing implementation. Passing fixture tests do not establish real
-powercap support.
-
 Reusable Ubuntu 24.04/26.04 host power policy. Apply with the role's `power` tag;
 the configuration assertion is also available with `preflight`. The role does
 not select a fleet policy: hosts opt in through inventory.
@@ -22,12 +15,12 @@ not select a fleet policy: hosts opt in through inventory.
 | `host_power_cpu_boost` | `null` | Optional boolean boost request; Intel `no_turbo` is preferred (inverted), otherwise cpufreq `boost` is used. |
 | `host_power_platform_profile` | `""` | Optional sysfs platform profile. Requested choice must be advertised when choices are exposed. |
 | `host_power_powertop_auto_tune` | `false` | Install powertop and run its auto-tune command in a separate, persistent unit after the policy unit. |
-| `host_power_rapl_limits` | `[]` | Optional list of named, writable RAPL constraints described below. No numeric cap is selected by default. |
+| `host_power_rapl_limits` | `[]` | Optional list of named, writable flat-ABI RAPL constraints described below. No numeric cap is selected by default. |
 
 PPD cannot be combined with low-level governor, EPP, boost, or platform-profile
 requests: those inputs are rejected rather than relying on unverified backend
 compatibility. RAPL limits may accompany either selected backend. `none` means
-no CPU/RAPL controls; the independent powertop opt-in may still be enabled. It does not disable unrelated policy services. When a
+no CPU/RAPL controls; the independent powertop opt-in may still be enabled. It does not disable unrelated policy services. Previously managed PPD is stopped when relinquished. When a
 backend is selected, known competing `tuned`, TLP, laptop-mode and (for sysfs)
 PPD services are stopped/disabled; adjust `host_power_known_competing_services`
 if a host's known controller list differs.
@@ -56,7 +49,9 @@ when the kernel exposes compatible writable powercap constraints; the role
 does not install vendor utilities such as `ryzenadj`.
 
 The helper supports `--check` and `--sysfs-root` for offline fixture use. On
-normal runs it only writes drift and reports requested/effective values. Sysfs
+normal runs it only writes drift and reports requested/effective values plus a
+`changed` flag. Every normal Ansible run invokes it, including unchanged active
+oneshots. Quantized readback differing from the request can cause a repeat write. Sysfs
 files with unset controls are not written. Clearing controls in inventory
 stops/removes the managed service and configuration but cannot reliably restore
 firmware defaults immediately: reboot to return unmanaged kernel controls to

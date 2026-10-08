@@ -257,7 +257,7 @@ class SshdPrecedenceTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
-        self.assertIn("permitrootlogin prohibit-password", result.stdout.lower().splitlines())
+        self.assertIn("permitrootlogin prohibit-password", result.stdout.lower().replace("without-password", "prohibit-password").splitlines())
         self.assertIn("kbdinteractiveauthentication no", result.stdout.lower().splitlines())
 
     def test_ssh_assertion_evaluates_aliases_and_mismatches(self):

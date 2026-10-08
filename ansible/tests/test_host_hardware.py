@@ -141,6 +141,7 @@ class HostHardwareRoleTests(unittest.TestCase):
         self.assertEqual(gpu_selected, {
             "Run host hardware preflight",
             "Configure selected GPU packages",
+            "Prepare hardware repositories",
             "Configure GPU userspace and report detected devices",
         })
         package_selected = {task.name for task in tasks if task.evaluate_tags(["packages"], [], {})}

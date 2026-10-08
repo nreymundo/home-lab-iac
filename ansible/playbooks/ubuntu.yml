@@ -1,0 +1,55 @@
+---
+- name: Provision Ubuntu hosts
+  hosts: "{{ ubuntu_target_hosts | default('ubuntu_hosts') }}"
+  become: true
+  pre_tasks:
+    - name: Require a supported Ubuntu installation
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == 'Ubuntu'
+          - ansible_distribution_release in ['noble', 'resolute']
+        fail_msg: Install Ubuntu Server 24.04 or 26.04 before provisioning this host.
+      tags: [always]
+    - name: Remove superseded laptop boot configuration
+      ansible.builtin.import_role:
+        name: headless_laptop
+        tasks_from: bootloader
+      when: "'headless_laptops' in group_names"
+      tags: [boot]
+  roles:
+    - role: common
+    - role: ssh_hardening
+      tags: [ssh]
+    - role: host_hardware
+    - role: host_power
+    - role: headless_laptop
+      when: "'headless_laptops' in group_names"
+      tags: [laptop]
+    - role: homebrew
+      when: homebrew_install_enabled | default(false) | bool
+      tags: [homebrew]
+    - role: docker
+      when: docker_install_enabled | default(false) | bool
+      tags: [docker]
+    - role: nodejs_runtime
+      when: nodejs_runtime_install_enabled | default(false) | bool
+      tags: [nodejs]
+    - role: swapfile
+      when: swapfile_enabled | default(false) | bool
+      tags: [swap]
+    - role: disk_expand
+      when: disk_expand_rootfs_expand | default(false) | bool
+      tags: [disk]
+    - role: ufw
+      when: ufw_install_enabled | default(false) | bool
+      tags: [firewall]
+    - role: fail2ban
+      when: fail2ban_install_enabled | default(false) | bool
+      tags: [fail2ban]
+    - role: cockpit
+      tags: [cockpit]
+  post_tasks:
+    - name: Report pending reboot without rebooting
+      ansible.builtin.debug:
+        msg: "Reboot required: {{ common_reboot_required | default(false) }}. Schedule any reboot separately."
+      tags: [boot]

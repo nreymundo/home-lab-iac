@@ -37,9 +37,9 @@
 
 - name: Install host-specific packages
   ansible.builtin.apt:
-    name: "{{ common_extra_packages }}"
+    name: "{{ (common_group_packages + common_extra_packages) | unique | list }}"
     state: present
-  when: common_extra_packages | default([]) | length > 0
+  when: (common_group_packages + common_extra_packages) | length > 0
   tags:
     - packages
 

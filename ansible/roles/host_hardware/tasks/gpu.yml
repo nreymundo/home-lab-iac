@@ -41,6 +41,14 @@
       render_nodes: "{{ host_hardware_render_discovery.stdout | from_json }}"
       acceleration_asserted: false
 
+- name: Require a render device for requested GPU validation
+  ansible.builtin.assert:
+    that:
+      - host_hardware_selected_gpu_profiles | length > 0
+      - host_hardware_render_discovery.stdout | from_json | length > 0
+    fail_msg: GPU validation was requested but no selected GPU profile or stable DRM render device exists.
+  when: host_hardware_validate_gpu | bool
+
 - name: Validate selected GPU acceleration with headless VAAPI
   ansible.builtin.command:
     argv:

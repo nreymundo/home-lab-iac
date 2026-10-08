@@ -12,6 +12,13 @@
     - gpu
     - packages
 
+- name: Prepare hardware repositories
+  ansible.builtin.include_tasks:
+    file: repositories.yml
+    apply:
+      tags: [hardware, gpu, packages]
+  tags: [hardware, gpu, packages]
+
 - name: Install physical-host diagnostics
   ansible.builtin.include_tasks:
     file: physical.yml
@@ -44,8 +51,10 @@
     apply:
       tags:
         - packages
+        - hardware
   tags:
     - packages
+    - hardware
 
 - name: Configure selected GPU packages
   ansible.builtin.include_tasks:

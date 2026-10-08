@@ -1,7 +1,8 @@
 [Unit]
 Description=Apply host power policy
-After=local-fs.target{% if host_power_backend == 'power-profiles-daemon' %} power-profiles-daemon.service{% endif %}
-{% if host_power_backend == 'power-profiles-daemon' %}Wants=power-profiles-daemon.service
+After=local-fs.target{{ ' power-profiles-daemon.service' if host_power_backend == 'power-profiles-daemon' else '' }}
+{% if host_power_backend == 'power-profiles-daemon' %}
+Requires=power-profiles-daemon.service
 {% endif %}
 
 [Service]

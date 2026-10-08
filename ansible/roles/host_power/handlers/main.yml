@@ -3,13 +3,6 @@
   ansible.builtin.systemd:
     daemon_reload: true
 
-- name: Apply host power policy
-  ansible.builtin.systemd:
-    name: host-power-policy.service
-    state: restarted
-    daemon_reload: true
-  when: host_power_backend != 'none'
-
 - name: Apply host powertop auto-tune
   ansible.builtin.systemd:
     name: host-power-powertop.service

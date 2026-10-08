@@ -1,0 +1,178 @@
+---
+- name: Inspect previous managed policy
+  ansible.builtin.stat:
+    path: /etc/host-power.json
+  register: host_power_previous_file
+
+- name: Read previous managed policy
+  ansible.builtin.slurp:
+    src: /etc/host-power.json
+  register: host_power_previous_content
+  when: host_power_previous_file.stat.exists
+
+- name: Remember previous backend
+  ansible.builtin.set_fact:
+    host_power_previous_backend: >-
+      {{ (host_power_previous_content.content | b64decode | from_json).backend
+         if host_power_previous_file.stat.exists else 'none' }}
+
+- name: Install selected backend packages
+  ansible.builtin.apt:
+    name: "{{ (['power-profiles-daemon'] if host_power_backend == 'power-profiles-daemon' else []) + (['powertop'] if host_power_powertop_auto_tune else []) }}"
+    state: present
+  when: host_power_backend == 'power-profiles-daemon' or host_power_powertop_auto_tune
+
+- name: Gather installed policy services
+  ansible.builtin.service_facts:
+
+- name: Stop competing policy controllers
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop: "{{ host_power_known_competing_services + (['power-profiles-daemon.service'] if host_power_backend == 'sysfs' else []) }}"
+  when:
+    - host_power_backend != 'none'
+    - item in ansible_facts.services
+
+- name: Relinquish previously managed PPD backend
+  ansible.builtin.systemd:
+    name: power-profiles-daemon.service
+    enabled: false
+    state: stopped
+  when:
+    - host_power_previous_backend == 'power-profiles-daemon'
+    - host_power_backend == 'none'
+    - "'power-profiles-daemon.service' in ansible_facts.services"
+
+- name: Stop disabled role-owned units
+  ansible.builtin.systemd:
+    name: "{{ item.name }}"
+    enabled: false
+    state: stopped
+  loop:
+    - name: host-power-policy.service
+      disabled: "{{ host_power_backend == 'none' }}"
+    - name: host-power-powertop.service
+      disabled: "{{ not host_power_powertop_auto_tune }}"
+  when:
+    - item.disabled | bool
+    - item.name in ansible_facts.services
+
+- name: Ensure helper directory exists
+  ansible.builtin.file:
+    path: /usr/local/libexec
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: host_power_backend != 'none'
+
+- name: Install policy helper
+  ansible.builtin.copy:
+    src: host_power.py
+    dest: /usr/local/libexec/host-power
+    owner: root
+    group: root
+    mode: "0755"
+  when: host_power_backend != 'none'
+
+- name: Install policy configuration
+  ansible.builtin.template:
+    src: config.json.j2
+    dest: /etc/host-power.json
+    owner: root
+    group: root
+    mode: "0644"
+  when: host_power_backend != 'none'
+
+- name: Install policy systemd unit
+  ansible.builtin.template:
+    src: host-power-policy.service.j2
+    dest: /etc/systemd/system/host-power-policy.service
+    owner: root
+    group: root
+    mode: "0644"
+  when: host_power_backend != 'none'
+  notify: Reload host power systemd units
+
+- name: Install optional powertop unit
+  ansible.builtin.template:
+    src: host-power-powertop.service.j2
+    dest: /etc/systemd/system/host-power-powertop.service
+    owner: root
+    group: root
+    mode: "0644"
+  when: host_power_powertop_auto_tune
+  notify:
+    - Reload host power systemd units
+    - Apply host powertop auto-tune
+
+- name: Remove disabled policy files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/systemd/system/host-power-policy.service
+    - /etc/host-power.json
+    - /usr/local/libexec/host-power
+  when: host_power_backend == 'none'
+  notify: Reload host power systemd units
+
+- name: Remove disabled powertop unit
+  ansible.builtin.file:
+    path: /etc/systemd/system/host-power-powertop.service
+    state: absent
+  when: not host_power_powertop_auto_tune
+  notify: Reload host power systemd units
+
+- name: Enable selected PPD backend
+  ansible.builtin.systemd:
+    name: power-profiles-daemon.service
+    enabled: true
+    state: started
+  when:
+    - host_power_backend == 'power-profiles-daemon'
+    - not ansible_check_mode
+
+- name: Apply pending unit changes
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable boot policy persistence
+  ansible.builtin.systemd:
+    name: host-power-policy.service
+    enabled: true
+    state: started
+  when:
+    - host_power_backend != 'none'
+    - not ansible_check_mode
+
+- name: Enable powertop auto-tune persistence
+  ansible.builtin.systemd:
+    name: host-power-powertop.service
+    enabled: true
+    state: started
+  when:
+    - host_power_powertop_auto_tune
+    - not ansible_check_mode
+
+- name: Reconverge runtime policy and report effective controls
+  ansible.builtin.command:
+    argv: [/usr/local/libexec/host-power, --config, /etc/host-power.json]
+  register: host_power_result
+  changed_when: host_power_result.stdout | from_json | selectattr('changed') | list | length > 0
+  when:
+    - host_power_backend != 'none'
+    - not ansible_check_mode
+
+- name: Report effective power policy
+  ansible.builtin.debug:
+    var: host_power_result.stdout
+  when:
+    - host_power_backend != 'none'
+    - not ansible_check_mode
+
+- name: Report relinquished kernel policy
+  ansible.builtin.debug:
+    msg: Policy enforcement removed; existing kernel controls may persist until reboot. No reboot is performed.
+  when: host_power_previous_backend != 'none' and host_power_backend == 'none'

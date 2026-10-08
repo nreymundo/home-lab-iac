@@ -4,7 +4,7 @@ common_user: "{{ ansible_user }}"
 # Keep interactive playbook runs from doing a full dist-upgrade.
 common_run_upgrade: false
 common_enable_unattended_upgrades: true
-common_unattended_upgrades_auto_reboot: true
+common_unattended_upgrades_auto_reboot: false
 common_unattended_upgrades_reboot_time: "06:00"
 common_enable_fstrim: true
 common_manage_journald: true
@@ -27,10 +27,13 @@ ssh_hardening_sshd_settings:
   ChallengeResponseAuthentication: "no"
   UsePAM: "yes"
 
-headless_laptop_power_profile: power-saver
+host_power_backend: power-profiles-daemon
+host_power_profile: power-saver
+nodejs_runtime_install_enabled: true
+common_kernel_params_add: [crashkernel=0]
 headless_laptop_battery_charge_limit: 60
 headless_laptop_asus_quiet_fan_percent: 20
-headless_laptop_extra_packages:
+common_extra_packages:
   # System diagnostics
   - htop
   - btop
@@ -87,7 +90,6 @@ headless_laptop_extra_packages:
   - ufw
 
   # Laptop telemetry and power tooling
-  - power-profiles-daemon
   - fastfetch
-headless_laptop_gpu_users:
+host_hardware_gpu_users:
   - "{{ ansible_user }}"

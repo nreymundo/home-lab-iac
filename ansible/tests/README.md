@@ -26,3 +26,10 @@ contact inventory hosts, or retrieve 1Password secrets.
 These tests establish configuration and helper behavior. First provisioning,
 fresh SSH/sudo access, real GPU acceleration and power enforcement, service
 behavior, and reboot persistence still require target machines.
+
+Power fixtures reproduce Linux's flat `constraint_N_*` ABI and cover PPD/RAPL,
+class symlinks, bounded traversal, preferences and drift. Composition checks use
+Ansible inventory and condition evaluation without connecting to target hosts.
+Ansible execution fixtures need permission to create a local Unix socket for the
+controller RPC manager; restricted environments can run helper/composition tests
+but must use CI for the complete suite. Do not turn those failures into skips.

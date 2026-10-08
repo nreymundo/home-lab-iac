@@ -1,0 +1,7 @@
+---
+cockpit_enabled: false
+# Deliberately avoid the cockpit metapackage and its networking recommendations.
+cockpit_packages: [cockpit-ws, cockpit-bridge, cockpit-system]
+cockpit_extensions: []
+# Explicit source CIDRs only; empty means no firewall access managed by this role.
+cockpit_ufw_sources: []

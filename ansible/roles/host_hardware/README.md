@@ -1,9 +1,5 @@
 # host_hardware
 
-**Checkpoint status:** offline tests pass; integration, the hardware/power review
-gate and real-host validation remain pending. See the
-[implementation checkpoint](../../../../docs/ubuntu-host-provisioning.md).
-
 Reusable Ubuntu 24.04 (`noble`) and 26.04 (`resolute`) CPU/GPU enablement. CPU vendor facts select physical microcode; PCI display devices independently select GPU userspace, including devices passed through to a guest. This role does not configure hypervisor VFIO.
 
 ## API
@@ -22,7 +18,7 @@ Reusable Ubuntu 24.04 (`noble`) and 26.04 (`resolute`) CPU/GPU enablement. CPU v
 | `host_hardware_gpu_sysfs_root` | `/sys/bus/pci/devices` | Override for isolated discovery fixtures. |
 | `host_hardware_render_root` | `/dev/dri` | DRM node root, primarily useful for fixtures. |
 
-The role installs `linux-firmware` on both supported releases, maps Intel/AMD microcode from CPU facts only on physical hosts, and installs/enables `qemu-guest-agent` for KVM guests. GPU diagnostics report PCI IDs, driver binding, and stable render paths. Optional VAAPI uses the stable `/dev/dri/by-path/pci-…-render` path; OpenCL/Vulkan checks are opt-in. A VM with no exposed GPU does not gain an inferred AMD profile from its CPU.
+The role installs `linux-firmware` on both supported releases, maps Intel/AMD microcode from CPU facts only on physical hosts, and installs/enables `qemu-guest-agent` for KVM guests. GPU diagnostics report PCI IDs, driver binding, and stable render paths. Requested validation fails if no stable render device exists. Optional VAAPI uses the stable `/dev/dri/by-path/pci-…-render` path; OpenCL/Vulkan checks are opt-in. A VM with no exposed GPU does not gain an inferred AMD profile from its CPU.
 
 Package lists are the unique composition of the release baseline, physical CPU firmware, enabled diagnostics, detected/explicit GPU profile packages, and `host_hardware_extra_packages`. When needed, Ubuntu universe/multiverse are added through separate deb822 source files for archive/update and security pockets; existing source definitions are preserved. Ubuntu maps use `mesa-va-drivers` on noble and `mesa-libgallium` on resolute for AMD VAAPI. No ROCm stack or vendor kernel is installed.
 

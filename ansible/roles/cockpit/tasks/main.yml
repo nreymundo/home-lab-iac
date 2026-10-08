@@ -1,0 +1,119 @@
+---
+- name: Validate Cockpit options
+  ansible.builtin.assert:
+    that:
+      - cockpit_extensions | type_debug == 'list'
+      - cockpit_ufw_sources | type_debug == 'list'
+      - not cockpit_enabled or cockpit_ufw_sources | length == 0 or (ufw_install_enabled | default(false) | bool and ufw_enabled | default(false) | bool)
+    fail_msg: Cockpit firewall sources require managed, enabled UFW.
+
+- name: Inspect previous Cockpit management state
+  ansible.builtin.stat:
+    path: /etc/cockpit/ansible-state.json
+  register: cockpit_state_file
+
+- name: Read previous Cockpit management state
+  ansible.builtin.slurp:
+    src: /etc/cockpit/ansible-state.json
+  register: cockpit_state_content
+  when: cockpit_state_file.stat.exists
+
+- name: Resolve previous Cockpit state
+  ansible.builtin.set_fact:
+    cockpit_previous: "{{ cockpit_state_content.content | b64decode | from_json if cockpit_state_file.stat.exists else {'packages': [], 'sources': []} }}"
+
+- name: Install selected Cockpit packages without network integration recommendations
+  ansible.builtin.apt:
+    name: "{{ (cockpit_packages + cockpit_extensions) | unique | list }}"
+    state: present
+    install_recommends: false
+    update_cache: true
+    cache_valid_time: 3600
+  when: cockpit_enabled | bool
+
+- name: Inspect installed Cockpit units before disabling
+  ansible.builtin.command:
+    argv: [systemctl, show, --property=LoadState, --value, "{{ item }}"]
+  loop: [cockpit.socket, cockpit.service]
+  register: cockpit_units
+  changed_when: false
+  check_mode: false
+  when:
+    - not cockpit_enabled | bool
+    - cockpit_state_file.stat.exists
+
+- name: Stop previously managed Cockpit access when disabled
+  ansible.builtin.systemd:
+    name: "{{ item.item }}"
+    state: stopped
+    enabled: false
+  loop: "{{ cockpit_units.results }}"
+  when:
+    - not cockpit_enabled | bool
+    - cockpit_state_file.stat.exists
+    - item.stdout | default('not-found') != 'not-found'
+
+- name: Check UFW availability for managed Cockpit rules
+  ansible.builtin.stat:
+    path: /usr/sbin/ufw
+  register: cockpit_ufw_binary
+
+- name: Remove obsolete Cockpit firewall rules
+  community.general.ufw:
+    rule: allow
+    port: "9090"
+    proto: tcp
+    from_ip: "{{ item }}"
+    comment: Ansible Cockpit
+    delete: true
+  loop: "{{ cockpit_previous.sources | difference(cockpit_ufw_sources if cockpit_enabled else []) }}"
+  when: cockpit_ufw_binary.stat.exists
+
+- name: Allow explicitly selected Cockpit management sources
+  community.general.ufw:
+    rule: allow
+    port: "9090"
+    proto: tcp
+    from_ip: "{{ item }}"
+    comment: Ansible Cockpit
+  loop: "{{ cockpit_ufw_sources if cockpit_enabled else [] }}"
+  when: cockpit_ufw_binary.stat.exists or not ansible_check_mode
+
+- name: Remove deselected role-managed Cockpit packages
+  ansible.builtin.apt:
+    name: "{{ cockpit_previous.packages | difference((cockpit_packages + cockpit_extensions) if cockpit_enabled else []) }}"
+    state: absent
+  when: cockpit_previous.packages | difference((cockpit_packages + cockpit_extensions) if cockpit_enabled else []) | length > 0
+
+- name: Enable per-host Cockpit socket
+  ansible.builtin.systemd:
+    name: cockpit.socket
+    enabled: true
+    state: started
+  when:
+    - cockpit_enabled | bool
+    - not ansible_check_mode
+
+- name: Ensure Cockpit configuration directory exists
+  ansible.builtin.file:
+    path: /etc/cockpit
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: cockpit_enabled | bool
+
+- name: Record managed Cockpit packages and firewall rules
+  ansible.builtin.copy:
+    dest: /etc/cockpit/ansible-state.json
+    content: "{{ {'packages': (cockpit_packages + cockpit_extensions) | unique | list, 'sources': cockpit_ufw_sources} | to_nice_json }}\n"
+    owner: root
+    group: root
+    mode: "0600"
+  when: cockpit_enabled | bool
+
+- name: Remove disabled Cockpit management state
+  ansible.builtin.file:
+    path: /etc/cockpit/ansible-state.json
+    state: absent
+  when: not cockpit_enabled | bool

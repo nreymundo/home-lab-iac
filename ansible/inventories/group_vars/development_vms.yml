@@ -67,3 +67,5 @@ ufw_inbound_rules:
     proto: udp
     from_ip: 192.168.0.0/16
     comment: Syncthing local discovery from the lab LAN
+
+nodejs_runtime_install_enabled: true

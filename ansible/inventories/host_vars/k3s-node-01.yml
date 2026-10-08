@@ -11,7 +11,7 @@ common_extra_packages:
   - intel-opencl-icd       # OpenCL ICD for Intel GPUs
   - ocl-icd-libopencl1     # OpenCL ICD loader
 
-# NOTE: This is placeholder for now as the runbook doesn't handle it properly for the VMs.
+# Managed by common on Ubuntu; changing these parameters requires a reboot.
 common_kernel_params_add:
   - "intel_iommu=on"
   - "iommu=pt"

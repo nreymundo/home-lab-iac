@@ -28,6 +28,7 @@ common_lock_root_password: false
 common_enable_fstrim: true
 common_fstrim_timer_schedule: "04:00:00"
 
+common_group_packages: []
 common_extra_packages: []
 
 # Install the Mosh server package via the OS-native package manager.
