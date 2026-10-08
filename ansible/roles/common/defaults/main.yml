@@ -8,11 +8,8 @@ common_sudoers_file: /etc/sudoers.d/90-common-user
 common_enable_unattended_upgrades: true
 common_unattended_upgrades_auto_reboot: false
 common_unattended_upgrades_reboot_time: "06:00"
+# Ubuntu is the default; other distributions override origins in inventory.
 common_unattended_upgrades_origins:
-  - "origin=Debian,codename=${distro_codename},label=Debian"
-  - "origin=Debian,codename=${distro_codename},label=Debian-Security"
-  - "origin=Raspbian,codename=${distro_codename},label=Raspbian"
-  - "origin=Raspberry Pi Foundation,codename=${distro_codename},label=Raspberry Pi Foundation"
   - "origin=Ubuntu,archive=${distro_codename}-security"
   - "origin=Ubuntu,archive=${distro_codename}-updates"
 common_unattended_upgrades_blacklist: []

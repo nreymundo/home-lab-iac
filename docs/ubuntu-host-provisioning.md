@@ -47,6 +47,14 @@ manage the designated administrator with validated NOPASSWD sudo, and require
 key-only SSH without direct root login. Group/host overrides remain possible.
 Existing VM and G14 automatic-reboot settings are now false.
 
+The shared role defaults allow only Ubuntu security and stable-release updates.
+Proxmox explicitly overrides the origins with Debian base, `-security` and
+`-updates` repositories; unattended upgrades remain disabled there. Proxmox/vendor
+repositories are not added to that automatic policy. A Pi running Ubuntu can use
+the defaults. For Raspberry Pi OS or another distribution, override
+`common_unattended_upgrades_origins` in its host/group inventory to match the
+installed OS repositories before enabling unattended updates.
+
 Package composition is explicit: `common_packages` provides the baseline,
 `common_group_packages` holds additive group requirements (e.g. VM `nfs-common`),
 and `common_extra_packages` holds host additions. Hardware packages compose
