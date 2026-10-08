@@ -1,0 +1,124 @@
+---
+- name: Require an explicit existing administrative server
+  ansible.builtin.assert:
+    that:
+      - k3s_admin_host | length > 0
+      - k3s_admin_host in groups.get('k3s_server', [])
+    fail_msg: Set k3s_admin_host to an existing server. Use k3s_bootstrap.yml only for a fresh cluster.
+
+- name: Select administrative connection
+  ansible.builtin.set_fact:
+    k3s_control_host: "{{ k3s_admin_host }}"
+    k3s_control_url: "{{ k3s_admin_api_url }}"
+
+- name: Verify cluster health before changing the selected server
+  ansible.builtin.include_tasks: health.yml
+
+- name: Prevent selected upgrades from skipping the rest of the server fleet
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - target_release.split('.')[0] == peer_release.split('.')[0]
+      - (target_release.split('.')[1] | int) - (peer_release.split('.')[1] | int) in [0, 1]
+    fail_msg: Complete the current server-fleet minor upgrade before starting another minor release.
+  vars:
+    target_release: "{{ k3s_version.split('+')[0] | regex_replace('^v', '') }}"
+    peer_release: "{{ item.status.nodeInfo.kubeletVersion.split('+')[0] | regex_replace('^v', '') }}"
+  loop: "{{ (k3s_cluster_nodes.stdout | from_json)['items'] }}"
+  loop_control:
+    label: "{{ item.metadata.name }}"
+  when:
+    - k3s_operation == 'upgrade'
+    - "'node-role.kubernetes.io/control-plane' in item.metadata.labels or 'node-role.kubernetes.io/master' in item.metadata.labels"
+
+- name: Read cluster identity
+  ansible.builtin.command:
+    argv: "{{ k3s_kubectl_argv + ['get', 'namespace', 'kube-system', '-o', 'jsonpath={.metadata.uid}'] }}"
+  delegate_to: "{{ k3s_control_host }}"
+  register: k3s_identity_before
+  changed_when: false
+  check_mode: false
+
+- name: Read selected node registration
+  ansible.builtin.command:
+    argv: "{{ k3s_kubectl_argv + ['get', 'node', inventory_hostname, '--ignore-not-found', '-o', 'json'] }}"
+  delegate_to: "{{ k3s_control_host }}"
+  register: k3s_registration
+  changed_when: false
+  check_mode: false
+
+- name: Read local datastore identity for an existing server
+  ansible.builtin.command:
+    argv: [/usr/local/bin/k3s, kubectl, '--server=https://127.0.0.1:6443', '--request-timeout=20s', get, namespace, kube-system, -o, 'jsonpath={.metadata.uid}']
+  register: k3s_local_identity
+  changed_when: false
+  check_mode: false
+  when: k3s_existing_server
+
+- name: Require the selected datastore to belong to this cluster
+  ansible.builtin.assert:
+    that:
+      - k3s_local_identity.stdout == k3s_identity_before.stdout
+  when: k3s_existing_server
+
+- name: Match existing datastore to current cluster membership
+  ansible.builtin.assert:
+    that:
+      - (k3s_registration.stdout | length > 0) == (k3s_existing_server | bool)
+    fail_msg: Node registration and local datastore disagree. Resolve the old node identity before joining or reconciling.
+
+- name: Read the selected server running release
+  ansible.builtin.set_fact:
+    k3s_running_version: "{{ (k3s_registration.stdout | from_json).status.nodeInfo.kubeletVersion }}"
+  when: k3s_existing_server
+
+- name: Require deliberate running-version changes
+  ansible.builtin.assert:
+    that:
+      - k3s_operation == 'upgrade' or k3s_running_version == k3s_version
+      - target_release is version(running_release, '>=')
+      - target_release.split('.')[0] == running_release.split('.')[0]
+      - (target_release.split('.')[1] | int) - (running_release.split('.')[1] | int) <= 1
+      - >-
+        target_release != running_release or
+        (k3s_version.split('+k3s')[1] | int) >= (k3s_running_version.split('+k3s')[1] | int)
+    fail_msg: Use k3s_upgrade.yml to change the running release; downgrades and skipped minor releases are unsupported.
+  vars:
+    target_release: "{{ k3s_version.split('+')[0] | regex_replace('^v', '') }}"
+    running_release: "{{ k3s_running_version.split('+')[0] | regex_replace('^v', '') }}"
+  when: k3s_existing_server
+
+- name: Require a new server to match the administrative server release
+  when: not k3s_existing_server
+  block:
+    - name: Read administrative server binary release
+      ansible.builtin.command: /usr/local/bin/k3s --version
+      delegate_to: "{{ k3s_control_host }}"
+      register: k3s_admin_version
+      changed_when: false
+      check_mode: false
+
+    - name: Validate join release
+      ansible.builtin.assert:
+        that:
+          - k3s_admin_version.stdout.split()[2] == k3s_version
+          - admin_nodes | length == 1
+          - admin_nodes[0].status.nodeInfo.kubeletVersion == k3s_version
+        fail_msg: Join at the existing server release; complete version upgrades separately.
+      vars:
+        admin_nodes: >-
+          {{ (k3s_cluster_nodes.stdout | from_json)['items']
+             | selectattr('metadata.name', 'equalto', k3s_control_host) | list }}
+
+- name: Read existing server token without persisting it on the controller
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/token
+  delegate_to: "{{ k3s_control_host }}"
+  register: k3s_server_token
+  no_log: true
+
+- name: Validate server token
+  ansible.builtin.assert:
+    that:
+      - k3s_server_token.content | b64decode | trim | length > 0
+  no_log: true

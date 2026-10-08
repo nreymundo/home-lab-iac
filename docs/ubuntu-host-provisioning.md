@@ -86,9 +86,15 @@ discovery still requires the configured 1Password service account. For bootstrap
 using a different login, set the intended `common_user` explicitly and supply
 working privilege escalation (`--ask-become-pass` when needed).
 
-`ubuntu_vms.yml` and `headless_laptops.yml` are compatibility wrappers retaining
-exactly their prior target groups. Application-specific playbooks remain
-separate. Use the directory inventory so fleet defaults are loaded for wrappers.
+Use `ubuntu.yml` with a group limit to provision VMs or headless laptops:
+
+```sh
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/ubuntu.yml --limit all_vms
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/ubuntu.yml --limit headless_laptops
+```
+
+Application-specific playbooks remain separate. Use the directory inventory so
+fleet defaults are loaded.
 
 | Tags | Scope |
 | --- | --- |

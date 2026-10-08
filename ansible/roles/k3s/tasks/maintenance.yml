@@ -1,0 +1,88 @@
+---
+- name: Select the bootstrap server for administrative delegation
+  ansible.builtin.set_fact:
+    k3s_control_host: "{{ inventory_hostname }}"
+    k3s_control_url: https://127.0.0.1:6443
+  when: k3s_operation == 'bootstrap'
+
+- name: Record whether the selected node was already cordoned
+  ansible.builtin.set_fact:
+    k3s_was_cordoned: >-
+      {{ (k3s_registration.stdout | from_json).spec.unschedulable | default(false)
+         if k3s_existing_server else false }}
+
+- name: Drain an existing server only for disruptive changes
+  ansible.builtin.command:
+    argv: >-
+      {{ k3s_kubectl_argv + ['drain', inventory_hostname, '--ignore-daemonsets', '--delete-emptydir-data',
+         '--timeout=' + k3s_drain_timeout]
+         + (['--force'] if k3s_drain_force | bool else [])
+         + (['--disable-eviction'] if k3s_drain_disable_eviction | bool else []) }}
+  delegate_to: "{{ k3s_control_host }}"
+  changed_when: true
+  when: k3s_existing_server and k3s_restart_required
+
+# Failures propagate to the serial play's any_errors_fatal gate. Nothing in a
+# rescue/always block uncordons a failed node or advances to the next target.
+- name: Apply server configuration and binary changes
+  ansible.builtin.include_tasks: apply.yml
+
+- name: Verify recovered cluster health
+  ansible.builtin.include_tasks: health.yml
+
+- name: Wait for selected node registration
+  ansible.builtin.command:
+    argv: "{{ k3s_kubectl_argv + ['get', 'node', inventory_hostname, '-o', 'name'] }}"
+  delegate_to: "{{ k3s_control_host }}"
+  register: k3s_node_registration
+  changed_when: false
+  until: k3s_node_registration.rc == 0
+  retries: "{{ k3s_ready_retries }}"
+  delay: "{{ k3s_ready_delay }}"
+
+- name: Wait for the selected node to be Ready
+  ansible.builtin.command:
+    argv: "{{ k3s_kubectl_argv + ['wait', 'node/' + inventory_hostname, '--for=condition=Ready', '--timeout=5m'] }}"
+  delegate_to: "{{ k3s_control_host }}"
+  changed_when: false
+
+- name: Wait for the selected node to report the desired running release
+  ansible.builtin.command:
+    argv: >-
+      {{ k3s_kubectl_argv + ['wait', 'node/' + inventory_hostname,
+         '--for=jsonpath={.status.nodeInfo.kubeletVersion}=' + k3s_version, '--timeout=5m'] }}
+  delegate_to: "{{ k3s_control_host }}"
+  changed_when: false
+
+- name: Verify cluster identity after reconciliation
+  when: k3s_operation != 'bootstrap'
+  block:
+    - name: Read recovered cluster identity
+      ansible.builtin.command:
+        argv: "{{ k3s_kubectl_argv + ['get', 'namespace', 'kube-system', '-o', 'jsonpath={.metadata.uid}'] }}"
+      delegate_to: "{{ k3s_control_host }}"
+      register: k3s_identity_after
+      changed_when: false
+
+    - name: Require the original cluster identity
+      ansible.builtin.assert:
+        that:
+          - k3s_identity_after.stdout == k3s_identity_before.stdout
+
+- name: Reconcile selected node labels and workload taint
+  ansible.builtin.include_tasks: metadata.yml
+  when: k3s_operation != 'upgrade'
+
+- name: Uncordon only a recovered node cordoned by this run
+  ansible.builtin.command:
+    argv: "{{ k3s_kubectl_argv + ['uncordon', inventory_hostname] }}"
+  delegate_to: "{{ k3s_control_host }}"
+  changed_when: true
+  when:
+    - k3s_existing_server
+    - k3s_restart_required
+    - not k3s_was_cordoned
+
+- name: Fetch kubeconfig when explicitly requested
+  ansible.builtin.include_tasks: kubeconfig.yml
+  when: k3s_fetch_kubeconfig | bool

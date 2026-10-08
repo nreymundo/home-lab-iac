@@ -3,6 +3,13 @@
   hosts: "{{ ubuntu_target_hosts | default('ubuntu_hosts') }}"
   become: true
   pre_tasks:
+    - name: Require swap provisioning to be disabled for cluster members
+      ansible.builtin.assert:
+        that:
+          - not (swapfile_enabled | default(false) | bool)
+        fail_msg: Set swapfile_enabled=false in this host's inventory before K3s enrollment.
+      when: "'k3s_cluster' in group_names"
+      tags: [always]
     - name: Require a supported Ubuntu installation
       ansible.builtin.assert:
         that:

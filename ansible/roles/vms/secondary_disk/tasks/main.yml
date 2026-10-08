@@ -14,7 +14,7 @@
     msg: "Secondary disk {{ secondary_disk_device }} is required but not found on this host"
   when:
     - not secondary_disk_stat.stat.exists
-    - "'k3s_nodes' in group_names"
+    - "'k3s_cluster' in group_names"
 
 - name: Configure secondary disk for Longhorn storage
   when: secondary_disk_stat.stat.exists
@@ -43,14 +43,27 @@
       register: secondary_disk_parted_info
       changed_when: false
 
-    - name: Check if partition 1 exists
-      community.general.parted:
-        device: "{{ secondary_disk_device }}"
-        number: 1
-        unit: GiB
-      register: secondary_disk_partition_info
+    - name: Reject unexpected existing partitions
+      ansible.builtin.assert:
+        that:
+          - secondary_disk_parted_info.partitions | length <= 1
+          - secondary_disk_parted_info.partitions | length == 0 or secondary_disk_parted_info.partitions[0].num == 1
+        fail_msg: The managed Longhorn disk must be blank or contain only its existing partition 1.
+
+    - name: Inspect whole-disk signatures before partitioning
+      ansible.builtin.command:
+        argv: [wipefs, --no-act, --json, "{{ secondary_disk_device }}"]
+      register: secondary_disk_signatures
       changed_when: false
-      failed_when: false
+      check_mode: false
+      when: secondary_disk_parted_info.partitions | length == 0
+
+    - name: Require an empty disk before creating a partition
+      ansible.builtin.assert:
+        that:
+          - (secondary_disk_signatures.stdout | from_json).signatures | length == 0
+        fail_msg: Refusing to partition a disk with existing signatures. Prepare or select the intended disk explicitly.
+      when: secondary_disk_parted_info.partitions | length == 0
 
     - name: Create partition using entire disk
       community.general.parted:
@@ -62,8 +75,7 @@
         part_end: "100%"
         align: optimal
       when:
-        - secondary_disk_partition_info.partitions is not defined
-          or secondary_disk_partition_info.partitions | length == 0
+        - secondary_disk_parted_info.partitions | length == 0
 
     - name: Wait for device node to be ready
       ansible.builtin.command:
@@ -75,7 +87,14 @@
         cmd: "blkid -s TYPE -o value {{ secondary_disk_partition }}"
       register: secondary_disk_current_fs
       changed_when: false
-      failed_when: false
+      check_mode: false
+      failed_when: secondary_disk_current_fs.rc not in [0, 2]
+
+    - name: Preserve existing filesystems
+      ansible.builtin.assert:
+        that:
+          - secondary_disk_current_fs.rc == 2 or secondary_disk_current_fs.stdout == secondary_disk_fstype
+        fail_msg: Refusing to format an existing unexpected filesystem on the Longhorn partition.
 
     - name: Format partition as ext4 with label
       community.general.filesystem:
@@ -83,7 +102,7 @@
         fstype: "{{ secondary_disk_fstype }}"
         opts: "-L {{ secondary_disk_fs_label }}"
       when:
-        - secondary_disk_current_fs.stdout != secondary_disk_fstype or secondary_disk_current_fs.rc != 0
+        - secondary_disk_current_fs.rc == 2
 
     - name: Get disk UUID
       ansible.builtin.command:

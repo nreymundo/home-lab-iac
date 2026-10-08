@@ -1,0 +1,29 @@
+---
+# Frozen rendering inputs from bb5bc406's k3s/tasks/main.yml.
+labels: >-
+  {% for key, value in (k3s_node_labels | default({})).items() -%}
+  --node-label {{ key }}={{ value }} {{ ' ' }}{%- endfor %}
+initial: >
+  server
+  --cluster-init
+  --node-ip {{ k3s_node_ip }}
+  --flannel-iface {{ k3s_iface }}
+  --write-kubeconfig-mode 644
+  --tls-san {{ k3s_api_vip }}
+  {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
+  --disable traefik
+  --disable metrics-server
+  --disable servicelb
+  {{ k3s_node_label_args | trim }}
+joining: >
+  server
+  --server https://{{ k3s_api_vip }}:6443
+  --token {{ k3s_cluster_token }}
+  --node-ip {{ k3s_node_ip }}
+  --flannel-iface {{ k3s_iface }}
+  --tls-san {{ k3s_api_vip }}
+  {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
+  --disable traefik
+  --disable metrics-server
+  --disable servicelb
+  {{ k3s_node_label_args | trim }}

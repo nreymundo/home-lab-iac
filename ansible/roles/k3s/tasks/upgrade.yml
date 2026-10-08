@@ -1,10 +1,5 @@
 ---
-- name: Download K3s binary
-  ansible.builtin.import_tasks: download_binary.yml
-
-- name: Restart K3s service after upgrade
-  ansible.builtin.systemd_service:
-    name: k3s
-    state: restarted
-    daemon_reload: true
-  become: true
+- name: Run the shared selected-server upgrade workflow
+  ansible.builtin.include_tasks: main.yml
+  vars:
+    k3s_operation: upgrade

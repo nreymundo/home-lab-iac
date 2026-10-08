@@ -1,0 +1,66 @@
+---
+- name: Create K3s configuration directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - /usr/local/bin
+    - /etc/rancher/k3s
+  when: not k3s_existing_server
+
+- name: Store the existing cluster token in a root-only file
+  ansible.builtin.copy:
+    content: "{{ k3s_server_token.content | b64decode | trim }}\n"
+    dest: "{{ k3s_token_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  when:
+    - k3s_operation != 'upgrade'
+    - not k3s_initial_server
+    - k3s_use_token_file
+    - not k3s_existing_server
+  no_log: true
+  diff: false
+
+- name: Write desired server files
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop: "{{ k3s_desired_files }}"
+  no_log: true
+  diff: false
+  when: k3s_operation != 'upgrade' and k3s_configuration_changed
+
+- name: Install the selected release when necessary
+  ansible.builtin.include_tasks: download_binary.yml
+  when: k3s_binary_changed
+
+- name: Provide the kubectl entrypoint
+  ansible.builtin.file:
+    src: /usr/local/bin/k3s
+    dest: /usr/local/bin/kubectl
+    state: link
+  when: not k3s_existing_server
+
+- name: Start or restart the selected K3s service
+  ansible.builtin.systemd_service:
+    name: k3s
+    state: "{{ 'restarted' if k3s_existing_server and k3s_restart_required else 'started' }}"
+    enabled: true
+    daemon_reload: "{{ k3s_configuration_changed }}"
+  when: not k3s_existing_server or k3s_restart_required
+
+- name: Confirm the local server API and datastore recovered
+  ansible.builtin.command: /usr/local/bin/k3s kubectl --request-timeout=20s get --raw=/readyz
+  register: k3s_local_ready
+  changed_when: false
+  until: k3s_local_ready.rc == 0
+  retries: "{{ k3s_ready_retries }}"
+  delay: "{{ k3s_ready_delay }}"

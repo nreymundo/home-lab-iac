@@ -1,0 +1,100 @@
+---
+- name: Keep managed storage at the configured Longhorn path
+  ansible.builtin.assert:
+    that:
+      - secondary_disk_mountpoint | default(k3s_storage_path) == k3s_storage_path
+  when: k3s_storage_mode == 'managed'
+
+- name: Prepare an explicitly managed VM disk
+  ansible.builtin.include_role:
+    name: secondary_disk
+  when:
+    - k3s_storage_mode == 'managed'
+    - not k3s_existing_server
+
+- name: Inspect the exact Longhorn mount
+  ansible.builtin.command:
+    argv: [findmnt, --json, --mountpoint, "{{ k3s_storage_path }}", --output, 'TARGET,SOURCE,FSTYPE,OPTIONS,UUID']
+  register: k3s_storage_mount
+  changed_when: false
+  check_mode: false
+  failed_when: k3s_storage_mount.rc not in [0, 1]
+
+- name: Require a mounted Longhorn filesystem
+  ansible.builtin.assert:
+    that:
+      - k3s_storage_mount.rc == 0
+    fail_msg: >-
+      Mount a persistent ext4/XFS filesystem at {{ k3s_storage_path }} before joining.
+      In check mode, an unprepared managed disk must first be provisioned in a normal run.
+
+- name: Validate Longhorn mount properties
+  ansible.builtin.assert:
+    that:
+      - mount.target == k3s_storage_path
+      - mount.fstype in ['ext4', 'xfs']
+      - "'rw' in mount.options.split(',')"
+      - k3s_storage_expected_uuid | length == 0 or mount.uuid == k3s_storage_expected_uuid
+      - k3s_storage_expected_source | length == 0 or mount.source == k3s_storage_expected_source
+    fail_msg: Longhorn requires the intended read/write ext4/XFS mount, not the root filesystem or an unexpected disk.
+  vars:
+    mount: "{{ (k3s_storage_mount.stdout | from_json).filesystems[0] }}"
+
+- name: Inspect the root filesystem identity
+  ansible.builtin.command:
+    argv: [findmnt, --json, --mountpoint, /, --output, 'SOURCE,UUID']
+  register: k3s_root_mount
+  changed_when: false
+  check_mode: false
+
+- name: Require Longhorn storage to be separate from the root filesystem
+  ansible.builtin.assert:
+    that:
+      - storage.source.split('[')[0] != root.source.split('[')[0]
+      - not root.uuid or not storage.uuid or root.uuid != storage.uuid
+    fail_msg: A bind mount of the root filesystem is not a dedicated Longhorn filesystem.
+  vars:
+    storage: "{{ (k3s_storage_mount.stdout | from_json).filesystems[0] }}"
+    root: "{{ (k3s_root_mount.stdout | from_json).filesystems[0] }}"
+
+- name: Inspect persistent Longhorn mount configuration
+  ansible.builtin.command:
+    argv: [findmnt, --json, --fstab, --evaluate, --mountpoint, "{{ k3s_storage_path }}", --output, 'SOURCE,FSTYPE']
+  register: k3s_storage_fstab
+  changed_when: false
+  check_mode: false
+
+- name: Require persistent configuration for the mounted filesystem
+  ansible.builtin.assert:
+    that:
+      - persistent | length == 1
+      - persistent[0].source == mounted.source
+      - persistent[0].fstype == mounted.fstype
+    fail_msg: The Longhorn fstab entry must refer to the currently mounted filesystem.
+  vars:
+    persistent: "{{ (k3s_storage_fstab.stdout | from_json).filesystems }}"
+    mounted: "{{ (k3s_storage_mount.stdout | from_json).filesystems[0] }}"
+
+- name: Check XFS directory entry support
+  ansible.builtin.command:
+    argv: [xfs_info, "{{ k3s_storage_path }}"]
+  register: k3s_xfs_info
+  changed_when: false
+  check_mode: false
+  failed_when: k3s_xfs_info.rc != 0 or 'ftype=1' not in k3s_xfs_info.stdout
+  when: (k3s_storage_mount.stdout | from_json).filesystems[0].fstype == 'xfs'
+
+- name: Verify Longhorn filesystem can persist a write
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/python3
+      - -c
+      - |
+        import os, sys, tempfile
+        with tempfile.TemporaryFile(dir=sys.argv[1]) as probe:
+            probe.write(b'k3s-storage-check')
+            probe.flush()
+            os.fsync(probe.fileno())
+      - "{{ k3s_storage_path }}"
+  changed_when: false
+  when: not ansible_check_mode and not k3s_existing_server

@@ -1,0 +1,19 @@
+---
+- name: Inspect existing Kubernetes networking prerequisites
+  ansible.builtin.command:
+    argv: [sysctl, -n, net.bridge.bridge-nf-call-iptables, net.bridge.bridge-nf-call-ip6tables, net.ipv4.ip_forward]
+  register: k3s_existing_network
+  changed_when: false
+  check_mode: false
+
+- name: Inspect existing swap state
+  ansible.builtin.command: swapon --show --noheadings --output NAME
+  register: k3s_existing_swap
+  changed_when: false
+  check_mode: false
+
+- name: Report existing host state without applying enrollment policy
+  ansible.builtin.debug:
+    msg:
+      network_sysctls: "{{ k3s_existing_network.stdout_lines }}"
+      active_swap: "{{ k3s_existing_swap.stdout_lines }}"

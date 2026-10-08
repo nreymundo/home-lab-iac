@@ -1,0 +1,33 @@
+---
+- name: Initialize a new K3s cluster explicitly
+  hosts: k3s_server
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Require the bootstrap server in the selected hosts
+      ansible.builtin.assert:
+        that:
+          - k3s_bootstrap_host | default('') in ansible_play_hosts_all
+        fail_msg: Set k3s_bootstrap_host and include it in --limit for a fresh bootstrap.
+  tasks:
+    - name: Initialize the designated server
+      ansible.builtin.include_role:
+        name: k3s
+      vars:
+        k3s_operation: bootstrap
+      when: inventory_hostname == k3s_bootstrap_host
+
+- name: Join the remaining selected servers to the new cluster
+  hosts: k3s_server
+  become: true
+  gather_facts: true
+  serial: 1
+  any_errors_fatal: true
+  tasks:
+    - name: Join through the newly initialized administrative server
+      ansible.builtin.include_role:
+        name: k3s
+      vars:
+        k3s_admin_host: "{{ k3s_bootstrap_host }}"
+      when: inventory_hostname != k3s_bootstrap_host

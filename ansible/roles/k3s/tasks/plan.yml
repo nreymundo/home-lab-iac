@@ -1,0 +1,134 @@
+---
+- name: Read the installed service startup mode
+  ansible.builtin.slurp:
+    src: /etc/systemd/system/k3s.service
+  register: k3s_existing_service
+  when: k3s_local_state.results[3].stat.exists
+  no_log: true
+
+- name: Preserve the initial server startup mode independently of administration
+  ansible.builtin.set_fact:
+    k3s_initial_server: >-
+      {{ k3s_operation == 'bootstrap' or
+         (k3s_existing_server and '--cluster-init' in (k3s_existing_service.content | default('') | b64decode)) }}
+    k3s_use_token_file: >-
+      {{ not k3s_existing_server or
+         '--token-file ' in (k3s_existing_service.content | default('') | b64decode) }}
+
+# These expressions deliberately retain the original role's whitespace and
+# startup arguments. Administrative host selection does not change node mode.
+- name: Construct the original node label arguments
+  ansible.builtin.set_fact:
+    k3s_node_label_args: >-
+      {% for key, value in (k3s_node_labels | default({})).items() -%}
+      --node-label {{ key }}={{ value }} {{ ' ' }}{%- endfor %}
+
+- name: Render the original initial-server startup arguments
+  ansible.builtin.set_fact:
+    k3s_exec_args: >
+      server
+      --cluster-init
+      --node-ip {{ k3s_node_ip }}
+      --flannel-iface {{ k3s_iface }}
+      --write-kubeconfig-mode 644
+      --tls-san {{ k3s_api_vip }}
+      {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
+      --disable traefik
+      --disable metrics-server
+      --disable servicelb
+      {{ k3s_node_label_args | trim }}
+  when: k3s_initial_server
+
+- name: Render joining-server arguments while retaining its token layout
+  ansible.builtin.set_fact:
+    k3s_exec_args: >
+      server
+      --server {{ k3s_join_url }}
+      {{ '--token-file ' + k3s_token_file if k3s_use_token_file else '--token ' + (k3s_server_token.content | b64decode | trim) }}
+      --node-ip {{ k3s_node_ip }}
+      --flannel-iface {{ k3s_iface }}
+      --tls-san {{ k3s_api_vip }}
+      {% if k3s_embedded_registry_enabled | bool %}--embedded-registry{% endif %}
+      --disable traefik
+      --disable metrics-server
+      --disable servicelb
+      {{ k3s_node_label_args | trim }}
+  when: not k3s_initial_server
+  no_log: true
+
+- name: Inspect existing registry configuration
+  ansible.builtin.stat:
+    path: /etc/rancher/k3s/registries.yaml
+  register: k3s_registry_stat
+
+- name: Read existing registry configuration
+  ansible.builtin.slurp:
+    src: /etc/rancher/k3s/registries.yaml
+  register: k3s_registry_raw
+  when: k3s_registry_stat.stat.exists
+  no_log: true
+
+- name: Preserve node-local registry authentication
+  ansible.builtin.set_fact:
+    k3s_existing_registry: "{{ (k3s_registry_raw.content | b64decode | from_yaml) if k3s_registry_stat.stat.exists else {} }}"
+  no_log: true
+
+- name: Reject malformed registry configuration instead of dropping credentials
+  ansible.builtin.assert:
+    that:
+      - k3s_existing_registry is mapping
+      - k3s_existing_registry.get('configs', {}) is mapping
+  no_log: true
+
+- name: Select preserved registry credentials
+  ansible.builtin.set_fact:
+    k3s_preserved_configs: "{{ k3s_existing_registry.get('configs', {}) }}"
+  no_log: true
+
+- name: Render desired server files in memory
+  ansible.builtin.set_fact:
+    k3s_desired_files:
+      - path: /etc/systemd/system/k3s.service
+        mode: "0644"
+        content: "{{ lookup('ansible.builtin.template', 'k3s.service.j2') }}"
+      - path: /etc/rancher/k3s/registries.yaml
+        mode: "0600"
+        content: "{{ lookup('ansible.builtin.template', 'registries.yaml.j2') }}"
+  no_log: true
+
+- name: Inspect current server files
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  loop: "{{ k3s_desired_files }}"
+  register: k3s_current_file_stats
+  no_log: true
+
+- name: Read current server files
+  ansible.builtin.slurp:
+    src: "{{ item.item.path }}"
+  loop: "{{ k3s_current_file_stats.results }}"
+  when: item.stat.exists
+  register: k3s_current_files
+  no_log: true
+
+- name: Initialize selected server change plan
+  ansible.builtin.set_fact:
+    k3s_configuration_changed: false
+    k3s_changed_files: []
+    k3s_binary_changed: "{{ not k3s_binary_exists or k3s_installed_version != k3s_version }}"
+
+- name: Compare desired and current file contents
+  ansible.builtin.set_fact:
+    k3s_configuration_changed: true
+    k3s_changed_files: "{{ k3s_changed_files + [item.item.item.path] }}"
+  loop: "{{ k3s_current_files.results }}"
+  when: >-
+    item.skipped | default(false) or
+    (item.content | b64decode) != item.item.item.content
+  no_log: true
+
+- name: Determine whether the selected server requires a restart
+  ansible.builtin.set_fact:
+    k3s_restart_required: >-
+      {{ not k3s_existing_server or k3s_configuration_changed or k3s_binary_changed
+         or k3s_running_version | default('') != k3s_version }}

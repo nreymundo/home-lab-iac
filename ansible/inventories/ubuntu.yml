@@ -6,4 +6,6 @@ all:
       children:
         all_vms: {}
         headless_laptops: {}
-        ubuntu_baremetal: {}
+        ubuntu_baremetal:
+          children:
+            k3s_baremetal: {}
