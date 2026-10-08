@@ -1,5 +1,0 @@
----
-- name: Provision Ubuntu VMs through the unified entrypoint
-  ansible.builtin.import_playbook: ubuntu.yml
-  vars:
-    ubuntu_target_hosts: all_vms

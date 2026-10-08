@@ -56,11 +56,11 @@ Existing roles include `common`, `containers`, `docker`, `fail2ban`, `garage`,
 `lxc_bootstrap`, `lxc_hardening`, `nodejs_runtime`, `openclaw`, `proxmox`,
 `ssh_hardening`, `swapfile`, `ufw`, `vms`, `whisper_runtime`.
 
-Existing playbooks: `fedora.yml`, `garage_lxc.yml`, `headless_laptops.yml`,
+Existing playbooks: `fedora.yml`, `garage_lxc.yml`,
 `k3s_cluster.yml`, `k3s_upgrade.yml`, `llm_lxc.yml`, `netbird.yml`,
 `openclaw.yml`, `photon_lxc.yml`, `proxmox.yml`,
 `proxmox-fix-thin-provisioning.yml`, `public_vps.yml`, `rpi.yml`,
-`ubuntu_vms.yml`.
+`ubuntu.yml`. Limit `ubuntu.yml` to `all_vms` or `headless_laptops` for those fleets.
 
 ## Source-of-truth boundaries
 
