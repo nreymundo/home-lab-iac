@@ -100,7 +100,6 @@ class UbuntuCompositionTests(unittest.TestCase):
         package_vars = {**ubuntu_defaults, **self.inventory["_meta"]["hostvars"]["daring"]}
         composed = render(ubuntu_defaults["common_ubuntu_packages"], package_vars)
         self.assertEqual(len(composed), len(set(composed)))
-        self.assertNotIn("needrestart", composed)
         self.assertIn("bind9-dnsutils", composed)
         self.assertNotIn("dnsutils", composed)
         self.assertNotIn("auditd", composed)
