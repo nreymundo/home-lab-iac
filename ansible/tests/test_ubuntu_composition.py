@@ -39,7 +39,70 @@ class UbuntuCompositionTests(unittest.TestCase):
         self.assertEqual(set(self.inventory["ubuntu_hosts"]["children"]), {"all_vms", "headless_laptops", "ubuntu_baremetal"})
         self.assertEqual(set(self.inventory["all_vms"]["children"]), {"development_vms", "hermes_vms", "k3s_nodes", "omniroute_vms"})
         self.assertEqual(self.inventory["headless_laptops"]["hosts"], ["g14-2022"])
-        self.assertNotIn("hosts", self.inventory.get("ubuntu_baremetal", {}))
+        self.assertEqual(self.inventory["ubuntu_baremetal"]["hosts"], ["daring"])
+
+    def test_daring_is_only_in_hand_maintained_ubuntu_baremetal(self):
+        hosts = self.inventory["_meta"]["hostvars"]
+        daring = hosts["daring"]
+        self.assertIn("daring", self.inventory["ubuntu_baremetal"]["hosts"])
+        self.assertEqual(daring["ansible_host"], "192.168.10.30")
+        self.assertEqual(daring["ansible_user"], "ubuntu")
+        def group_hosts(name):
+            group = self.inventory.get(name, {})
+            result = set(group.get("hosts", []))
+            for child in group.get("children", []):
+                result.update(group_hosts(child))
+            return result
+
+        host_groups = {name for name in self.inventory if not name.startswith("_") and "daring" in group_hosts(name)}
+        self.assertIn("ubuntu_baremetal", host_groups)
+        self.assertNotIn("k3s_baremetal", host_groups)
+        self.assertNotIn("k3s_server", host_groups)
+        self.assertNotIn("k3s_cluster", host_groups)
+        for key, value in {
+            "host_power_backend": "sysfs",
+            "host_power_cpu_governor": "powersave",
+            "host_power_cpu_epp": "balance_performance",
+            "host_power_cpu_boost": True,
+            "host_power_cpu_max_freq_khz": 4200000,
+            "host_power_powertop_auto_tune": True,
+        }.items():
+            self.assertEqual(daring[key], value)
+        self.assertEqual(set(daring["host_hardware_extra_packages"]), {"intel-gpu-tools", "ffmpeg"})
+
+    def test_ubuntu_package_additions_are_additive_and_os_scoped(self):
+        defaults = read_yaml("roles/common/defaults/main.yml")
+        task = next(
+            row for row in read_yaml("roles/common/tasks/os-debian.yml")
+            if row["name"] == "Install host-specific packages"
+        )
+        packages_expression = task["ansible.builtin.apt"]["name"]
+        self.assertEqual(defaults["common_ubuntu_packages"], [])
+        self.assertIn("common_group_packages + common_extra_packages", packages_expression)
+        self.assertIn("common_ubuntu_packages if ansible_distribution == 'Ubuntu' else []", packages_expression)
+        vm = self.inventory["_meta"]["hostvars"]["vm-dev"]
+        self.assertIn("nfs-common", vm["common_group_packages"])
+        self.assertEqual(vm.get("common_extra_packages", []), [])
+        common_values = {
+            "common_group_packages": ["nfs-common"],
+            "common_extra_packages": ["host-tool"],
+            "common_ubuntu_packages": ["ubuntu-tool"],
+        }
+        ubuntu_packages = render(packages_expression, {
+            **common_values, "ansible_distribution": "Ubuntu",
+        })
+        debian_packages = render(packages_expression, {
+            **common_values, "ansible_distribution": "Debian",
+        })
+        self.assertEqual(ubuntu_packages, ["nfs-common", "host-tool", "ubuntu-tool"])
+        self.assertEqual(debian_packages, ["nfs-common", "host-tool"])
+        ubuntu_defaults = read_yaml("inventories/group_vars/ubuntu_hosts.yml")
+        package_vars = {**ubuntu_defaults, **self.inventory["_meta"]["hostvars"]["daring"]}
+        composed = render(ubuntu_defaults["common_ubuntu_packages"], package_vars)
+        self.assertEqual(len(composed), len(set(composed)))
+        self.assertIn("bind9-dnsutils", composed)
+        self.assertNotIn("dnsutils", composed)
+        self.assertNotIn("auditd", composed)
 
     def test_fleet_defaults_and_explicit_tools_survive_precedence(self):
         hosts = self.inventory["_meta"]["hostvars"]

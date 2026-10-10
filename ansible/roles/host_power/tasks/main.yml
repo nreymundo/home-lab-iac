@@ -3,8 +3,8 @@
   ansible.builtin.assert:
     that:
       - host_power_backend in ['none', 'sysfs', 'power-profiles-daemon']
-      - host_power_backend != 'power-profiles-daemon' or (host_power_cpu_governor | length == 0 and host_power_cpu_epp | length == 0 and host_power_cpu_boost is none and host_power_platform_profile | length == 0)
-      - host_power_backend != 'none' or (host_power_cpu_governor | length == 0 and host_power_cpu_epp | length == 0 and host_power_cpu_boost is none and host_power_platform_profile | length == 0 and host_power_rapl_limits | length == 0)
+      - host_power_backend != 'power-profiles-daemon' or (host_power_cpu_governor | length == 0 and host_power_cpu_epp | length == 0 and host_power_cpu_boost is none and host_power_cpu_max_freq_khz is none and host_power_platform_profile | length == 0)
+      - host_power_backend != 'none' or (host_power_cpu_governor | length == 0 and host_power_cpu_epp | length == 0 and host_power_cpu_boost is none and host_power_cpu_max_freq_khz is none and host_power_platform_profile | length == 0 and host_power_rapl_limits | length == 0)
       - host_power_rapl_limits | type_debug == 'list'
     fail_msg: PPD and sysfs CPU controls are mutually exclusive; none requires CPU and RAPL controls unset.
   tags: [power, preflight]

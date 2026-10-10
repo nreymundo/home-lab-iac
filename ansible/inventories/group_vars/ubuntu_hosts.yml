@@ -8,6 +8,31 @@ common_enable_unattended_upgrades: true
 common_unattended_upgrades_auto_reboot: false
 common_manage_journald: true
 
+ubuntu_utility_packages:
+  - ca-certificates
+  - python3
+  - python3-apt
+  - acl
+  - gnupg
+  - jq
+  - rsync
+  - wget
+  - unzip
+  - htop
+  - sysstat
+  - lsof
+  - strace
+  - bind9-dnsutils
+  - iputils-ping
+  - ethtool
+  - tcpdump
+  - mtr-tiny
+  - iperf3
+  - nftables
+  - irqbalance
+ubuntu_security_packages: []
+common_ubuntu_packages: "{{ (ubuntu_utility_packages + ubuntu_security_packages) | unique | list }}"
+
 ssh_hardening_user: "{{ common_user }}"
 ssh_hardening_sshd_settings:
   PermitRootLogin: "no"

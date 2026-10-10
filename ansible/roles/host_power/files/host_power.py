@@ -8,6 +8,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 
 class PowerError(ValueError):
@@ -42,6 +43,54 @@ def finite_positive(value, label, scale):
     if scaled != scaled.to_integral_value():
         raise PowerError(f"{label} has more precision than sysfs supports")
     return int(scaled)
+
+
+def positive_integer(value, label):
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        raise PowerError(f"{label} must be a finite positive integer")
+    try:
+        decimal = Decimal(str(value))
+    except InvalidOperation as error:
+        raise PowerError(f"{label} must be a finite positive integer") from error
+    if not decimal.is_finite() or decimal <= 0 or decimal != decimal.to_integral_value():
+        raise PowerError(f"{label} must be a finite positive integer")
+    return int(decimal)
+
+
+def validate_cpu_max_freq(cap, cpufreq):
+    requested = positive_integer(cap, "cpu_max_freq_khz")
+    policies = sorted(path for path in cpufreq.glob("policy*") if path.is_dir())
+    if not policies:
+        raise PowerError("Requested CPU maximum frequency but no cpufreq policy paths were found")
+    plans = []
+    for policy in policies:
+        hardware_path = policy / "cpuinfo_max_freq"
+        if not hardware_path.is_file():
+            raise PowerError(f"CPU frequency hardware maximum is missing: {hardware_path}")
+        try:
+            hardware_max = int(read(hardware_path))
+        except ValueError as error:
+            raise PowerError(f"Malformed CPU frequency hardware maximum: {hardware_path}") from error
+        if hardware_max <= 0:
+            raise PowerError(f"Malformed CPU frequency hardware maximum: {hardware_path}")
+        if hardware_max <= requested:
+            continue
+        minimum_path = policy / "scaling_min_freq"
+        maximum_path = policy / "scaling_max_freq"
+        for path, label in ((minimum_path, "minimum"), (maximum_path, "maximum")):
+            if not path.is_file() or not writable(path) and label == "maximum":
+                raise PowerError(f"Requested CPU maximum frequency has missing or read-only {label} control: {path}")
+        try:
+            minimum = int(read(minimum_path))
+            current_maximum = int(read(maximum_path))
+        except ValueError as error:
+            raise PowerError(f"Malformed CPU frequency policy control in {policy}") from error
+        if minimum <= 0 or current_maximum <= 0:
+            raise PowerError(f"Malformed CPU frequency policy control in {policy}")
+        if requested < minimum:
+            raise PowerError(f"CPU maximum frequency {requested} is below scaling_min_freq {minimum} for {policy}")
+        plans.append((maximum_path, str(requested)))
+    return plans
 
 
 def discover_zones(powercap):
@@ -162,6 +211,7 @@ def sysfs_plan(config, root):
         raise PowerError("Requested CPU governor but no cpufreq policy paths were found")
     if config.get("cpu_epp") and not policies:
         raise PowerError("Requested CPU EPP but no cpufreq policy paths were found")
+    # Boost controls may reset cpufreq policy limits, so apply the ceiling after boost.
     boost = config.get("cpu_boost")
     if boost is not None:
         if not isinstance(boost, bool):
@@ -174,6 +224,9 @@ def sysfs_plan(config, root):
             plans.extend(discover_control(root, "devices/system/cpu/cpufreq/boost", "CPU boost", "1" if boost else "0"))
         else:
             raise PowerError("Requested CPU boost control is unsupported")
+    cpu_max_freq = config.get("cpu_max_freq_khz")
+    if cpu_max_freq is not None:
+        plans.extend(validate_cpu_max_freq(cpu_max_freq, cpufreq))
     profile = config.get("platform_profile", "")
     if profile:
         path = root / "firmware/acpi/platform_profile"
@@ -189,13 +242,27 @@ def apply_plan(plans, check=False):
     report = []
     # Pre-read the entire plan before the first write as well.
     initial = [(path, wanted, read(path)) for path, wanted in plans]
-    for path, wanted, before in initial:
+    for path, wanted, initial_value in initial:
+        # Earlier controls (notably boost) may reset a later control after the
+        # initial validation read, so make the decision from its turn-time value.
+        before = initial_value if check else read(path)
         if not check and before != str(wanted):
             try:
                 path.write_text(f"{wanted}\n")
             except OSError as error:
                 raise PowerError(f"Cannot write {path}: {error}") from error
-        effective = before if check or before == str(wanted) else read(path)
+            effective = read(path)
+            if path.name == "scaling_max_freq" and effective != str(wanted):
+                # Some cpufreq drivers publish the updated limit asynchronously.
+                # Keep this exception narrow and bounded; all other controls retain
+                # their immediate strict readback behavior.
+                for _ in range(20):
+                    time.sleep(0.05)
+                    effective = read(path)
+                    if effective == str(wanted):
+                        break
+        else:
+            effective = before
         if not check and effective != str(wanted) and not re.fullmatch(r"constraint_[0-9]+_(power_limit_uw|time_window_us)", path.name):
             raise PowerError(f"Readback {effective!r} differs from requested {wanted!r} for {path}")
         report.append({"path": str(path), "requested": str(wanted), "effective": effective, "changed": before != str(wanted)})
@@ -205,7 +272,7 @@ def apply_plan(plans, check=False):
 def apply(config, root=Path("/sys"), check=False, powerprofilesctl="/usr/bin/powerprofilesctl"):
     backend = config.get("backend")
     if backend == "power-profiles-daemon":
-        if any(config.get(key) for key in ("cpu_governor", "cpu_epp", "platform_profile")) or config.get("cpu_boost") is not None:
+        if any(config.get(key) for key in ("cpu_governor", "cpu_epp", "platform_profile")) or config.get("cpu_boost") is not None or ("cpu_max_freq_khz" in config and config["cpu_max_freq_khz"] is not None):
             raise PowerError("PPD and sysfs CPU controls are mutually exclusive")
         # Validate every cap before a profile or sysfs mutation.
         plans = validate_rapl(config.get("rapl_limits", []), root / "class/powercap")

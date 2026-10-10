@@ -27,6 +27,7 @@ common_fstrim_timer_schedule: "04:00:00"
 
 common_group_packages: []
 common_extra_packages: []
+common_ubuntu_packages: []
 
 # Install the Mosh server package via the OS-native package manager.
 common_enable_mosh: true
