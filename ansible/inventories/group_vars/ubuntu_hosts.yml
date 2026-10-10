@@ -30,8 +30,7 @@ ubuntu_utility_packages:
   - iperf3
   - nftables
   - irqbalance
-ubuntu_security_packages:
-  - needrestart
+ubuntu_security_packages: []
 common_ubuntu_packages: "{{ (ubuntu_utility_packages + ubuntu_security_packages) | unique | list }}"
 
 ssh_hardening_user: "{{ common_user }}"
