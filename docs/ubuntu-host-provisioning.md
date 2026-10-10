@@ -65,16 +65,13 @@ Package composition is explicit: `common_packages` provides the baseline,
 `common_group_packages` holds additive group requirements (e.g. VM `nfs-common`),
 and `common_extra_packages` holds host additions. Ubuntu hosts additionally
 compose `common_ubuntu_packages`; the `ubuntu_hosts` group builds it from
-`ubuntu_utility_packages` and `ubuntu_security_packages` (`needrestart`). This
+`ubuntu_utility_packages` and `ubuntu_security_packages` (empty by default). This
 does not replace baseline, group, or host packages and does not affect other
 Debian-family hosts. `auditd` is not installed by default. These additions only
 install packages: they do not define service, firewall, or network policy, and
 install toggles do not disable services that were already present. In
 particular, `iperf3` is selected as a CLI utility, not as an intended server.
-Ubuntu's `needrestart` APT hook can automatically restart services during
-package transactions, including noninteractive runs on 24.04 and 26.04; it is
-not report-only. Schedule package changes accordingly. Automatic host reboots
-remain disabled. Check service state on rollout rather than assuming that
+Automatic host reboots remain disabled. Check service state on rollout rather than assuming that
 installing a package has no runtime side effects.
 Hardware packages compose separately, with `host_hardware_extra_packages` as
 their extension point; `daring` adds `intel-gpu-tools` and `ffmpeg` there.
@@ -283,7 +280,6 @@ Kubernetes desired state are unchanged.
 ## References
 
 - [Linux CPUFreq policy interface](https://docs.kernel.org/admin-guide/pm/cpufreq.html)
-- [Ubuntu needrestart automatic-restart behavior](https://git.launchpad.net/ubuntu/+source/needrestart/plain/debian/patches/ubuntu-mode.patch?h=ubuntu/noble)
 - [Linux powercap ABI](https://docs.kernel.org/power/powercap/powercap.html)
 - [Ubuntu package catalogue](https://packages.ubuntu.com/)
 - [Mesa Rusticl](https://docs.mesa3d.org/rusticl.html)
