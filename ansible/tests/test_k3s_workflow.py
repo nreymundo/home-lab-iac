@@ -416,6 +416,44 @@ class K3sWorkflowTests(unittest.TestCase):
 
 
 class K3sStorageTests(unittest.TestCase):
+    def test_swap_unit_query_accepts_empty_listing_but_keeps_errors_and_provider_guard(self):
+        prerequisites = yaml.safe_load((ROLE / 'tasks/prerequisites.yml').read_text())
+        names = [
+            'Check independently enabled swap units',
+            'Inspect the source of remaining swap units',
+            'Require independent swap providers to be disabled',
+        ]
+        tasks = [copy.deepcopy(next(task for task in prerequisites if task['name'] == name)) for name in names]
+        # Exercise the real command result handling, empty loops and provider
+        # assertion without querying the controller's services.
+        tasks[1]['ansible.builtin.command'] = {'argv': [shutil.which('python3'), '-c', 'print("")']}
+        cases = [
+            (0, '', '', True),
+            (1, '', '', True),
+            (2, '', '', False),
+            (1, '', 'Failed to connect to bus', False),
+            (1, 'zram0.swap generated -', '', False),
+            (0, 'zram0.swap generated -', '', False),
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            play = Path(directory) / 'swap-query.yml'
+            for rc, stdout, stderr, expected in cases:
+                with self.subTest(rc=rc, stdout=stdout, stderr=stderr):
+                    script = f'import sys; sys.stdout.write({stdout!r}); sys.stderr.write({stderr!r}); sys.exit({rc})'
+                    tasks[0]['ansible.builtin.command'] = {'argv': [shutil.which('python3'), '-c', script]}
+                    play.write_text(yaml.safe_dump([{
+                        'hosts': 'localhost', 'gather_facts': False, 'connection': 'local',
+                        'vars': {'k3s_fstab_swap': {'changed': False}}, 'tasks': tasks,
+                    }]))
+                    result = subprocess.run(['ansible-playbook', '-i', 'localhost,', str(play)],
+                                            env={**os.environ, 'ANSIBLE_CONFIG': str(ROOT / 'ansible.cfg')},
+                                            capture_output=True, text=True)
+                    self.assertEqual(result.returncode == 0, expected, result.stdout + result.stderr)
+                    if expected:
+                        self.assertIn('changed=0', result.stdout)
+                    elif rc == 0:
+                        self.assertIn('Disable explicitly enabled swap units', result.stdout)
+
     def test_swap_fstab_changes_preserve_other_mounts_and_converge(self):
         tasks = yaml.safe_load((ROLE / 'tasks/prerequisites.yml').read_text())
         task = next(task for task in tasks if task['name'] == 'Disable persistent fstab swap entries')
