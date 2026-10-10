@@ -63,7 +63,14 @@ class UbuntuCompositionTests(unittest.TestCase):
         self.assertEqual(daring["k3s_storage_expected_uuid"], "bf176804-6285-4d34-842c-c6483255b503")
         self.assertTrue(daring["k3s_allow_workloads"])
         self.assertFalse(daring["swapfile_enabled"])
-        self.assertNotIn("k3s_node_labels", daring)
+        self.assertEqual(daring["k3s_node_labels"], {
+            "homelab.lan/cpu-vendor": "intel",
+            "homelab.lan/gpu": "intel",
+            "homelab.lan/role": "general",
+            "homelab.lan/runtime": "baremetal",
+            "topology.kubernetes.io/zone": "daring",
+        })
+        self.assertNotIn("homelab.lan/hypervisor", daring["k3s_node_labels"])
         for key in ("k3s_api_vip", "k3s_join_url", "k3s_admin_api_url"):
             self.assertNotIn(key, daring)
         k3s_defaults = read_yaml("roles/k3s/defaults/main.yml")
