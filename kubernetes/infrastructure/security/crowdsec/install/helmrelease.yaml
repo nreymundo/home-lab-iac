@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -31,6 +32,8 @@ spec:
         tlsClientAuth: true
 
     lapi:
+      deployAnnotations:
+        secret.reloader.stakater.com/reload: "crowdsec-lapi-tls,crowdsec-agent-tls"
       replicas: 1
       strategy:
         type: Recreate
@@ -102,6 +105,8 @@ spec:
 
     # --- Agent Configuration ---
     agent:
+      daemonsetAnnotations:
+        secret.reloader.stakater.com/reload: "crowdsec-agent-tls"
       env:
         - name: PARSERS
           value: "crowdsecurity/whitelists"
