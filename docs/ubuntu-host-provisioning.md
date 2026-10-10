@@ -13,11 +13,11 @@ defaults in `inventories/group_vars/`. See the [K3s guide](k3s-provisioning.md)
 for cluster operations.
 
 ```sh
-ANSIBLE_CONFIG=ansible.cfg ansible-inventory --graph ubuntu_hosts
-ANSIBLE_CONFIG=ansible.cfg ansible-playbook playbooks/ubuntu.yml --limit <host> --list-hosts
-ANSIBLE_CONFIG=ansible.cfg ansible-playbook playbooks/ubuntu.yml --limit <host> --syntax-check
-ANSIBLE_CONFIG=ansible.cfg ansible-playbook playbooks/ubuntu.yml --limit <host> --check
-ANSIBLE_CONFIG=ansible.cfg ansible-playbook playbooks/ubuntu.yml --limit <host>
+ansible-inventory --graph ubuntu_hosts
+ansible-playbook playbooks/ubuntu.yml --limit <host> --list-hosts
+ansible-playbook playbooks/ubuntu.yml --limit <host> --syntax-check
+ansible-playbook playbooks/ubuntu.yml --limit <host> --check
+ansible-playbook playbooks/ubuntu.yml --limit <host>
 ```
 
 `--check` connects to the host, gathers facts and may run read-only commands; it

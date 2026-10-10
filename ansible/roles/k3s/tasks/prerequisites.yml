@@ -64,10 +64,10 @@
   check_mode: false
   # Some systemd versions return 1 when no matching unit files remain.
   failed_when: >-
-    k3s_enabled_swap_units.rc != 0 and not
-    (k3s_enabled_swap_units.rc == 1 and
-     k3s_enabled_swap_units.stdout | trim | length == 0 and
-     k3s_enabled_swap_units.stderr | trim | length == 0)
+    k3s_enabled_swap_units.rc != 0 and
+    (k3s_enabled_swap_units.rc != 1 or
+     k3s_enabled_swap_units.stdout | trim | length > 0 or
+     k3s_enabled_swap_units.stderr | trim | length > 0)
 
 - name: Inspect the source of remaining swap units
   ansible.builtin.command:

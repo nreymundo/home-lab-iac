@@ -84,7 +84,9 @@ independent swap providers must already be disabled.
 Before replacement, verify cluster and Longhorn replica health. Maintain three
 healthy voters; a temporary fourth tolerates only one failure. Promote and
 verify the replacement before retiring the old server. Update API backends and
-protect Longhorn replicas and application data.
+move workloads and Longhorn replicas before removing the old server or disk.
+Node readiness alone does not prove PVC I/O, GPU workload execution or reboot
+persistence on the replacement.
 
 Check playbook syntax from `ansible/` with:
 

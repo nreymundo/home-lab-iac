@@ -39,8 +39,8 @@ Host prerequisites and storage provisioning are excluded from that simulation;
 mount/filesystem guards and fstab editing have separate focused checks. These
 tests establish delegation, selected-host scope, change planning, credential
 preservation and rolling failure behaviour, not real etcd/Longhorn health. See
-[`../../docs/k3s-provisioning.md`](../../docs/k3s-provisioning.md) for the
-disposable-cluster acceptance sequence.
+[`../../docs/k3s-provisioning.md`](../../docs/k3s-provisioning.md) for
+provisioning and replacement guidance.
 
 Frozen original-role rendering fixtures also verify old-to-new compatibility for
 initial and joining servers: unchanged files, no credential-layout conversion,
