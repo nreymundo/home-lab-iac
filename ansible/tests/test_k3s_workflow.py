@@ -49,6 +49,7 @@ class K3sWorkflowTests(unittest.TestCase):
             'ansible_distribution': 'Ubuntu', 'ansible_distribution_release': 'noble',
             'ansible_architecture': 'x86_64', 'ansible_os_family': 'Debian',
             'ansible_host': '192.0.2.10', 'k3s_iface': 'eth0',
+            'k3s_storage_mode': 'managed',
             'k3s_admin_host': 'admin', 'k3s_bootstrap_host': 'admin',
             'k3s_ready_retries': 1, 'k3s_ready_delay': 0,
         }
@@ -415,6 +416,44 @@ class K3sWorkflowTests(unittest.TestCase):
 
 
 class K3sStorageTests(unittest.TestCase):
+    def test_swap_unit_query_accepts_empty_listing_but_keeps_errors_and_provider_guard(self):
+        prerequisites = yaml.safe_load((ROLE / 'tasks/prerequisites.yml').read_text())
+        names = [
+            'Check independently enabled swap units',
+            'Inspect the source of remaining swap units',
+            'Require independent swap providers to be disabled',
+        ]
+        tasks = [copy.deepcopy(next(task for task in prerequisites if task['name'] == name)) for name in names]
+        # Exercise the real command result handling, empty loops and provider
+        # assertion without querying the controller's services.
+        tasks[1]['ansible.builtin.command'] = {'argv': [shutil.which('python3'), '-c', 'print("")']}
+        cases = [
+            (0, '', '', True),
+            (1, '', '', True),
+            (2, '', '', False),
+            (1, '', 'Failed to connect to bus', False),
+            (1, 'zram0.swap generated -', '', False),
+            (0, 'zram0.swap generated -', '', False),
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            play = Path(directory) / 'swap-query.yml'
+            for rc, stdout, stderr, expected in cases:
+                with self.subTest(rc=rc, stdout=stdout, stderr=stderr):
+                    script = f'import sys; sys.stdout.write({stdout!r}); sys.stderr.write({stderr!r}); sys.exit({rc})'
+                    tasks[0]['ansible.builtin.command'] = {'argv': [shutil.which('python3'), '-c', script]}
+                    play.write_text(yaml.safe_dump([{
+                        'hosts': 'localhost', 'gather_facts': False, 'connection': 'local',
+                        'vars': {'k3s_fstab_swap': {'changed': False}}, 'tasks': tasks,
+                    }]))
+                    result = subprocess.run(['ansible-playbook', '-i', 'localhost,', str(play)],
+                                            env={**os.environ, 'ANSIBLE_CONFIG': str(ROOT / 'ansible.cfg')},
+                                            capture_output=True, text=True)
+                    self.assertEqual(result.returncode == 0, expected, result.stdout + result.stderr)
+                    if expected:
+                        self.assertIn('changed=0', result.stdout)
+                    elif rc == 0:
+                        self.assertIn('Disable explicitly enabled swap units', result.stdout)
+
     def test_swap_fstab_changes_preserve_other_mounts_and_converge(self):
         tasks = yaml.safe_load((ROLE / 'tasks/prerequisites.yml').read_text())
         task = next(task for task in tasks if task['name'] == 'Disable persistent fstab swap entries')
@@ -426,6 +465,12 @@ class K3sStorageTests(unittest.TestCase):
             task['ansible.builtin.replace']['path'] = str(fstab)
             play = root / 'swap.yml'
             play.write_text(yaml.safe_dump([{'hosts': 'localhost', 'gather_facts': False, 'connection': 'local', 'tasks': [task]}]))
+            preview = subprocess.run(['ansible-playbook', '-i', 'localhost,', str(play), '--check'],
+                                     env={**os.environ, 'ANSIBLE_CONFIG': str(ROOT / 'ansible.cfg')},
+                                     capture_output=True, text=True)
+            self.assertEqual(preview.returncode, 0, preview.stdout + preview.stderr)
+            self.assertIn('changed=1', preview.stdout)
+            self.assertEqual(fstab.read_text(), original)
             for attempt in range(2):
                 result = subprocess.run(['ansible-playbook', '-i', 'localhost,', str(play)],
                                         env={**os.environ, 'ANSIBLE_CONFIG': str(ROOT / 'ansible.cfg')},
@@ -435,6 +480,59 @@ class K3sStorageTests(unittest.TestCase):
                     self.assertIn('changed=0', result.stdout)
             self.assertEqual(fstab.read_text(), original.replace('/swapfile none', '# K3s disables swap: /swapfile none')
                              .replace('\tUUID=swap', '# K3s disables swap: \tUUID=swap'))
+
+    def test_swap_check_mode_only_accepts_fstab_units_pending_removal(self):
+        tasks = yaml.safe_load((ROLE / 'tasks/prerequisites.yml').read_text())
+        task = next(task for task in tasks if task['name'] == 'Require independent swap providers to be disabled')
+        cases = [
+            (True, True, 'generated', '/etc/fstab', True),
+            (False, True, 'generated', '/etc/fstab', False),
+            (True, False, 'generated', '/etc/fstab', False),
+            (True, True, 'enabled', '/etc/fstab', False),
+            (True, True, 'enabled-runtime', '/etc/fstab', False),
+            (True, True, 'generated', '/etc/systemd/zram-generator.conf', False),
+            (True, True, 'generated', '', False),
+        ]
+        for check_mode, fstab_changed, state, source, expected in cases:
+            with self.subTest(check_mode=check_mode, fstab_changed=fstab_changed, state=state, source=source):
+                templar = Templar(variables={
+                    'ansible_check_mode': check_mode,
+                    'k3s_fstab_swap': {'changed': fstab_changed},
+                    'item': {'item': f'swap.img.swap {state} -', 'stdout': source},
+                })
+                passed = all(templar.evaluate_conditional(trust_as_template(condition))
+                             for condition in task['ansible.builtin.assert']['that'])
+                self.assertEqual(passed, expected)
+
+    def test_persistent_storage_resolves_device_alias_and_rejects_other_disk(self):
+        tasks = yaml.safe_load((ROLE / 'tasks/storage.yml').read_text())
+        query = next(task for task in tasks if task['name'] == 'Inspect persistent Longhorn mount configuration')
+        assertion = next(task for task in tasks if task['name'] == 'Require persistent configuration for the mounted filesystem')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            device = root / 'device'
+            device.touch()
+            alias = root / 'by-uuid'
+            alias.symlink_to(device)
+            mountpoint = root / 'longhorn'
+            mountpoint.mkdir()
+            fstab = root / 'fstab'
+            fstab.write_text(f'{alias} {mountpoint} ext4 defaults 0 2\n')
+            argv = [str(mountpoint) if arg == '{{ k3s_storage_path }}' else arg
+                    for arg in query['ansible.builtin.command']['argv']]
+            result = subprocess.run(argv + ['--tab-file', str(fstab)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            persistent = json.loads(result.stdout)['filesystems']
+            self.assertEqual(persistent[0]['source'], str(device))
+            for mounted_source, expected in [(str(device), True), (str(root / 'other-device'), False)]:
+                with self.subTest(mounted_source=mounted_source):
+                    templar = Templar(variables={
+                        'persistent': persistent,
+                        'mounted': {'source': mounted_source, 'fstype': 'ext4'},
+                    })
+                    passed = all(templar.evaluate_conditional(trust_as_template(condition))
+                                 for condition in assertion['ansible.builtin.assert']['that'])
+                    self.assertEqual(passed, expected)
 
     def test_manual_mount_assertions_reject_wrong_storage(self):
         tasks = yaml.safe_load((ROLE / 'tasks/storage.yml').read_text())

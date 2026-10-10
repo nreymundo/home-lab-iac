@@ -39,12 +39,11 @@ class UbuntuCompositionTests(unittest.TestCase):
         self.assertEqual(set(self.inventory["ubuntu_hosts"]["children"]), {"all_vms", "headless_laptops", "ubuntu_baremetal"})
         self.assertEqual(set(self.inventory["all_vms"]["children"]), {"development_vms", "hermes_vms", "k3s_nodes", "omniroute_vms"})
         self.assertEqual(self.inventory["headless_laptops"]["hosts"], ["g14-2022"])
-        self.assertEqual(self.inventory["ubuntu_baremetal"]["hosts"], ["daring"])
+        self.assertEqual(set(self.inventory["ubuntu_baremetal"]["children"]), {"k3s_baremetal"})
 
-    def test_daring_is_only_in_hand_maintained_ubuntu_baremetal(self):
+    def test_daring_is_hand_maintained_ubuntu_baremetal_and_k3s_server(self):
         hosts = self.inventory["_meta"]["hostvars"]
         daring = hosts["daring"]
-        self.assertIn("daring", self.inventory["ubuntu_baremetal"]["hosts"])
         self.assertEqual(daring["ansible_host"], "192.168.10.30")
         self.assertEqual(daring["ansible_user"], "ubuntu")
         def group_hosts(name):
@@ -56,9 +55,27 @@ class UbuntuCompositionTests(unittest.TestCase):
 
         host_groups = {name for name in self.inventory if not name.startswith("_") and "daring" in group_hosts(name)}
         self.assertIn("ubuntu_baremetal", host_groups)
-        self.assertNotIn("k3s_baremetal", host_groups)
-        self.assertNotIn("k3s_server", host_groups)
-        self.assertNotIn("k3s_cluster", host_groups)
+        self.assertIn("k3s_baremetal", host_groups)
+        self.assertIn("k3s_server", host_groups)
+        self.assertIn("k3s_cluster", host_groups)
+        self.assertEqual(daring["k3s_iface"], "enp86s0")
+        self.assertEqual(daring["k3s_storage_mode"], "manual")
+        self.assertEqual(daring["k3s_storage_expected_uuid"], "bf176804-6285-4d34-842c-c6483255b503")
+        self.assertTrue(daring["k3s_allow_workloads"])
+        self.assertFalse(daring["swapfile_enabled"])
+        self.assertEqual(daring["k3s_node_labels"], {
+            "homelab.lan/cpu-vendor": "intel",
+            "homelab.lan/gpu": "intel",
+            "homelab.lan/role": "general",
+            "homelab.lan/runtime": "baremetal",
+            "topology.kubernetes.io/zone": "daring",
+        })
+        self.assertNotIn("homelab.lan/hypervisor", daring["k3s_node_labels"])
+        for key in ("k3s_api_vip", "k3s_join_url", "k3s_admin_api_url"):
+            self.assertNotIn(key, daring)
+        k3s_defaults = read_yaml("roles/k3s/defaults/main.yml")
+        self.assertEqual(k3s_defaults["k3s_node_ip"], "{{ ansible_host }}")
+        self.assertEqual(k3s_defaults["k3s_api_vip"], "192.168.10.10")
         for key, value in {
             "host_power_backend": "sysfs",
             "host_power_cpu_governor": "powersave",
@@ -175,6 +192,14 @@ class UbuntuCompositionTests(unittest.TestCase):
 
 
 class PolicyLifecycleTests(unittest.TestCase):
+    def test_k3s_unit_requires_manual_storage_mount_only(self):
+        template = (ROOT / "roles/k3s/templates/k3s.service.j2").read_text()
+        values = {"k3s_exec_args": "server", "k3s_storage_path": "/var/lib/longhorn"}
+        manual = render(template, {**values, "k3s_storage_mode": "manual"})
+        managed = render(template, {**values, "k3s_storage_mode": "managed"})
+        self.assertIn("RequiresMountsFor=/var/lib/longhorn", manual)
+        self.assertNotIn("RequiresMountsFor=", managed)
+
     def test_ppd_relinquishment_only_when_previously_managed(self):
         tasks = read_yaml("roles/host_power/tasks/policy.yml")
         task = next(row for row in tasks if row["name"] == "Relinquish previously managed PPD backend")
