@@ -1,4 +1,9 @@
 ---
+host_hardware_linux_tools_tracking_packages:
+  linux-image-generic: linux-tools-generic
+  linux-image-generic-hwe-24.04: linux-tools-generic-hwe-24.04
+  linux-image-generic-hwe-26.04: linux-tools-generic-hwe-26.04
+
 host_hardware_package_maps:
   noble:
     baseline:

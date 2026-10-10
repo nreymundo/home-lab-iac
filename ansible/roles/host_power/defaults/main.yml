@@ -4,6 +4,7 @@ host_power_profile: balanced
 host_power_cpu_governor: ""
 host_power_cpu_epp: ""
 host_power_cpu_boost: null
+host_power_cpu_max_freq_khz: null
 host_power_platform_profile: ""
 host_power_powertop_auto_tune: false
 host_power_rapl_limits: []

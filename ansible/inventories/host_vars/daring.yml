@@ -1,0 +1,11 @@
+---
+host_power_backend: sysfs
+host_power_cpu_governor: powersave
+host_power_cpu_epp: balance_performance
+host_power_cpu_boost: true
+host_power_cpu_max_freq_khz: 4200000
+host_power_powertop_auto_tune: true
+
+host_hardware_extra_packages:
+  - intel-gpu-tools
+  - ffmpeg

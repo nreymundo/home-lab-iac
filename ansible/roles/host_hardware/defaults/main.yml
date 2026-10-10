@@ -7,6 +7,19 @@ host_hardware_validate_gpu: false
 host_hardware_enable_universe: true
 host_hardware_install_diagnostics: true
 host_hardware_physical: "{{ ansible_virtualization_role | default('NA') != 'guest' }}"
+host_hardware_physical_diagnostic_packages:
+  - powertop
+  - smartmontools
+  - nvme-cli
+  - hdparm
+  - usbutils
+  - dmidecode
+  - lshw
+  - msr-tools
+  - fio
+  - stress-ng
+  - memtester
+host_hardware_linux_tools_packages: null
 host_hardware_gpu_sysfs_root: /sys/bus/pci/devices
 host_hardware_render_root: /dev/dri
 host_hardware_validate_opencl: false

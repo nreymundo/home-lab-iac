@@ -13,14 +13,15 @@ not select a fleet policy: hosts opt in through inventory.
 | `host_power_cpu_governor` | `""` | Optional governor applied to every discovered cpufreq policy in sysfs mode. |
 | `host_power_cpu_epp` | `""` | Optional energy-performance preference applied to every discovered policy in sysfs mode. |
 | `host_power_cpu_boost` | `null` | Optional boolean boost request; Intel `no_turbo` is preferred (inverted), otherwise cpufreq `boost` is used. |
+| `host_power_cpu_max_freq_khz` | `null` | Optional positive integer kHz ceiling for cpufreq policies whose `cpuinfo_max_freq` is strictly greater than the requested value. Sysfs mode only. |
 | `host_power_platform_profile` | `""` | Optional sysfs platform profile. Requested choice must be advertised when choices are exposed. |
 | `host_power_powertop_auto_tune` | `false` | Install powertop and run its auto-tune command in a separate, persistent unit after the policy unit. |
 | `host_power_rapl_limits` | `[]` | Optional list of named, writable flat-ABI RAPL constraints described below. No numeric cap is selected by default. |
 
-PPD cannot be combined with low-level governor, EPP, boost, or platform-profile
+PPD cannot be combined with low-level governor, EPP, boost, CPU maximum-frequency ceiling, or platform-profile
 requests: those inputs are rejected rather than relying on unverified backend
 compatibility. RAPL limits may accompany either selected backend. `none` means
-no CPU/RAPL controls; the independent powertop opt-in may still be enabled. It does not disable unrelated policy services. Previously managed PPD is stopped when relinquished. When a
+no CPU/RAPL controls, including the CPU frequency ceiling; the independent powertop opt-in may still be enabled. It does not disable unrelated policy services. Previously managed PPD is stopped when relinquished. When a
 backend is selected, known competing `tuned`, TLP, laptop-mode and (for sysfs)
 PPD services are stopped/disabled; adjust `host_power_known_competing_services`
 if a host's known controller list differs.
@@ -56,6 +57,23 @@ files with unset controls are not written. Clearing controls in inventory
 stops/removes the managed service and configuration but cannot reliably restore
 firmware defaults immediately: reboot to return unmanaged kernel controls to
 their platform defaults.
+
+The optional CPU maximum-frequency ceiling uses the Linux cpufreq policy ABI:
+the requested kHz value must be a finite positive integer, and must be at least
+the selected policy's `scaling_min_freq`. A policy is selected only when its
+`cpuinfo_max_freq` is strictly greater than the ceiling; equal-or-lower policies
+are left completely untouched by this control. All selected policy controls are
+validated before writes, and boost (when requested) is applied before the
+ceiling because boost changes can reset policy limits. Linux may clamp the
+requested value, so the helper preserves strict readback checks. After writing
+`scaling_max_freq`, the helper allows up to 20 additional reads at 50 ms intervals
+for a delayed exact readback (about one second total); a persistent mismatch still
+fails. This bounded wait is only for a changed frequency ceiling—not for an
+already-correct value, check mode, or other controls. A value of
+`4200000` kHz is an exact 100 MHz step commonly used for an Intel P-core limit,
+but this threshold is not core-type detection and does not guarantee that only
+P-cores (or any particular core class on other CPUs) are selected. Inspect the
+host's actual policy maxima before opting in.
 
 The persistent policy is a oneshot systemd unit ordered after local filesystems
 and, for PPD, after the daemon. It is enabled through `WantedBy=multi-user.target`

@@ -13,6 +13,7 @@ from ansible.plugins.loader import init_plugin_loader
 from ansible.playbook.block import Block
 from ansible.playbook.play import Play
 from ansible.playbook.task import Task
+from ansible.template import Templar, trust_as_template
 
 
 ANSIBLE_ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +21,106 @@ ROLE_ROOT = ANSIBLE_ROOT / "roles/host_hardware"
 
 
 class HostHardwareRoleTests(unittest.TestCase):
+    def test_physical_diagnostics_are_optional_and_extendable(self):
+        defaults = yaml.safe_load((ROLE_ROOT / "defaults/main.yml").read_text())
+        tasks = yaml.safe_load((ROLE_ROOT / "tasks/physical.yml").read_text())
+        physical_task = next(task for task in tasks if task["name"] == "Install bare-metal hardware diagnostics")
+        packages = physical_task["ansible.builtin.package"]["name"]
+        self.assertEqual(defaults["host_hardware_physical_diagnostic_packages"], [
+            "powertop", "smartmontools", "nvme-cli", "hdparm", "usbutils",
+            "dmidecode", "lshw", "msr-tools", "fio", "stress-ng", "memtester",
+        ])
+        self.assertIsNone(defaults["host_hardware_linux_tools_packages"])
+        self.assertIn("host_hardware_physical_diagnostic_packages + host_hardware_selected_linux_tools_packages", packages)
+        self.assertEqual(physical_task["when"], "host_hardware_install_diagnostics | bool")
+
+        package_task = yaml.safe_load((ROLE_ROOT / "tasks/packages.yml").read_text())[1]
+        composed = package_task["ansible.builtin.set_fact"]["host_hardware_packages"]
+        self.assertIn("+ host_hardware_extra_packages", composed)
+        self.assertIn("| unique | list", composed)
+
+    def test_running_kernel_and_installed_image_meta_select_linux_tools(self):
+        defaults = yaml.safe_load((ROLE_ROOT / "defaults/main.yml").read_text())
+        role_vars = yaml.safe_load((ROLE_ROOT / "vars/main.yml").read_text())
+        tasks = yaml.safe_load((ROLE_ROOT / "tasks/physical.yml").read_text())
+        selection_task = next(task for task in tasks if task["name"] == "Select physical diagnostic Linux tools packages")
+        selection_expression = selection_task["ansible.builtin.set_fact"]["host_hardware_selected_linux_tools_packages"]
+        install_task = next(task for task in tasks if task["name"] == "Install bare-metal hardware diagnostics")
+        install_expression = install_task["ansible.builtin.package"]["name"]
+
+        def selected_tools(kernel, installed_packages, override=None):
+            variables = {
+                **defaults,
+                **role_vars,
+                "ansible_kernel": kernel,
+                "ansible_facts": {"packages": {name: [{}] for name in installed_packages}},
+                "host_hardware_linux_tools_packages": override,
+            }
+            return Templar(variables=variables).template(trust_as_template(selection_expression))
+
+        cases = [
+            ("6.8.0-101-generic", ["linux-image-generic"], None,
+             ["linux-tools-6.8.0-101-generic", "linux-tools-generic"]),
+            ("6.8.0-101-generic", ["linux-image-generic-hwe-24.04"], None,
+             ["linux-tools-6.8.0-101-generic", "linux-tools-generic-hwe-24.04"]),
+            ("7.0.0-38-generic", ["linux-image-7.0.0-38-generic", "linux-image-generic"], None,
+             ["linux-tools-7.0.0-38-generic", "linux-tools-generic"]),
+            ("7.0.0-42-generic", ["linux-image-generic-hwe-26.04"], None,
+             ["linux-tools-7.0.0-42-generic", "linux-tools-generic-hwe-26.04"]),
+            ("7.1.0-1-custom", ["linux-image-7.1.0-1-custom"], None,
+             ["linux-tools-7.1.0-1-custom"]),
+            ("7.0.0-38-generic", ["linux-image-generic", "linux-image-generic-hwe-26.04"], None,
+             ["linux-tools-7.0.0-38-generic", "linux-tools-generic", "linux-tools-generic-hwe-26.04"]),
+            ("7.0.0-38-generic", ["linux-image-generic"], ["custom-tools"], ["custom-tools"]),
+            ("7.0.0-38-generic", ["linux-image-generic"], [], []),
+        ]
+        for kernel, installed, override, expected in cases:
+            with self.subTest(kernel=kernel, installed=installed, override=override):
+                self.assertEqual(selected_tools(kernel, installed, override), expected)
+
+        daring_tools = selected_tools(
+            "7.0.0-38-generic",
+            ["linux-image-7.0.0-38-generic", "linux-image-generic"],
+        )
+        rendered_daring_packages = Templar(variables={
+            **defaults,
+            "host_hardware_selected_linux_tools_packages": daring_tools,
+        }).template(trust_as_template(install_expression))
+        self.assertEqual(rendered_daring_packages, [
+            *defaults["host_hardware_physical_diagnostic_packages"],
+            "linux-tools-7.0.0-38-generic",
+            "linux-tools-generic",
+        ])
+
+    def test_linux_tools_facts_and_installation_respect_physical_diagnostics_gates(self):
+        physical_tasks = yaml.safe_load((ROLE_ROOT / "tasks/physical.yml").read_text())
+        package_facts = next(task for task in physical_tasks if task["name"] == "Gather installed APT package facts for automatic kernel tools selection")
+        selection = next(task for task in physical_tasks if task["name"] == "Select physical diagnostic Linux tools packages")
+        role_tasks = yaml.safe_load((ROLE_ROOT / "tasks/main.yml").read_text())
+        physical_include = next(task for task in role_tasks if task["name"] == "Install physical-host diagnostics")
+
+        def runs(task, variables):
+            conditions = task.get("when", [])
+            if not isinstance(conditions, list):
+                conditions = [conditions]
+            templar = Templar(variables=variables)
+            return all(templar.evaluate_conditional(trust_as_template(condition)) for condition in conditions)
+
+        self.assertFalse(runs(physical_include, {"host_hardware_physical": False}))
+        self.assertFalse(runs(package_facts, {
+            "host_hardware_install_diagnostics": False,
+            "host_hardware_linux_tools_packages": None,
+        }))
+        self.assertFalse(runs(package_facts, {
+            "host_hardware_install_diagnostics": True,
+            "host_hardware_linux_tools_packages": ["custom-tools"],
+        }))
+        self.assertTrue(runs(package_facts, {
+            "host_hardware_install_diagnostics": True,
+            "host_hardware_linux_tools_packages": None,
+        }))
+        self.assertFalse(runs(selection, {"host_hardware_install_diagnostics": False}))
+
     def make_pci_device(self, root, bdf, vendor, device, pci_class="0x030000", driver=None):
         path = root / bdf
         path.mkdir(parents=True)

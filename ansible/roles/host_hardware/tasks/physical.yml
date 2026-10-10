@@ -1,5 +1,25 @@
 ---
+- name: Gather installed APT package facts for automatic kernel tools selection
+  ansible.builtin.package_facts:
+    manager: apt
+  when:
+    - host_hardware_install_diagnostics | bool
+    - host_hardware_linux_tools_packages is none
+
+- name: Select physical diagnostic Linux tools packages
+  ansible.builtin.set_fact:
+    host_hardware_selected_linux_tools_packages: >-
+      {{ host_hardware_linux_tools_packages
+         if host_hardware_linux_tools_packages is not none else
+         (['linux-tools-' ~ ansible_kernel]
+          + (host_hardware_linux_tools_tracking_packages | dict2items
+             | selectattr('key', 'in', ansible_facts.packages.keys() | list)
+             | map(attribute='value') | list)) | unique | list }}
+  when: host_hardware_install_diagnostics | bool
+  changed_when: false
+
 - name: Install bare-metal hardware diagnostics
   ansible.builtin.package:
-    name: powertop
+    name: "{{ (host_hardware_physical_diagnostic_packages + host_hardware_selected_linux_tools_packages) | unique | list }}"
     state: present
+  when: host_hardware_install_diagnostics | bool

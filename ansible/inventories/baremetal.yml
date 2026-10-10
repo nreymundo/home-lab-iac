@@ -17,6 +17,9 @@ all:
     g14-2022:
       ansible_host: 192.168.10.11
       ansible_user: alx0s
+    daring:
+      ansible_host: 192.168.10.30
+      ansible_user: ubuntu
 
 # Here we group the hosts defined above based on type/functionality
   children:
@@ -31,3 +34,6 @@ all:
     headless_laptops:
       hosts:
         g14-2022: {}
+    ubuntu_baremetal:
+      hosts:
+        daring: {}
