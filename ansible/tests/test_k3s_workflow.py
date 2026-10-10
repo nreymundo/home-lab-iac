@@ -49,6 +49,7 @@ class K3sWorkflowTests(unittest.TestCase):
             'ansible_distribution': 'Ubuntu', 'ansible_distribution_release': 'noble',
             'ansible_architecture': 'x86_64', 'ansible_os_family': 'Debian',
             'ansible_host': '192.0.2.10', 'k3s_iface': 'eth0',
+            'k3s_storage_mode': 'managed',
             'k3s_admin_host': 'admin', 'k3s_bootstrap_host': 'admin',
             'k3s_ready_retries': 1, 'k3s_ready_delay': 0,
         }

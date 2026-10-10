@@ -9,3 +9,9 @@ host_power_powertop_auto_tune: true
 host_hardware_extra_packages:
   - intel-gpu-tools
   - ffmpeg
+
+k3s_iface: enp86s0
+k3s_storage_mode: manual
+k3s_storage_expected_uuid: bf176804-6285-4d34-842c-c6483255b503
+k3s_allow_workloads: true
+swapfile_enabled: false

@@ -3,6 +3,9 @@ Description=Lightweight Kubernetes
 Documentation=https://k3s.io
 Wants=network-online.target
 After=network-online.target
+{% if k3s_storage_mode == 'manual' %}
+RequiresMountsFor={{ k3s_storage_path }}
+{% endif %}
 
 [Service]
 Type=notify
