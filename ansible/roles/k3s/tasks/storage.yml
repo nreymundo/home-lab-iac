@@ -59,7 +59,16 @@
 
 - name: Inspect persistent Longhorn mount configuration
   ansible.builtin.command:
-    argv: [findmnt, --json, --fstab, --evaluate, --mountpoint, "{{ k3s_storage_path }}", --output, 'SOURCE,FSTYPE']
+    argv:
+      - findmnt
+      - --json
+      - --fstab
+      - --evaluate
+      - --canonicalize
+      - --mountpoint
+      - "{{ k3s_storage_path }}"
+      - --output
+      - SOURCE,FSTYPE
   register: k3s_storage_fstab
   changed_when: false
   check_mode: false

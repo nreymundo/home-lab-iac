@@ -77,6 +77,10 @@ not join, restart, drain, change metadata, fetch kubeconfig or run the storage
 write probe. It cannot prove a join will succeed; an unprepared managed disk can
 fail check-mode validation.
 
+Fstab-generated swap units are accepted in check mode only when the role plans
+to remove their fstab entries. Enrollment disables that swap and reloads systemd;
+independent swap providers must already be disabled.
+
 Before replacement, verify cluster and Longhorn replica health. Maintain three
 healthy voters; a temporary fourth tolerates only one failure. Promote and
 verify the replacement before retiring the old server. Update API backends and
