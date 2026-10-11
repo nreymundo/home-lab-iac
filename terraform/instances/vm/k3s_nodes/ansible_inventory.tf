@@ -1,3 +1,9 @@
+locals {
+  nodes_by_name = {
+    for node in local.k3s.nodes : "k3s-node-${format("%02d", node.node_number)}" => node
+  }
+}
+
 resource "local_file" "ansible_inventory" {
   filename = abspath("${path.module}/../../../../ansible/inventories/k3s-nodes.yml")
 
@@ -28,21 +34,21 @@ resource "local_file" "ansible_inventory" {
         children = {
           k3s_nodes = {
             hosts = {
-              for node_index, vm in module.proxmox_vms.vms : vm.name => {
-                ansible_host = vm.ip_address
-                ansible_user = vm.ansible_user
+              for name, instance in module.proxmox_vms : name => {
+                ansible_host = instance.vms[0].ip_address
+                ansible_user = instance.vms[0].ansible_user
                 ansible_port = 22
-                node_os      = vm.ci_user
+                node_os      = instance.vms[0].ci_user
                 k3s_node_labels = merge(
                   {
                     "homelab.lan/role"            = "general"
                     "homelab.lan/cpu-vendor"      = "intel"
                     "homelab.lan/runtime"         = "vm"
                     "homelab.lan/hypervisor"      = "proxmox"
-                    "homelab.lan/gpu"             = length(try(local.k3s.nodes[node_index].pci_devices, [])) > 0 ? "intel" : "none"
-                    "topology.kubernetes.io/zone" = vm.target_node
+                    "homelab.lan/gpu"             = length(try(local.nodes_by_name[name].pci_devices, [])) > 0 ? "intel" : "none"
+                    "topology.kubernetes.io/zone" = instance.vms[0].target_node
                   },
-                  try(local.k3s.nodes[node_index].labels, {})
+                  try(local.nodes_by_name[name].labels, {})
                 )
               }
             }

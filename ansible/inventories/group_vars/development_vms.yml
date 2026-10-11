@@ -45,10 +45,6 @@ ufw_default_outgoing_policy: allow
 ufw_inbound_rules:
   - port: "8080"
     proto: tcp
-    from_ip: 192.168.10.50
-    comment: code-server from k3s-node-01
-  - port: "8080"
-    proto: tcp
     from_ip: 192.168.10.51
     comment: code-server from k3s-node-02
   - port: "8080"

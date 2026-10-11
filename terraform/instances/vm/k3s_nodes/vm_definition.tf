@@ -14,17 +14,8 @@ locals {
     nodes = [
       {
         ci_user     = "ubuntu"
-        target_node = "pve1"
-        pci_devices = [
-          {
-            # Requires manual creation of 'intel-igpu' PCI Resource Mapping in Proxmox Datacenter
-            id = "intel-igpu"
-          }
-        ]
-      },
-      {
-        ci_user     = "ubuntu"
         target_node = "pve2"
+        node_number = 2
         pci_devices = [
           {
             # Requires manual creation of 'intel-igpu' PCI Resource Mapping in Proxmox Datacenter
@@ -35,6 +26,7 @@ locals {
       {
         ci_user     = "ubuntu"
         target_node = "pve3"
+        node_number = 3
         labels = {
           "homelab.lan/cpu-vendor" = "amd"
         }
@@ -63,12 +55,12 @@ locals {
   vm_definitions = [
     for node_index, node in local.normalized_nodes : merge(
       {
-        name                   = "k3s-node-${format("%02d", node_index + 1)}"
+        name                   = "k3s-node-${format("%02d", node.node_number)}"
         target_node            = node.target_node
-        vmid                   = local.k3s.node_vmid_start + node_index
+        vmid                   = local.k3s.node_vmid_start + node.node_number - 1
         ci_user                = node.ci_user
         ansible_user           = node.ansible_user
-        ip_address             = cidrhost(local.node_ip_subnet, local.node_ip_start_octet + node_index)
+        ip_address             = cidrhost(local.node_ip_subnet, local.node_ip_start_octet + node.node_number - 1)
         ip_prefix_len          = local.k3s.ip_prefix_len
         vm_cores               = node.vm_cores
         vm_memory_mb           = node.vm_memory_mb
