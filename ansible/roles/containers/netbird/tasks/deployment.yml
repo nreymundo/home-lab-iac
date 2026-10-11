@@ -38,9 +38,9 @@
   no_log: true
   notify: Restart NetBird containers
 
-- name: Render CrowdSec acquisition configuration
-  ansible.builtin.template:
-    src: crowdsec-acquis.yaml.j2
+- name: Install CrowdSec acquisition configuration
+  ansible.builtin.copy:
+    src: crowdsec-acquis.yaml
     dest: "{{ netbird_crowdsec_acquisition_file }}"
     owner: "{{ netbird_container_owner }}"
     group: "{{ netbird_container_group }}"

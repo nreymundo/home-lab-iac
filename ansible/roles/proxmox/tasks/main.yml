@@ -185,8 +185,8 @@
     - corefreq
 
 - name: Set root .profile
-  ansible.builtin.template:
-    src: profile.j2
+  ansible.builtin.copy:
+    src: profile
     dest: /root/.profile
     owner: root
     group: root
@@ -195,8 +195,8 @@
     - shell
 
 - name: Set root .bashrc
-  ansible.builtin.template:
-    src: bashrc.j2
+  ansible.builtin.copy:
+    src: bashrc
     dest: /root/.bashrc
     owner: root
     group: root

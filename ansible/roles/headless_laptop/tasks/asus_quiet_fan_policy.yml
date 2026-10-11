@@ -51,8 +51,8 @@
         mode: "0755"
 
     - name: Configure ASUS quiet fan policy service
-      ansible.builtin.template:
-        src: asus-quiet-fan-policy.service.j2
+      ansible.builtin.copy:
+        src: asus-quiet-fan-policy.service
         dest: /etc/systemd/system/asus-quiet-fan-policy.service
         owner: root
         group: root

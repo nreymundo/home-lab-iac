@@ -130,6 +130,7 @@ The larger roles use role-local task files, imported in execution order from
 | `hermes` | `install-prerequisites`, `identity`, `install`, `default-gateway`, `named-profiles`, `dashboard` |
 | `netbird` | `secrets`, `networking`, `deployment`, `verification` |
 | `omniroute` | `secrets`, `deployment`, `api-bootstrap` |
+| `comfyui` | `preflight`, `deployment`, `openai-api`, `idle-restart`, `models`, `services` |
 
 These use static `ansible.builtin.import_tasks` so existing tasks remain
 visible to `--list-tasks` and selectable through `--start-at-task`, with
@@ -151,6 +152,12 @@ for sudo, timers, and Ubuntu GRUB remain unchanged.
 Static helpers belong in role-local `files/`; templated configuration belongs
 in `templates/`. OmniRoute's `files/bootstrap_omniroute.py` is copied unchanged
 and consumes the separately rendered `templates/bootstrap-config.json.j2`.
+The same convention applies to Proxmox's shell files and CoreFreq unit, the
+ASUS quiet fan policy service unit, and NetBird's CrowdSec acquisition config.
+
+ComfyUI's task imports preserve the original sequence, including model downloads
+before the handler flush and service management in `services.yml`. Feature
+conditions remain on each task, including cleanup when an integration is disabled.
 
 ## Development workstation repository keys
 
