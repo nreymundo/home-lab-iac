@@ -123,7 +123,7 @@ class UbuntuCompositionTests(unittest.TestCase):
 
     def test_fleet_defaults_and_explicit_tools_survive_precedence(self):
         hosts = self.inventory["_meta"]["hostvars"]
-        for name in ["vm-dev", "vm-hermes", "vm-omniroute", "k3s-node-01", "g14-2022"]:
+        for name in ["vm-dev", "vm-hermes", "vm-omniroute", "k3s-node-02", "g14-2022"]:
             with self.subTest(name=name):
                 values = hosts[name]
                 self.assertFalse(values["common_run_upgrade"])
@@ -134,8 +134,8 @@ class UbuntuCompositionTests(unittest.TestCase):
         self.assertTrue(hosts["g14-2022"]["nodejs_runtime_install_enabled"])
         self.assertTrue(hosts["vm-omniroute"]["ufw_enabled"])
         self.assertNotIn("common_passwordless_sudo", hosts["pve3"])
-        self.assertIn("nfs-common", hosts["k3s-node-01"]["common_group_packages"])
-        self.assertIn("intel-gpu-tools", hosts["k3s-node-01"]["common_extra_packages"])
+        self.assertIn("nfs-common", hosts["k3s-node-02"]["common_group_packages"])
+        self.assertIn("intel-gpu-tools", hosts["k3s-node-02"]["common_extra_packages"])
 
     def test_unified_playbook_limits_preserve_target_sets(self):
         def group_hosts(name):
@@ -170,7 +170,7 @@ class UbuntuCompositionTests(unittest.TestCase):
         ]:
             self.assertIn(f'"{origin}";', config)
         self.assertNotIn("origin=Ubuntu", config)
-        ubuntu_config = render(template, {**defaults, **self.inventory["_meta"]["hostvars"]["k3s-node-01"]})
+        ubuntu_config = render(template, {**defaults, **self.inventory["_meta"]["hostvars"]["k3s-node-02"]})
         self.assertIn('"origin=Ubuntu,archive=${distro_codename}-security";', ubuntu_config)
         self.assertNotIn("origin=Raspbian", ubuntu_config)
 

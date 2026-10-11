@@ -265,9 +265,9 @@ For registry validation (embedded peer sharing + direct upstream):
 
 ```bash
 # Embedded registry flag present on each node's K3s unit
-ssh k3s-node-01 'systemctl cat k3s | grep -- --embedded-registry'
+ssh k3s-node-02 'systemctl cat k3s | grep -- --embedded-registry'
 # A pull resolves through peer cache or direct upstream
-ssh k3s-node-01 'sudo k3s crictl pull ghcr.io/oras-project/oras:v1.2.3'
+ssh k3s-node-02 'sudo k3s crictl pull ghcr.io/oras-project/oras:v1.2.3'
 ```
 
 ## Troubleshooting

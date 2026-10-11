@@ -26,10 +26,6 @@ ufw_default_outgoing_policy: allow
 ufw_inbound_rules:
   - port: "20128"
     proto: tcp
-    from_ip: 192.168.10.50
-    comment: OmniRoute from k3s-node-01
-  - port: "20128"
-    proto: tcp
     from_ip: 192.168.10.51
     comment: OmniRoute from k3s-node-02
   - port: "20128"
