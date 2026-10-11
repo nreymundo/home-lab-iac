@@ -68,8 +68,8 @@ ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook \
 ```
 
 The role validates Compose with `docker compose ... config --quiet`, compiles
-the rendered Python, and parses the rendered JSON before reconciliation. These
-checks do not print expanded secret-bearing files. Ansible check mode renders
+the installed Python helper, and parses the rendered JSON before reconciliation.
+These checks do not print expanded secret-bearing files. Ansible check mode renders
 and compares ordinary files but intentionally skips Compose validation,
 service changes, health checks, and management API mutations; it does not prove
 remote convergence.
