@@ -140,6 +140,14 @@ Homebrew keeps OS-specific prerequisites in `os-debian.yml` and `os-fedora.yml`;
 both import the shared `bootstrap.yml` before formula installation. Its outer
 OS selection remains dynamic.
 
+The `common` role also keeps dynamic OS selection. Its OS entrypoints retain
+package and network setup and import `timesync-{debian,fedora}.yml`,
+`unattended-upgrades-{debian,fedora}.yml`, Fedora's `grubby.yml`, and Debian's
+`reboot-required.yml` at their original positions. These static imports keep
+conditions and `base`/`packages`/`boot` tags on the individual tasks; they do
+not apply category tags to the whole imported file. Existing dynamic includes
+for sudo, timers, and Ubuntu GRUB remain unchanged.
+
 Static helpers belong in role-local `files/`; templated configuration belongs
 in `templates/`. OmniRoute's `files/bootstrap_omniroute.py` is copied unchanged
 and consumes the separately rendered `templates/bootstrap-config.json.j2`.

@@ -1,0 +1,25 @@
+---
+- name: Check for reboot-required marker
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: common_reboot_required_marker
+  changed_when: false
+  tags:
+    - boot
+
+- name: Check for pending common-role GRUB reboot marker
+  ansible.builtin.stat:
+    path: /run/common-role-grub-reboot-required
+  register: common_grub_reboot_marker
+  changed_when: false
+  tags:
+    - boot
+
+- name: Report whether this host requires a reboot
+  ansible.builtin.set_fact:
+    common_reboot_required: >-
+      {{ (common_grub_configuration_changed | default(false) | bool)
+         or (common_reboot_required_marker.stat.exists | default(false) | bool)
+         or (common_grub_reboot_marker.stat.exists | default(false) | bool) }}
+  tags:
+    - boot
