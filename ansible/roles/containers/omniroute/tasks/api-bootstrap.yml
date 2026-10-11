@@ -1,7 +1,7 @@
 ---
 - name: Install OmniRoute bootstrap script
-  ansible.builtin.template:
-    src: bootstrap_omniroute.py.j2
+  ansible.builtin.copy:
+    src: bootstrap_omniroute.py
     dest: "{{ omniroute_bootstrap_script }}"
     owner: root
     group: root

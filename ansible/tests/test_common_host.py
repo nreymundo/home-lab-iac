@@ -13,7 +13,7 @@ from ansible.parsing.dataloader import DataLoader
 from ansible.plugins.loader import init_plugin_loader
 from ansible.playbook.block import Block
 from ansible.playbook.play import Play
-from ansible.playbook.task import Task
+from ansible.vars.manager import VariableManager
 from jinja2 import Environment
 import yaml
 
@@ -90,7 +90,7 @@ class CommonGrubParameterTests(unittest.TestCase):
         self.assertIn("common_grub_remove | length == 0", removal["when"])
 
     def test_grub_reboot_marker_survives_unchanged_role_rerun_until_reboot(self):
-        tasks = yaml.safe_load((ANSIBLE_ROOT / "roles/common/tasks/os-debian.yml").read_text())
+        tasks = yaml.safe_load((ANSIBLE_ROOT / "roles/common/tasks/reboot-required.yml").read_text())
         marker_task = next(task for task in tasks if task["name"] == "Check for pending common-role GRUB reboot marker")
         self.assertEqual(marker_task["ansible.builtin.stat"]["path"], "/run/common-role-grub-reboot-required")
         handler_text = (ANSIBLE_ROOT / "roles/common/handlers/main.yml").read_text()
@@ -98,9 +98,10 @@ class CommonGrubParameterTests(unittest.TestCase):
 
     def test_os_task_tags_isolate_packages_and_boot_for_both_families(self):
         loader = DataLoader()
+        loader.set_basedir(str(ANSIBLE_ROOT / "roles/common/tasks"))
         init_plugin_loader()
-        play = Play.load({"hosts": "all", "tasks": []}, loader=loader)
-        block = Block.load({"block": []}, play=play, loader=loader)
+        variable_manager = VariableManager(loader=loader)
+        play = Play.load({"hosts": "all", "tasks": []}, loader=loader, variable_manager=variable_manager)
         cases = {
             "os-debian.yml": {
                 "boot": {"Configure Ubuntu GRUB kernel parameters", "Check for reboot-required marker", "Check for pending common-role GRUB reboot marker", "Report whether this host requires a reboot"},
@@ -127,7 +128,11 @@ class CommonGrubParameterTests(unittest.TestCase):
 
         for filename, expected in cases.items():
             raw_tasks = yaml.safe_load((ANSIBLE_ROOT / "roles/common/tasks" / filename).read_text())
-            loaded = [Task.load(item, block=block, loader=loader) for item in raw_tasks]
+            # Let Ansible expand static imports and inherit their attributes so
+            # category isolation is checked across the complete OS task list.
+            loaded = Block.load(
+                {"block": raw_tasks}, play=play, loader=loader, variable_manager=variable_manager,
+            ).get_tasks()
             names_by_tag = {
                 tag: {task.name for task in loaded if task.evaluate_tags([tag], [], {})}
                 for tag in ("boot", "packages", "base")

@@ -141,8 +141,8 @@
       when: (proxmox_corefreqk_module_files.matched | default(0)) > 0
 
     - name: CoreFreq | Install systemd unit
-      ansible.builtin.template:
-        src: corefreqd.service.j2
+      ansible.builtin.copy:
+        src: corefreqd.service
         dest: /usr/lib/systemd/system/corefreqd.service
         owner: root
         group: root

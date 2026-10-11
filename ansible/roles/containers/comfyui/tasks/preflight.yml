@@ -1,0 +1,21 @@
+---
+- name: Ensure ComfyUI container role supports this system
+  ansible.builtin.assert:
+    that:
+      - ansible_system == 'Linux'
+    fail_msg: "ComfyUI container role supports Linux only"
+
+- name: Ensure required GPU device nodes are present
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ comfyui_required_device_nodes }}"
+  register: comfyui_device_nodes
+
+- name: Assert required GPU device nodes are present
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+    fail_msg: "Required GPU device node {{ item.item }} is missing"
+  loop: "{{ comfyui_device_nodes.results }}"
+  loop_control:
+    label: "{{ item.item }}"

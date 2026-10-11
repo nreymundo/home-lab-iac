@@ -1,0 +1,41 @@
+---
+- name: Flush ComfyUI handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Manage ComfyUI service
+  ansible.builtin.systemd_service:
+    name: "{{ comfyui_service_name }}"
+    enabled: "{{ comfyui_enabled | bool }}"
+    state: "{{ 'started' if comfyui_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Manage ComfyUI idle restart timer
+  ansible.builtin.systemd_service:
+    name: comfyui-idle-restart.timer
+    enabled: "{{ comfyui_enabled | bool and comfyui_idle_restart_enabled | bool }}"
+    state: "{{ 'started' if comfyui_enabled | bool and comfyui_idle_restart_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Manage ComfyUI OpenAI API service
+  ansible.builtin.systemd_service:
+    name: "{{ comfyui_openai_api_service_name }}"
+    enabled: "{{ comfyui_enabled | bool and comfyui_openai_api_enabled | bool }}"
+    state: "{{ 'started' if comfyui_enabled | bool and comfyui_openai_api_enabled | bool else 'stopped' }}"
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Validate ComfyUI health endpoint
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ comfyui_host_port }}/system_stats"
+    status_code: 200
+    return_content: true
+  register: comfyui_health
+  until: comfyui_health.status == 200
+  retries: "{{ comfyui_health_retries }}"
+  delay: "{{ comfyui_health_delay }}"
+  when:
+    - comfyui_enabled | bool
+    - comfyui_validate_health | bool
+    - not ansible_check_mode
