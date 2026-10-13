@@ -24,6 +24,15 @@
   with the restricted `open-webui-chat` key and `cloud/fast` selected by default. A user's own
   default model still takes precedence. OpenRouter access is provided separately by the imported
   pipe described below.
+- Hermes Agent: second OpenAI-compatible connection at
+  `http://hermes.external-proxy.svc.cluster.local:8642/v1`, backed by the native gateway on
+  `vm-hermes`. Hermes runs tools on that VM and advertises its active profile as a model
+  (normally `hermes-agent`). The dashboard remains on port 9119. Connection URLs and keys
+  are configured through environment variables because `ENABLE_PERSISTENT_CONFIG=false`;
+  Admin UI connection edits do not survive restart. `OPENAI_API_KEYS` contains the existing
+  OmniRoute chat key followed by the Hermes API key, separated by a semicolon, in the same
+  order as `OPENAI_API_BASE_URLS`. The Hermes key must match its existing 1Password-managed
+  `API_SERVER_KEY`; rotating it requires updating this consumer too.
 - Database: dedicated CNPG PostgreSQL cluster `open-webui-pg` (PostgreSQL 18, 1 instance,
   5Gi `longhorn-r2`) with pgvector (extension `vector`, pgvector 0.8.2 bundled in the
   `ghcr.io/cloudnative-pg/postgresql:18` image, created by the cluster bootstrap). Open WebUI
@@ -46,7 +55,8 @@
   a rollback copy
 - Local secrets are consolidated in `open-webui-secrets`: `WEBUI_SECRET_KEY`, three restricted
   `OMNIROUTE_*_API_KEY` values, the retained `LITELLM_API_KEY` rollback value, and
-  `OPENROUTER_API_KEY`. Database credentials live in `open-webui-db-secrets` (`username`,
+  `OPENROUTER_API_KEY`, and the combined `OPENAI_API_KEYS` connection-key list. Database
+  credentials live in `open-webui-db-secrets` (`username`,
   `password`, `DATABASE_URL`), shared by the CNPG bootstrap (database/owner `open_webui`) and
   the app
 - Backups: `open-webui-pg` ships WAL and base backups via barman to
