@@ -164,6 +164,17 @@
       "automergeSchedule": ["at any time"]
     },
     {
+      "description": "Group Hindsight API, worker, and control plane image updates",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "vectorize-io/hindsight-api",
+        "ghcr.io/vectorize-io/hindsight-api",
+        "vectorize-io/hindsight-control-plane",
+        "ghcr.io/vectorize-io/hindsight-control-plane"
+      ],
+      "groupName": "Hindsight"
+    },
+    {
       "description": "Group Observability Stack",
       "matchPackageNames": ["/loki/", "/alloy/", "/kube-prometheus-stack/"],
       "groupName": "observability"
