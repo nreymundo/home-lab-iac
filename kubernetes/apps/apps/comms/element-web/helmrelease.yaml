@@ -19,7 +19,7 @@ spec:
             image:
               # renovate: datasource=docker depName=vectorim/element-web registryUrl=https://docker.io
               repository: docker.io/vectorim/element-web
-              tag: "v1.12.30"
+              tag: "v1.12.31"
             ports:
               - name: http
                 containerPort: 80
