@@ -1444,30 +1444,6 @@ data:
         attrs:
           group: !KeyOf home-assistant-admins
 
-  266-continuwuity.yaml: |
-    version: 1
-    metadata:
-      name: continuwuity-sso
-      labels:
-        blueprints.goauthentik.io/instantiate: "true"
-    entries:
-      # Keep deletion entries: removing a blueprint does not delete its objects.
-      # Deleting the application also removes its access policy bindings.
-      - model: authentik_core.application
-        state: absent
-        identifiers:
-          slug: "continuwuity"
-
-      - model: authentik_providers_oauth2.oauth2provider
-        state: absent
-        identifiers:
-          name: "Continuwuity"
-
-      - model: authentik_core.group
-        state: absent
-        identifiers:
-          name: "continuwuity-users"
-
   264-proxmox-backup.yaml: |
     version: 1
     metadata:
