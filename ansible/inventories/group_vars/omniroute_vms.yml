@@ -37,10 +37,26 @@ ufw_inbound_rules:
     from_ip: 192.168.10.0/24
     comment: OmniRoute clients on the LAN
 
-# Explicit metadata overlays for models served by llama-swap. Create-only
+# ComfyUI's Roundabout API is reached directly, alongside llama-swap.
+# The backend has no authentication; the placeholder satisfies provider enrollment.
+omniroute_provider_nodes:
+  - ref: comfyui
+    name: comfyui-qwen-image
+    prefix: comfyimage
+    apiType: chat
+    baseUrl: http://192.168.10.70:8188/v1
+    connectionName: comfyui-qwen-image
+    apiKey: unused
+    syncModels: true
+
+# Explicit metadata overlays for local models. Create-only
 # fields are corrected by deleting and recreating only the exact managed row;
 # imported provider catalogs and unrelated dashboard rows are never pruned.
 omniroute_provider_models:
+  - providerRef: comfyui
+    modelId: qwen-image-2.1-turbo
+    apiFormat: images-generations
+    supportedEndpoints: [images]
   - providerRef: providerNode
     modelId: unsloth/gemma-4-e4b-it-qat
     apiFormat: chat-completions

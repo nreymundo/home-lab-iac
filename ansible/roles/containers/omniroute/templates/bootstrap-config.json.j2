@@ -31,6 +31,7 @@
     "apiKey": {{ omniroute_secrets.omniroute_llama_swap_api_key | default('') | to_json }},
     "syncModels": true
   },
+  "providerNodes": {{ omniroute_provider_nodes | to_json }},
   "providerModels": {{ omniroute_provider_models | to_json }},
   "combos": {{ omniroute_combos | to_json }},
   "modelComboMappings": {{ omniroute_model_combo_mappings | to_json }},

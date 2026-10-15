@@ -1,0 +1,18 @@
+FROM {{ comfyui_base_image }}
+
+# Preserve the working gfx1151 ROCm wheels when resolving ComfyUI dependencies.
+RUN python -m pip freeze | grep -E '^(torch|torchvision|torchaudio)==' > /opt/rocm-constraints.txt
+RUN git -C /opt/ComfyUI fetch --depth=1 origin {{ comfyui_version }} && \
+    git -C /opt/ComfyUI checkout --detach FETCH_HEAD && \
+    python -m pip install --constraint /opt/rocm-constraints.txt -r /opt/ComfyUI/requirements.txt
+
+RUN git init /opt/ComfyUI/custom_nodes/ComfyUI-Roundabout && \
+    git -C /opt/ComfyUI/custom_nodes/ComfyUI-Roundabout remote add origin https://github.com/0c0/ComfyUI-Roundabout.git && \
+    git -C /opt/ComfyUI/custom_nodes/ComfyUI-Roundabout fetch --depth=1 origin {{ comfyui_roundabout_version }} && \
+    git -C /opt/ComfyUI/custom_nodes/ComfyUI-Roundabout checkout --detach FETCH_HEAD
+
+COPY roundabout-multipart-refs.patch /tmp/roundabout-multipart-refs.patch
+RUN git -C /opt/ComfyUI/custom_nodes/ComfyUI-Roundabout apply /tmp/roundabout-multipart-refs.patch
+
+# REST reuses ComfyUI's dependencies. MCP is disabled in the compose environment.
+RUN python -m pip check && python -c 'import torch; assert torch.version.hip; print(torch.__version__)'
