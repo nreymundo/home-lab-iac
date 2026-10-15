@@ -18,7 +18,7 @@ spec:
             image:
               # renovate: datasource=docker depName=gitea/gitea registryUrl=https://docker.gitea.com
               repository: docker.gitea.com/gitea
-              tag: 1.25.4
+              tag: 1.27.3
             env:
               TZ: Europe/Berlin
               USER_UID: 99
@@ -60,7 +60,7 @@ spec:
             image:
               # renovate: datasource=docker depName=gitea/gitea registryUrl=https://docker.gitea.com
               repository: docker.gitea.com/gitea
-              tag: 1.25.4
+              tag: 1.27.3
             command:
               - /bin/sh
               - -c
