@@ -49,9 +49,8 @@ operators must be trusted with all sessions on this instance.
 
 ## Custom icon
 
-`camofox.svg` is the editable vector source for the Camofox fox icon used by
-Authentik and Homepage. It contains vector paths rather than an embedded PNG.
-The deployed object is `assets/icons/camofox.svg` on Garage, served as
+Authentik and Homepage reference the Camofox SVG hosted on the assets service.
+The object is `assets/icons/camofox.svg` on Garage, served as
 `image/svg+xml` at `https://assets.web.<cluster-domain>/icons/camofox.svg`.
 
 ## Hermes activation
