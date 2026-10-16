@@ -8,7 +8,7 @@ The interactive browser uses the upstream noVNC plugin.
 
 ## Access
 
-- Interactive browser: `https://browser.lan.<cluster-domain>/vnc.html?autoconnect=true&resize=scale`.
+- Interactive browser: `https://browser.lan.<cluster-domain>/desktop.html`.
   Authentik admits the `camofox-users` group before serving noVNC and its
   WebSocket connection. The bootstrap operator is the initial group member.
   Homepage opens this usable browser interface with Camofox's upstream fox mascot.
@@ -16,12 +16,21 @@ The interactive browser uses the upstream noVNC plugin.
   Traefik applies the existing LAN allowlist; Camofox also requires a Bearer
   token. `/health` is intentionally unauthenticated for probes.
 - noVNC listens on pod port 6080 behind the authenticated ingress. Native VNC
-  stays on container loopback and has no Service or Ingress port. The startup
-  hook creates a blank tab in the `browser-ui` / `desktop` session so the UI is
-  usable immediately, without needing an API call from the operator.
-- API session/browser idle shutdown is disabled because direct mouse/keyboard
-  activity does not refresh API idle counters. The upstream tab reaper cannot
-  be disabled with zero; its timeout is extended to about 24 days.
+  stays on container loopback and has no Service or Ingress port.
+- Opening the Homepage link starts or resumes the `browser-ui` / `desktop`
+  session, then connects noVNC. The launch page uses authenticated same-origin
+  `/tabs` requests; Authentik injects the credential, so it is not exposed to
+  browser JavaScript. Mouse and keyboard activity refresh idle counters, at
+  most once every 30 seconds. There is no periodic keepalive: leaving a page
+  unattended does not keep Firefox alive. Use **Start / resume browser** after
+  an idle disconnect.
+- There is no startup tab hook or timeout override. The pinned image's defaults
+  apply: tabs are reaped after about five minutes without API activity,
+  sessions expire after ten minutes, and Firefox shuts down five minutes after
+  the last session closes (cleanup runs periodically). Camofox briefly prewarms
+  Firefox on service startup, then shuts it down after five minutes if unused.
+  The small API/noVNC services stay available so a later visit or Hermes
+  request can launch Firefox again. Saved login state stays on the PVC.
 - API documentation remains available at the machine hostname
   `/docs`, using the same Bearer credential as other API requests.
 
@@ -95,7 +104,7 @@ Runtime acceptance requires:
 1. The Homepage Browser card opens noVNC through Authentik. The intended user
    can navigate and type in Firefox, while a user outside `camofox-users` is
    denied. Confirm the WebSocket is also authenticated and that a blank tab
-   is present after startup without any prior Hermes/API activity.
+   is created when the launch page opens, rather than at pod startup.
 2. API requests to `/tabs` without a token or with a wrong token return 401;
    the correct token works from the Hermes VM. A token does not bypass the
    machine route's LAN restriction. Direct Service access still requires it.
@@ -104,7 +113,10 @@ Runtime acceptance requires:
    `/stop` rejects that key without the separate admin credential.
 4. A controlled test login survives a new task, a Hermes restart, and a
    Camofox pod replacement once managed persistence is enabled.
-5. Repeat the issue's bot.sannysoft.com and bot-detector.rebrowser.net checks
+5. Leave the browser unattended and verify sessions expire and Firefox exits;
+   reopening the Homepage link must start it again. Active mouse/keyboard input
+   must extend the session. Health/readiness probes must not create tabs.
+6. Repeat the issue's bot.sannysoft.com and bot-detector.rebrowser.net checks
    and compare with the Chromium baseline. `/health` alone does not prove that
    Firefox starts or that the persistence plugin loaded successfully.
 

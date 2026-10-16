@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/v1.32.0/configmap-v1.json
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: camofox-desktop
+  namespace: utils
+data:
+  desktop.html: |
+    <!doctype html>
+    <html lang="en">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Browser</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #171717; color: white; font: 14px sans-serif; }
+      body { display: flex; flex-direction: column; }
+      header { padding: 8px 12px; display: flex; gap: 12px; align-items: center; }
+      button { cursor: pointer; padding: 4px 12px; }
+      iframe { flex: 1; width: 100%; border: 0; }
+    </style>
+    <header>
+      <button id="resume">Start / resume browser</button>
+      <span id="status" role="status">Starting browser…</span>
+    </header>
+    <iframe id="desktop" title="Interactive browser" allow="clipboard-read; clipboard-write"></iframe>
+    <script>
+      const userId = 'browser-ui';
+      const frame = document.getElementById('desktop');
+      const status = document.getElementById('status');
+      let tabId;
+      let starting = false;
+      let lastActivity = 0;
+
+      // Authentik supplies the Bearer credential server-side. No key is sent to this page.
+      async function api(path, options) {
+        const response = await fetch(path, options);
+        if (!response.ok) throw new Error('Browser request failed (' + response.status + ')');
+        return response.json();
+      }
+
+      async function start() {
+        if (starting) return;
+        starting = true;
+        status.textContent = 'Starting browser…';
+        try {
+          const existing = await api('/tabs?userId=' + userId);
+          let tab = existing.tabs.find(item => item.listItemId === 'desktop');
+          if (!tab) {
+            tab = await api('/tabs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, sessionKey: 'desktop' }),
+            });
+          }
+          tabId = tab.tabId || tab.targetId;
+          lastActivity = 0;
+          frame.src = '/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000';
+          status.textContent = 'Browser sleeps after inactivity. Resume here when needed.';
+        } catch (error) {
+          status.textContent = error.message + '. Use Start / resume to retry.';
+        } finally {
+          starting = false;
+        }
+      }
+
+      // Only real input refreshes the API counters: an unattended open page stays idle.
+      async function activity() {
+        if (!tabId || starting || document.hidden || Date.now() - lastActivity < 30000) return;
+        lastActivity = Date.now();
+        try {
+          await api('/tabs/' + encodeURIComponent(tabId) + '/snapshot?userId=' + userId);
+        } catch {
+          tabId = undefined;
+          status.textContent = 'Browser is idle or disconnected. Use Start / resume.';
+        }
+      }
+      frame.addEventListener('load', () => {
+        const desktop = frame.contentDocument;
+        for (const event of ['keydown', 'pointerdown', 'pointermove', 'wheel', 'touchstart']) {
+          desktop.addEventListener(event, activity, { capture: true, passive: true });
+        }
+      });
+      document.getElementById('resume').addEventListener('click', start);
+      start();
+    </script>
+    </html>

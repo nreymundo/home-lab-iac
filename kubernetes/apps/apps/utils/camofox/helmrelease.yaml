@@ -31,10 +31,6 @@ spec:
               VNC_BIND: 0.0.0.0
               VNC_RFB_BIND: 127.0.0.1
               VNC_RESOLUTION: 1920x1080
-              # Direct mouse/keyboard interaction does not update API idle counters.
-              SESSION_TIMEOUT_MS: "0"
-              BROWSER_IDLE_TIMEOUT_MS: "0"
-              TAB_INACTIVITY_MS: "2147483647"
               # Firefox shares the container's memory budget with Node.
               MAX_OLD_SPACE_SIZE: "512"
               MAX_SESSIONS: "2"
@@ -61,35 +57,6 @@ spec:
                 containerPort: 9377
               - name: novnc
                 containerPort: 6080
-            lifecycle:
-              postStart:
-                exec:
-                  command:
-                    - node
-                    - -e
-                    - |
-                      const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-                      (async () => {
-                        for (let attempt = 0; attempt < 60; attempt++) {
-                          try {
-                            const response = await fetch('http://127.0.0.1:9377/tabs', {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: 'Bearer ' + process.env.CAMOFOX_ACCESS_KEY,
-                              },
-                              body: JSON.stringify({
-                                userId: 'browser-ui', sessionKey: 'desktop',
-                              }),
-                              signal: AbortSignal.timeout(30000),
-                            });
-                            if (response.ok) return;
-                          } catch {}
-                          await sleep(2000);
-                        }
-                        console.error('Could not open the initial interactive browser tab');
-                        process.exit(1);
-                      })();
             probes:
               liveness:
                 enabled: true
@@ -148,6 +115,11 @@ spec:
                 service:
                   identifier: main
                   port: novnc
+              - path: /tabs
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
       api:
         enabled: true
         className: traefik
@@ -171,3 +143,13 @@ spec:
             claimName: camofox
         globalMounts:
           - path: /root/.camofox
+      desktop:
+        enabled: true
+        type: configMap
+        name: camofox-desktop
+        advancedMounts:
+          main:
+            main:
+              - path: /usr/share/novnc/desktop.html
+                subPath: desktop.html
+                readOnly: true

@@ -6,4 +6,5 @@ components:
   - ../../../../components/ingress/traefik-base
 resources:
   - helmrelease.yaml
+  - desktop-configmap.yaml
   - camofox-secrets.sops.yaml
