@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/v1.32.0/persistentvolumeclaim-v1.json
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: camofox
+  namespace: utils
+  annotations:
+    helm.sh/resource-policy: keep
+  labels:
+    recurring-job.longhorn.io/source: enabled
+    recurring-job.longhorn.io/backup-daily: enabled
+    recurring-job.longhorn.io/backup-weekly: enabled
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-r2
+  resources:
+    requests:
+      storage: 3Gi

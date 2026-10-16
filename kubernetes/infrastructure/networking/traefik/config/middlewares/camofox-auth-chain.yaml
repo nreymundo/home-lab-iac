@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/traefik.io/middleware_v1alpha1.json
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: camofox-auth-chain
+  namespace: traefik
+spec:
+  chain:
+    middlewares:
+      - name: default-headers
+      - name: crowdsec-bouncer
+        namespace: crowdsec
+      - name: authentik-auth-camofox
+        namespace: authentik

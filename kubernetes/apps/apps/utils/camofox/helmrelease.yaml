@@ -1,0 +1,155 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: camofox
+  namespace: utils
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        replicas: 1
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=jo-inc/camofox-browser registryUrl=https://ghcr.io
+              repository: ghcr.io/jo-inc/camofox-browser
+              tag: 1.18.1
+            env:
+              TZ: Europe/Berlin
+              CAMOFOX_PORT: "9377"
+              CAMOFOX_BIND_HOST: 0.0.0.0
+              CAMOFOX_CRASH_REPORT_ENABLED: "false"
+              ENABLE_VNC: "1"
+              VNC_BIND: 0.0.0.0
+              VNC_RFB_BIND: 127.0.0.1
+              VNC_RESOLUTION: 1920x1080
+              # Firefox shares the container's memory budget with Node.
+              MAX_OLD_SPACE_SIZE: "512"
+              MAX_SESSIONS: "2"
+              MAX_TABS_PER_SESSION: "5"
+              MAX_TABS_GLOBAL: "10"
+              CAMOFOX_ACCESS_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: camofox-secrets
+                    key: ACCESS_KEY
+              # Hermes sends one Bearer token for browsing and cookie import.
+              CAMOFOX_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: camofox-secrets
+                    key: ACCESS_KEY
+              CAMOFOX_ADMIN_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: camofox-secrets
+                    key: ADMIN_KEY
+            ports:
+              - name: http
+                containerPort: 9377
+              - name: novnc
+                containerPort: 6080
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 9377
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /vnc.html
+                    port: 6080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 9377
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 100m
+                memory: 768Mi
+              limits:
+                memory: 3Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 9377
+          novnc:
+            port: 6080
+    ingress:
+      main:
+        annotations:
+          external-dns.kubernetes.io/hostname: browser.lan.${CLUSTER_DOMAIN}
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-camofox-auth-chain@kubernetescrd
+        hosts:
+          - host: browser.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: novnc
+              - path: /tabs
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+      api:
+        enabled: true
+        className: traefik
+        annotations:
+          external-dns.kubernetes.io/hostname: browser-api.lan.${CLUSTER_DOMAIN}
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-lan-allowlist@kubernetescrd
+        hosts:
+          - host: browser-api.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: camofox
+        globalMounts:
+          - path: /root/.camofox
+      desktop:
+        enabled: true
+        type: configMap
+        name: camofox-desktop
+        advancedMounts:
+          main:
+            main:
+              - path: /usr/share/novnc/desktop.html
+                subPath: desktop.html
+                readOnly: true

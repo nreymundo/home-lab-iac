@@ -23,8 +23,11 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Validate changes with the most direct evidence available for the kind of change you made.
 
 ## Change Discipline
+- Before editing, check the planned changes against every applicable repo and skill requirement, including ownership, reference patterns, asset formats, and validation. Do not replace those requirements with implementation preferences.
 - For an unfamiliar configuration or integration change, finish evidence gathering and state the complete proposed source change, validation, and expected rollout before editing.
-- A request to explain, review, or pause supersedes earlier approval. Do not edit, commit, revert, or push until fresh approval is given.
+- During already-authorized implementation, questions, explanations, status requests, and reviews are steering, not cancellation. Answer or review, then continue the authorized work, including fixes within the requested scope. Do not require fresh approval solely because the user asked a question or requested a review.
+- Stop mutations when the user explicitly asks to pause, stop, or perform a read-only review, withdraws approval, or changes the scope in a way that requires clarification. A standalone review request does not authorize implementing its findings.
+- Carry authorized changes through the required validation and requested delivery steps, including commits and pushes when authorized. Do not substitute a findings report or a promise for an explicitly requested fix. If a step is blocked, state the concrete blocker and complete the unaffected work without asking again for permission already granted.
 
 ## Editor Schema Metadata
 - For new YAML files, and for existing YAML files lacking a schema directive that are being materially modified, add a `# yaml-language-server: $schema=<url>` directive pointing at the maintained schema when one exists. This is the root file's domain: GitHub Actions workflows, tooling configs (`.pre-commit-config.yaml`, `.checkov.yaml`, and similar), and any other YAML outside an owned subtree. Do not retrofit directives into files you are not otherwise touching.
