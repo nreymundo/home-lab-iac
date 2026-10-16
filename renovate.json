@@ -175,6 +175,17 @@
       "groupName": "Hindsight"
     },
     {
+      "description": "Group Mailflow frontend and backend image updates",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "maathimself/mailflow-frontend",
+        "ghcr.io/maathimself/mailflow-frontend",
+        "maathimself/mailflow-backend",
+        "ghcr.io/maathimself/mailflow-backend"
+      ],
+      "groupName": "Mailflow"
+    },
+    {
       "description": "Group Observability Stack",
       "matchPackageNames": ["/loki/", "/alloy/", "/kube-prometheus-stack/"],
       "groupName": "observability"
