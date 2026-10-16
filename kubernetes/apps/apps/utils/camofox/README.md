@@ -3,21 +3,27 @@
 Camofox runs in `utils` with one replica and a Longhorn-backed `/root/.camofox`
 volume. Profile state contains site credentials; only trusted operators should
 have access to this service. The initial limits allow two browser sessions and
-five tabs per session, with a 3Gi container memory limit. Telemetry and noVNC
-are disabled.
+five tabs per session, with a 3Gi container memory limit. Telemetry is disabled.
+The interactive browser uses the upstream noVNC plugin.
 
 ## Access
 
-- Human API documentation: `https://browser.lan.<cluster-domain>/docs`.
-  Authentik admits the `camofox-users` group and injects the backend Bearer
-  token. The bootstrap operator is the initial group member. Homepage links
-  here using Camofox's upstream fox mascot.
+- Interactive browser: `https://browser.lan.<cluster-domain>/vnc.html?autoconnect=true&resize=scale`.
+  Authentik admits the `camofox-users` group before serving noVNC and its
+  WebSocket connection. The bootstrap operator is the initial group member.
+  Homepage opens this usable browser interface with Camofox's upstream fox mascot.
 - Hermes and scripts: `https://browser-api.lan.<cluster-domain>`.
   Traefik applies the existing LAN allowlist; Camofox also requires a Bearer
   token. `/health` is intentionally unauthenticated for probes.
-- The API is not a browser desktop. noVNC is disabled; no ports 6080/5900 are
-  published. Add an authenticated visual route separately if interactive
-  browser login is needed.
+- noVNC listens on pod port 6080 behind the authenticated ingress. Native VNC
+  stays on container loopback and has no Service or Ingress port. The startup
+  hook creates a blank tab in the `browser-ui` / `desktop` session so the UI is
+  usable immediately, without needing an API call from the operator.
+- API session/browser idle shutdown is disabled because direct mouse/keyboard
+  activity does not refresh API idle counters. The upstream tab reaper cannot
+  be disabled with zero; its timeout is extended to about 24 days.
+- API documentation remains available at the machine hostname
+  `/docs`, using the same Bearer credential as other API requests.
 
 The app-local `camofox-secrets.sops.yaml` owns `camofox-secrets` in `utils`.
 Kube-replicator delivers the same Secret to `authentik`, whose HelmRelease
@@ -64,6 +70,14 @@ browser:
 Camofox's persistence plugin is enabled by default in the pinned image. Hermes
 must send its stable profile-scoped identity for later tasks to reuse logins.
 
+To let Hermes operate the exact browser session visible in noVNC, configure
+the same profile with `CAMOFOX_USER_ID=browser-ui`,
+`CAMOFOX_SESSION_KEY=desktop`, and `CAMOFOX_ADOPT_EXISTING_TAB=true`. Current
+Hermes supports these external-session settings and skips destructive session
+cleanup. Without these overrides, Hermes uses its own session on the shared
+Firefox display; a manual login in `browser-ui` does not log Hermes's separate
+identity into that site.
+
 ## Rollout and acceptance
 
 Storage reconciles through `apps-storage`; the workload and source Secret
@@ -78,8 +92,10 @@ Static checks must render the app, storage, production app aggregator,
 Authentik install/config, and Traefik config, then run the repository hooks.
 Runtime acceptance requires:
 
-1. A fresh browser is redirected from `/docs` to Authentik; the intended user
-   can return and use the docs, while a user outside `camofox-users` is denied.
+1. The Homepage Browser card opens noVNC through Authentik. The intended user
+   can navigate and type in Firefox, while a user outside `camofox-users` is
+   denied. Confirm the WebSocket is also authenticated and that a blank tab
+   is present after startup without any prior Hermes/API activity.
 2. API requests to `/tabs` without a token or with a wrong token return 401;
    the correct token works from the Hermes VM. A token does not bypass the
    machine route's LAN restriction. Direct Service access still requires it.

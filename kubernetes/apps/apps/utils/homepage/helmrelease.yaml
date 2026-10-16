@@ -165,8 +165,8 @@ spec:
                 href: https://audiomuse.lan.${CLUSTER_DOMAIN}
             - Browser:
                 icon: https://raw.githubusercontent.com/jo-inc/camofox-browser/v1.18.1/fox.png
-                description: "Camofox browser API and documentation"
-                href: https://browser.lan.${CLUSTER_DOMAIN}/docs
+                description: "Interactive Camofox browser"
+                href: https://browser.lan.${CLUSTER_DOMAIN}/vnc.html?autoconnect=true&resize=scale
             - Chatterbox:
                 icon: https://i.imgur.com/w9QDXK0.png
                 description: "Text-to-speech API"
