@@ -34,7 +34,13 @@ data:
       // Authentik supplies the Bearer credential server-side. No key is sent to this page.
       async function api(path, options) {
         const response = await fetch(path, options);
-        if (!response.ok) throw new Error('Browser request failed (' + response.status + ')');
+        if (!response.ok) {
+          const detail = await response.json().catch(() => ({}));
+          const error = new Error(detail.error || 'Browser request failed (' + response.status + ')');
+          error.status = response.status;
+          error.code = detail.code;
+          throw error;
+        }
         return response.json();
       }
 
@@ -45,6 +51,22 @@ data:
         try {
           const existing = await api('/tabs?userId=' + userId);
           let tab = existing.tabs.find(item => item.listItemId === 'desktop');
+          if (tab) {
+            // Camofox can list a tab after its Firefox window has been closed.
+            try {
+              await api('/tabs/' + encodeURIComponent(tab.tabId || tab.targetId) + '/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, expression: 'true' }),
+              });
+            } catch (error) {
+              if ([404, 410].includes(error.status) || error.code === 'session_expired') {
+                tab = undefined;
+              } else {
+                throw error;
+              }
+            }
+          }
           if (!tab) {
             tab = await api('/tabs', {
               method: 'POST',
@@ -69,9 +91,14 @@ data:
         lastActivity = Date.now();
         try {
           await api('/tabs/' + encodeURIComponent(tabId) + '/snapshot?userId=' + userId);
-        } catch {
-          tabId = undefined;
-          status.textContent = 'Browser is idle or disconnected. Use Start / resume.';
+          status.textContent = 'Browser sleeps after inactivity. Resume here when needed.';
+        } catch (error) {
+          if ([404, 410].includes(error.status) || error.code === 'session_expired') {
+            tabId = undefined;
+            status.textContent = 'Browser is idle or disconnected. Use Start / resume.';
+          } else {
+            status.textContent = 'Connection interrupted. Activity will retry as you use the browser.';
+          }
         }
       }
       frame.addEventListener('load', () => {
