@@ -2285,7 +2285,6 @@ data:
           slug: "camofox"
         attrs:
           name: "Browser"
-          icon: "https://raw.githubusercontent.com/jo-inc/camofox-browser/v1.18.1/fox.png"
           provider: !KeyOf camofox-provider
           group: "Local Services"
 
