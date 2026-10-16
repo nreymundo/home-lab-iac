@@ -1,74 +1,27 @@
 ---
-- name: Ensure selected ComfyUI model download profiles exist
-  ansible.builtin.assert:
-    that:
-      - item in comfyui_model_download_profiles
-    fail_msg: "Unknown ComfyUI model download profile: {{ item }}"
-  loop: "{{ comfyui_model_download_profile_names }}"
-
-- name: Initialize selected ComfyUI model profile downloads
-  ansible.builtin.set_fact:
-    comfyui_model_profile_downloads: []
-
-- name: Resolve selected ComfyUI model profile downloads
-  ansible.builtin.set_fact:
-    comfyui_model_profile_downloads: >-
-      {{ comfyui_model_profile_downloads + comfyui_model_download_profiles[item] }}
-  loop: "{{ comfyui_model_download_profile_names }}"
-
-- name: Resolve effective ComfyUI model downloads
-  ansible.builtin.set_fact:
-    comfyui_model_downloads_effective: >-
-      {{ comfyui_model_profile_downloads + comfyui_model_downloads }}
-
-- name: Download optional ComfyUI models
+- name: Download optional Qwen Image Turbo models
   ansible.builtin.command:
     argv:
       - docker
       - run
       - --rm
+      - --entrypoint
+      - /opt/venv/bin/hf
       - -e
-      - HOME=/root
-      - -e
-      - "HF_HOME={{ comfyui_environment['HF_HOME'] }}"
-      - -e
-      - "HF_HUB_ENABLE_HF_TRANSFER={{ comfyui_environment['HF_HUB_ENABLE_HF_TRANSFER'] }}"
+      - HF_XET_HIGH_PERFORMANCE=1
       - -v
       - "{{ comfyui_models_dir }}:/root/comfy-models"
       - "{{ comfyui_image }}"
-      - /bin/bash
-      - -lc
-      - >-
-        bash /opt/{{ item.script }} {{ item.args | default([]) | map('quote') | join(' ') }}
-  loop: "{{ comfyui_model_downloads_effective }}"
+      - download
+      - "{{ comfyui_model_repo }}"
+      - "{{ item }}"
+      - --revision
+      - "{{ comfyui_model_revision }}"
+      - --local-dir
+      - /root/comfy-models
+  loop: "{{ comfyui_model_files }}"
   register: comfyui_model_download
-  changed_when: "'Downloading' in comfyui_model_download.stdout"
+  changed_when: "'Downloading' in comfyui_model_download.stderr"
   when:
+    - comfyui_model_downloads_enabled | bool
     - not ansible_check_mode
-    - comfyui_model_downloads_effective | length > 0
-
-- name: Find ComfyUI model download staging directories
-  ansible.builtin.find:
-    paths: "{{ comfyui_models_dir }}"
-    patterns: ".hf_stage_*"
-    file_type: directory
-    recurse: false
-  register: comfyui_model_download_staging_dirs
-  when:
-    - not ansible_check_mode
-    - comfyui_model_download_cleanup_cache | bool
-    - comfyui_model_downloads_effective | length > 0
-
-- name: Remove ComfyUI model download cache and staging directories
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
-  loop: >-
-    {{
-      [comfyui_models_dir + '/.cache/huggingface']
-      + (comfyui_model_download_staging_dirs.files | default([]) | map(attribute='path') | list)
-    }}
-  when:
-    - not ansible_check_mode
-    - comfyui_model_download_cleanup_cache | bool
-    - comfyui_model_downloads_effective | length > 0

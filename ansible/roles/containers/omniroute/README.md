@@ -10,7 +10,7 @@ clients or remove LiteLLM.
 
 - `settings`, `cacheSettings`, `compressionSettings`, and `comboDefaults`
 - API-key provider connections plus required native OAuth providers
-- one OpenAI-compatible provider node and its connection
+- the llama-swap `providerNode` plus additional `providerNodes` and their connections
 - explicitly managed provider-model metadata
 - combos and model-combo mappings
 - Settings aliases that remain explicitly managed
@@ -54,6 +54,39 @@ Settings comparisons cover only declared fields. Provider-specific updates
 merge with the observed object so OAuth/runtime fields not owned by Ansible are
 preserved. Catalog import changes count as reconciliation changes, while
 telemetry and timestamps are ignored.
+
+## Qwen image API
+
+The `comfyui-qwen-image` provider reaches Roundabout directly at
+`http://192.168.10.70:8188/v1`; requests do not pass through LiteLLM. The pinned
+OmniRoute 3.8.51 image supports both generation and multipart editing with this
+OpenAI-compatible provider. Model metadata uses `apiFormat: images-generations`
+and `supportedEndpoints: [images]`.
+
+Clients use `https://omniroute.lan.${CLUSTER_DOMAIN}/v1` with an OmniRoute key and
+model `comfyimage/qwen-image-2.1-turbo`. Both `/images/generations` JSON requests and `/images/edits`
+multipart requests accept `response_format=b64_json`. Use that format so clients
+receive image bytes without needing access to ComfyUI's image URLs. For example:
+
+```bash
+curl --fail "$OMNIROUTE_BASE_URL/images/generations" \
+  -H "Authorization: Bearer $OMNIROUTE_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"comfyimage/qwen-image-2.1-turbo","prompt":"A red ceramic teapot","size":"1024x1024","response_format":"b64_json"}'
+curl --fail "$OMNIROUTE_BASE_URL/images/edits" \
+  -H "Authorization: Bearer $OMNIROUTE_API_KEY" \
+  -F model=comfyimage/qwen-image-2.1-turbo -F 'prompt=Change the teapot to blue' \
+  -F image=@/path/to/teapot.png -F response_format=b64_json
+```
+
+Use an existing key with `modelAccessMode: all`, such as `hermes`, `systems`,
+`sillytavern`, or `omniroute-operator`. Restricted workload keys retain their
+existing access. Do not wrap this provider in an image combo on the current
+pin: the generation combo handler filters against the built-in image catalog
+and rejects custom provider targets even with correct `supportedEndpoints`
+metadata. Its image handlers also do not resolve Settings model aliases.
+The provider-qualified name supports both endpoints. ComfyUI's existing idle
+restart job continues to release GPU memory after inactivity.
 
 ## Validation
 

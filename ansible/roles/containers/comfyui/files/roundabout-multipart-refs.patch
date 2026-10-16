@@ -1,0 +1,18 @@
+--- a/gateway/pipeline.py
++++ b/gateway/pipeline.py
+@@ -330,2 +330,8 @@
+         images = [await load_image_input(str(req.image))]
++    # Multipart edits supply bytes separately from req.image. Reference-only
++    # graphs must receive them through the same slots used by JSON requests.
++    if images and not ref_imgs and (spec.references or {}).get("images") and not spec.binds("image"):
++        ref_imgs = [base64.b64encode(image).decode("ascii") for image in images]
++        req = req.model_copy(update={"reference_images": ref_imgs, "image": None})
++        images = []
+     if not mask_input and req.mask:
+--- a/gateway/handlers.py
++++ b/gateway/handlers.py
+@@ -250,3 +250,3 @@
+         name = part.name
+-        if name == "image":
++        if name in {"image", "image[]"}:
+             images.append(await part.read(decode=False))

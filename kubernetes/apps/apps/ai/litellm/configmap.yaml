@@ -74,6 +74,22 @@ data:
           input_cost_per_token: 0.00000075
           output_cost_per_token: 0.0000045
 
+      - model_name: local/image
+        model_info:
+          id: ad05e73c-5ea8-52f6-a958-d04043943833
+          mode: image_generation
+        litellm_params:
+          # Generic OpenAI-compatible images; avoid GPT Image parameter assumptions.
+          model: hosted_vllm/qwen-image-2.1-turbo
+          custom_llm_provider: hosted_vllm
+          api_base: http://comfyui.external-proxy.svc.cluster.local:8188/v1
+          # ComfyUI is internal; client authentication stays at LiteLLM.
+          api_key: unused
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          timeout: 900
+          response_format: b64_json
+
       - model_name: openai/chatterbox
         model_info:
           mode: audio_speech

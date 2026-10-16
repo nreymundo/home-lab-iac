@@ -14,6 +14,8 @@
     - "{{ comfyui_user_dir }}"
     - "{{ comfyui_cache_dir }}"
     - "{{ comfyui_workflows_dir }}"
+    - "{{ comfyui_build_dir }}"
+    - "{{ comfyui_api_config_dir }}"
 
 - name: Ensure ComfyUI model directories exist
   ansible.builtin.file:
@@ -29,43 +31,42 @@
   register: comfyui_docker_compose_version
   changed_when: false
 
-- name: Pull ComfyUI toolbox image
-  ansible.builtin.command: docker pull {{ comfyui_image | quote }}
-  register: comfyui_image_pull
-  changed_when: >-
-    'Downloaded newer image' in comfyui_image_pull.stdout
-    or 'Pull complete' in comfyui_image_pull.stdout
-    or 'Status: Downloaded' in comfyui_image_pull.stdout
-  when: not ansible_check_mode
+- name: Render pinned ComfyUI image build definition
+  ansible.builtin.template:
+    src: Dockerfile.j2
+    dest: "{{ comfyui_build_dir }}/Dockerfile"
+    owner: root
+    group: root
+    mode: "0644"
+  register: comfyui_build_definition
 
-- name: Check ComfyUI seed marker
-  ansible.builtin.stat:
-    path: "{{ comfyui_seed_marker }}"
-  register: comfyui_seed_marker_stat
+- name: Install ComfyUI gateway multipart reference fix
+  ansible.builtin.copy:
+    src: roundabout-multipart-refs.patch
+    dest: "{{ comfyui_build_dir }}/roundabout-multipart-refs.patch"
+    owner: root
+    group: root
+    mode: "0644"
+  register: comfyui_gateway_patch
 
-- name: Seed ComfyUI bundled state from image
+- name: Check local ComfyUI image
   ansible.builtin.command:
-    argv:
-      - docker
-      - run
-      - --rm
-      - --entrypoint
-      - /bin/bash
-      - -v
-      - "{{ comfyui_base_dir }}:/seed"
-      - "{{ comfyui_image }}"
-      - -lc
-      - >-
-        set -euo pipefail;
-        mkdir -p /seed/input /seed/user /seed/workflows/api;
-        cp -an /opt/ComfyUI/input/. /seed/input/;
-        cp -an /opt/ComfyUI/user/. /seed/user/;
-        cp -an /opt/comfy-workflows/. /seed/workflows/api/;
-        date -u +%Y-%m-%dT%H:%M:%SZ > /seed/.seeded
+    argv: [docker, image, inspect, "{{ comfyui_image }}"]
+  register: comfyui_local_image
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Build pinned ComfyUI ROCm image
+  ansible.builtin.command:
+    argv: [docker, build, --tag, "{{ comfyui_image }}", "{{ comfyui_build_dir }}"]
   changed_when: true
+  notify: Restart ComfyUI container
   when:
     - not ansible_check_mode
-    - comfyui_seed_force | bool or not comfyui_seed_marker_stat.stat.exists
+    - >-
+      comfyui_build_definition.changed or comfyui_gateway_patch.changed or
+      comfyui_local_image.rc != 0 or comfyui_force_rebuild | bool
 
 - name: Render ComfyUI Docker Compose file
   ansible.builtin.template:

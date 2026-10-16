@@ -1018,8 +1018,15 @@ def reconcile(config, client, actions, warnings):
         if connection_id and spec.get("syncModels"):
             changed = sync_models(client, connection_id, spec.get("name") or spec["providerId"], actions) or changed
 
-    node_spec = config.get("providerNode") or {}
-    if node_spec.get("enabled"):
+    node_specs = [config["providerNode"]] if config.get("providerNode") else []
+    node_specs.extend(config.get("providerNodes") or [])
+    node_refs = {spec["ref"] for spec in node_specs}
+    for node_spec in node_specs:
+        if not node_spec.get("enabled", True):
+            message = "provider node %s: unavailable" % node_spec["name"]
+            actions.append(message)
+            warnings.append(message)
+            continue
         node_id, node_changed = ensure_provider_node(client, node_spec, actions)
         changed = node_changed or changed
         if node_id:
@@ -1028,14 +1035,9 @@ def reconcile(config, client, actions, warnings):
             changed = connection_changed or changed
             if connection_id and node_spec.get("syncModels", True):
                 changed = sync_models(client, connection_id, node_spec["name"], actions) or changed
-    else:
-        message = "provider node: unavailable; llama-swap routes are not ready"
-        actions.append(message)
-        warnings.append(message)
-
     for spec in config.get("providerModels") or []:
-        if spec["providerRef"] not in provider_ids and spec["providerRef"] == "providerNode":
-            warnings.append("provider-node metadata skipped because llama-swap is unavailable")
+        if spec["providerRef"] in node_refs and spec["providerRef"] not in provider_ids:
+            warnings.append("provider-node metadata skipped because %s is unavailable" % spec["providerRef"])
             continue
         changed = ensure_provider_model(client, spec, provider_ids, actions) or changed
 

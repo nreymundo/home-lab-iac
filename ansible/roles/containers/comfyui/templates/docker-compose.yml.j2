@@ -15,6 +15,7 @@ services:
 {% endfor %}
     ports:
       - "{{ comfyui_bind_address }}:{{ comfyui_host_port }}:{{ comfyui_container_port }}"
+      - "{{ comfyui_openai_api_bind_address }}:{{ comfyui_openai_api_host_port }}:{{ comfyui_container_port }}"
     environment:
 {% for name, value in comfyui_environment.items() %}
       {{ name }}: "{{ value }}"
@@ -26,6 +27,7 @@ services:
       - "{{ comfyui_input_dir }}:/opt/ComfyUI/input"
       - "{{ comfyui_user_dir }}:/opt/ComfyUI/user"
       - "{{ comfyui_workflows_dir }}:/opt/comfy-workflows"
+      - "{{ comfyui_api_config_dir }}:/etc/comfyui-api:ro"
     command:
       - /bin/bash
       - -lc

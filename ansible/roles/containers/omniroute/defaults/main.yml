@@ -113,6 +113,9 @@ omniroute_llama_swap_api_type: chat
 omniroute_llama_swap_base_url: "http://192.168.10.70:8080/v1"
 omniroute_llama_swap_connection_name: "llama-swap"
 
+# Additional OpenAI-compatible endpoints, reconciled with the llama-swap node.
+omniroute_provider_nodes: []
+
 # Only these settings are owned. Unrelated dashboard and OIDC values survive.
 omniroute_settings:
   autoRoutingEnabled: false
