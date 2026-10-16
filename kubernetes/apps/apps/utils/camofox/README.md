@@ -11,7 +11,7 @@ The interactive browser uses the upstream noVNC plugin.
 - Interactive browser: `https://browser.lan.<cluster-domain>/desktop.html`.
   Authentik admits the `camofox-users` group before serving noVNC and its
   WebSocket connection. The bootstrap operator is the initial group member.
-  Homepage opens this usable browser interface with Camofox's upstream fox mascot.
+  Homepage opens this usable browser interface with the custom Camofox SVG.
 - Hermes and scripts: `https://browser-api.lan.<cluster-domain>`.
   Traefik applies the existing LAN allowlist; Camofox also requires a Bearer
   token. `/health` is intentionally unauthenticated for probes.
@@ -46,6 +46,13 @@ The human and machine routes are two authentication methods for the same
 trusted browser service. Session `userId` values separate browser state but
 are not user authorization boundaries. API-key holders and admitted human
 operators must be trusted with all sessions on this instance.
+
+## Custom icon
+
+`camofox.svg` is the editable vector source for the Camofox fox icon used by
+Authentik and Homepage. It contains vector paths rather than an embedded PNG.
+The deployed object is `assets/icons/camofox.svg` on Garage, served as
+`image/svg+xml` at `https://assets.web.<cluster-domain>/icons/camofox.svg`.
 
 ## Hermes activation
 

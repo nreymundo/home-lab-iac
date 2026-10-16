@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">Camofox</title>
+  <defs>
+    <linearGradient id="fur" x1="0" y1="0" x2="0.8" y2="1">
+      <stop stop-color="#fa6c50"/>
+      <stop offset="1" stop-color="#bb2743"/>
+    </linearGradient>
+    <linearGradient id="tail" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#e94c4e"/>
+      <stop offset="1" stop-color="#8f2045"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#tail)" d="M142 175c38 12 64-5 65-37-12 9-27 8-38 2 39-4 46-38 76-44-9 20 4 46-4 73-9 38-42 61-79 58l-35-15z"/>
+  <path fill="#fff1dd" d="M208 137c-4-23 9-35 37-41-13 14-15 24-17 37-6-2-13-1-20 4z"/>
+  <path fill="#ac2943" d="M74 159c-10 19-14 41-8 60 11 9 27 13 46 13s35-4 46-13c6-19 2-41-8-60z"/>
+  <path fill="#fff1dd" d="M89 175c-7 14-6 31 1 43l22-7 22 7c7-12 8-29 1-43z"/>
+  <path fill="url(#fur)" stroke="#8f2045" stroke-linejoin="round" stroke-width="4" d="M39 91 28 20c25 3 44 16 56 31 18-7 38-7 56 0 12-15 31-28 56-31l-11 71c10 19 13 40 8 59-12 27-48 43-81 43s-69-16-81-43c-5-19-2-40 8-59z"/>
+  <path fill="#76293f" d="m40 36 9 49 24-26c-9-10-20-18-33-23zm144 0-9 49-24-26c9-10 20-18 33-23z"/>
+  <path fill="#fda08a" d="m47 48 5 25 12-14zm130 0-5 25-12-14z"/>
+  <path fill="#fff1dd" d="M33 126c24 0 42 11 57 31l22 11 22-11c15-20 33-31 57-31 1 16-6 28-20 38l-17-2-3 13c-12 8-25 12-39 12s-27-4-39-12l-3-13-17 2c-14-10-21-22-20-38z"/>
+  <path fill="#92283f" d="M55 101c10-15 27-18 40-7-14-3-25-1-40 7zm114 0c-10-15-27-18-40-7 14-3 25-1 40 7z"/>
+  <ellipse cx="77" cy="117" rx="17" ry="20" fill="#652638"/>
+  <ellipse cx="147" cy="117" rx="17" ry="20" fill="#652638"/>
+  <ellipse cx="78" cy="119" rx="12" ry="15" fill="#e7b84d"/>
+  <ellipse cx="146" cy="119" rx="12" ry="15" fill="#e7b84d"/>
+  <ellipse cx="81" cy="119" rx="6" ry="11" fill="#352535"/>
+  <ellipse cx="143" cy="119" rx="6" ry="11" fill="#352535"/>
+  <circle cx="75" cy="112" r="4" fill="#fff"/>
+  <circle cx="149" cy="112" r="4" fill="#fff"/>
+  <path fill="#482738" d="M99 151q13-7 26 0-2 14-13 14t-13-14z"/>
+  <path fill="none" stroke="#703443" stroke-linecap="round" stroke-width="3" d="M112 165v6m-12 2q12 10 24 0"/>
+</svg>

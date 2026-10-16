@@ -2285,6 +2285,7 @@ data:
           slug: "camofox"
         attrs:
           name: "Browser"
+          icon: "https://assets.web.${CLUSTER_DOMAIN}/icons/camofox.svg"
           provider: !KeyOf camofox-provider
           group: "Local Services"
 
