@@ -1845,19 +1845,25 @@ data:
 
 
     def worker_startup_hook():
-        patch_chatgpt_codex_model_catalog()
-        zai_coding_catalog.worker_startup_hook()
-        patch_chatgpt_codex_reasoning_validator()
-        patch_chatgpt_responses_request_transform()
+        # Only virtual-key discovery remains active. CacheBypassHandler is
+        # registered separately in config.yaml's litellm_settings.callbacks.
         patch_virtual_key_model_discovery_routes()
-        patch_model_list_metadata()
-        patch_proxy_model_info_endpoints()
-        patch_public_model_cost_map_endpoint()
-        patch_file_authoritative_router_settings()
-        patch_router_response_retries()
-        patch_responses_iterator_cache_callback()
-        vllm_model_discovery.worker_startup_hook()
-        chatgpt_responses_streaming_patch.worker_startup_hook()
+
+        # Retained implementations and mounts allow selective restoration by
+        # uncommenting calls below. Review compatibility before re-enabling.
+        # patch_chatgpt_codex_model_catalog()
+        # zai_coding_catalog.worker_startup_hook()
+        # patch_chatgpt_codex_reasoning_validator()
+        # patch_chatgpt_responses_request_transform()
+        # patch_model_list_metadata()
+        # patch_proxy_model_info_endpoints()
+        # patch_public_model_cost_map_endpoint()
+        # Incompatible with v1.105.1: upstream no longer passes config_data.
+        # patch_file_authoritative_router_settings()
+        # patch_router_response_retries()
+        # patch_responses_iterator_cache_callback()
+        # vllm_model_discovery.worker_startup_hook()
+        # chatgpt_responses_streaming_patch.worker_startup_hook()
 
   sitecustomize.py: |
     import litellm_startup
