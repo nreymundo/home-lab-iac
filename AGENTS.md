@@ -8,6 +8,7 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Do not add attribution to a person, tool, or AI assistant unless explicitly instructed.
 
 ## Git Workflow
+- When creating or updating a pull request, follow the pull request description policy in `CONTRIBUTING.md`.
 - Before committing or pushing, verify `git status`, the current branch and upstream, and the intended commit target. Use a dedicated Git worktree when concurrent branch changes or isolated amendment work makes the active worktree ambiguous. Before amending or force-pushing, confirm the target is the branch tip and that no unrelated commits will be rewritten.
 
 ## What To Do

@@ -42,6 +42,12 @@ git push origin feature/my-change
 - If a PR is opened from a bot or machine account, this ensures the main account is still pulled in for review.
 - Pull request titles should follow the same conventional format as commit subjects.
 
+#### Pull Request Descriptions
+
+- Default to 1–3 short sentences explaining the problem and resulting change, plus one concise validation line.
+- Add detail only when needed to explain a material risk or non-obvious decision.
+- Omit file-by-file summaries, implementation walkthroughs, task history, repeated context, and boilerplate headings or checklists.
+
 ---
 
 ## Pre-commit Hooks
