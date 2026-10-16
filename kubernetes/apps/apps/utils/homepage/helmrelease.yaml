@@ -163,10 +163,6 @@ spec:
                 icon: audiomuse-ai.png
                 description: "AI-powered music analysis and playlist generation"
                 href: https://audiomuse.lan.${CLUSTER_DOMAIN}
-            - Browser:
-                icon: https://assets.web.${CLUSTER_DOMAIN}/icons/camofox.svg
-                description: "Interactive Camofox browser"
-                href: https://browser.lan.${CLUSTER_DOMAIN}/desktop.html
             - Chatterbox:
                 icon: https://i.imgur.com/w9QDXK0.png
                 description: "Text-to-speech API"
@@ -295,6 +291,10 @@ spec:
                 icon: https://raw.githubusercontent.com/bookorbit/bookorbit/main/docs/images/bookorbit-icon.png
                 description: "Self-hosted reading library"
                 href: https://bookorbit.lan.${CLUSTER_DOMAIN}
+            - Browser:
+                icon: https://assets.web.${CLUSTER_DOMAIN}/icons/camofox.svg
+                description: "Interactive Camofox browser"
+                href: https://browser.lan.${CLUSTER_DOMAIN}/desktop.html
             - Dawarich:
                 icon: dawarich.png
                 description: "Location history tracker"
