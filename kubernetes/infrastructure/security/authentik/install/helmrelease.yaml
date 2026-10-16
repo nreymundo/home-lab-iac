@@ -303,6 +303,11 @@ spec:
             secretKeyRef:
               name: llama-auth-secret
               key: BASIC_AUTH
+        - name: CAMOFOX_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: camofox-secrets
+              key: ACCESS_KEY
         - name: FRIGATE_PROXY_SECRET
           valueFrom:
             secretKeyRef:
@@ -376,7 +381,7 @@ spec:
     server:
       replicas: 2
       deploymentAnnotations:
-        secret.reloader.stakater.com/reload: "authentik-env,tautulli-basic-auth-pbk-secret"
+        secret.reloader.stakater.com/reload: "authentik-env,tautulli-basic-auth-pbk-secret,camofox-secrets"
       resources:
         requests:
           cpu: 100m
@@ -412,7 +417,7 @@ spec:
     worker:
       replicas: 2
       deploymentAnnotations:
-        secret.reloader.stakater.com/reload: "authentik-env,tautulli-basic-auth-pbk-secret"
+        secret.reloader.stakater.com/reload: "authentik-env,tautulli-basic-auth-pbk-secret,camofox-secrets"
       resources:
         requests:
           cpu: 500m
