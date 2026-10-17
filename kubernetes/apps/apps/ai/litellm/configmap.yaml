@@ -100,8 +100,6 @@ data:
           model: openrouter/*
           custom_llm_provider: openrouter
           litellm_credential_name: openrouter
-          input_cost_per_token: 0.0
-          output_cost_per_token: 0.0
 
       - model_name: openrouter/free
         model_info:
@@ -110,8 +108,14 @@ data:
           model: openrouter/openrouter/free
           custom_llm_provider: openrouter
           litellm_credential_name: openrouter
-          input_cost_per_token: 0.0
-          output_cost_per_token: 0.0
+
+      - model_name: openrouter/~typesafe/jev-latest
+        model_info:
+          mode: decisions
+        litellm_params:
+          model: openrouter/~typesafe/jev-latest
+          custom_llm_provider: openrouter
+          litellm_credential_name: openrouter
 
       - model_name: hosted_vllm/qwen/qwen3-reranker-0.6b
         model_info:
@@ -391,6 +395,7 @@ data:
       model_group_alias:
         cloud/coder: zai-coding/glm-5.3
         cloud/deep: chatgpt/gpt-6-sol
+        cloud/decision: openrouter/~typesafe/jev-latest
         cloud/fast: chatgpt/gpt-6-luna
         cloud/general: zai-coding/glm-5.3
         local/analysis: hosted_vllm/unsloth/qwen3.8-27b-analysis
