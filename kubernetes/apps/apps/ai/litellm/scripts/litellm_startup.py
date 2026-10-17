@@ -1,5 +1,6 @@
 import os
 import sys
+from functools import wraps
 
 import litellm
 from litellm.llms.chatgpt.responses.transformation import ChatGPTResponsesAPIConfig
@@ -101,6 +102,40 @@ def _apply_chatgpt_reasoning_summary_default(request, model=None):
 
     reasoning["summary"] = summary_default
     request["reasoning"] = reasoning
+
+
+def patch_chatgpt_responses_string_input():
+    """Backport non-empty string normalization from upstream PR #38191."""
+    original_transform = ChatGPTResponsesAPIConfig.transform_responses_api_request
+    if getattr(original_transform, "_chatgpt_responses_string_input_patch", False):
+        return
+
+    @wraps(original_transform)
+    def transform_responses_api_request(
+        self,
+        model,
+        input,
+        response_api_optional_request_params,
+        litellm_params,
+        headers,
+    ):
+        if isinstance(input, str) and input != "":
+            input = [
+                {"role": "user", "content": [{"type": "input_text", "text": input}]}
+            ]
+        return original_transform(
+            self,
+            model=model,
+            input=input,
+            response_api_optional_request_params=response_api_optional_request_params,
+            litellm_params=litellm_params,
+            headers=headers,
+        )
+
+    transform_responses_api_request._chatgpt_responses_string_input_patch = True
+    ChatGPTResponsesAPIConfig.transform_responses_api_request = (
+        transform_responses_api_request
+    )
 
 
 def patch_chatgpt_responses_request_transform():
@@ -460,9 +495,10 @@ def patch_file_authoritative_router_settings():
 
 
 def worker_startup_hook():
-    # Only virtual-key discovery remains active. CacheBypassHandler is
-    # registered separately in config.yaml's litellm_settings.callbacks.
+    # Keep virtual-key discovery and the narrow upstream string-input backport
+    # active. CacheBypassHandler is registered separately in config.yaml.
     patch_virtual_key_model_discovery_routes()
+    patch_chatgpt_responses_string_input()
 
     # Retained implementations and mounts allow selective restoration by
     # uncommenting calls below. Review compatibility before re-enabling.
