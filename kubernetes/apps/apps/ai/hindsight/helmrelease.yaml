@@ -33,6 +33,8 @@ spec:
               HINDSIGHT_API_LLM_PROVIDER: openai
               HINDSIGHT_API_LLM_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
               HINDSIGHT_API_LLM_MODEL: cloud/fast
+              # GPT reasoning models reject Hindsight's per-operation temperature defaults.
+              HINDSIGHT_API_LLM_TEMPERATURE: "none"
               HINDSIGHT_API_REFLECT_LLM_MODEL: cloud/fast
               HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: English
               HINDSIGHT_API_LLM_STRICT_SCHEMA: "false"
@@ -133,6 +135,8 @@ spec:
               HINDSIGHT_API_LLM_PROVIDER: openai
               HINDSIGHT_API_LLM_BASE_URL: http://litellm-main.ai.svc.cluster.local:4000/v1
               HINDSIGHT_API_LLM_MODEL: cloud/fast
+              # GPT reasoning models reject Hindsight's per-operation temperature defaults.
+              HINDSIGHT_API_LLM_TEMPERATURE: "none"
               HINDSIGHT_API_REFLECT_LLM_MODEL: cloud/fast
               HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: English
               HINDSIGHT_API_LLM_STRICT_SCHEMA: "false"
