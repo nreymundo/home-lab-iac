@@ -8,48 +8,6 @@ data:
   config.yaml: |
     model_list:
       # Expose only ChatGPT models verified against this subscription.
-      - model_name: openai/gpt-6.1-sol
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-6.1-sol
-
-      - model_name: openai/gpt-6-sol
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-6-sol
-
-      - model_name: openai/gpt-6-astra
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-6-astra
-
-      - model_name: openai/gpt-6-luna
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-6-luna
-
-      - model_name: openai/gpt-5.6-sol
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-5.6-sol
-
-      - model_name: openai/gpt-5.6-terra
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-5.6-terra
-
-      - model_name: openai/gpt-5.6-luna
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-5.6-luna
-
       - model_name: chatgpt/gpt-6.1-sol
         model_info:
           mode: responses
@@ -605,6 +563,15 @@ data:
       store_model_in_db: false
 
     router_settings:
+      # Preserve the OpenAI-compatible names without duplicate deployments.
+      model_group_alias:
+        openai/gpt-6.1-sol: chatgpt/gpt-6.1-sol
+        openai/gpt-6-sol: chatgpt/gpt-6-sol
+        openai/gpt-6-astra: chatgpt/gpt-6-astra
+        openai/gpt-6-luna: chatgpt/gpt-6-luna
+        openai/gpt-5.6-sol: chatgpt/gpt-5.6-sol
+        openai/gpt-5.6-terra: chatgpt/gpt-5.6-terra
+        openai/gpt-5.6-luna: chatgpt/gpt-5.6-luna
       routing_strategy: simple-shuffle
       num_retries: 2
       timeout: 6000
