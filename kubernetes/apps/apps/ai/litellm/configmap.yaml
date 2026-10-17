@@ -52,7 +52,6 @@ data:
 
       - model_name: comfyimage/qwen-image-2.1-turbo
         model_info:
-          id: ad05e73c-5ea8-52f6-a958-d04043943833
           mode: image_generation
         litellm_params:
           # Generic OpenAI-compatible images; avoid GPT Image parameter assumptions.
