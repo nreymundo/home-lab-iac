@@ -1,8 +1,24 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 components:
   - ../../../../components/bjw-s-defaults
   - ../../../../components/ingress/traefik-base
+
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+  - name: litellm-config
+    namespace: ai
+    behavior: merge
+    files:
+      - scripts/cache_bypass.py
+      - scripts/chatgpt_responses_streaming_patch.py
+      - scripts/chatgpt_codex_catalog.py
+      - scripts/zai_coding_catalog.py
+      - scripts/litellm_startup.py
+      - scripts/sitecustomize.py
+      - scripts/vllm_model_discovery.py
 
 resources:
   - configmap.yaml

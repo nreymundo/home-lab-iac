@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/v1/configmap.json
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -309,10 +310,6 @@ data:
       - model_name: zai-coding/glm-5.3
         model_info:
           mode: chat
-          max_input_tokens: 1000000
-          max_output_tokens: 128000
-          supports_function_calling: true
-          supports_reasoning: true
           reasoning_options:
             - type: effort
               values:
@@ -320,14 +317,10 @@ data:
                 - high
                 - max
           default_reasoning_effort: max
-          supports_tool_choice: true
         litellm_params:
           model: zai/glm-5.3
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
-          input_cost_per_token: 0.0000014
-          cache_read_input_token_cost: 0.00000026
-          output_cost_per_token: 0.0000044
           tags:
             - zai
             - coding-plan
@@ -335,10 +328,6 @@ data:
       - model_name: zai-coding/glm-5.3-flash
         model_info:
           mode: chat
-          max_input_tokens: 1048576
-          max_output_tokens: 131072
-          supports_function_calling: true
-          supports_reasoning: true
           reasoning_options:
             - type: effort
               values:
@@ -346,110 +335,153 @@ data:
                 - high
                 - max
           default_reasoning_effort: max
-          supports_tool_choice: true
           input_modalities:
             - text
             - image
           supports_image_input: true
-          supports_vision: true
         litellm_params:
           model: zai/glm-5.3-flash
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
-          input_cost_per_token: 0.000000075
-          cache_read_input_token_cost: 0.000000015
-          output_cost_per_token: 0.00000025
           tags:
             - zai
             - coding-plan
 
-      - model_name: zai-coding/glm-5.2
+      # Keep OmniRoute client-facing names available during the gateway migration.
+      - model_name: cloud/fast
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-6-luna
+
+      - model_name: cloud/deep
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-6-sol
+
+      - model_name: cloud/general
         model_info:
           mode: chat
-          max_input_tokens: 1000000
-          max_output_tokens: 131072
-          supports_function_calling: true
-          supports_reasoning: true
           reasoning_options:
             - type: effort
               values:
+                - low
                 - high
                 - max
-          default_reasoning_effort: high
-          supports_tool_choice: true
+          default_reasoning_effort: max
         litellm_params:
-          model: zai/glm-5.2
+          model: zai/glm-5.3
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
-          input_cost_per_token: 0.0000014
-          cache_read_input_token_cost: 0.00000026
-          output_cost_per_token: 0.0000044
           tags:
             - zai
             - coding-plan
 
-      - model_name: zai-coding/glm-5.1
+      - model_name: cloud/coder
         model_info:
           mode: chat
-          max_input_tokens: 200000
-          max_output_tokens: 128000
-          supports_function_calling: true
-          supports_reasoning: true
           reasoning_options:
-            - type: toggle
-          supports_tool_choice: true
+            - type: effort
+              values:
+                - low
+                - high
+                - max
+          default_reasoning_effort: max
         litellm_params:
-          model: zai/glm-5.1
+          model: zai/glm-5.3
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
-          input_cost_per_token: 0.0000014
-          cache_read_input_token_cost: 0.00000026
-          output_cost_per_token: 0.0000044
           tags:
             - zai
             - coding-plan
 
-      - model_name: zai-coding/glm-5-turbo
+      - model_name: embedding-qwen3-4b-2560
         model_info:
-          mode: chat
-          max_input_tokens: 200000
-          max_output_tokens: 128000
-          supports_function_calling: true
-          supports_reasoning: true
-          reasoning_options:
-            - type: toggle
-          supports_tool_choice: true
+          mode: embedding
+          max_input_tokens: 16384
+          output_vector_size: 2560
         litellm_params:
-          model: zai/glm-5-turbo
-          custom_llm_provider: zai
-          litellm_credential_name: zai-coding
-          input_cost_per_token: 0.0000012
-          cache_read_input_token_cost: 0.00000024
-          output_cost_per_token: 0.000004
+          model: hosted_vllm/majentik/qwen3-embedding-4b
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
           tags:
-            - zai
-            - coding-plan
+            - llama-swap
+            - pve3
+          guardrails: []
 
-      - model_name: zai-coding/glm-4.7
+      - model_name: local-stt-large
         model_info:
-          mode: chat
-          max_input_tokens: 200000
-          max_output_tokens: 128000
-          supports_function_calling: true
-          supports_reasoning: true
-          reasoning_options:
-            - type: toggle
-          supports_tool_choice: true
+          mode: audio_transcription
         litellm_params:
-          model: zai/glm-4.7
-          custom_llm_provider: zai
-          litellm_credential_name: zai-coding
-          input_cost_per_token: 0.0000006
-          cache_read_input_token_cost: 0.00000011
-          output_cost_per_token: 0.0000022
+          model: hosted_vllm/whisper/large-v3-q5_0
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
           tags:
-            - zai
-            - coding-plan
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local-stt-fast
+        model_info:
+          mode: audio_transcription
+        litellm_params:
+          model: hosted_vllm/whisper/large-v3-turbo-q5_0
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
+      - model_name: local-tts
+        model_info:
+          mode: audio_speech
+          health_check_voice: Abigail.wav
+        litellm_params:
+          model: openai/chatterbox
+          custom_llm_provider: openai
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+
+      - model_name: openrouter/voyageai/rerank-2.5-lite
+        model_info:
+          mode: rerank
+          max_input_tokens: 8192
+        litellm_params:
+          # LiteLLM has no native OpenRouter rerank provider; hosted_vllm is the
+          # OpenAI-compatible rerank client that posts to {api_base}/rerank.
+          model: hosted_vllm/voyageai/rerank-2.5-lite
+          custom_llm_provider: hosted_vllm
+          api_base: https://openrouter.ai/api/v1
+          litellm_credential_name: openrouter
+          # Voyage rerank pricing, in USD/token: $0.02 per million input tokens.
+          input_cost_per_token: 0.00000002
+          output_cost_per_token: 0.0
+
+      - model_name: comfyimage/qwen-image-2.1-turbo
+        model_info:
+          mode: image_generation
+        litellm_params:
+          # Generic OpenAI-compatible images; avoid GPT Image parameter assumptions.
+          model: hosted_vllm/qwen-image-2.1-turbo
+          custom_llm_provider: hosted_vllm
+          api_base: http://comfyui.external-proxy.svc.cluster.local:8188/v1
+          # ComfyUI is internal; client authentication stays at LiteLLM.
+          api_key: unused
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          timeout: 900
+          response_format: b64_json
 
     credential_list:
       - credential_name: llama-swap
@@ -496,1362 +528,3 @@ data:
       cooldown_time: 5
       retry_after: 0
       enable_pre_call_checks: false
-
-  cache_bypass.py: |
-    import json
-    from typing import Literal
-
-    from litellm.integrations.custom_logger import CustomLogger
-    from litellm.proxy.proxy_server import DualCache, UserAPIKeyAuth
-
-
-    class CacheBypassHandler(CustomLogger):
-        async def async_pre_call_hook(
-            self,
-            user_api_key_dict: UserAPIKeyAuth,
-            cache: DualCache,
-            data: dict,
-            call_type: Literal[
-                "completion",
-                "text_completion",
-                "embeddings",
-                "image_generation",
-                "moderation",
-                "audio_transcription",
-            ],
-        ):
-            metadata = getattr(user_api_key_dict, "metadata", {}) or {}
-
-            if isinstance(metadata, str):
-                try:
-                    metadata = json.loads(metadata)
-                except json.JSONDecodeError:
-                    metadata = {}
-
-            if not isinstance(metadata, dict):
-                metadata = {}
-
-            if metadata.get("bypass_redis_cache") is True:
-                cache_controls = data.setdefault("cache", {})
-                cache_controls["no-cache"] = True
-                cache_controls["no-store"] = True
-
-            drop_request_params = metadata.get("drop_request_params")
-            if isinstance(drop_request_params, list):
-                for param in drop_request_params:
-                    if isinstance(param, str):
-                        data.pop(param, None)
-
-            drop_request_params_by_model = metadata.get("drop_request_params_by_model")
-            model = data.get("model")
-            if isinstance(drop_request_params_by_model, dict) and isinstance(model, str):
-                model_drop_params = drop_request_params_by_model.get(model)
-                if isinstance(model_drop_params, list):
-                    for param in model_drop_params:
-                        if isinstance(param, str):
-                            data.pop(param, None)
-
-            return data
-
-
-    proxy_handler_instance = CacheBypassHandler()
-
-  chatgpt_responses_streaming_patch.py: |
-    import json
-
-    import httpx
-    import litellm
-    from litellm._logging import verbose_logger
-    from litellm.exceptions import MidStreamFallbackError
-    from litellm.llms.chatgpt.responses.transformation import (
-        ChatGPTResponsesAPIConfig,
-        record_output_item_chunk,
-        record_output_text_chunk,
-    )
-    from litellm.llms.custom_httpx.llm_http_handler import (
-        BaseLLMHTTPHandler,
-        get_async_httpx_client,
-    )
-    from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler
-    from litellm.responses.streaming_iterator import ResponsesAPIStreamingIterator
-    from litellm.types.llms.openai import ResponsesAPIStreamEvents
-    from litellm.types.utils import CallTypes
-    from litellm.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
-
-
-    _original_async_response_api_handler = BaseLLMHTTPHandler.async_response_api_handler
-
-
-    class ChatGPTResponsesStreamingIterator(ResponsesAPIStreamingIterator):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self._streamed_output_items = {}
-            self._text_only_output_items = {}
-            self._suppress_completed_response_logging = False
-
-        def _handle_logging_completed_response(self):
-            if self._suppress_completed_response_logging:
-                return
-            return super()._handle_logging_completed_response()
-
-        async def __anext__(self):
-            try:
-                return await super().__anext__()
-            except StopAsyncIteration:
-                if self.completed_response is not None:
-                    raise
-                error = litellm.APIError(
-                    status_code=502,
-                    message="ChatGPT Responses stream ended without a terminal event",
-                    model=self.model,
-                    llm_provider=self.custom_llm_provider or "chatgpt",
-                )
-                raise MidStreamFallbackError(
-                    message=str(error),
-                    model=self.model,
-                    llm_provider=self.custom_llm_provider or "chatgpt",
-                    original_exception=error,
-                    generated_content=self._generated_content,
-                    is_pre_first_chunk=not self._yielded_first_chunk,
-                )
-
-        def _process_chunk(self, chunk):
-            if not chunk or chunk == "[DONE]":
-                return super()._process_chunk(chunk)
-
-            try:
-                parsed_chunk = json.loads(chunk)
-            except json.JSONDecodeError:
-                return super()._process_chunk(chunk)
-
-            if not isinstance(parsed_chunk, dict):
-                return super()._process_chunk(chunk)
-
-            event_type = parsed_chunk.get("type")
-            if event_type == ResponsesAPIStreamEvents.OUTPUT_ITEM_DONE:
-                record_output_item_chunk(
-                    parsed_chunk=parsed_chunk,
-                    output_items=self._streamed_output_items,
-                )
-            elif event_type == ResponsesAPIStreamEvents.OUTPUT_TEXT_DONE:
-                record_output_text_chunk(
-                    parsed_chunk=parsed_chunk,
-                    output_items=self._streamed_output_items,
-                    text_only_items=self._text_only_output_items,
-                )
-            elif event_type in (
-                ResponsesAPIStreamEvents.RESPONSE_COMPLETED,
-                ResponsesAPIStreamEvents.RESPONSE_INCOMPLETE,
-            ):
-                response_payload = parsed_chunk.get("response")
-                if isinstance(response_payload, dict) and not response_payload.get("output"):
-                    merged_items = {**self._text_only_output_items}
-                    merged_items.update(self._streamed_output_items)
-                    if merged_items:
-                        parsed_chunk = dict(parsed_chunk)
-                        parsed_chunk["response"] = dict(response_payload)
-                        parsed_chunk["response"]["output"] = [
-                            item for _, item in sorted(merged_items.items())
-                        ]
-
-            return super()._process_chunk(json.dumps(parsed_chunk))
-
-
-    async def _chatgpt_streaming_response_api_handler(
-        self,
-        model,
-        input,
-        responses_api_provider_config,
-        response_api_optional_request_params,
-        custom_llm_provider,
-        litellm_params,
-        logging_obj,
-        extra_headers=None,
-        extra_body=None,
-        timeout=None,
-        client=None,
-        fake_stream=False,
-        litellm_metadata=None,
-        shared_session=None,
-    ):
-        if (
-            custom_llm_provider != "chatgpt"
-            or not isinstance(responses_api_provider_config, ChatGPTResponsesAPIConfig)
-        ):
-            return await _original_async_response_api_handler(
-                self,
-                model=model,
-                input=input,
-                responses_api_provider_config=responses_api_provider_config,
-                response_api_optional_request_params=response_api_optional_request_params,
-                custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
-                logging_obj=logging_obj,
-                extra_headers=extra_headers,
-                extra_body=extra_body,
-                timeout=timeout,
-                client=client,
-                fake_stream=fake_stream,
-                litellm_metadata=litellm_metadata,
-                shared_session=shared_session,
-            )
-
-        if client is None or not isinstance(client, AsyncHTTPHandler):
-            async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
-                shared_session=shared_session,
-            )
-        else:
-            async_httpx_client = client
-
-        headers = responses_api_provider_config.validate_environment(
-            headers=response_api_optional_request_params.get("extra_headers", {}) or {},
-            model=model,
-            litellm_params=litellm_params,
-        )
-        headers.setdefault("Accept", "text/event-stream")
-        if extra_headers:
-            headers.update(extra_headers)
-
-        api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
-        )
-        data = responses_api_provider_config.transform_responses_api_request(
-            model=model,
-            input=input,
-            response_api_optional_request_params=response_api_optional_request_params,
-            litellm_params=litellm_params,
-            headers=headers,
-        )
-        data = BaseResponsesAPIConfig.normalize_responses_api_request_dict(data)
-        return_stream = bool(response_api_optional_request_params.get("stream", False))
-        if extra_body:
-            data.update(extra_body)
-        data["stream"] = True
-
-        request_context = {"input": input}
-        try:
-            request_context.update(response_api_optional_request_params)
-        except Exception:
-            pass
-        request_context["litellm_params"] = dict(litellm_params)
-
-        logging_obj.pre_call(
-            input=input,
-            api_key="",
-            additional_args={
-                "complete_input_dict": data,
-                "api_base": api_base,
-                "headers": headers,
-            },
-        )
-
-        try:
-            req = async_httpx_client.client.build_request(
-                "POST",
-                api_base,
-                headers=headers,
-                json=data,
-                timeout=timeout or float(response_api_optional_request_params.get("timeout", 0)),
-            )
-            response = await async_httpx_client.client.send(req, stream=True)
-            response.raise_for_status()
-        except Exception as exc:
-            error_response = getattr(exc, "response", None)
-            if error_response is not None:
-                try:
-                    await error_response.aread()
-                except Exception:
-                    pass
-            raise self._handle_error(
-                e=exc,
-                provider_config=responses_api_provider_config,
-            )
-
-        verbose_logger.debug("Using local ChatGPT Responses streaming patch")
-        iterator = ChatGPTResponsesStreamingIterator(
-            response=response,
-            model=model,
-            logging_obj=logging_obj,
-            responses_api_provider_config=responses_api_provider_config,
-            litellm_metadata=litellm_metadata,
-            custom_llm_provider=custom_llm_provider,
-            request_data=request_context,
-            call_type=CallTypes.responses.value,
-        )
-        if return_stream or fake_stream:
-            return iterator
-
-        iterator._suppress_completed_response_logging = True
-        async for _ in iterator:
-            pass
-        completed_response = iterator._get_completed_response_object()
-        if completed_response is None:
-            raise ValueError("ChatGPT Responses stream ended without a completed response")
-        return completed_response
-
-
-    def patch_chatgpt_responses_streaming():
-        if getattr(BaseLLMHTTPHandler.async_response_api_handler, "_chatgpt_streaming_patch", False):
-            return
-        _chatgpt_streaming_response_api_handler._chatgpt_streaming_patch = True
-        BaseLLMHTTPHandler.async_response_api_handler = _chatgpt_streaming_response_api_handler
-
-
-    def worker_startup_hook():
-        patch_chatgpt_responses_streaming()
-
-  chatgpt_codex_catalog.py: |
-    from copy import deepcopy
-
-
-    SUPPORTED_OPENAI_PARAMS = [
-        "stream",
-        "tools",
-        "tool_choice",
-        "parallel_tool_calls",
-        "reasoning_effort",
-        "verbosity",
-        "extra_headers",
-    ]
-
-    REASONING_LEVELS = ["none", "low", "medium", "high", "xhigh", "max"]
-
-    CHATGPT_CODEX_MODELS = {
-        "gpt-5.6-sol": {
-            "display_name": "GPT-5.6-Sol",
-            "description": "Latest frontier agentic coding model.",
-            "context_window": 372000,
-            "max_context_window": 372000,
-            "max_output_tokens": 128000,
-            "effective_context_window_percent": 95,
-            "default_reasoning_level": "medium",
-            "default_reasoning_summary": "none",
-            "default_verbosity": "low",
-            "input_modalities": ["text", "image"],
-            "web_search_tool_type": "text_and_image",
-            "supports_image_detail_original": True,
-            "supported_in_api": True,
-            "visibility": "list",
-            "priority": 1,
-            "service_tiers": [
-                {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
-            ],
-            "additional_speed_tiers": ["fast"],
-            "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
-            "input_cost_per_token": 0.000005,
-            "output_cost_per_token": 0.00003,
-            "cache_read_input_token_cost": 0.0000005,
-            "cache_creation_input_token_cost": 0.00000625,
-            "input_cost_per_token_above_272k_tokens": 0.00001,
-            "cache_read_input_token_cost_above_272k_tokens": 0.000001,
-            "cache_creation_input_token_cost_above_272k_tokens": 0.0000125,
-            "output_cost_per_token_above_272k_tokens": 0.000045,
-        },
-        "gpt-5.6-terra": {
-            "display_name": "GPT-5.6-Terra",
-            "description": "Balanced agentic coding model for everyday work.",
-            "context_window": 372000,
-            "max_context_window": 372000,
-            "max_output_tokens": 128000,
-            "effective_context_window_percent": 95,
-            "default_reasoning_level": "medium",
-            "default_reasoning_summary": "none",
-            "default_verbosity": "low",
-            "input_modalities": ["text", "image"],
-            "web_search_tool_type": "text_and_image",
-            "supports_image_detail_original": True,
-            "supported_in_api": True,
-            "visibility": "list",
-            "priority": 2,
-            "service_tiers": [
-                {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
-            ],
-            "additional_speed_tiers": ["fast"],
-            "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
-            "input_cost_per_token": 0.000002,
-            "output_cost_per_token": 0.000012,
-            "cache_read_input_token_cost": 0.0000002,
-            "cache_creation_input_token_cost": 0.0000025,
-            "input_cost_per_token_above_272k_tokens": 0.000004,
-            "cache_read_input_token_cost_above_272k_tokens": 0.0000004,
-            "cache_creation_input_token_cost_above_272k_tokens": 0.000005,
-            "output_cost_per_token_above_272k_tokens": 0.000018,
-        },
-        "gpt-5.6-luna": {
-            "display_name": "GPT-5.6-Luna",
-            "description": "Fast and affordable agentic coding model.",
-            "context_window": 372000,
-            "max_context_window": 372000,
-            "max_output_tokens": 128000,
-            "effective_context_window_percent": 95,
-            "default_reasoning_level": "medium",
-            "default_reasoning_summary": "none",
-            "default_verbosity": "low",
-            "input_modalities": ["text", "image"],
-            "web_search_tool_type": "text_and_image",
-            "supports_image_detail_original": True,
-            "supported_in_api": True,
-            "visibility": "list",
-            "priority": 3,
-            "service_tiers": [
-                {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
-            ],
-            "additional_speed_tiers": ["fast"],
-            "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
-            "input_cost_per_token": 0.0000002,
-            "output_cost_per_token": 0.0000012,
-            "cache_read_input_token_cost": 0.00000002,
-            "cache_creation_input_token_cost": 0.00000025,
-            "input_cost_per_token_above_272k_tokens": 0.0000004,
-            "cache_read_input_token_cost_above_272k_tokens": 0.00000004,
-            "cache_creation_input_token_cost_above_272k_tokens": 0.0000005,
-            "output_cost_per_token_above_272k_tokens": 0.0000018,
-        },
-        "gpt-5.5": {
-            "display_name": "GPT-5.5",
-            "description": "Frontier model for complex coding, research, and real-world work.",
-            "context_window": 272000,
-            "max_context_window": 272000,
-            "max_output_tokens": 128000,
-            "effective_context_window_percent": 95,
-            "default_reasoning_level": "medium",
-            "default_reasoning_summary": "none",
-            "default_verbosity": "low",
-            "input_modalities": ["text", "image"],
-            "web_search_tool_type": "text_and_image",
-            "supports_image_detail_original": True,
-            "supported_in_api": True,
-            "visibility": "list",
-            "priority": 7,
-            "service_tiers": [
-                {"id": "priority", "name": "Fast", "description": "1.5x speed, increased usage"}
-            ],
-            "additional_speed_tiers": ["fast"],
-            "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh"],
-            "input_cost_per_token": 0.000005,
-            "output_cost_per_token": 0.00003,
-        },
-        "gpt-5.4-mini": {
-            "display_name": "GPT-5.4-Mini",
-            "description": "Small, fast, and cost-efficient model for simpler coding tasks.",
-            "context_window": 272000,
-            "max_context_window": 272000,
-            "max_output_tokens": 128000,
-            "effective_context_window_percent": 95,
-            "default_reasoning_level": "medium",
-            "default_reasoning_summary": "none",
-            "default_verbosity": "medium",
-            "input_modalities": ["text", "image"],
-            "web_search_tool_type": "text_and_image",
-            "supports_image_detail_original": True,
-            "supported_in_api": True,
-            "visibility": "list",
-            "priority": 23,
-            "service_tiers": [],
-            "additional_speed_tiers": [],
-            "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["low", "medium", "high", "xhigh"],
-            "input_cost_per_token": 0.00000075,
-            "output_cost_per_token": 0.0000045,
-        },
-        "codex-auto-review": {
-            "display_name": "Codex Auto Review",
-            "description": "Automatic approval review model for Codex.",
-            "context_window": 272000,
-            "max_context_window": 1000000,
-            "max_output_tokens": 128000,
-            "effective_context_window_percent": 95,
-            "default_reasoning_level": "medium",
-            "default_reasoning_summary": "none",
-            "default_verbosity": "low",
-            "input_modalities": ["text", "image"],
-            "web_search_tool_type": "text_and_image",
-            "supported_in_api": True,
-            "visibility": "hide",
-            "priority": 43,
-            "service_tiers": [],
-            "additional_speed_tiers": [],
-            "truncation_policy": {"mode": "tokens", "limit": 10000},
-            "supported_reasoning_efforts": ["none", "low", "medium", "high", "xhigh"],
-            "input_cost_per_token": 0.0,
-            "output_cost_per_token": 0.0,
-        },
-    }
-
-    PUBLIC_MODEL_PREFIX = "openai/"
-    BACKEND_MODEL_PREFIX = "chatgpt/"
-
-
-    def get_chatgpt_codex_slug(model):
-        if not isinstance(model, str):
-            return None
-        if model in CHATGPT_CODEX_MODELS:
-            return model
-        for prefix in (PUBLIC_MODEL_PREFIX, BACKEND_MODEL_PREFIX):
-            if model.startswith(prefix):
-                slug = model[len(prefix) :]
-                return slug if slug in CHATGPT_CODEX_MODELS else None
-        return None
-
-
-    def get_chatgpt_codex_model(model):
-        slug = get_chatgpt_codex_slug(model)
-        if slug is None:
-            return None
-        return deepcopy(CHATGPT_CODEX_MODELS[slug])
-
-
-    def is_public_chatgpt_codex_model(model):
-        info = get_chatgpt_codex_model(model)
-        return bool(
-            info
-            and info.get("supported_in_api") is True
-            and info.get("visibility") != "hide"
-        )
-
-
-    def _reasoning_support_flags(info):
-        supported_efforts = set(info.get("supported_reasoning_efforts", REASONING_LEVELS))
-        flags = {
-            f"supports_{level}_reasoning_effort": level in supported_efforts
-            for level in REASONING_LEVELS
-        }
-        flags["supports_minimal_reasoning_effort"] = "minimal" in supported_efforts
-        flags["supports_none_reasoning_effort"] = "none" in supported_efforts
-        return flags
-
-
-    def _base_metadata(slug, info):
-        supports_vision = "image" in info["input_modalities"]
-        metadata = {
-            "codex_model_slug": slug,
-            "display_name": info["display_name"],
-            "description": info["description"],
-            "litellm_provider": "chatgpt",
-            "mode": "responses",
-            "context_window": info["context_window"],
-            "max_input_tokens": info["context_window"],
-            "max_context_window": info["max_context_window"],
-            "max_output_tokens": info["max_output_tokens"],
-            "max_tokens": info["max_output_tokens"],
-            "effective_context_window_percent": info["effective_context_window_percent"],
-            "supports_reasoning": True,
-            "supported_reasoning_levels": [
-                level
-                for level in REASONING_LEVELS
-                if level in info.get("supported_reasoning_efforts", REASONING_LEVELS)
-            ],
-            "default_reasoning_level": info["default_reasoning_level"],
-            "supports_reasoning_summaries": True,
-            "default_reasoning_summary": info["default_reasoning_summary"],
-            "supports_verbosity": True,
-            "support_verbosity": True,
-            "default_verbosity": info["default_verbosity"],
-            "input_modalities": list(info["input_modalities"]),
-            "supports_vision": supports_vision,
-            "supports_image_input": supports_vision,
-            "supports_image_detail_original": info.get(
-                "supports_image_detail_original", False
-            ),
-            "supports_web_search": True,
-            "web_search_tool_type": info["web_search_tool_type"],
-            "supports_function_calling": True,
-            "supports_parallel_function_calling": True,
-            "supports_parallel_tool_calls": True,
-            "supported_openai_params": list(SUPPORTED_OPENAI_PARAMS),
-            "supported_in_api": info["supported_in_api"],
-            "visibility": info["visibility"],
-            "priority": info["priority"],
-            "service_tiers": deepcopy(info["service_tiers"]),
-            "additional_speed_tiers": list(info["additional_speed_tiers"]),
-            "truncation_policy": deepcopy(info["truncation_policy"]),
-            "input_cost_per_token": info["input_cost_per_token"],
-            "output_cost_per_token": info["output_cost_per_token"],
-        }
-        for key in (
-            "cache_read_input_token_cost",
-            "cache_creation_input_token_cost",
-            "input_cost_per_token_above_272k_tokens",
-            "cache_read_input_token_cost_above_272k_tokens",
-            "cache_creation_input_token_cost_above_272k_tokens",
-            "output_cost_per_token_above_272k_tokens",
-        ):
-            if key in info:
-                metadata[key] = info[key]
-        metadata.update(_reasoning_support_flags(info))
-        return metadata
-
-
-    def model_metadata_for(model):
-        slug = get_chatgpt_codex_slug(model)
-        if slug is None:
-            return None
-        return _base_metadata(slug, CHATGPT_CODEX_MODELS[slug])
-
-
-    def litellm_model_cost_for(model):
-        metadata = model_metadata_for(model)
-        if metadata is None:
-            return None
-        return deepcopy(metadata)
-
-
-    def public_model_name_for(model):
-        slug = get_chatgpt_codex_slug(model)
-        if slug is None:
-            return None
-        return f"{PUBLIC_MODEL_PREFIX}{slug}"
-
-
-    def backend_model_name_for(model):
-        slug = get_chatgpt_codex_slug(model)
-        if slug is None:
-            return None
-        return f"{BACKEND_MODEL_PREFIX}{slug}"
-
-
-    def iter_model_cost_entries():
-        for slug in CHATGPT_CODEX_MODELS:
-            info = litellm_model_cost_for(slug)
-            yield slug, deepcopy(info)
-            yield f"{BACKEND_MODEL_PREFIX}{slug}", deepcopy(info)
-            yield f"{PUBLIC_MODEL_PREFIX}{slug}", deepcopy(info)
-
-  zai_coding_catalog.py: |
-    from copy import deepcopy
-
-    import litellm
-    from litellm.llms.zai.chat.transformation import ZAIChatConfig
-
-
-    ZAI_CODING_MODELS = {
-        "glm-5.3": {
-            "context_window": 1000000,
-            "max_output_tokens": 128000,
-            "input_cost_per_token": 0.0000014,
-            "cache_read_input_token_cost": 0.00000026,
-            "output_cost_per_token": 0.0000044,
-            "reasoning_options": [{"type": "effort", "values": ["low", "high", "max"]}],
-            "default_reasoning_effort": "max",
-            "source": "https://openrouter.ai/z-ai/glm-5.3/api",
-        },
-        "glm-5.3-flash": {
-            "context_window": 1048576,
-            "max_output_tokens": 131072,
-            "input_cost_per_token": 0.000000075,
-            "cache_read_input_token_cost": 0.000000015,
-            "output_cost_per_token": 0.00000025,
-            "reasoning_options": [{"type": "effort", "values": ["low", "high", "max"]}],
-            "default_reasoning_effort": "max",
-            "supports_vision": True,
-            "source": "https://openrouter.ai/z-ai/glm-5.3-flash/api",
-        },
-        "glm-5.2": {
-            "context_window": 1000000,
-            "max_output_tokens": 131072,
-            "input_cost_per_token": 0.0000014,
-            "cache_read_input_token_cost": 0.00000026,
-            "output_cost_per_token": 0.0000044,
-            "reasoning_options": [{"type": "effort", "values": ["high", "max"]}],
-            "default_reasoning_effort": "high",
-            "source": "https://openrouter.ai/z-ai/glm-5.2/api",
-        },
-        "glm-5.1": {
-            "context_window": 200000,
-            "max_output_tokens": 128000,
-            "input_cost_per_token": 0.0000014,
-            "cache_read_input_token_cost": 0.00000026,
-            "output_cost_per_token": 0.0000044,
-        },
-        "glm-5-turbo": {
-            "context_window": 200000,
-            "max_output_tokens": 128000,
-            "input_cost_per_token": 0.0000012,
-            "cache_read_input_token_cost": 0.00000024,
-            "output_cost_per_token": 0.000004,
-        },
-        "glm-4.7": {
-            "context_window": 200000,
-            "max_output_tokens": 128000,
-            "input_cost_per_token": 0.0000006,
-            "cache_read_input_token_cost": 0.00000011,
-            "output_cost_per_token": 0.0000022,
-        },
-    }
-
-
-    def _metadata_for(slug):
-        info = ZAI_CODING_MODELS[slug]
-        supports_vision = info.get("supports_vision", False)
-        metadata = {
-            "litellm_provider": "zai",
-            "mode": "chat",
-            "context_window": info["context_window"],
-            "max_input_tokens": info["context_window"],
-            "max_output_tokens": info["max_output_tokens"],
-            "max_tokens": info["max_output_tokens"],
-            "supports_function_calling": True,
-            "supports_tool_choice": True,
-            # Z.AI uses native `thinking`; do not advertise OpenAI-style
-            # `reasoning_effort` as a supported request parameter below.
-            "supports_reasoning": True,
-            "reasoning_options": deepcopy(
-                info.get("reasoning_options", [{"type": "toggle"}])
-            ),
-            "source": info.get("source", "https://docs.z.ai/guides/overview/pricing"),
-        }
-        for key in (
-            "input_cost_per_token",
-            "cache_read_input_token_cost",
-            "output_cost_per_token",
-        ):
-            if key in info:
-                metadata[key] = info[key]
-        if "default_reasoning_effort" in info:
-            metadata["default_reasoning_effort"] = info["default_reasoning_effort"]
-        if supports_vision:
-            metadata.update(
-                {
-                    "input_modalities": ["text", "image"],
-                    "supports_image_input": True,
-                    "supports_vision": True,
-                }
-            )
-        return metadata
-
-
-    def iter_model_cost_entries():
-        for slug in ZAI_CODING_MODELS:
-            metadata = _metadata_for(slug)
-            yield f"zai/{slug}", deepcopy(metadata)
-            yield f"zai-coding/{slug}", deepcopy(metadata)
-
-
-    def _zai_coding_slug(model):
-        if not isinstance(model, str):
-            return None
-        for prefix in ("zai/", "zai-coding/"):
-            if model.startswith(prefix):
-                model = model[len(prefix) :]
-                break
-        return model if model in ZAI_CODING_MODELS else None
-
-
-    def patch_zai_coding_supported_params():
-        if getattr(
-            ZAIChatConfig.get_supported_openai_params,
-            "_zai_coding_supported_params_patch",
-            False,
-        ):
-            return
-
-        original_get_supported_openai_params = ZAIChatConfig.get_supported_openai_params
-
-        def get_supported_openai_params(self, model):
-            supported_params = list(original_get_supported_openai_params(self, model))
-            # Z.AI GLM models support native `thinking`, and GLM-5.2/5.3/5.3-Flash
-            # also accept OpenAI-style `reasoning_effort` values.
-            # OpenAI-compatible clients may also send max_completion_tokens;
-            # Z.AI accepts it, but LiteLLM's ZAI provider does not list it by default.
-            slug = _zai_coding_slug(model)
-            if slug is not None:
-                params = ["thinking", "max_completion_tokens", "extra_body"]
-                if slug in {"glm-5.2", "glm-5.3", "glm-5.3-flash"}:
-                    params.append("reasoning_effort")
-                for param in params:
-                    if param not in supported_params:
-                        supported_params.append(param)
-            return supported_params
-
-        get_supported_openai_params._zai_coding_supported_params_patch = True
-        ZAIChatConfig.get_supported_openai_params = get_supported_openai_params
-
-        if getattr(
-            ZAIChatConfig.map_openai_params,
-            "_zai_coding_map_params_patch",
-            False,
-        ):
-            return
-
-        original_map_openai_params = ZAIChatConfig.map_openai_params
-
-        def map_openai_params(self, non_default_params, optional_params, model, drop_params):
-            optional_params = original_map_openai_params(
-                self,
-                non_default_params=non_default_params,
-                optional_params=optional_params,
-                model=model,
-                drop_params=drop_params,
-            )
-            if _zai_coding_slug(model) is not None and "thinking" in optional_params:
-                extra_body = dict(optional_params.get("extra_body") or {})
-                extra_body["thinking"] = optional_params.pop("thinking")
-                optional_params["extra_body"] = extra_body
-            return optional_params
-
-        map_openai_params._zai_coding_map_params_patch = True
-        ZAIChatConfig.map_openai_params = map_openai_params
-
-
-    def patch_zai_coding_model_catalog():
-        updated_model_cost = False
-        for model_name, catalog_info in iter_model_cost_entries():
-            existing_info = dict(litellm.model_cost.get(model_name, {}) or {})
-            existing_info.update(catalog_info)
-            if litellm.model_cost.get(model_name) != existing_info:
-                updated_model_cost = True
-            litellm.model_cost[model_name] = existing_info
-
-        provider_models = litellm.models_by_provider.setdefault("zai", [])
-        for slug in ZAI_CODING_MODELS:
-            if slug not in provider_models:
-                if hasattr(provider_models, "add"):
-                    provider_models.add(slug)
-                else:
-                    provider_models.append(slug)
-
-        if updated_model_cost:
-            from litellm.utils import _invalidate_model_cost_lowercase_map
-
-            _invalidate_model_cost_lowercase_map()
-
-
-    def worker_startup_hook():
-        patch_zai_coding_model_catalog()
-        patch_zai_coding_supported_params()
-
-  litellm_startup.py: |
-    import os
-    import sys
-
-    import litellm
-    from litellm.llms.chatgpt.responses.transformation import ChatGPTResponsesAPIConfig
-    from litellm.llms.openai.chat.gpt_5_transformation import OpenAIGPT5Config
-    from litellm.proxy.auth.route_checks import RouteChecks
-    from litellm.router import Router
-
-    import chatgpt_codex_catalog
-    import chatgpt_responses_streaming_patch
-    import vllm_model_discovery
-    import zai_coding_catalog
-
-
-    _SYSTEM_INSTRUCTION_ROLES = {"system", "developer"}
-
-
-    def _content_to_instruction_text(content):
-        if content is None:
-            return ""
-        if isinstance(content, str):
-            return content
-        if isinstance(content, list):
-            text_parts = []
-            for item in content:
-                if isinstance(item, str):
-                    text_parts.append(item)
-                elif isinstance(item, dict) and isinstance(item.get("text"), str):
-                    text_parts.append(item["text"])
-            return "\n".join(part for part in text_parts if part)
-        if isinstance(content, dict) and isinstance(content.get("text"), str):
-            return content["text"]
-        return str(content)
-
-
-    def _merge_instructions(existing_instructions, extracted_instructions):
-        extracted_instructions = [item for item in extracted_instructions if item]
-        if not extracted_instructions:
-            return existing_instructions
-
-        parts = []
-        if existing_instructions:
-            parts.append(str(existing_instructions))
-        parts.extend(extracted_instructions)
-        return "\n\n".join(parts)
-
-
-    def _move_system_input_items_to_instructions(request):
-        input_items = request.get("input")
-        if not isinstance(input_items, list):
-            return
-
-        sanitized_input = []
-        extracted_instructions = []
-        for item in input_items:
-            if (
-                isinstance(item, dict)
-                and item.get("type", "message") == "message"
-                and item.get("role") in _SYSTEM_INSTRUCTION_ROLES
-            ):
-                extracted_instructions.append(
-                    _content_to_instruction_text(item.get("content"))
-                )
-                continue
-            sanitized_input.append(item)
-
-        if len(sanitized_input) == len(input_items):
-            return
-
-        request["input"] = sanitized_input
-        request["instructions"] = _merge_instructions(
-            request.get("instructions"), extracted_instructions
-        )
-
-
-    def _summary_default_disabled(summary_default):
-        return summary_default.lower() in {"", "0", "false", "none", "off", "disabled"}
-
-
-    def _apply_chatgpt_reasoning_summary_default(request, model=None):
-        metadata = chatgpt_codex_catalog.model_metadata_for(model)
-        if metadata is not None:
-            summary_default = str(metadata.get("default_reasoning_summary", "none")).strip()
-        else:
-            summary_default = os.getenv("CHATGPT_REASONING_SUMMARY_DEFAULT", "detailed").strip()
-        if _summary_default_disabled(summary_default):
-            return
-
-        reasoning = request.get("reasoning")
-        if hasattr(reasoning, "model_dump"):
-            reasoning = reasoning.model_dump(exclude_none=True)
-        elif isinstance(reasoning, dict):
-            reasoning = dict(reasoning)
-        else:
-            return
-
-        effort = reasoning.get("effort")
-        if not effort or effort == "none" or reasoning.get("summary"):
-            return
-
-        reasoning["summary"] = summary_default
-        request["reasoning"] = reasoning
-
-
-    def patch_chatgpt_responses_request_transform():
-        if getattr(
-            ChatGPTResponsesAPIConfig.transform_responses_api_request,
-            "_chatgpt_responses_request_patch",
-            False,
-        ):
-            return
-
-        original_transform = ChatGPTResponsesAPIConfig.transform_responses_api_request
-
-        def transform_responses_api_request(
-            self,
-            model,
-            input,
-            response_api_optional_request_params,
-            litellm_params,
-            headers,
-        ):
-            request = original_transform(
-                self,
-                model=model,
-                input=input,
-                response_api_optional_request_params=response_api_optional_request_params,
-                litellm_params=litellm_params,
-                headers=headers,
-            )
-            _move_system_input_items_to_instructions(request)
-            _apply_chatgpt_reasoning_summary_default(request, model)
-            return request
-
-        transform_responses_api_request._chatgpt_responses_request_patch = True
-        ChatGPTResponsesAPIConfig.transform_responses_api_request = (
-            transform_responses_api_request
-        )
-
-
-    def patch_router_response_retries():
-        if getattr(
-            Router.async_function_with_retries,
-            "_num_retries_default_patch",
-            False,
-        ):
-            return
-
-        original_async_function_with_retries = Router.async_function_with_retries
-
-        async def async_function_with_retries(self, *args, **kwargs):
-            if kwargs.get("num_retries") is None:
-                kwargs["num_retries"] = getattr(self, "num_retries", None) or 0
-            return await original_async_function_with_retries(self, *args, **kwargs)
-
-        async_function_with_retries._num_retries_default_patch = True
-        Router.async_function_with_retries = async_function_with_retries
-
-
-    def patch_responses_iterator_cache_callback():
-        from litellm.caching.caching_handler import LLMCachingHandler
-        from litellm.responses.streaming_iterator import BaseResponsesAPIStreamingIterator
-        from litellm.types.llms.openai import ResponsesAPIResponse
-
-        if getattr(
-            LLMCachingHandler.async_set_cache,
-            "_responses_iterator_cache_patch",
-            False,
-        ):
-            return
-
-        original_async_set_cache = LLMCachingHandler.async_set_cache
-
-        async def async_set_cache(self, result, original_function, kwargs, args=None):
-            # Responses iterators persist their completed response when the stream
-            # finishes. The generic callback only sees the non-serializable iterator.
-            if isinstance(result, BaseResponsesAPIStreamingIterator) or (
-                isinstance(result, ResponsesAPIResponse)
-                and result.status != "completed"
-            ):
-                return
-            return await original_async_set_cache(
-                self,
-                result=result,
-                original_function=original_function,
-                kwargs=kwargs,
-                args=args,
-            )
-
-        async_set_cache._responses_iterator_cache_patch = True
-        LLMCachingHandler.async_set_cache = async_set_cache
-
-
-    def _catalog_metadata_for_deployment(deployment):
-        if not isinstance(deployment, dict):
-            return None
-
-        metadata = chatgpt_codex_catalog.model_metadata_for(deployment.get("model_name"))
-        if metadata is not None:
-            return metadata
-
-        litellm_params = deployment.get("litellm_params") or {}
-        if isinstance(litellm_params, dict):
-            return chatgpt_codex_catalog.model_metadata_for(litellm_params.get("model"))
-
-        return None
-
-
-    def _apply_catalog_metadata_to_deployment(deployment):
-        metadata = _catalog_metadata_for_deployment(deployment)
-        if metadata is not None:
-            model_info = deployment.setdefault("model_info", {})
-            model_info.update(metadata)
-        return deployment
-
-
-    def patch_chatgpt_codex_model_catalog():
-        updated_model_cost = False
-        for model_name, catalog_info in chatgpt_codex_catalog.iter_model_cost_entries():
-            existing_info = dict(litellm.model_cost.get(model_name, {}) or {})
-            existing_info.update(catalog_info)
-            if litellm.model_cost.get(model_name) != existing_info:
-                updated_model_cost = True
-            litellm.model_cost[model_name] = existing_info
-
-        provider_models = litellm.models_by_provider.setdefault("chatgpt", [])
-        for slug in chatgpt_codex_catalog.CHATGPT_CODEX_MODELS:
-            if slug not in provider_models:
-                if hasattr(provider_models, "add"):
-                    provider_models.add(slug)
-                else:
-                    provider_models.append(slug)
-
-        if updated_model_cost:
-            from litellm.utils import _invalidate_model_cost_lowercase_map
-
-            _invalidate_model_cost_lowercase_map()
-
-
-    def patch_chatgpt_codex_reasoning_validator():
-        if getattr(
-            OpenAIGPT5Config._supports_reasoning_effort_level,
-            "_chatgpt_codex_reasoning_patch",
-            False,
-        ):
-            return
-
-        original_supports = OpenAIGPT5Config._supports_reasoning_effort_level
-
-        def supports_reasoning_effort_level(cls, model, level):
-            metadata = chatgpt_codex_catalog.model_metadata_for(model)
-            if metadata is not None:
-                return level in metadata.get("supported_reasoning_levels", [])
-            return original_supports(model, level)
-
-        supports_reasoning_effort_level._chatgpt_codex_reasoning_patch = True
-        OpenAIGPT5Config._supports_reasoning_effort_level = classmethod(
-            supports_reasoning_effort_level
-        )
-
-
-    _MODEL_DISCOVERY_ROUTES = [
-        "/v1/models",
-        "/models",
-        "/v1/models/{model_id}",
-        "/models/{model_id}",
-        "/model/info",
-        "/v1/model/info",
-        "/model_group/info",
-    ]
-
-
-    def _is_model_discovery_route(route):
-        return RouteChecks.check_route_access(
-            route=route,
-            allowed_routes=_MODEL_DISCOVERY_ROUTES,
-        )
-
-
-    def patch_virtual_key_model_discovery_routes():
-        if getattr(
-            RouteChecks.is_virtual_key_allowed_to_call_route,
-            "_chatgpt_codex_model_discovery_patch",
-            False,
-        ):
-            return
-
-        original_is_allowed = RouteChecks.is_virtual_key_allowed_to_call_route
-
-        def is_virtual_key_allowed_to_call_route(route, valid_token, *args, **kwargs):
-            if _is_model_discovery_route(route):
-                return True
-            return original_is_allowed(route, valid_token, *args, **kwargs)
-
-        is_virtual_key_allowed_to_call_route._chatgpt_codex_model_discovery_patch = True
-        RouteChecks.is_virtual_key_allowed_to_call_route = staticmethod(
-            is_virtual_key_allowed_to_call_route
-        )
-
-
-    def patch_model_list_metadata():
-        import litellm.proxy.utils as proxy_utils
-
-        if getattr(
-            proxy_utils.create_model_info_response,
-            "_chatgpt_codex_model_list_metadata_patch",
-            False,
-        ):
-            return
-
-        original_create_model_info_response = proxy_utils.create_model_info_response
-
-        def create_model_info_response(
-            model_id,
-            provider,
-            include_metadata=False,
-            fallback_type=None,
-            llm_router=None,
-            get_model_info=litellm.get_model_info,
-        ):
-            response = original_create_model_info_response(
-                model_id=model_id,
-                provider=provider,
-                include_metadata=include_metadata,
-                fallback_type=fallback_type,
-                llm_router=llm_router,
-                get_model_info=get_model_info,
-            )
-            metadata = chatgpt_codex_catalog.model_metadata_for(model_id)
-            if metadata is None:
-                return response
-
-            response["owned_by"] = "chatgpt"
-            if include_metadata:
-                response_metadata = response.setdefault("metadata", {})
-                response_metadata.update(metadata)
-            return response
-
-        create_model_info_response._chatgpt_codex_model_list_metadata_patch = True
-        proxy_utils.create_model_info_response = create_model_info_response
-
-
-    def patch_proxy_model_info_endpoints():
-        proxy_server = sys.modules.get("litellm.proxy.proxy_server")
-        if proxy_server is None:
-            return
-
-        if not getattr(
-            proxy_server._get_proxy_model_info,
-            "_chatgpt_codex_proxy_model_info_patch",
-            False,
-        ):
-            original_get_proxy_model_info = proxy_server._get_proxy_model_info
-
-            def get_proxy_model_info(model):
-                _apply_catalog_metadata_to_deployment(model)
-                deployment = original_get_proxy_model_info(model)
-                return _apply_catalog_metadata_to_deployment(deployment)
-
-            get_proxy_model_info._chatgpt_codex_proxy_model_info_patch = True
-            proxy_server._get_proxy_model_info = get_proxy_model_info
-
-        if not getattr(
-            proxy_server._enrich_model_info_with_litellm_data,
-            "_chatgpt_codex_enrich_model_info_patch",
-            False,
-        ):
-            original_enrich_model_info = proxy_server._enrich_model_info_with_litellm_data
-
-            def enrich_model_info_with_litellm_data(model, debug=False, llm_router=None):
-                _apply_catalog_metadata_to_deployment(model)
-                deployment = original_enrich_model_info(
-                    model=model,
-                    debug=debug,
-                    llm_router=llm_router,
-                )
-                return _apply_catalog_metadata_to_deployment(deployment)
-
-            enrich_model_info_with_litellm_data._chatgpt_codex_enrich_model_info_patch = True
-            proxy_server._enrich_model_info_with_litellm_data = enrich_model_info_with_litellm_data
-
-        if getattr(
-            proxy_server._get_model_group_info,
-            "_chatgpt_codex_model_group_info_patch",
-            False,
-        ):
-            return
-
-        original_get_model_group_info = proxy_server._get_model_group_info
-
-        def get_model_group_info(llm_router, all_models_str, model_group):
-            model_groups = original_get_model_group_info(
-                llm_router=llm_router,
-                all_models_str=all_models_str,
-                model_group=model_group,
-            )
-            normalized_groups = []
-            for model_group_info in model_groups:
-                if hasattr(model_group_info, "model_dump"):
-                    group = model_group_info.model_dump(exclude_none=True)
-                else:
-                    group = dict(model_group_info)
-
-                metadata = chatgpt_codex_catalog.model_metadata_for(
-                    group.get("model_group")
-                )
-                if metadata is not None:
-                    group.update(metadata)
-                    group["providers"] = ["chatgpt"]
-                normalized_groups.append(group)
-            return normalized_groups
-
-        get_model_group_info._chatgpt_codex_model_group_info_patch = True
-        proxy_server._get_model_group_info = get_model_group_info
-
-
-    def patch_public_model_cost_map_endpoint():
-        proxy_server = sys.modules.get("litellm.proxy.proxy_server")
-        if proxy_server is None:
-            return
-
-        public_path = "/public/litellm_model_cost_map"
-        proxy_server.app.router.routes[:] = [
-            route
-            for route in proxy_server.app.router.routes
-            if getattr(route, "path", None) != public_path
-        ]
-
-        @proxy_server.app.get(public_path, include_in_schema=False)
-        async def public_litellm_model_cost_map():
-            patch_chatgpt_codex_model_catalog()
-            zai_coding_catalog.worker_startup_hook()
-            return litellm.model_cost
-
-
-    def patch_file_authoritative_router_settings():
-        proxy_server = sys.modules.get("litellm.proxy.proxy_server")
-        if proxy_server is None:
-            return
-
-        proxy_config_cls = getattr(proxy_server, "ProxyConfig", None)
-        if proxy_config_cls is None:
-            return
-
-        current = getattr(proxy_config_cls, "_add_router_settings_from_db_config", None)
-        if current is None or getattr(current, "_file_authoritative_patch", False):
-            return
-
-        async def add_router_settings_from_config(self, config_data, llm_router, prisma_client):
-            if llm_router is None:
-                return
-
-            router_settings = config_data.get("router_settings") or {}
-            if isinstance(router_settings, dict) and router_settings:
-                llm_router.update_settings(**router_settings)
-
-        add_router_settings_from_config._file_authoritative_patch = True
-        proxy_config_cls._add_router_settings_from_db_config = add_router_settings_from_config
-
-
-    def worker_startup_hook():
-        # Only virtual-key discovery remains active. CacheBypassHandler is
-        # registered separately in config.yaml's litellm_settings.callbacks.
-        patch_virtual_key_model_discovery_routes()
-
-        # Retained implementations and mounts allow selective restoration by
-        # uncommenting calls below. Review compatibility before re-enabling.
-        # patch_chatgpt_codex_model_catalog()
-        # zai_coding_catalog.worker_startup_hook()
-        # patch_chatgpt_codex_reasoning_validator()
-        # patch_chatgpt_responses_request_transform()
-        # patch_model_list_metadata()
-        # patch_proxy_model_info_endpoints()
-        # patch_public_model_cost_map_endpoint()
-        # Incompatible with v1.105.1: upstream no longer passes config_data.
-        # patch_file_authoritative_router_settings()
-        # patch_router_response_retries()
-        # patch_responses_iterator_cache_callback()
-        # vllm_model_discovery.worker_startup_hook()
-        # chatgpt_responses_streaming_patch.worker_startup_hook()
-
-  sitecustomize.py: |
-    import litellm_startup
-
-
-    litellm_startup.worker_startup_hook()
-
-  vllm_model_discovery.py: |
-    import os
-
-    import litellm
-    from litellm.llms.vllm.common_utils import VLLMModelInfo
-    from litellm.utils import _add_path_to_api_base
-
-
-    def patch_vllm_model_discovery():
-        def get_models(self, api_key=None, api_base=None):
-            api_base = api_base or os.environ.get("VLLM_API_BASE") or os.environ.get(
-                "LITELLM_CREDENTIAL_LLAMA_SWAP_API_BASE"
-            )
-            api_key = api_key or os.environ.get("VLLM_API_KEY") or os.environ.get(
-                "LITELLM_CREDENTIAL_LLAMA_SWAP_API_KEY"
-            )
-
-            if api_base is None:
-                raise ValueError("VLLM_API_BASE is not set")
-
-            headers = {}
-            if api_key:
-                headers["Authorization"] = f"Bearer {api_key}"
-                headers["x-api-key"] = api_key
-
-            response = litellm.module_level_client.get(
-                url=_add_path_to_api_base(api_base, "/v1/models"),
-                headers=headers,
-            )
-            response.raise_for_status()
-
-            return [model["id"] for model in response.json().get("data", [])]
-
-        VLLMModelInfo.get_models = get_models
-        litellm.models_by_provider.setdefault("hosted_vllm", [])
-
-
-    def worker_startup_hook():
-        patch_vllm_model_discovery()
