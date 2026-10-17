@@ -84,9 +84,8 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   false so the first model does not pin the entire conversation. Verify both chat
   and Responses routing, client effort precedence, session reuse, selected-tier
   fallbacks, summary preservation, and Auto-Routers UI visibility when changing
-  this configuration. `tests/test_auto_router_effort.py` exercises the repo config
-  against an installed LiteLLM version with all provider HTTP mocked, including
-  client `xhigh`, streaming, turn reuse, and classifier/provider/image failures.
+  this configuration. Validate client `xhigh`, streaming, turn reuse, and
+  classifier/provider/image failures against the installed LiteLLM version.
   `cloud/decision` remains a direct Jev alias; other existing cloud/local routes
   do not opt into auto routing.
 - `cloud/glm-auto` uses the same native Jev classifier and user-turn policy. Its
@@ -137,6 +136,10 @@ pre-commit run --files <changed-file> [<changed-file>...]
 
 Include changed `scripts/*.py` files explicitly. Documentation-only skill changes
 need skill validation and applicable file hooks, not cluster or inference tests.
+
+Do not create a new test folder unless the user explicitly requests one. Keep
+ad hoc validation scripts outside the repository; validation authorization does
+not authorize committing a test harness.
 
 Run Python integration tests that import the full proxy in a separate local
 runtime matching the deployed image, with provider HTTP mocked. Extra proxy
