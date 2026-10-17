@@ -75,6 +75,19 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   fallbacks, and Auto-Routers UI visibility when changing this configuration.
   `cloud/decision` remains a direct Jev alias; other existing cloud/local routes
   do not opt into auto routing.
+- `cloud/glm-auto` uses the same native Jev classifier and user-turn policy. Its
+  tiers are GLM-5.3-Flash/low, Flash/high, GLM-5.3/high, and GLM-5.3/max,
+  through `cloud/glm-flash-low`, `cloud/glm-flash-high`, `cloud/glm-high`, and
+  `cloud/glm-max`. They reuse the `zai-coding` credential and provider parameters;
+  `low`, `high`, and `max` are the supported effort values. Classification failure
+  selects GLM/high, while each tier's inference fallback is `cloud/coder-fallback`
+  (the independent ChatGPT subscription). Switching between GLM models does not
+  replenish their shared Coding Plan quota. Flash tiers advertise vision support;
+  main GLM tiers explicitly do not. Native modality routing only searches higher
+  tiers, so `cloud/glm-auto` also falls back to `cloud/glm-flash-high` when routing
+  fails before a tier is dispatched. Validate image requests and classifier-failure
+  image requests stay on Flash through this fallback. Client effort
+  precedence and stable-session requirements match `cloud/codex-auto`.
 - Local model entries share the llama-swap credential/backend. Another local model
   is not an independent host-outage fallback. Check endpoint, tool, modality,
   context, and embedding-space compatibility when proposing destinations.

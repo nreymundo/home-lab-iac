@@ -361,6 +361,137 @@ data:
             - pve3
           guardrails: []
 
+      # Native GLM routing uses the same Jev deployment and user-turn policy.
+      - model_name: cloud/glm-auto
+        model_info:
+          mode: chat
+        litellm_params:
+          model: auto_router/complexity_router
+          complexity_router_default_model: cloud/glm-high
+          complexity_router_config:
+            tiers:
+              SIMPLE: cloud/glm-flash-low
+              MEDIUM: cloud/glm-flash-high
+              COMPLEX: cloud/glm-high
+              REASONING: cloud/glm-max
+            classifier_type: oss_classifier
+            opensource_classifier_config:
+              provider: jev
+              deployment_name: openrouter/~typesafe/jev-latest
+              model: jev-latest
+              timeout_ms: 2000
+            classifier_fallback: default_model
+            classification_mode: user_turn
+            session_affinity: false
+            deployment_affinity: true
+            classifier_context_window_size: 3
+            classifier_context_budget_chars: 2400
+            classifier_context_per_turn_chars: 800
+            classifier_context_include_assistant_turns: true
+            enable_context_window_escalation: true
+            modality_routing: true
+            return_raw_model_name: true
+
+      - model_name: cloud/glm-flash-low
+        model_info:
+          mode: chat
+          reasoning_options:
+            - type: effort
+              values:
+                - low
+                - high
+                - max
+          default_reasoning_effort: low
+          input_modalities:
+            - text
+            - image
+          supports_image_input: true
+          supports_vision: true
+        litellm_params:
+          model: zai/glm-5.3-flash
+          reasoning_effort: low
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          allowed_openai_params:
+            - reasoning_effort
+            - response_format
+          tags:
+            - zai
+            - coding-plan
+
+      - model_name: cloud/glm-flash-high
+        model_info:
+          mode: chat
+          reasoning_options:
+            - type: effort
+              values:
+                - low
+                - high
+                - max
+          default_reasoning_effort: high
+          input_modalities:
+            - text
+            - image
+          supports_image_input: true
+          supports_vision: true
+        litellm_params:
+          model: zai/glm-5.3-flash
+          reasoning_effort: high
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          allowed_openai_params:
+            - reasoning_effort
+            - response_format
+          tags:
+            - zai
+            - coding-plan
+
+      - model_name: cloud/glm-high
+        model_info:
+          mode: chat
+          supports_vision: false
+          reasoning_options:
+            - type: effort
+              values:
+                - low
+                - high
+                - max
+          default_reasoning_effort: high
+        litellm_params:
+          model: zai/glm-5.3
+          reasoning_effort: high
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          allowed_openai_params:
+            - reasoning_effort
+            - response_format
+          tags:
+            - zai
+            - coding-plan
+
+      - model_name: cloud/glm-max
+        model_info:
+          mode: chat
+          supports_vision: false
+          reasoning_options:
+            - type: effort
+              values:
+                - low
+                - high
+                - max
+          default_reasoning_effort: max
+        litellm_params:
+          model: zai/glm-5.3
+          reasoning_effort: max
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          allowed_openai_params:
+            - reasoning_effort
+            - response_format
+          tags:
+            - zai
+            - coding-plan
+
       - model_name: zai-coding/glm-5.3
         model_info:
           mode: chat
@@ -490,6 +621,17 @@ data:
         openai/gpt-6.1-sol: chatgpt/gpt-6.1-sol
       # Scope failover to service aliases so explicit model names and local routes stay predictable.
       fallbacks:
+        # Native modality checks cannot descend from main GLM to a Flash tier.
+        - cloud/glm-auto:
+            - cloud/glm-flash-high
+        - cloud/glm-flash-low:
+            - cloud/coder-fallback
+        - cloud/glm-flash-high:
+            - cloud/coder-fallback
+        - cloud/glm-high:
+            - cloud/coder-fallback
+        - cloud/glm-max:
+            - cloud/coder-fallback
         - cloud/codex-luna-low:
             - cloud/fast-fallback
         - cloud/codex-luna-high:
