@@ -12,8 +12,8 @@ data:
         model_info:
           mode: responses
           # auto_router/* is unknown to LiteLLM's model catalog, so the router
-          # must declare the window itself; 272k is the advertised Codex-plan
-          # tier (the backend accepts more, kept conservative for now).
+          # must declare the window itself; 272k is the common input budget
+          # across Luna and Astra, while the Sol tier declares 500k below.
           max_input_tokens: 272000
           max_output_tokens: 128000
         litellm_params:
@@ -78,7 +78,7 @@ data:
       - model_name: cloud/codex-sol-high
         model_info:
           mode: responses
-          max_input_tokens: 272000
+          max_input_tokens: 500000
           supports_vision: true
         litellm_params:
           model: chatgpt/gpt-6.1-sol
