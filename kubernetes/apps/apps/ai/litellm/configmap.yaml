@@ -12,9 +12,9 @@ data:
         model_info:
           mode: responses
           # auto_router/* is unknown to LiteLLM's model catalog, so the router
-          # must declare the window itself; 922k matches every member tier
-          # (Codex-plan cap for the gpt-6 family, 128k output).
-          max_input_tokens: 922000
+          # must declare the window itself; 272k is the advertised Codex-plan
+          # tier (the backend accepts more, kept conservative for now).
+          max_input_tokens: 272000
           max_output_tokens: 128000
         litellm_params:
           model: auto_router/complexity_router
@@ -60,7 +60,7 @@ data:
       - model_name: cloud/codex-luna-low
         model_info:
           mode: responses
-          max_input_tokens: 922000
+          max_input_tokens: 272000
           supports_vision: true
         litellm_params:
           model: chatgpt/gpt-6-luna
@@ -69,7 +69,7 @@ data:
       - model_name: cloud/codex-luna-high
         model_info:
           mode: responses
-          max_input_tokens: 922000
+          max_input_tokens: 272000
           supports_vision: true
         litellm_params:
           model: chatgpt/gpt-6-luna
@@ -78,7 +78,7 @@ data:
       - model_name: cloud/codex-sol-high
         model_info:
           mode: responses
-          max_input_tokens: 922000
+          max_input_tokens: 272000
           supports_vision: true
         litellm_params:
           model: chatgpt/gpt-6.1-sol
@@ -87,7 +87,7 @@ data:
       - model_name: cloud/codex-astra-high
         model_info:
           mode: responses
-          max_input_tokens: 922000
+          max_input_tokens: 272000
           supports_vision: true
         litellm_params:
           model: chatgpt/gpt-6-astra
