@@ -50,16 +50,60 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
 - `cache_bypass.proxy_handler_instance` is registered independently as a callback.
   Key metadata can disable cache reads/writes or remove selected request parameters
   globally or by requested model name. Check this when diagnosing client differences.
+  For `cloud/codex-auto` and `cloud/glm-auto`, the same hook removes client effort
+  controls before routing (including nested/extra-body forms), while preserving
+  unrelated reasoning fields. Its deployment hook copies the resolved effort into
+  a retained Responses `reasoning` object so a summary-only object cannot shadow
+  `reasoning_effort`. This is request normalization; model selection stays native.
+  Direct model requests keep client effort precedence. Keep the scope restricted
+  to these auto routes and test both chat and Responses before changing the hook.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
-  to canonical primary deployments. Explicit fallback chains are keyed only on
+  to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
   are matching `cloud/<type>-fallback` aliases. Each fallback alias maps directly to
   a canonical model name and has no fallback chain of its own. The prefix describes
   where the target runs; future local targets use `local/<type>-fallback`. Explicit
-  model names and local routes have no configured failover. Verify source and
-  destination alias resolution on image updates. There is no automatic complexity
-  router. `cloud/decision` exposes Jev through
-  OpenRouter; it does not automatically classify or route other requests.
+  canonical model names and local routes have no configured failover. Verify source
+  and destination alias resolution on image updates.
+- `cloud/codex-auto` is an opt-in native `auto_router/complexity_router` deployment,
+  configured entirely in `configmap.yaml`. Its four tiers select Luna/low,
+  Luna/high, Sol/high, and Astra/high through dedicated `cloud/codex-*-*`
+  deployments. These deployment names carry reasoning defaults; they are not
+  `model_group_alias` entries. Native per-tier `litellm_params` pin effort on auto
+  routes; ingress normalization also protects retained decisions and classifier
+  failures, where this build otherwise restores client effort. Direct requests
+  to the presets still allow caller overrides.
+  Jev uses `classifier_type: oss_classifier` with the existing
+  `openrouter/~typesafe/jev-latest` decision deployment, without a new credential or
+  custom routing engine. Classification failure selects Astra/high; inference
+  failures use per-tier fallback chains to the existing fast/deep fallback aliases,
+  with explicit fallback effort parameters to preserve the selected level.
+  `classification_mode: user_turn` retains the choice through tool continuations
+  only when the client supplies a stable session identifier (for example
+  `metadata.session_id`); a new human ask reclassifies. `session_affinity` remains
+  false so the first model does not pin the entire conversation. Verify both chat
+  and Responses routing, client effort precedence, session reuse, selected-tier
+  fallbacks, summary preservation, and Auto-Routers UI visibility when changing
+  this configuration. Validate client `xhigh`, streaming, turn reuse, and
+  classifier/provider/image failures against the installed LiteLLM version.
+  `cloud/decision` remains a direct Jev alias; other existing cloud/local routes
+  do not opt into auto routing.
+- `cloud/glm-auto` uses the same native Jev classifier and user-turn policy. Its
+  tiers are GLM-5.3-Flash/low, Flash/high, GLM-5.3/high, and GLM-5.3/max,
+  through `cloud/glm-flash-low`, `cloud/glm-flash-high`, `cloud/glm-high`, and
+  `cloud/glm-max`. They reuse the `zai-coding` credential and provider parameters;
+  `low`, `high`, and `max` are the supported effort values. Classification failure
+  selects GLM/high, while each tier's inference fallback is `cloud/coder-fallback`
+  (the independent ChatGPT subscription). Switching between GLM models does not
+  replenish their shared Coding Plan quota. Flash tiers advertise vision support;
+  main GLM tiers explicitly do not. Native modality routing only searches higher
+  tiers, so `cloud/glm-auto` also falls back to `cloud/glm-flash-high` when routing
+  fails before a tier is dispatched. With a failed classifier, native modality
+  handling has no decided tier and instead selects the first compatible tier,
+  Flash/low. Validate both image paths and their enforced effort: a classified
+  text-only tier falls back to Flash/high; classifier failure uses Flash/low.
+  Auto-route effort ownership and stable-session requirements match
+  `cloud/codex-auto`.
 - Local model entries share the llama-swap credential/backend. Another local model
   is not an independent host-outage fallback. Check endpoint, tool, modality,
   context, and embedding-space compatibility when proposing destinations.
@@ -92,6 +136,11 @@ pre-commit run --files <changed-file> [<changed-file>...]
 
 Include changed `scripts/*.py` files explicitly. Documentation-only skill changes
 need skill validation and applicable file hooks, not cluster or inference tests.
+
+Run Python integration tests that import the full proxy in a separate local
+runtime matching the deployed image, with provider HTTP mocked. Extra proxy
+interpreters inside the production container share its memory limit and have
+caused an OOM restart; do not use the running proxy pod as the test runner.
 
 When live inspection is relevant, check the HelmRelease, deployment, readiness,
 and startup logs without exposing credentials or prompt contents. After an authorized

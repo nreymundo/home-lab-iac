@@ -24,6 +24,7 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Validate changes with the most direct evidence available for the kind of change you made.
 
 ## Change Discipline
+- Across every app and layer, do not create a new test folder or commit an ad hoc test harness unless the user explicitly requests it. When no test folder exists for the affected code, keep one-off validation scripts outside the repository. Authorization to validate a change does not authorize adding test infrastructure.
 - Before editing, check the planned changes against every applicable repo and skill requirement, including ownership, reference patterns, asset formats, and validation. Do not replace those requirements with implementation preferences.
 - For an unfamiliar configuration or integration change, finish evidence gathering and state the complete proposed source change, validation, and expected rollout before editing.
 - During already-authorized implementation, questions, explanations, status requests, and reviews are steering, not cancellation. Answer or review, then continue the authorized work, including fixes within the requested scope. Do not require fresh approval solely because the user asked a question or requested a review.
