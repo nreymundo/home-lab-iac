@@ -377,6 +377,11 @@ data:
       - model_name: cloud/glm-auto
         model_info:
           mode: chat
+          # auto_router/* is unknown to LiteLLM's model catalog, so the router
+          # must declare the window itself; 1M is the floor across members
+          # (glm-5.3 1,000,000 / glm-5.3-flash 1,048,576).
+          max_input_tokens: 1000000
+          max_output_tokens: 128000
         litellm_params:
           model: auto_router/complexity_router
           complexity_router_default_model: cloud/glm-high
