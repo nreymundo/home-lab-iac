@@ -17,6 +17,7 @@ configMapGenerator:
       - scripts/chatgpt_codex_catalog.py
       - scripts/zai_coding_catalog.py
       - scripts/litellm_startup.py
+      - scripts/openrouter_rerank.py
       - scripts/sitecustomize.py
       - scripts/vllm_model_discovery.py
 

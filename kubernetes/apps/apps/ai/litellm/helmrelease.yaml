@@ -222,6 +222,9 @@ spec:
               - path: /etc/litellm/litellm_startup.py
                 subPath: litellm_startup.py
                 readOnly: true
+              - path: /etc/litellm/openrouter_rerank.py
+                subPath: openrouter_rerank.py
+                readOnly: true
               - path: /etc/litellm/sitecustomize.py
                 subPath: sitecustomize.py
                 readOnly: true
