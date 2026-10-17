@@ -11,6 +11,11 @@ data:
       - model_name: cloud/codex-auto
         model_info:
           mode: responses
+          # auto_router/* is unknown to LiteLLM's model catalog, so the router
+          # must declare the window itself; 272k is the common input budget
+          # across Luna and Astra, while the Sol tier declares 500k below.
+          max_input_tokens: 272000
+          max_output_tokens: 128000
         litellm_params:
           model: auto_router/complexity_router
           complexity_router_default_model: cloud/codex-astra-high
@@ -55,7 +60,7 @@ data:
       - model_name: cloud/codex-luna-low
         model_info:
           mode: responses
-          max_input_tokens: 922000
+          max_input_tokens: 272000
           supports_vision: true
         litellm_params:
           model: chatgpt/gpt-6-luna
@@ -64,7 +69,7 @@ data:
       - model_name: cloud/codex-luna-high
         model_info:
           mode: responses
-          max_input_tokens: 922000
+          max_input_tokens: 272000
           supports_vision: true
         litellm_params:
           model: chatgpt/gpt-6-luna
@@ -73,7 +78,7 @@ data:
       - model_name: cloud/codex-sol-high
         model_info:
           mode: responses
-          max_input_tokens: 922000
+          max_input_tokens: 500000
           supports_vision: true
         litellm_params:
           model: chatgpt/gpt-6.1-sol
@@ -82,7 +87,7 @@ data:
       - model_name: cloud/codex-astra-high
         model_info:
           mode: responses
-          max_input_tokens: 922000
+          max_input_tokens: 272000
           supports_vision: true
         litellm_params:
           model: chatgpt/gpt-6-astra
@@ -377,6 +382,11 @@ data:
       - model_name: cloud/glm-auto
         model_info:
           mode: chat
+          # auto_router/* is unknown to LiteLLM's model catalog, so the router
+          # must declare the window itself; 1M is the floor across members
+          # (glm-5.3 1,000,000 / glm-5.3-flash 1,048,576).
+          max_input_tokens: 1000000
+          max_output_tokens: 128000
         litellm_params:
           model: auto_router/complexity_router
           complexity_router_default_model: cloud/glm-high
