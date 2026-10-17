@@ -339,6 +339,7 @@ data:
             - text
             - image
           supports_image_input: true
+          supports_vision: true
         litellm_params:
           model: zai/glm-5.3-flash
           custom_llm_provider: zai
