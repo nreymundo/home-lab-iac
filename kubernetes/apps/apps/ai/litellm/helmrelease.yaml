@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -17,7 +18,7 @@ spec:
             image:
               # renovate: datasource=docker depName=berriai/litellm registryUrl=https://ghcr.io
               repository: ghcr.io/berriai/litellm
-              tag: v1.105.1
+              tag: v1.106.0-rc.4
             env:
               TZ: Europe/Berlin
               PYTHONPATH: /etc/litellm

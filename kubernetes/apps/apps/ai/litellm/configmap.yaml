@@ -7,18 +7,90 @@ metadata:
 data:
   config.yaml: |
     model_list:
-      # Expose the upstream ChatGPT catalog under both client-facing prefixes.
-      - model_name: openai/*
+      # Expose only ChatGPT models verified against this subscription.
+      - model_name: openai/gpt-6.1-sol
         model_info:
           mode: responses
         litellm_params:
-          model: chatgpt/*
+          model: chatgpt/gpt-6.1-sol
 
-      - model_name: chatgpt/*
+      - model_name: openai/gpt-6-sol
         model_info:
           mode: responses
         litellm_params:
-          model: chatgpt/*
+          model: chatgpt/gpt-6-sol
+
+      - model_name: openai/gpt-6-astra
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-6-astra
+
+      - model_name: openai/gpt-6-luna
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-6-luna
+
+      - model_name: openai/gpt-5.6-sol
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-5.6-sol
+
+      - model_name: openai/gpt-5.6-terra
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-5.6-terra
+
+      - model_name: openai/gpt-5.6-luna
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-5.6-luna
+
+      - model_name: chatgpt/gpt-6.1-sol
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-6.1-sol
+
+      - model_name: chatgpt/gpt-6-sol
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-6-sol
+
+      - model_name: chatgpt/gpt-6-astra
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-6-astra
+
+      - model_name: chatgpt/gpt-6-luna
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-6-luna
+
+      - model_name: chatgpt/gpt-5.6-sol
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-5.6-sol
+
+      - model_name: chatgpt/gpt-5.6-terra
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-5.6-terra
+
+      - model_name: chatgpt/gpt-5.6-luna
+        model_info:
+          mode: responses
+        litellm_params:
+          model: chatgpt/gpt-5.6-luna
 
       - model_name: local/image
         model_info:
@@ -321,6 +393,9 @@ data:
           model: zai/glm-5.3
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
+          allowed_openai_params:
+            - reasoning_effort
+            - response_format
           tags:
             - zai
             - coding-plan
@@ -344,6 +419,9 @@ data:
           model: zai/glm-5.3-flash
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
+          allowed_openai_params:
+            - reasoning_effort
+            - response_format
           tags:
             - zai
             - coding-plan
@@ -375,6 +453,9 @@ data:
           model: zai/glm-5.3
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
+          allowed_openai_params:
+            - reasoning_effort
+            - response_format
           tags:
             - zai
             - coding-plan
@@ -393,6 +474,9 @@ data:
           model: zai/glm-5.3
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
+          allowed_openai_params:
+            - reasoning_effort
+            - response_format
           tags:
             - zai
             - coding-plan
