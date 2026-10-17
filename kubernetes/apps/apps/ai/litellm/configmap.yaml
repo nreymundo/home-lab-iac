@@ -16,10 +16,22 @@ data:
           complexity_router_default_model: cloud/codex-astra-high
           complexity_router_config:
             tiers:
-              SIMPLE: cloud/codex-luna-low
-              MEDIUM: cloud/codex-luna-high
-              COMPLEX: cloud/codex-sol-high
-              REASONING: cloud/codex-astra-high
+              SIMPLE:
+                model_name: cloud/codex-luna-low
+                litellm_params:
+                  reasoning_effort: low
+              MEDIUM:
+                model_name: cloud/codex-luna-high
+                litellm_params:
+                  reasoning_effort: high
+              COMPLEX:
+                model_name: cloud/codex-sol-high
+                litellm_params:
+                  reasoning_effort: high
+              REASONING:
+                model_name: cloud/codex-astra-high
+                litellm_params:
+                  reasoning_effort: high
             classifier_type: oss_classifier
             opensource_classifier_config:
               provider: jev
@@ -39,7 +51,7 @@ data:
             return_raw_model_name: true
 
       # Each tier resolves to a deployment with its own default reasoning effort.
-      # Explicit caller effort takes precedence, as with other LiteLLM models.
+      # Direct calls use defaults; auto routes enforce the tier-level effort above.
       - model_name: cloud/codex-luna-low
         model_info:
           mode: responses
@@ -370,10 +382,22 @@ data:
           complexity_router_default_model: cloud/glm-high
           complexity_router_config:
             tiers:
-              SIMPLE: cloud/glm-flash-low
-              MEDIUM: cloud/glm-flash-high
-              COMPLEX: cloud/glm-high
-              REASONING: cloud/glm-max
+              SIMPLE:
+                model_name: cloud/glm-flash-low
+                litellm_params:
+                  reasoning_effort: low
+              MEDIUM:
+                model_name: cloud/glm-flash-high
+                litellm_params:
+                  reasoning_effort: high
+              COMPLEX:
+                model_name: cloud/glm-high
+                litellm_params:
+                  reasoning_effort: high
+              REASONING:
+                model_name: cloud/glm-max
+                litellm_params:
+                  reasoning_effort: max
             classifier_type: oss_classifier
             opensource_classifier_config:
               provider: jev
@@ -623,23 +647,32 @@ data:
       fallbacks:
         # Native modality checks cannot descend from main GLM to a Flash tier.
         - cloud/glm-auto:
-            - cloud/glm-flash-high
+            - model: cloud/glm-flash-high
+              reasoning_effort: high
         - cloud/glm-flash-low:
-            - cloud/coder-fallback
+            - model: cloud/coder-fallback
+              reasoning_effort: low
         - cloud/glm-flash-high:
-            - cloud/coder-fallback
+            - model: cloud/coder-fallback
+              reasoning_effort: high
         - cloud/glm-high:
-            - cloud/coder-fallback
+            - model: cloud/coder-fallback
+              reasoning_effort: high
         - cloud/glm-max:
-            - cloud/coder-fallback
+            - model: cloud/coder-fallback
+              reasoning_effort: max
         - cloud/codex-luna-low:
-            - cloud/fast-fallback
+            - model: cloud/fast-fallback
+              reasoning_effort: low
         - cloud/codex-luna-high:
-            - cloud/fast-fallback
+            - model: cloud/fast-fallback
+              reasoning_effort: high
         - cloud/codex-sol-high:
-            - cloud/deep-fallback
+            - model: cloud/deep-fallback
+              reasoning_effort: high
         - cloud/codex-astra-high:
-            - cloud/deep-fallback
+            - model: cloud/deep-fallback
+              reasoning_effort: high
         - cloud/fast:
             - cloud/fast-fallback
         - cloud/general:

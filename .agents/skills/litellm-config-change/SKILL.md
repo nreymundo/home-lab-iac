@@ -50,6 +50,13 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
 - `cache_bypass.proxy_handler_instance` is registered independently as a callback.
   Key metadata can disable cache reads/writes or remove selected request parameters
   globally or by requested model name. Check this when diagnosing client differences.
+  For `cloud/codex-auto` and `cloud/glm-auto`, the same hook removes client effort
+  controls before routing (including nested/extra-body forms), while preserving
+  unrelated reasoning fields. Its deployment hook copies the resolved effort into
+  a retained Responses `reasoning` object so a summary-only object cannot shadow
+  `reasoning_effort`. This is request normalization; model selection stays native.
+  Direct model requests keep client effort precedence. Keep the scope restricted
+  to these auto routes and test both chat and Responses before changing the hook.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
@@ -62,17 +69,24 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   configured entirely in `configmap.yaml`. Its four tiers select Luna/low,
   Luna/high, Sol/high, and Astra/high through dedicated `cloud/codex-*-*`
   deployments. These deployment names carry reasoning defaults; they are not
-  `model_group_alias` entries. Explicit caller effort overrides those defaults.
+  `model_group_alias` entries. Native per-tier `litellm_params` pin effort on auto
+  routes; ingress normalization also protects retained decisions and classifier
+  failures, where this build otherwise restores client effort. Direct requests
+  to the presets still allow caller overrides.
   Jev uses `classifier_type: oss_classifier` with the existing
   `openrouter/~typesafe/jev-latest` decision deployment, without a new credential or
-  Python routing callback. Classification failure selects Astra/high; inference
-  failures use per-tier fallback chains to the existing fast/deep fallback aliases.
+  custom routing engine. Classification failure selects Astra/high; inference
+  failures use per-tier fallback chains to the existing fast/deep fallback aliases,
+  with explicit fallback effort parameters to preserve the selected level.
   `classification_mode: user_turn` retains the choice through tool continuations
   only when the client supplies a stable session identifier (for example
   `metadata.session_id`); a new human ask reclassifies. `session_affinity` remains
   false so the first model does not pin the entire conversation. Verify both chat
   and Responses routing, client effort precedence, session reuse, selected-tier
-  fallbacks, and Auto-Routers UI visibility when changing this configuration.
+  fallbacks, summary preservation, and Auto-Routers UI visibility when changing
+  this configuration. `tests/test_auto_router_effort.py` exercises the repo config
+  against an installed LiteLLM version with all provider HTTP mocked, including
+  client `xhigh`, streaming, turn reuse, and classifier/provider/image failures.
   `cloud/decision` remains a direct Jev alias; other existing cloud/local routes
   do not opt into auto routing.
 - `cloud/glm-auto` uses the same native Jev classifier and user-turn policy. Its
@@ -85,9 +99,12 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   replenish their shared Coding Plan quota. Flash tiers advertise vision support;
   main GLM tiers explicitly do not. Native modality routing only searches higher
   tiers, so `cloud/glm-auto` also falls back to `cloud/glm-flash-high` when routing
-  fails before a tier is dispatched. Validate image requests and classifier-failure
-  image requests stay on Flash through this fallback. Client effort
-  precedence and stable-session requirements match `cloud/codex-auto`.
+  fails before a tier is dispatched. With a failed classifier, native modality
+  handling has no decided tier and instead selects the first compatible tier,
+  Flash/low. Validate both image paths and their enforced effort: a classified
+  text-only tier falls back to Flash/high; classifier failure uses Flash/low.
+  Auto-route effort ownership and stable-session requirements match
+  `cloud/codex-auto`.
 - Local model entries share the llama-swap credential/backend. Another local model
   is not an independent host-outage fallback. Check endpoint, tool, modality,
   context, and embedding-space compatibility when proposing destinations.
@@ -120,6 +137,11 @@ pre-commit run --files <changed-file> [<changed-file>...]
 
 Include changed `scripts/*.py` files explicitly. Documentation-only skill changes
 need skill validation and applicable file hooks, not cluster or inference tests.
+
+Run Python integration tests that import the full proxy in a separate local
+runtime matching the deployed image, with provider HTTP mocked. Extra proxy
+interpreters inside the production container share its memory limit and have
+caused an OOM restart; do not use the running proxy pod as the test runner.
 
 When live inspection is relevant, check the HelmRelease, deployment, readiness,
 and startup logs without exposing credentials or prompt contents. After an authorized
