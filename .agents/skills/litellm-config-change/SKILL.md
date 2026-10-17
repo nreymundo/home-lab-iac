@@ -53,9 +53,12 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Explicit fallback chains are keyed only on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
-  are canonical model names, avoiding recursive service-alias chains. Explicit model
-  names and local routes have no configured failover. Verify alias-scoped lookup on
-  image updates. There is no automatic complexity router. `cloud/decision` exposes Jev through
+  are matching `cloud/<type>-fallback` aliases. Each fallback alias maps directly to
+  a canonical model name and has no fallback chain of its own. The prefix describes
+  where the target runs; future local targets use `local/<type>-fallback`. Explicit
+  model names and local routes have no configured failover. Verify source and
+  destination alias resolution on image updates. There is no automatic complexity
+  router. `cloud/decision` exposes Jev through
   OpenRouter; it does not automatically classify or route other requests.
 - Local model entries share the llama-swap credential/backend. Another local model
   is not an independent host-outage fallback. Check endpoint, tool, modality,
