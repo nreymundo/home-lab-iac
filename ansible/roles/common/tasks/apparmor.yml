@@ -1,0 +1,46 @@
+---
+- name: Inspect selected AppArmor profile files
+  ansible.builtin.stat:
+    path: "/etc/apparmor.d/{{ item }}"
+  loop: "{{ common_apparmor_disabled_profiles }}"
+  register: common_apparmor_profiles
+
+- name: Read loaded AppArmor profiles
+  ansible.builtin.command: cat /sys/kernel/security/apparmor/profiles
+  register: common_apparmor_loaded_profiles
+  changed_when: false
+  check_mode: false
+
+- name: Unload conflicting host executable profiles
+  ansible.builtin.command:
+    argv:
+      - apparmor_parser
+      - --remove
+      - "/etc/apparmor.d/{{ item.item }}"
+  loop: "{{ common_apparmor_profiles.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when:
+    - item.stat.exists
+    - (item.item ~ ' (') in common_apparmor_loaded_profiles.stdout
+  changed_when: true
+
+- name: Ensure the AppArmor profile disable directory exists
+  ansible.builtin.file:
+    path: /etc/apparmor.d/disable
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Persist selected AppArmor profile exceptions
+  ansible.builtin.file:
+    src: "/etc/apparmor.d/{{ item.item }}"
+    dest: "/etc/apparmor.d/disable/{{ item.item }}"
+    state: link
+    owner: root
+    group: root
+  loop: "{{ common_apparmor_profiles.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stat.exists

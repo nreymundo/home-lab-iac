@@ -50,3 +50,11 @@
     - packages
     - boot
   when: ansible_os_family == 'RedHat'
+
+- name: Configure selected AppArmor profile exceptions
+  ansible.builtin.import_tasks: apparmor.yml
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - common_apparmor_disabled_profiles | length > 0
+  tags:
+    - apparmor

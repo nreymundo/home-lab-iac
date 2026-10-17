@@ -1,4 +1,10 @@
 ---
+# Ubuntu 26.04 host profiles attach to SABnzbd's privileged container binaries
+# and deny its /config paths and VPN hooks. AppArmor remains enabled otherwise.
+common_apparmor_disabled_profiles:
+  - wg-quick
+  - wg
+
 host_power_backend: sysfs
 host_power_cpu_governor: powersave
 host_power_cpu_epp: balance_performance

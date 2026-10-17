@@ -21,6 +21,9 @@ common_apt_daily_upgrade_timer_schedule: ""
 common_run_upgrade: true
 common_lock_root_password: false
 
+# Host executable profiles that conflict with container-managed applications.
+common_apparmor_disabled_profiles: []
+
 # Scheduled fstrim for Linux guests (ignored if discard unsupported).
 common_enable_fstrim: true
 common_fstrim_timer_schedule: "04:00:00"
