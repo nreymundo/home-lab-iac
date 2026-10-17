@@ -5,12 +5,15 @@ comfyui_service_name: comfyui-container
 comfyui_compose_project_name: comfyui
 comfyui_compose_service_name: comfyui
 comfyui_container_name: comfyui
-comfyui_image: comfyui-qwen-image:0.40.0
+comfyui_image: comfyui-qwen-image:0.40.0-rocm10.1
 comfyui_base_image: >-
   docker.io/kyuz0/amd-strix-halo-comfyui@sha256:384aa1fecef6a841832e0d5552949977330308d8c25e212a94f5e8dfcc061cae
 comfyui_version: 3541246a9c997f4b8c32f9f88f3c985d02021c79 # v0.40.0
 comfyui_roundabout_version: d148fd09e2f2048c839083b395e1929ad528644d
 comfyui_force_rebuild: false
+comfyui_torch_version: 2.15.0a0+rocm10.1.0a20260822
+comfyui_torchvision_version: 0.30.0a0+rocm10.1.0a20260822
+comfyui_torchaudio_version: 2.11.0.3+rocm10.1.0a20260822
 
 comfyui_base_dir: /opt/ai/containers/comfyui
 comfyui_models_dir: /opt/ai/models/comfyui

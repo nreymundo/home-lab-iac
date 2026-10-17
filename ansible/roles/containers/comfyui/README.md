@@ -2,8 +2,15 @@
 
 The role builds ComfyUI 0.40.0 on a digest-pinned Strix Halo ROCm image and adds
 [ComfyUI-Roundabout](https://github.com/0c0/ComfyUI-Roundabout) at a pinned commit.
-The existing ROCm PyTorch wheels are constrained during the build. Rebuilding or
+The selected ROCm PyTorch wheels are constrained during the build. Rebuilding or
 recreating the container preserves models, inputs, outputs, and user state.
+
+The build replaces the base image's July ROCm 7.15 wheels with a matched,
+pinned ROCm 10.1/PyTorch package set. The old runtime burns a CPU core after
+even a one-element GPU operation while the GPU is idle, increasing package
+power. See the [upstream idle-spin report](https://github.com/ROCm/rocm-systems/issues/12674).
+Validate runtime updates with a GPU operation followed by an idle CPU/power
+measurement, as well as image generation; startup health alone misses this fault.
 
 Clients use the existing **LiteLLM HTTPS endpoint**, with their LiteLLM API key:
 
