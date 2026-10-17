@@ -11,6 +11,11 @@ data:
       - model_name: cloud/codex-auto
         model_info:
           mode: responses
+          # auto_router/* is unknown to LiteLLM's model catalog, so the router
+          # must declare the window itself; 922k matches every member tier
+          # (Codex-plan cap for the gpt-6 family, 128k output).
+          max_input_tokens: 922000
+          max_output_tokens: 128000
         litellm_params:
           model: auto_router/complexity_router
           complexity_router_default_model: cloud/codex-astra-high
