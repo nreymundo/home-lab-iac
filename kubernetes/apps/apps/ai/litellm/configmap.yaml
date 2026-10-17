@@ -7,6 +7,75 @@ metadata:
 data:
   config.yaml: |
     model_list:
+      # Native Jev routing; clients opt in by requesting cloud/codex-auto.
+      - model_name: cloud/codex-auto
+        model_info:
+          mode: responses
+        litellm_params:
+          model: auto_router/complexity_router
+          complexity_router_default_model: cloud/codex-astra-high
+          complexity_router_config:
+            tiers:
+              SIMPLE: cloud/codex-luna-low
+              MEDIUM: cloud/codex-luna-high
+              COMPLEX: cloud/codex-sol-high
+              REASONING: cloud/codex-astra-high
+            classifier_type: oss_classifier
+            opensource_classifier_config:
+              provider: jev
+              deployment_name: openrouter/~typesafe/jev-latest
+              model: jev-latest
+              timeout_ms: 2000
+            classifier_fallback: default_model
+            classification_mode: user_turn
+            session_affinity: false
+            deployment_affinity: true
+            classifier_context_window_size: 3
+            classifier_context_budget_chars: 2400
+            classifier_context_per_turn_chars: 800
+            classifier_context_include_assistant_turns: true
+            enable_context_window_escalation: true
+            modality_routing: true
+            return_raw_model_name: true
+
+      # Each tier resolves to a deployment with its own default reasoning effort.
+      # Explicit caller effort takes precedence, as with other LiteLLM models.
+      - model_name: cloud/codex-luna-low
+        model_info:
+          mode: responses
+          max_input_tokens: 922000
+          supports_vision: true
+        litellm_params:
+          model: chatgpt/gpt-6-luna
+          reasoning_effort: low
+
+      - model_name: cloud/codex-luna-high
+        model_info:
+          mode: responses
+          max_input_tokens: 922000
+          supports_vision: true
+        litellm_params:
+          model: chatgpt/gpt-6-luna
+          reasoning_effort: high
+
+      - model_name: cloud/codex-sol-high
+        model_info:
+          mode: responses
+          max_input_tokens: 922000
+          supports_vision: true
+        litellm_params:
+          model: chatgpt/gpt-6.1-sol
+          reasoning_effort: high
+
+      - model_name: cloud/codex-astra-high
+        model_info:
+          mode: responses
+          max_input_tokens: 922000
+          supports_vision: true
+        litellm_params:
+          model: chatgpt/gpt-6-astra
+          reasoning_effort: high
+
       # Expose only ChatGPT models verified against this subscription.
       - model_name: chatgpt/gpt-6.1-sol
         model_info:
@@ -421,6 +490,14 @@ data:
         openai/gpt-6.1-sol: chatgpt/gpt-6.1-sol
       # Scope failover to service aliases so explicit model names and local routes stay predictable.
       fallbacks:
+        - cloud/codex-luna-low:
+            - cloud/fast-fallback
+        - cloud/codex-luna-high:
+            - cloud/fast-fallback
+        - cloud/codex-sol-high:
+            - cloud/deep-fallback
+        - cloud/codex-astra-high:
+            - cloud/deep-fallback
         - cloud/fast:
             - cloud/fast-fallback
         - cloud/general:

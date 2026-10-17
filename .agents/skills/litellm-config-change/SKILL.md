@@ -51,15 +51,30 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   Key metadata can disable cache reads/writes or remove selected request parameters
   globally or by requested model name. Check this when diagnosing client differences.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
-  to canonical primary deployments. Explicit fallback chains are keyed only on
+  to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
   are matching `cloud/<type>-fallback` aliases. Each fallback alias maps directly to
   a canonical model name and has no fallback chain of its own. The prefix describes
   where the target runs; future local targets use `local/<type>-fallback`. Explicit
-  model names and local routes have no configured failover. Verify source and
-  destination alias resolution on image updates. There is no automatic complexity
-  router. `cloud/decision` exposes Jev through
-  OpenRouter; it does not automatically classify or route other requests.
+  canonical model names and local routes have no configured failover. Verify source
+  and destination alias resolution on image updates.
+- `cloud/codex-auto` is an opt-in native `auto_router/complexity_router` deployment,
+  configured entirely in `configmap.yaml`. Its four tiers select Luna/low,
+  Luna/high, Sol/high, and Astra/high through dedicated `cloud/codex-*-*`
+  deployments. These deployment names carry reasoning defaults; they are not
+  `model_group_alias` entries. Explicit caller effort overrides those defaults.
+  Jev uses `classifier_type: oss_classifier` with the existing
+  `openrouter/~typesafe/jev-latest` decision deployment, without a new credential or
+  Python routing callback. Classification failure selects Astra/high; inference
+  failures use per-tier fallback chains to the existing fast/deep fallback aliases.
+  `classification_mode: user_turn` retains the choice through tool continuations
+  only when the client supplies a stable session identifier (for example
+  `metadata.session_id`); a new human ask reclassifies. `session_affinity` remains
+  false so the first model does not pin the entire conversation. Verify both chat
+  and Responses routing, client effort precedence, session reuse, selected-tier
+  fallbacks, and Auto-Routers UI visibility when changing this configuration.
+  `cloud/decision` remains a direct Jev alias; other existing cloud/local routes
+  do not opt into auto routing.
 - Local model entries share the llama-swap credential/backend. Another local model
   is not an independent host-outage fallback. Check endpoint, tool, modality,
   context, and embedding-space compatibility when proposing destinations.
