@@ -137,10 +137,6 @@ pre-commit run --files <changed-file> [<changed-file>...]
 Include changed `scripts/*.py` files explicitly. Documentation-only skill changes
 need skill validation and applicable file hooks, not cluster or inference tests.
 
-Do not create a new test folder unless the user explicitly requests one. Keep
-ad hoc validation scripts outside the repository; validation authorization does
-not authorize committing a test harness.
-
 Run Python integration tests that import the full proxy in a separate local
 runtime matching the deployed image, with provider HTTP mocked. Extra proxy
 interpreters inside the production container share its memory limit and have
