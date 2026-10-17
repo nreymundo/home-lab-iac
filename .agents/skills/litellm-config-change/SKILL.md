@@ -1,116 +1,109 @@
 ---
 name: litellm-config-change
 description: >-
-  Add or change a LiteLLM model, provider, credential, pricing entry, local
-  Python patch, or cache/streaming behavior in this repo's locally-customized
-  LiteLLM deployment under `kubernetes/apps/apps/ai/litellm/`. Use when the user
-  says "add a model to LiteLLM", "add ZAI/OpenAI/GPT-5/Codex/GLM provider",
-  "change LiteLLM caching/streaming/pricing", "bump LiteLLM image", or "fix
-  LiteLLM responses/cache". Remember the image is manual-review-gated by
-  `renovate.json` because local monkey-patches must keep applying. Do NOT use
-  for routine app onboarding (use `k8s-app-onboarding`) or for non-LiteLLM AI
-  gateway work.
+  Inspect or change this repo's LiteLLM models, providers, credentials, routing,
+  fallbacks, pricing, caching, Python compatibility patches, or image version under
+  kubernetes/apps/apps/ai/litellm/. Image updates require manual review of active
+  patches. Use for LiteLLM configuration and feature comparisons, not general
+  app onboarding or unrelated AI gateways.
 ---
 
 # LiteLLM Config Change
 
-This LiteLLM deployment is heavily customized: configmap-mounted Python patches,
-a Headroom callback adapter installed via an initContainer, a sidecar Valkey
-cache, SSO via Authentik, and a CNPG database. Image bumps are **always manual
-review** while the local patches are active.
+This deployment uses ConfigMap-mounted Python compatibility patches, a separate
+Valkey controller for response caching, Authentik SSO, and a CNPG database.
+Headroom and its installation initContainer are no longer present.
 
-## When to use
+## Source and activation contract
 
-- Add/remove a model or provider in `configmap.yaml`.
-- Update pricing or reasoning defaults.
-- Add/change credentials (provider keys, SSO, master/salt, DB URL).
-- Add or modify a mounted patch (e.g. `cache_bypass.py`,
-  `chatgpt_responses_streaming_patch.py`, `vllm_model_discovery.py`,
-  `chatgpt_codex_catalog.py`, `zai_coding_catalog.py`, `headroom_adapter.py`).
-- Change cache backend (Valkey/Redis) or streaming behavior.
-- Bump the LiteLLM image tag (manual gate — see below).
+All paths below are relative to `kubernetes/apps/apps/ai/litellm/`:
 
-Do not use for general workload onboarding or unrelated AI gateway work.
+- `configmap.yaml`: embedded `config.yaml` with models, credential references,
+  aliases, router settings, cache settings, and callbacks.
+- `scripts/*.py`: Python source of truth. Do not embed patches in `configmap.yaml`.
+- `kustomization.yaml`: merges scripts into `litellm-config` through
+  `configMapGenerator.files`, with a stable ConfigMap name.
+- `helmrelease.yaml`: image, main and Valkey controllers, environment, and mounts.
+  Python files mount under `persistence.config.advancedMounts.main.main` using
+  `subPath`; `PYTHONPATH=/etc/litellm` makes them importable.
+- `cnpg-cluster.yaml`: database and backup configuration.
+- `litellm-credentials.sops.yaml`: provider credentials consumed through `envFrom`.
+- `litellm-secrets.sops.yaml`: master and salt keys.
+- `litellm-db-secrets.sops.yaml`: database credentials and URL.
 
-## Files in scope
+The Authentik-owned `litellm-sso-secret` comes from
+`kubernetes/infrastructure/security/authentik/install/`; consume its namespace
+replica directly. Use the SOPS lifecycle skill for secret changes.
 
-```
-kubernetes/apps/apps/ai/litellm/
-  helmrelease.yaml          # main + valkey controllers, initContainer, mounts
-  configmap.yaml            # config.yaml + all mounted Python patches
-  kustomization.yaml
-  cnpg-cluster.yaml         # litellm-pg
-  litellm-secrets.sops.yaml        # LITELLM_MASTER_KEY, LITELLM_SALT_KEY
-  litellm-db-secrets.sops.yaml     # DATABASE_URL
-  litellm-credentials.sops.yaml    # provider API keys (envFrom)
-```
+`sitecustomize.py` invokes `litellm_startup.worker_startup_hook()`, also registered
+through `LITELLM_WORKER_STARTUP_HOOKS`. Keep patches idempotent. For new modules,
+trace source → generator entry → mount → activation. A mounted or imported module
+is not evidence that its patch is enabled; inspect the actual startup hook.
 
-SSO secret `litellm-sso-secret` lives under
-`kubernetes/infrastructure/security/authentik/install/`.
+## Current behavior to verify before changing
 
-## Workflow
+- The startup hook enables virtual-key model-discovery route access, the ChatGPT
+  Responses string-input normalization backport, and OpenRouter rerank support.
+  Catalog, reasoning, streaming/cache, vLLM-discovery, retry, and file-authoritative
+  router implementations remain present but their hook calls are commented out.
+  Do not restore them merely because their files still exist.
+- `cache_bypass.proxy_handler_instance` is registered independently as a callback.
+  Key metadata can disable cache reads/writes or remove selected request parameters
+  globally or by requested model name. Check this when diagnosing client differences.
+- `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
+  to canonical primary deployments. Explicit fallback chains are keyed only on
+  `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
+  are canonical model names, avoiding recursive service-alias chains. Explicit model
+  names and local routes have no configured failover. Verify alias-scoped lookup on
+  image updates. There is no automatic complexity router. `cloud/decision` exposes Jev through
+  OpenRouter; it does not automatically classify or route other requests.
+- Local model entries share the llama-swap credential/backend. Another local model
+  is not an independent host-outage fallback. Check endpoint, tool, modality,
+  context, and embedding-space compatibility when proposing destinations.
+- Git intends to own configuration (`general_settings.store_model_in_db: false`),
+  while the HelmRelease also sets `STORE_MODEL_IN_DB: "True"`. Verify the installed
+  version's effective precedence and DB configuration before diagnosing drift.
+  The disabled file-authority patch is not an ownership guarantee.
+- Read the image tag from the HelmRelease. Renovate admits stable tags only, even
+  when the selected image is a manually chosen release candidate. Compare features
+  with that exact build; current documentation may describe unreleased changes.
 
-1. **Identify the edit surface**:
-   - Model list / pricing / router → `configmap.yaml` `config.yaml` entry.
-   - Provider credentials → `litellm-credentials.sops.yaml` (SOPS) and a
-     matching `envFrom`/`secretKeyRef` in `helmrelease.yaml`.
-   - Behaviour patch (cache bypass, streaming, discovery, catalog) → new key in
-     `configmap.yaml`, mounted `subPath` in `helmrelease.yaml` `persistence.config`,
-     and imported by `sitecustomize.py` or `litellm_startup.py` as needed.
-2. **Preserve the patch contract**: `PYTHONPATH=/opt/headroom:/etc/litellm` is
-   set in `helmrelease.yaml` and must include any new patch path. New patches
-   must be added to the main container's `advancedMounts.config` entries.
-3. **Keep Headroom working**: the `install-headroom` initContainer installs to
-   `/opt/headroom` from `headroom-requirements.txt` with `--require-hashes`. If
-   a patch depends on a new Headroom version, update both the requirements file
-   and verify the hash.
-4. **Validate the patch applies** before bumping the image — patches load via
-   `sitecustomize.py` at interpreter startup; a silent import failure breaks
-   LiteLLM at runtime, not at deploy time.
-5. **Image bump policy**: `renovate.json` marks `berriai/litellm` as manual
-   review (`automerge: false`) specifically because of these patches. Treat any
-   image bump as: read the upstream changelog, verify each patch still applies,
-   run a smoke test (call `/health/liveliness`, `/health/readiness`, and a
-   minimal `/chat/completions`). See `renovate-pr-triage`.
+## Changes and validation
 
-## Validation
+Edit model/router settings in the embedded configuration, Python in `scripts/`,
+and provider credential references in the owning configuration and HelmRelease.
+Trace affected clients such as Open WebUI and Hindsight before changing shared aliases.
+
+Image updates remain manual under the LiteLLM rule in `renovate.json`. Read upstream
+release notes and verify active patches against the candidate image, including
+imports of retained modules. Rendering manifests cannot prove Python compatibility.
+
+For workload changes, follow the applicable Kubernetes validation chain:
 
 ```bash
-# Render the LiteLLM kustomization
 kubectl kustomize --load-restrictor=LoadRestrictionsNone \
   kubernetes/apps/apps/ai/litellm >/dev/null
-
-# Repo-wide manifest + secret policy
 scripts/kubeconform.sh
-pre-commit run --files kubernetes/apps/apps/ai/litellm/*
-
-# Live (only if reachable + intended)
-flux get helmrelease litellm -n ai
-kubectl -n ai logs deploy/litellm-main
-curl -fsS https://litellm.lan.${CLUSTER_DOMAIN}/health/readiness
+pre-commit run --files <changed-file> [<changed-file>...]
 ```
 
-After deploying, call LiteLLM with a tiny request against each newly added
-model to confirm routing and credentials.
+Include changed `scripts/*.py` files explicitly. Documentation-only skill changes
+need skill validation and applicable file hooks, not cluster or inference tests.
 
-## Anti-patterns
+When live inspection is relevant, check the HelmRelease, deployment, readiness,
+and startup logs without exposing credentials or prompt contents. After an authorized
+rollout, validate changed endpoints: ChatGPT Responses (string input and streaming),
+chat completions, or reranking as applicable. Use tiny requests to verify credentials
+and record the actual serving model for routing changes.
 
-- Editing `configmap.yaml` without verifying the new patch is mounted in
-  `helmrelease.yaml` `persistence.config.advancedMounts.main.main`.
-- Bumping the LiteLLM image as a routine `chore(deps)` without re-verifying
-  patches — this is exactly the failure mode `renovate.json:165-174` protects
-  against.
-- Adding provider keys as plaintext env vars instead of
-  `litellm-credentials.sops.yaml` (blocked by the local
-  `prevent-plaintext-k8s-secrets` pre-commit hook; CI does not enforce it).
-- Changing cache backend without checking `cache_bypass.py` and the Valkey
-  sidecar configuration together.
-- Forgetting that `PYTHONPATH` ordering matters: `/opt/headroom` must come
-  before `/etc/litellm`.
+For fallbacks, test alias resolution, destination key access, and the failure path
+in isolation. Recent proxy versions strip `mock_testing_fallbacks` from incoming
+requests; use direct Router tests or an isolated provider-error scenario instead.
+Keep runtime claims provisional when live validation is unavailable.
 
 ## References
 
-- `kubernetes/apps/apps/ai/litellm/helmrelease.yaml`
-- `kubernetes/apps/apps/ai/litellm/configmap.yaml`
-- `renovate.json` LiteLLM package rule (manual gate)
-- `kubernetes/apps/apps/AGENTS.md`, `kubernetes/apps/AGENTS.md`
+- `kubernetes/AGENTS.md`, `kubernetes/apps/AGENTS.md`, `kubernetes/apps/apps/AGENTS.md`
+- `renovate.json` LiteLLM package rule and the `renovate-pr-triage` skill
+- [Official fallback documentation](https://docs.litellm.ai/docs/proxy/reliability)
+- [Official Auto Routing reference](https://docs.litellm.ai/docs/proxy/auto_routing)
