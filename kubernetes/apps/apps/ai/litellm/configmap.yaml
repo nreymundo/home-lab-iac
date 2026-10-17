@@ -387,7 +387,7 @@ data:
       store_model_in_db: false
 
     router_settings:
-      # Friendly names point directly to canonical provider/model deployments.
+      # Friendly names select primaries; cloud service aliases have explicit failover below.
       model_group_alias:
         cloud/coder: zai-coding/glm-5.3
         cloud/deep: chatgpt/gpt-6-sol
@@ -415,6 +415,16 @@ data:
         openai/gpt-6-luna: chatgpt/gpt-6-luna
         openai/gpt-6-sol: chatgpt/gpt-6-sol
         openai/gpt-6.1-sol: chatgpt/gpt-6.1-sol
+      # Scope failover to service aliases so explicit model names and local routes stay predictable.
+      fallbacks:
+        - cloud/fast:
+            - zai-coding/glm-5.3-flash
+        - cloud/general:
+            - chatgpt/gpt-6.1-sol
+        - cloud/coder:
+            - chatgpt/gpt-6.1-sol
+        - cloud/deep:
+            - zai-coding/glm-5.3
       routing_strategy: simple-shuffle
       num_retries: 2
       timeout: 6000
