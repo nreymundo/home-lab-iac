@@ -394,6 +394,7 @@ data:
         cloud/decision: openrouter/~typesafe/jev-latest
         cloud/fast: chatgpt/gpt-6-luna
         cloud/general: zai-coding/glm-5.3
+        cloud/rerank: openrouter/voyageai/rerank-2.5-lite
         local/analysis: hosted_vllm/unsloth/qwen3.8-27b-analysis
         local/automation-lite: hosted_vllm/unsloth/gemma-4-e4b-it-qat
         local/camera-analysis: hosted_vllm/unsloth/gemma-4-12b-it-qat-camera
@@ -414,7 +415,6 @@ data:
         openai/gpt-6-luna: chatgpt/gpt-6-luna
         openai/gpt-6-sol: chatgpt/gpt-6-sol
         openai/gpt-6.1-sol: chatgpt/gpt-6.1-sol
-        remote/rerank: openrouter/voyageai/rerank-2.5-lite
       routing_strategy: simple-shuffle
       num_retries: 2
       timeout: 6000
