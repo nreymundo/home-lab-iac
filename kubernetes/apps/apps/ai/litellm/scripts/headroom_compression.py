@@ -7,9 +7,12 @@ import os
 import time
 from contextvars import ContextVar
 
+import httpx
+
 from litellm._logging import verbose_proxy_logger
 from litellm.integrations.custom_logger import CustomLogger
 from litellm.llms import get_guardrail_translation_mapping
+from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler
 from litellm.proxy.guardrails.guardrail_hooks.headroom.headroom import (
     HeadroomGuardrail,
     _flatten_messages_for_compression,
@@ -85,7 +88,9 @@ class _SessionGuardrail(HeadroomGuardrail):
             timeout=5,
             ccr_retrieval=False,
         )
-        self.async_handler = _SessionClient(self.async_handler)
+        # Keep localhost compression independent of the proxy's shared
+        # provider/guardrail transport and its startup/session lifecycle.
+        self.async_handler = _SessionClient(AsyncHTTPHandler(transport=httpx.AsyncHTTPTransport()))
 
     async def apply_guardrail(self, inputs, request_data, input_type, logging_obj=None):
         if input_type != "request" or self._should_bypass(request_data) or request_data.get("background"):
