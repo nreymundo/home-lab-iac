@@ -42,7 +42,7 @@ data:
               provider: jev
               deployment_name: local/decisions
               model: d3-mini
-              timeout_ms: 5000
+              timeout_ms: 25000
             classifier_fallback: default_model
             classification_mode: user_turn
             session_affinity: false
@@ -206,14 +206,14 @@ data:
       - model_name: hosted_vllm/d3-mini
         model_info:
           mode: decisions
-          max_input_tokens: 4096
+          max_input_tokens: 16384
         litellm_params:
           model: hosted_vllm/d3-mini
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
           output_cost_per_token: 0.0
-          timeout: 2
+          timeout: 20
           tags:
             - llama-swap
             - pve3
@@ -429,7 +429,7 @@ data:
               provider: jev
               deployment_name: local/decisions
               model: d3-mini
-              timeout_ms: 5000
+              timeout_ms: 25000
             classifier_fallback: default_model
             classification_mode: user_turn
             session_affinity: false

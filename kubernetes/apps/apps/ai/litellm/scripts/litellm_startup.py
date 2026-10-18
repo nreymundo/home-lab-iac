@@ -192,7 +192,7 @@ def patch_local_decision_classifier_fallbacks():
             == AUTOROUTER_CLASSIFIER_CALL_ORIGIN
         ):
             kwargs["disable_fallbacks"] = False
-            # The classifier's outer 5s deadline covers both attempts. Use the
+            # The classifier's outer deadline covers both attempts. Use the
             # configured per-deployment timeouts so local cannot spend it all.
             kwargs.pop("timeout", None)
         return await original(self, *args, **kwargs)
