@@ -1,4 +1,4 @@
-"""Observe likely secrets in provider-bound LiteLLM request content."""
+"""Observe or selectively block likely secrets in LiteLLM request content."""
 
 from __future__ import annotations
 
@@ -8,24 +8,28 @@ import logging
 import math
 import os
 import re
+import threading
 import time
-from collections import Counter
+import uuid
+from collections import Counter, OrderedDict
 from collections.abc import Iterable
 from typing import Any
 from urllib.parse import urlsplit
 
+from litellm.exceptions import GuardrailRaisedException
 from litellm.integrations.custom_guardrail import CustomGuardrail
 from litellm.proxy.common_utils.callback_utils import (
     add_guardrail_to_applied_guardrails_header,
 )
 
 
-logger = logging.getLogger("LiteLLM Proxy")
+_AUDIT_LOGGER = logging.getLogger("LiteLLM Proxy.secrets_observer")
+_AUDIT_LOGGER.setLevel(logging.INFO)
 _SOPS_CIPHERTEXT = re.compile(r"ENC\[AES256_GCM,[^\]\r\n]*\]")
 _CANDIDATE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_./+=-]{14,}[A-Za-z0-9+/=]")
 _ASSIGNMENT = re.compile(
-    r"(?i)(?<![A-Za-z0-9_])(?P<key>\"[A-Za-z_][A-Za-z0-9_-]*\"|[A-Za-z_][A-Za-z0-9_-]*)"
-    r"\s*(?:=|:)\s*(?P<value>\"[^\"\r\n]*\"|'[^'\r\n]*'|[^\s,}\]]+)"
+    r"(?i)(?<![A-Za-z0-9_])(?=(?P<key>\"[A-Za-z_][A-Za-z0-9_-]*\"|[A-Za-z_][A-Za-z0-9_-]*)"
+    r"\s*(?:=|:)\s*(?P<value>\"[^\"\r\n]*\"|'[^'\r\n]*'|[^\s,}\]]+))"
 )
 _ENV_NAME_SEGMENTS = {
     "ACCESS",
@@ -112,7 +116,7 @@ _LOCAL_MODEL_PREFIXES = ("local/", "hosted_vllm/")
 
 def _safe_log(level: int, message: str, *args: Any) -> None:
     try:
-        logger.log(level, message, *args)
+        _AUDIT_LOGGER.log(level, message, *args)
     except Exception:
         pass
 
@@ -273,7 +277,7 @@ def _is_local_destination(data: dict[str, Any]) -> bool:
 
 
 class SecretsObserverGuardrail(CustomGuardrail):
-    """Report likely secrets while preserving the complete request unchanged."""
+    """Report heuristic matches and optionally block known credential values."""
 
     use_native_lifecycle_hooks = True
     records_own_guardrail_information = True
@@ -281,12 +285,17 @@ class SecretsObserverGuardrail(CustomGuardrail):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         self._fingerprints = _load_fingerprints(os.getenv("GUARDRAIL_SECRETS_FINGERPRINTS"))
-        self._observe_only_setting = os.getenv("GUARDRAIL_SECRETS_DRY_RUN", "")
-        if self._observe_only_setting != "1":
-            _safe_log(logging.ERROR, "Secrets observer requires GUARDRAIL_SECRETS_DRY_RUN=1; enforcement is unavailable")
+        self._mode = os.getenv("GUARDRAIL_SECRETS_MODE", "observe").lower()
+        if self._mode not in {"enforce", "observe", "off"}:
+            raise ValueError("GUARDRAIL_SECRETS_MODE must be enforce, observe, or off")
+        if self._mode == "enforce" and not self._fingerprints:
+            raise ValueError("GUARDRAIL_SECRETS_MODE=enforce requires configured fingerprints")
+        self._pending_warning_ids: OrderedDict[str, bool] = OrderedDict()
+        self._pending_warning_lock = threading.Lock()
         _safe_log(
             logging.INFO,
-            "Secrets observer started in observe-only mode; detectors=%d fingerprint_count=%d",
+            "Secrets observer started; mode=%s detectors=%d fingerprint_count=%d",
+            self._mode,
             len(_PATTERNS) + 2,
             len(self._fingerprints),
         )
@@ -298,6 +307,8 @@ class SecretsObserverGuardrail(CustomGuardrail):
         extra_content: Any = None,
     ) -> dict[str, Any]:
         if not isinstance(data, dict):
+            return data
+        if self._mode == "off":
             return data
         started = time.perf_counter()
         outcome = "scanned"
@@ -317,20 +328,32 @@ class SecretsObserverGuardrail(CustomGuardrail):
             outcome = "scan_error"
             _safe_log(logging.WARNING, "Secrets observer scan failed; category=%s", type(exc).__name__)
 
+        fingerprint_findings = sorted(label for label in counts if label.startswith("fingerprint:"))
+        heuristic_findings = sorted(label for label in counts if not label.startswith("fingerprint:"))
+        blocked = self._mode == "enforce" and bool(fingerprint_findings) and outcome != "scan_error"
+        if blocked:
+            outcome = "blocked"
+        elif counts and outcome == "scanned":
+            outcome = "warning"
+
         elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
+        correlation_id = data.get("litellm_call_id")
+        if not isinstance(correlation_id, str) or not re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", correlation_id):
+            correlation_id = f"sg-{uuid.uuid4().hex}"
         audit = {
-            "mode": "observe_only",
+            "mode": self._mode,
             "stage": stage,
             "outcome": outcome,
             "detector_counts": dict(sorted(counts.items())),
             "duration_ms": elapsed_ms,
+            "correlation_id": correlation_id,
         }
-        correlation_id = data.get("litellm_call_id")
-        if isinstance(correlation_id, str) and re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", correlation_id):
-            audit["correlation_id"] = correlation_id
-        log_level = logging.WARNING if counts or outcome == "scan_error" else logging.INFO
+        if heuristic_findings:
+            audit["warning"] = "possible_credential_may_be_example"
+        if fingerprint_findings:
+            audit["fingerprint_categories"] = fingerprint_findings
         _safe_log(
-            log_level,
+            logging.WARNING if counts or outcome == "scan_error" else logging.INFO,
             "Secrets observer audit %s",
             json.dumps(audit, sort_keys=True, separators=(",", ":")),
         )
@@ -338,17 +361,57 @@ class SecretsObserverGuardrail(CustomGuardrail):
             self.add_standard_logging_guardrail_information_to_request_data(
                 guardrail_json_response=audit,
                 request_data=data,
-                guardrail_status="success",
+                guardrail_status="blocked" if blocked else "success",
                 duration=elapsed_ms / 1000,
             )
-            if outcome == "scanned":
+            if outcome not in {"local_skip", "scan_error"}:
                 add_guardrail_to_applied_guardrails_header(
                     request_data=data,
                     guardrail_name=self.guardrail_name,
                 )
         except Exception as exc:  # reporting failure must not change request handling
             _safe_log(logging.WARNING, "Secrets observer audit reporting failed; category=%s", type(exc).__name__)
+        if correlation_id and heuristic_findings and not blocked:
+            with self._pending_warning_lock:
+                self._pending_warning_ids[correlation_id] = True
+                self._pending_warning_ids.move_to_end(correlation_id)
+                while len(self._pending_warning_ids) > 1024:
+                    self._pending_warning_ids.popitem(last=False)
+        if blocked:
+            raise GuardrailRaisedException(
+                guardrail_name=self.guardrail_name,
+                status_code=400,
+                blocked_content=True,
+                should_wrap_with_default_message=False,
+                message=(
+                    "SECRETS_GUARDRAIL_CREDENTIAL_FINGERPRINT_MATCH: a configured "
+                    "credential fingerprint matched; request blocked. "
+                    "Remove the credential or replace it with <redacted> and resubmit. "
+                    f"Detection ID: {correlation_id}. No matched content is included."
+                ),
+            )
         return data
+
+    async def async_post_call_response_headers_hook(
+        self,
+        data,
+        user_api_key_dict,
+        response,
+        request_headers=None,
+        litellm_call_info=None,
+    ):
+        """Expose heuristic warnings without copying request content into headers."""
+        correlation_id = data.get("litellm_call_id") if isinstance(data, dict) else None
+        if not isinstance(correlation_id, str):
+            return {}
+        with self._pending_warning_lock:
+            warning = self._pending_warning_ids.pop(correlation_id, None)
+        if not warning:
+            return {}
+        return {
+            "X-LiteLLM-Secrets-Guardrail": "possible-credential-may-be-example",
+            "X-LiteLLM-Secrets-Detection-ID": correlation_id,
+        }
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
         return self._observe(data, "ingress")

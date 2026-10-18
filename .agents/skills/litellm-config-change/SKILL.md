@@ -29,9 +29,9 @@ All paths below are relative to `kubernetes/apps/apps/ai/litellm/`:
 - `cnpg-cluster.yaml`: database and backup configuration.
 - `litellm-credentials.sops.yaml`: provider credentials consumed through `envFrom`.
 - `litellm-secrets.sops.yaml`: master and salt keys.
-- `litellm-guardrail-fingerprints.sops.yaml`: hashes used by the observe-only
-  secrets guardrail. Its JSON value is delivered through `envFrom`; it contains
-  only SHA-256 fingerprints, not source credentials.
+- `litellm-guardrail-fingerprints.sops.yaml`: hashes used by the secrets
+  guardrail. Its JSON value is delivered through `envFrom`; it contains only
+  SHA-256 fingerprints, not source credentials.
 - `litellm-db-secrets.sops.yaml`: database credentials and URL.
 
 The Authentik-owned `litellm-sso-secret` comes from
@@ -60,24 +60,28 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   `reasoning_effort`. This is request normalization; model selection stays native.
   Direct model requests keep client effort precedence. Keep the scope restricted
   to these auto routes and test both chat and Responses before changing the hook.
-- `secrets-observer` runs after Headroom and is intentionally observe-only. It uses
-  native pre-call and deployment hooks because unified translations omit Decisions,
-  some rerank/Responses fields, and cloud fallbacks after local dispatch. It records
-  detector counts and timing but never rewrites or blocks requests; the applied
-  guardrail header indicates observation, not sanitization. `SET_DEBUG` must remain
-  disabled to avoid request-payload debug logging. Keep fingerprints in the
-  workload-owned SOPS Secret and rotate them by hashing current source values
-  locally without printing values or hashes. Exact fingerprints match intact values
-  only; they do not detect arbitrary truncation or encoding. Credential assignments
-  include quoted JSON keys; structured text fields named `data` are scanned, while
-  known audio, image, video, and file payloads are skipped. MCP gateway traffic is
-  not scanned. Unresolved local routes use the stable `local/` and `hosted_vllm/`
-  prefixes; a resolved `api_base` is authoritative and is also compared with the
-  configured llama-swap endpoint, so LAN-backed local routes are skipped while
-  cloud fallbacks remain observed. Direct `apply_guardrail` calls scan extracted
-  text inputs. Sanitized audit summaries include outcome, detector counts, duration,
-  and a safe LiteLLM call correlation ID; matched content is never logged, and no
-  finding blocks or rewrites content.
+- `secrets-observer` runs after Headroom and uses native pre-call and deployment
+  hooks because unified translations omit Decisions, some rerank/Responses fields,
+  and cloud fallbacks after local dispatch. `GUARDRAIL_SECRETS_MODE` accepts
+  `enforce`, `observe`, or `off`: enforce blocks only exact configured fingerprint
+  matches, observe never blocks, and off bypasses scanning. Heuristic token,
+  assignment, and private-key findings remain warnings in every scanning mode.
+  The applied-guardrail header indicates evaluation, not sanitization.
+  Scanner and reporting failures fail open; enforce requires a non-empty fingerprint
+  set. Keep `SET_DEBUG` disabled to avoid request-payload debug logging. Keep
+  fingerprints in the workload-owned SOPS Secret and rotate them by hashing current
+  source values locally without printing values or hashes. Exact fingerprints match
+  intact values only; they do not detect arbitrary truncation or encoding. Credential
+  assignments include quoted JSON keys; structured text fields named `data` are
+  scanned, while known audio, image, video, and file payloads are skipped. MCP
+  gateway traffic is not scanned. Unresolved local routes use the stable `local/`
+  and `hosted_vllm/` prefixes; a resolved `api_base` is authoritative and is also
+  compared with the configured llama-swap endpoint, so LAN-backed local routes are
+  skipped while cloud fallbacks are checked again at deployment. Direct
+  `apply_guardrail` calls scan extracted text inputs. Sanitized audit summaries
+  include mode, outcome, detector counts, duration, and correlation ID; matched
+  content is never logged. Fingerprint blocks return a client-readable 400 with a
+  detection ID and no matched value. Heuristic findings add safe warning headers.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
