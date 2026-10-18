@@ -609,8 +609,8 @@ data:
           guardrail: headroom
           mode: pre_call
           api_base: http://127.0.0.1:8787
-          # Attach to a virtual key or request to opt in during evaluation.
-          default_on: false
+          # Global compression; selective key/team activation requires Enterprise.
+          default_on: true
           unreachable_fallback: fail_open
           timeout: 5
 
