@@ -257,7 +257,9 @@ data:
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
           output_cost_per_token: 0.0
-          timeout: 20
+          # Batch-scale decisions (13K in / ~2.5K out) need more than 20s on pve3;
+          # at 20s the primary timed out and every full batch fell back to cloud.
+          timeout: 60
           tags:
             - llama-swap
             - pve3
@@ -737,7 +739,9 @@ data:
       fallbacks:
         - local/decision:
             - model: cloud/decision
-              timeout: 2
+              # Cap on the CLOUD fallback call itself, not on local/decision;
+              # 2s failed whole requests whenever OpenRouter hiccupped.
+              timeout: 30
         # Native modality checks cannot descend from main GLM to a Flash tier.
         - cloud/glm-auto:
             - model: cloud/glm-flash-high
