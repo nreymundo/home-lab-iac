@@ -324,13 +324,17 @@ def _is_local_destination(data: dict[str, Any]) -> bool:
     return isinstance(model, str) and model.lower().startswith(_LOCAL_MODEL_PREFIXES)
 
 
-def _add_model_notice(data: dict[str, Any]) -> None:
+def _add_model_notice(data: dict[str, Any], call_type: str | None) -> None:
+    if call_type not in {"completion", "acompletion", "responses", "aresponses"}:
+        return
     messages = data.get("messages")
     if isinstance(messages, list):
         messages.insert(0, {"role": "system", "content": _REDACTION_NOTICE})
         return
     inputs = data.get("input")
-    if isinstance(inputs, list):
+    if isinstance(inputs, list) and all(
+        isinstance(item, dict) and isinstance(item.get("role"), str) for item in inputs
+    ):
         inputs.insert(0, {"role": "system", "content": _REDACTION_NOTICE})
         return
     for key in ("instructions", "instruction", "prompt", "input"):
@@ -352,6 +356,16 @@ def _has_model_notice(value: Any) -> bool:
 
 def _was_redacted(data: Any) -> bool:
     return _REDACTED_THIS_CALL.get() or _has_model_notice(data)
+
+
+def _prepend_assistant_notice(message: dict[str, Any], notice: str) -> None:
+    content = message.get("content")
+    if isinstance(content, str):
+        message["content"] = f"{notice}\n\n{content}"
+    elif isinstance(content, list):
+        message["content"] = [{"type": "text", "text": notice}, *content]
+    elif content is None:
+        message["content"] = notice
 
 
 class SecretsObserverGuardrail(CustomGuardrail):
@@ -379,6 +393,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         data: dict[str, Any],
         stage: str,
         extra_content: Any = None,
+        call_type: str | None = None,
     ) -> dict[str, Any]:
         if not isinstance(data, dict):
             return data
@@ -404,7 +419,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
                         extra_content.insert(0, _REDACTION_NOTICE)
                 redacted = bool(counts)
                 if redacted:
-                    _add_model_notice(data)
+                    _add_model_notice(data, call_type)
             else:
                 for root in _CONTENT_ROOTS:
                     if root in data:
@@ -476,10 +491,10 @@ class SecretsObserverGuardrail(CustomGuardrail):
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
         _REDACTED_THIS_CALL.set(False)
-        return self._process(data, "ingress")
+        return self._process(data, "ingress", call_type=call_type)
 
     async def async_pre_call_deployment_hook(self, kwargs, call_type):
-        return self._process(kwargs, "deployment")
+        return self._process(kwargs, "deployment", call_type=call_type)
 
     async def apply_guardrail(self, inputs, request_data, input_type, logging_obj=None):
         texts = inputs.get("texts") if isinstance(inputs, dict) else None
@@ -496,12 +511,17 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 choices = response.get("choices")
                 if isinstance(choices, list) and choices:
                     message = choices[0].get("message")
-                    if isinstance(message, dict) and isinstance(message.get("content"), str):
-                        message["content"] = f"{notice}\n\n{message['content']}"
+                    if isinstance(message, dict):
+                        _prepend_assistant_notice(message, notice)
                 return response
-            content = response.choices[0].message.content
+            message = response.choices[0].message
+            content = message.content
             if isinstance(content, str):
-                response.choices[0].message.content = f"{notice}\n\n{content}"
+                message.content = f"{notice}\n\n{content}"
+            elif isinstance(content, list):
+                message.content = [{"type": "text", "text": notice}, *content]
+            elif content is None:
+                message.content = notice
         except (AttributeError, IndexError, KeyError, TypeError):
             pass
         return response
@@ -511,16 +531,18 @@ class SecretsObserverGuardrail(CustomGuardrail):
             async for chunk in response:
                 yield chunk
             return
-        first = True
+        notice_pending = True
         async for chunk in response:
-            if first:
-                first = False
+            if notice_pending:
                 try:
                     delta = chunk.choices[0].delta
-                    delta.content = (
-                        "Notice: sensitive credential-like content was redacted before processing.\n\n"
-                        + (delta.content or "")
-                    )
+                    content = delta.content
+                    if isinstance(content, str) and content:
+                        delta.content = (
+                            "Notice: sensitive credential-like content was redacted before processing.\n\n"
+                            + content
+                        )
+                        notice_pending = False
                 except (AttributeError, IndexError, TypeError):
                     pass
             yield chunk

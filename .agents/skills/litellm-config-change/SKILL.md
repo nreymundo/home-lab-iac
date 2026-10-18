@@ -69,8 +69,11 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   and continues processing, observe reports without modifying payloads, and off
   bypasses scanning. The safe default is `observe`; Helm explicitly selects
   `redact`. Redacted requests receive a model-context notice and an
-  assistant-visible notice, including streamed responses. The applied-guardrail
-  header indicates evaluation, not sanitization. Scanner and reporting failures
+  assistant-visible notice, including streamed responses; chat-compatible inputs
+  only receive model notices. Direct `apply_guardrail` calls scan extracted text
+  inputs and redact the caller-owned text list in place. The response header
+  `X-LiteLLM-Secrets-Guardrail: redacted` marks sanitized requests. The
+  applied-guardrail header indicates evaluation, not sanitization. Scanner and reporting failures
   fail open. Keep `SET_DEBUG` disabled to avoid request-payload debug logging. Keep
   fingerprints in the workload-owned SOPS Secret and rotate them by hashing current
   source values locally without printing values or hashes. Exact fingerprints match
@@ -80,9 +83,8 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   gateway traffic is not scanned. Unresolved local routes use the stable `local/`
   and `hosted_vllm/` prefixes; a resolved `api_base` is authoritative and is also
   compared with the configured llama-swap endpoint, so LAN-backed local routes are
-  skipped while cloud fallbacks are checked again at deployment. Direct
-  `apply_guardrail` calls scan extracted text inputs. Sanitized audit summaries
-  include mode, outcome, detector counts, duration, and correlation ID; matched
+  skipped while cloud fallbacks are checked again at deployment. Sanitized audit
+  summaries include mode, outcome, detector counts, duration, and correlation ID; matched
   content is never logged. Redaction preserves surrounding request structure and
   local-route exemptions remain intact.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
