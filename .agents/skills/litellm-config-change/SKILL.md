@@ -65,7 +65,8 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   and cloud fallbacks after local dispatch. `GUARDRAIL_SECRETS_MODE` accepts
   `redact`, `observe`, or `off`: redact replaces spans found by every detector
   and continues processing, observe reports without modifying payloads, and off
-  bypasses scanning. Redacted requests receive a model-context notice and an
+  bypasses scanning. The safe default is `observe`; Helm explicitly selects
+  `redact`. Redacted requests receive a model-context notice and an
   assistant-visible notice, including streamed responses. The applied-guardrail
   header indicates evaluation, not sanitization. Scanner and reporting failures
   fail open. Keep `SET_DEBUG` disabled to avoid request-payload debug logging. Keep

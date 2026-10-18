@@ -357,7 +357,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         self._fingerprints = _load_fingerprints(os.getenv("GUARDRAIL_SECRETS_FINGERPRINTS"))
-        self._mode = os.getenv("GUARDRAIL_SECRETS_MODE", "redact").lower()
+        self._mode = os.getenv("GUARDRAIL_SECRETS_MODE", "observe").lower()
         if self._mode not in {"redact", "observe", "off"}:
             raise ValueError("GUARDRAIL_SECRETS_MODE must be redact, observe, or off")
         _safe_log(
@@ -390,9 +390,12 @@ class SecretsObserverGuardrail(CustomGuardrail):
                     if root in data:
                         data[root], found = _redact_value(data[root], self._fingerprints)
                         counts.update(found)
-                if extra_content is not None:
-                    extra_content, found = _redact_value(extra_content, self._fingerprints)
+                if isinstance(extra_content, list):
+                    clean_extra, found = _redact_value(extra_content, self._fingerprints)
                     counts.update(found)
+                    if found:
+                        extra_content[:] = clean_extra
+                        extra_content.insert(0, _REDACTION_NOTICE)
                 redacted = bool(counts)
                 if redacted:
                     _add_model_notice(data)
@@ -473,12 +476,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
     async def apply_guardrail(self, inputs, request_data, input_type, logging_obj=None):
         texts = inputs.get("texts") if isinstance(inputs, dict) else None
         data = request_data if isinstance(request_data, dict) else {}
-        data = self._process(data, f"apply_guardrail:{input_type}", extra_content=texts)
-        if self._mode == "redact" and isinstance(texts, list):
-            clean, found = _redact_value(texts, self._fingerprints)
-            if found:
-                clean.insert(0, _REDACTION_NOTICE)
-            inputs["texts"] = clean
+        self._process(data, f"apply_guardrail:{input_type}", extra_content=texts)
         return inputs
 
     async def async_post_call_success_hook(self, data, user_api_key_dict, response):
@@ -486,11 +484,16 @@ class SecretsObserverGuardrail(CustomGuardrail):
             return response
         notice = "Notice: sensitive credential-like content was redacted before processing."
         try:
+            if isinstance(response, dict):
+                choices = response.get("choices")
+                if isinstance(choices, list) and choices:
+                    message = choices[0].get("message")
+                    if isinstance(message, dict) and isinstance(message.get("content"), str):
+                        message["content"] = f"{notice}\n\n{message['content']}"
+                return response
             content = response.choices[0].message.content
             if isinstance(content, str):
                 response.choices[0].message.content = f"{notice}\n\n{content}"
-            elif isinstance(response, dict):
-                response["choices"][0]["message"]["content"] = f"{notice}\n\n{content}"
         except (AttributeError, IndexError, KeyError, TypeError):
             pass
         return response
