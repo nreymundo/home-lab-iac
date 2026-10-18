@@ -82,7 +82,13 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   assignments include quoted JSON keys; assignments whose field name ends in a
   reference segment (`_name`, `_id`, `_ref`, `_url`, `_path`, `_label`, `_uri`,
   `_file`) are exempt from heuristic assignment redaction, while format and
-  fingerprint detectors still scan their values. Structured text fields named `data` are
+  fingerprint detectors still scan their values. Placeholder-shaped captures
+  (example/your/sample wording, long single-character runs, published sample
+  credentials such as the jwt.io default token, or bare environment
+  references like `os.environ/NAME`) are skipped by format and heuristic
+  detectors; fingerprint matches never skip. Redaction markers are typed per
+  detector (`[REDACTED:<detector>]`), and spans already carrying a marker are
+  not rescanned. Structured text fields named `data` are
   scanned, while known audio, image, video, and file payloads are skipped. MCP
   gateway traffic is not scanned. Unresolved local routes use the stable `local/`
   and `hosted_vllm/` prefixes; a resolved `api_base` is authoritative and is also
