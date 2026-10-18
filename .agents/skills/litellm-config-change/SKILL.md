@@ -69,7 +69,9 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   workload-owned SOPS Secret and rotate them by hashing current source values
   locally without printing values or hashes. Exact fingerprints match intact values
   only; they do not detect arbitrary truncation or encoding. Images, binary payloads,
-  and MCP gateway traffic are not scanned.
+  and MCP gateway traffic are not scanned. Unresolved local routes use the stable
+  `local/` and `hosted_vllm/` prefixes; after deployment resolution, `api_base` is
+  authoritative so a cloud fallback from a local alias is still observed.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations

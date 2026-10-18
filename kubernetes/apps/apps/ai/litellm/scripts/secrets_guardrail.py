@@ -98,30 +98,7 @@ _NON_TEXT_KEYS = {
     "type",
     "video",
 }
-# This exact allowlist mirrors local/* entries in the router's model_group_alias.
-_LOCAL_MODEL_ALIASES = frozenset(
-    {
-        "local/analysis",
-        "local/automation-lite",
-        "local/camera-analysis",
-        "local/chat",
-        "local/coder",
-        "local/decision",
-        "local/document-analysis",
-        "local/document-best",
-        "local/embedding",
-        "local/image",
-        "local/rerank",
-        "local/stt-fast",
-        "local/stt-large",
-        "local/tts",
-    }
-)
-_LOCAL_API_BASES = (
-    "http://127.0.0.1:",
-    "http://localhost:",
-    "http://comfyui.external-proxy.svc.cluster.local:",
-)
+_LOCAL_MODEL_PREFIXES = ("local/", "hosted_vllm/")
 
 
 def _safe_log(level: int, message: str, *args: Any) -> None:
@@ -247,20 +224,18 @@ def _scan_text(text: str, fingerprints: dict[str, bytes]) -> list[tuple[int, int
 
 
 def _is_local_destination(data: dict[str, Any]) -> bool:
-    model = data.get("model")
-    if isinstance(model, str):
-        normalized_model = model.lower()
-        if normalized_model in _LOCAL_MODEL_ALIASES or normalized_model.startswith("hosted_vllm/"):
-            return True
     api_base = data.get("api_base")
-    if not isinstance(api_base, str):
-        return False
-    if api_base.lower().startswith(_LOCAL_API_BASES):
-        return True
-    try:
-        return urlsplit(api_base).hostname.endswith(".svc.cluster.local")
-    except (AttributeError, ValueError):
-        return False
+    if isinstance(api_base, str):
+        try:
+            hostname = (urlsplit(api_base).hostname or "").lower()
+            return hostname in {"localhost", "127.0.0.1", "::1"} or hostname.endswith(
+                ".svc.cluster.local"
+            )
+        except ValueError:
+            return False
+
+    model = data.get("model")
+    return isinstance(model, str) and model.lower().startswith(_LOCAL_MODEL_PREFIXES)
 
 
 class SecretsObserverGuardrail(CustomGuardrail):
