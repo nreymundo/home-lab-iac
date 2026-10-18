@@ -13,6 +13,7 @@ import time
 import uuid
 from collections import Counter, OrderedDict
 from collections.abc import Iterable
+from contextvars import ContextVar
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -25,6 +26,9 @@ from litellm.proxy.common_utils.callback_utils import (
 
 _AUDIT_LOGGER = logging.getLogger("LiteLLM Proxy.secrets_observer")
 _AUDIT_LOGGER.setLevel(logging.INFO)
+_BLOCKED_DETECTION_ID: ContextVar[str | None] = ContextVar(
+    "secrets_guardrail_blocked_detection_id", default=None
+)
 _SOPS_CIPHERTEXT = re.compile(r"ENC\[AES256_GCM,[^\]\r\n]*\]")
 _CANDIDATE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_./+=-]{14,}[A-Za-z0-9+/=]")
 _ASSIGNMENT = re.compile(
@@ -378,6 +382,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 while len(self._pending_warning_ids) > 1024:
                     self._pending_warning_ids.popitem(last=False)
         if blocked:
+            _BLOCKED_DETECTION_ID.set(correlation_id)
             raise GuardrailRaisedException(
                 guardrail_name=self.guardrail_name,
                 status_code=400,
@@ -391,6 +396,33 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 ),
             )
         return data
+
+    async def async_post_call_failure_hook(
+        self,
+        request_data,
+        original_exception,
+        user_api_key_dict,
+        traceback_str=None,
+    ):
+        """Keep wrapped fallback blocks non-retryable and give clients safe detail."""
+        detection_id = _BLOCKED_DETECTION_ID.get()
+        if not detection_id:
+            return None
+        _BLOCKED_DETECTION_ID.set(None)
+        from fastapi import HTTPException
+
+        return HTTPException(
+            status_code=400,
+            detail={
+                "error": "secrets_guardrail_blocked",
+                "code": "SECRETS_GUARDRAIL_CREDENTIAL_FINGERPRINT_MATCH",
+                "message": (
+                    "A configured credential fingerprint matched. Remove the credential or "
+                    "replace it with <redacted> and resubmit. No matched content is included."
+                ),
+                "detection_id": detection_id,
+            },
+        )
 
     async def async_post_call_response_headers_hook(
         self,
@@ -414,6 +446,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         }
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
+        _BLOCKED_DETECTION_ID.set(None)
         return self._observe(data, "ingress")
 
     async def async_pre_call_deployment_hook(self, kwargs, call_type):

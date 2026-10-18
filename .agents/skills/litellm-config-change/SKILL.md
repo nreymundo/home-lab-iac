@@ -81,7 +81,9 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   `apply_guardrail` calls scan extracted text inputs. Sanitized audit summaries
   include mode, outcome, detector counts, duration, and correlation ID; matched
   content is never logged. Fingerprint blocks return a client-readable 400 with a
-  detection ID and no matched value. Heuristic findings add safe warning headers.
+  stable error code, detection ID, and no matched value, including when a local
+  failure wraps a blocked cloud fallback. Heuristic findings add safe warning
+  headers.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
