@@ -43,14 +43,9 @@ curl --fail "$LITELLM_BASE_URL/images/edits" \
   -F image=@/path/to/teapot.png -F response_format=b64_json
 ```
 
-OmniRoute also routes directly to this backend, using its normal HTTPS endpoint
-and model `comfyimage/qwen-image-2.1-turbo`.
-See [the OmniRoute role](../omniroute/README.md#qwen-image-api) for its
-API calls and key permissions. Use `response_format=b64_json` through OmniRoute.
-
 The UI remains on port 8188. Roundabout runs inside ComfyUI; its additional
 loopback listener at `http://127.0.0.1:10050/v1` is for node-local diagnostics.
-Client calls go through LiteLLM or OmniRoute. The old `comfyui-openai-api` systemd service is
+Client calls go through LiteLLM. The old `comfyui-openai-api` systemd service is
 stopped and removed by the role. MCP is disabled.
 
 The build applies `files/roundabout-multipart-refs.patch`: the pinned gateway
