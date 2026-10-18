@@ -32,6 +32,10 @@ _REDACTION_NOTICE = (
     "for the redacted value. Continue using the remaining request content.]"
 )
 _SOPS_CIPHERTEXT = re.compile(r"ENC\[AES256_GCM,[^\]\r\n]*\]")
+# Spans already carrying a redaction marker (an earlier pass, a cached
+# response, or replayed conversation history) are not rescanned; otherwise
+# `api_key: "[REDACTED: ...]"` re-triggers the assignment heuristic.
+_REDACTION_MARKER = re.compile(r"\[REDACTED: [^\]\r\n]*\]")
 _CANDIDATE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_./+=-]{14,}[A-Za-z0-9+/=]")
 _ASSIGNMENT = re.compile(
     r"(?i)(?<![A-Za-z0-9_])(?=(?P<key>\"[A-Za-z_][A-Za-z0-9_-]*\"|[A-Za-z_][A-Za-z0-9_-]*)"
@@ -63,6 +67,44 @@ _REFERENCE_NAME_SEGMENTS = {
     "URI",
     "URL",
 }
+# Placeholder shapes that mark a credential-like capture as documentation
+# filler rather than secret material. Tier-1 format detectors and tier-2
+# heuristic assignments both skip captures that look like these; tier-0
+# fingerprint matches are exact real-value matches and never skip.
+_PLACEHOLDER_TOKENS = (
+    "example",  # documented fakes: AWS example keys, sk-example-..., ghp_example-...
+    "placeholder",
+    "changeme",
+    "notareal",
+    "dummy",
+    "yourkey",
+    "your-api",
+    "your_api",
+    "user:pass",
+    "user:password",
+    "username:password",
+    "admin:admin",
+    "admin:public",
+)
+_PLACEHOLDER_WORD = re.compile(r"(?i)(?:^|[^a-z0-9])(?:your|sample|fake)(?:[^a-z0-9]|$)")
+_PLACEHOLDER_RUN = re.compile(r"(.)\1{5,}")
+# Sample credentials published verbatim by their own documentation pages,
+# split into fragments so repository secret scanners do not flag this file.
+_PUBLISHED_PLACEHOLDERS = frozenset(
+    {
+        "".join(
+            (
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.",
+                "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp",
+                "vaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.",
+                "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+            )
+        ),
+    }
+)
+# Bare environment references are pointers, never secret material; applies
+# to tier-2 assignment values only (format-detector captures never match).
+_ENV_REFERENCE_VALUE = re.compile(r"^(?:os\.environ/|env:)?\$?\{?[A-Z][A-Z0-9_]{2,}\}?$")
 _PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("anthropic", re.compile(r"\bsk-ant-[A-Za-z0-9_-]{16,}\b")),
     ("openrouter", re.compile(r"\bsk-or-v1-[A-Za-z0-9_-]{16,}\b")),
@@ -207,6 +249,17 @@ def _sensitive_assignment_name(name: str) -> bool:
     return segments[-1] not in _REFERENCE_NAME_SEGMENTS
 
 
+def _is_placeholder(capture: str) -> bool:
+    """True when a credential-shaped capture is documentation filler."""
+    lowered = capture.lower()
+    return (
+        capture in _PUBLISHED_PLACEHOLDERS
+        or any(token in lowered for token in _PLACEHOLDER_TOKENS)
+        or _PLACEHOLDER_RUN.search(capture) is not None
+        or _PLACEHOLDER_WORD.search(capture) is not None
+    )
+
+
 def _candidate_fingerprint_matches(text: str, fingerprints: dict[str, bytes]):
     if not fingerprints:
         return
@@ -236,10 +289,10 @@ def _candidate_fingerprint_matches(text: str, fingerprints: dict[str, bytes]):
 
 
 def _scan_text(text: str, fingerprints: dict[str, bytes]) -> list[tuple[int, int, str, int]]:
-    ciphertext = list(_SOPS_CIPHERTEXT.finditer(text))
-    if ciphertext:
+    ignored = [*_SOPS_CIPHERTEXT.finditer(text), *_REDACTION_MARKER.finditer(text)]
+    if ignored:
         masked = list(text)
-        for match in ciphertext:
+        for match in ignored:
             masked[match.start() : match.end()] = " " * (match.end() - match.start())
         scan_text = "".join(masked)
     else:
@@ -247,13 +300,22 @@ def _scan_text(text: str, fingerprints: dict[str, bytes]) -> list[tuple[int, int
     matches: list[tuple[int, int, str, int]] = []
 
     for label, pattern in _PATTERNS:
-        matches.extend((m.start(), m.end(), label, 80) for m in pattern.finditer(scan_text))
+        for m in pattern.finditer(scan_text):
+            if _is_placeholder(scan_text[m.start() : m.end()]):
+                continue
+            matches.append((m.start(), m.end(), label, 80))
     matches.extend(_candidate_fingerprint_matches(scan_text, fingerprints))
 
     for assignment in _ASSIGNMENT.finditer(scan_text):
         name = assignment.group("key").strip("\"'")
         value = assignment.group("value").strip("\"'")
-        if _sensitive_assignment_name(name) and len(value) >= 16 and _entropy(value) >= 3.0:
+        if (
+            _sensitive_assignment_name(name)
+            and len(value) >= 16
+            and _entropy(value) >= 3.0
+            and not _ENV_REFERENCE_VALUE.match(value)
+            and not _is_placeholder(value)
+        ):
             value_start, value_end = assignment.span("value")
             if scan_text[value_start:value_end][:1] in {"\"", "'"}:
                 value_start += 1
@@ -284,7 +346,7 @@ def _redact_text(text: str, fingerprints: dict[str, bytes]) -> tuple[str, Counte
     pieces: list[str] = []
     cursor = 0
     for start, end, label, _ in matches:
-        pieces.extend((text[cursor:start], "[REDACTED: sensitive value]"))
+        pieces.extend((text[cursor:start], f"[REDACTED: {label}]"))
         cursor = end
         counts[label] += 1
     pieces.append(text[cursor:])
