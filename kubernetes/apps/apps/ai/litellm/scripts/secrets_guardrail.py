@@ -49,6 +49,20 @@ _ENV_NAME_SEGMENTS = {
     "SECRET",
     "TOKEN",
 }
+# Final segments marking a field as a credential *reference* (identifier or
+# pointer to a secret), not a holder of secret material: `credential_name`,
+# `secret_id`, `token_ref`, etc. Tier-0 fingerprints and tier-1 format
+# detectors still scan these values unconditionally.
+_REFERENCE_NAME_SEGMENTS = {
+    "FILE",
+    "ID",
+    "LABEL",
+    "NAME",
+    "PATH",
+    "REF",
+    "URI",
+    "URL",
+}
 _PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("anthropic", re.compile(r"\bsk-ant-[A-Za-z0-9_-]{16,}\b")),
     ("openrouter", re.compile(r"\bsk-or-v1-[A-Za-z0-9_-]{16,}\b")),
@@ -187,8 +201,10 @@ def _entropy(value: str) -> float:
 
 
 def _sensitive_assignment_name(name: str) -> bool:
-    segments = set(re.split(r"[_-]+", name.upper()))
-    return bool(segments & _ENV_NAME_SEGMENTS)
+    segments = [segment for segment in re.split(r"[_-]+", name.upper()) if segment]
+    if not set(segments) & _ENV_NAME_SEGMENTS:
+        return False
+    return segments[-1] not in _REFERENCE_NAME_SEGMENTS
 
 
 def _candidate_fingerprint_matches(text: str, fingerprints: dict[str, bytes]):

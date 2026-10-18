@@ -79,7 +79,10 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   fingerprints in the workload-owned SOPS Secret and rotate them by hashing current
   source values locally without printing values or hashes. Exact fingerprints match
   intact values only; they do not detect arbitrary truncation or encoding. Credential
-  assignments include quoted JSON keys; structured text fields named `data` are
+  assignments include quoted JSON keys; assignments whose field name ends in a
+  reference segment (`_name`, `_id`, `_ref`, `_url`, `_path`, `_label`, `_uri`,
+  `_file`) are exempt from heuristic assignment redaction, while format and
+  fingerprint detectors still scan their values. Structured text fields named `data` are
   scanned, while known audio, image, video, and file payloads are skipped. MCP
   gateway traffic is not scanned. Unresolved local routes use the stable `local/`
   and `hosted_vllm/` prefixes; a resolved `api_base` is authoritative and is also
