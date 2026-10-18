@@ -12,6 +12,7 @@ import time
 import uuid
 from collections import Counter
 from collections.abc import Iterable
+from contextvars import ContextVar
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -23,6 +24,7 @@ from litellm.proxy.common_utils.callback_utils import (
 
 _AUDIT_LOGGER = logging.getLogger("LiteLLM Proxy.secrets_observer")
 _AUDIT_LOGGER.setLevel(logging.INFO)
+_REDACTED_THIS_CALL: ContextVar[bool] = ContextVar("secrets_guardrail_redacted", default=False)
 _REDACTION_NOTICE = (
     "[Security notice: LiteLLM detected and redacted sensitive credential-like content "
     "from this request before sending it to the model. Do not infer, reconstruct, or ask "
@@ -348,6 +350,10 @@ def _has_model_notice(value: Any) -> bool:
     return False
 
 
+def _was_redacted(data: Any) -> bool:
+    return _REDACTED_THIS_CALL.get() or _has_model_notice(data)
+
+
 class SecretsObserverGuardrail(CustomGuardrail):
     """Redact detector matches and continue with sanitized request content."""
 
@@ -412,6 +418,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         heuristic_findings = sorted(label for label in counts if not label.startswith("fingerprint:"))
         if redacted:
             outcome = "redacted"
+            _REDACTED_THIS_CALL.set(True)
         elif counts and outcome == "scanned":
             outcome = "warning"
 
@@ -461,13 +468,14 @@ class SecretsObserverGuardrail(CustomGuardrail):
         litellm_call_info=None,
     ):
         """Expose redaction status without copying request content into headers."""
-        if not isinstance(data, dict) or not _has_model_notice(data):
+        if not _was_redacted(data):
             return {}
         return {
             "X-LiteLLM-Secrets-Guardrail": "redacted",
         }
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
+        _REDACTED_THIS_CALL.set(False)
         return self._process(data, "ingress")
 
     async def async_pre_call_deployment_hook(self, kwargs, call_type):
@@ -480,7 +488,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         return inputs
 
     async def async_post_call_success_hook(self, data, user_api_key_dict, response):
-        if not isinstance(data, dict) or not _has_model_notice(data):
+        if not _was_redacted(data):
             return response
         notice = "Notice: sensitive credential-like content was redacted before processing."
         try:
@@ -499,7 +507,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         return response
 
     async def async_post_call_streaming_iterator_hook(self, user_api_key_dict, response, request_data):
-        if not isinstance(request_data, dict) or not _has_model_notice(request_data):
+        if not _was_redacted(request_data):
             async for chunk in response:
                 yield chunk
             return

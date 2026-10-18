@@ -688,7 +688,7 @@ data:
       - guardrail_name: secrets-observer
         litellm_params:
           guardrail: secrets_guardrail.SecretsObserverGuardrail
-          mode: pre_call
+          mode: [pre_call, post_call]
           default_on: true
 
     litellm_settings:

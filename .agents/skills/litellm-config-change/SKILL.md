@@ -60,9 +60,11 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   `reasoning_effort`. This is request normalization; model selection stays native.
   Direct model requests keep client effort precedence. Keep the scope restricted
   to these auto routes and test both chat and Responses before changing the hook.
-- `secrets-observer` runs after Headroom and uses native pre-call and deployment
-  hooks because unified translations omit Decisions, some rerank/Responses fields,
-  and cloud fallbacks after local dispatch. `GUARDRAIL_SECRETS_MODE` accepts
+- `secrets-observer` runs after Headroom and uses native pre-call, deployment, and
+  post-call hooks because unified translations omit Decisions, some rerank/Responses
+  fields, and cloud fallbacks after local dispatch. Its `pre_call` and `post_call`
+  modes are both required: post-call mode gates response notices and streaming hooks.
+  `GUARDRAIL_SECRETS_MODE` accepts
   `redact`, `observe`, or `off`: redact replaces spans found by every detector
   and continues processing, observe reports without modifying payloads, and off
   bypasses scanning. The safe default is `observe`; Helm explicitly selects
