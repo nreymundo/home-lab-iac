@@ -97,7 +97,16 @@ _NON_TEXT_KEYS = {
     "type",
     "video",
 }
-_BINARY_OBJECT_TYPES = {"audio", "file", "image", "input_audio", "input_image", "video"}
+_BINARY_OBJECT_TYPES = {
+    "audio",
+    "base64",
+    "file",
+    "image",
+    "input_audio",
+    "input_file",
+    "input_image",
+    "video",
+}
 _LOCAL_MODEL_PREFIXES = ("local/", "hosted_vllm/")
 
 
