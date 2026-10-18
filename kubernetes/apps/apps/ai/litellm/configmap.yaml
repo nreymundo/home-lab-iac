@@ -7,7 +7,7 @@ metadata:
 data:
   config.yaml: |
     model_list:
-      # Native Jev routing; clients opt in by requesting cloud/codex-auto.
+      # Native decision routing; local d3-mini falls back to cloud Jev.
       - model_name: cloud/codex-auto
         model_info:
           mode: responses
@@ -40,9 +40,9 @@ data:
             classifier_type: oss_classifier
             opensource_classifier_config:
               provider: jev
-              deployment_name: openrouter/~typesafe/jev-latest
-              model: jev-latest
-              timeout_ms: 2000
+              deployment_name: local/decisions
+              model: d3-mini
+              timeout_ms: 5000
             classifier_fallback: default_model
             classification_mode: user_turn
             session_affinity: false
@@ -202,6 +202,22 @@ data:
           model: openrouter/~typesafe/jev-latest
           custom_llm_provider: openrouter
           litellm_credential_name: openrouter
+
+      - model_name: hosted_vllm/d3-mini
+        model_info:
+          mode: decisions
+          max_input_tokens: 4096
+        litellm_params:
+          model: hosted_vllm/d3-mini
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          timeout: 2
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
 
       - model_name: hosted_vllm/qwen/qwen3-reranker-0.6b
         model_info:
@@ -378,7 +394,7 @@ data:
             - pve3
           guardrails: []
 
-      # Native GLM routing uses the same Jev deployment and user-turn policy.
+      # Native GLM routing uses the same local-first classifier and user-turn policy.
       - model_name: cloud/glm-auto
         model_info:
           mode: chat
@@ -411,9 +427,9 @@ data:
             classifier_type: oss_classifier
             opensource_classifier_config:
               provider: jev
-              deployment_name: openrouter/~typesafe/jev-latest
-              model: jev-latest
-              timeout_ms: 2000
+              deployment_name: local/decisions
+              model: d3-mini
+              timeout_ms: 5000
             classifier_fallback: default_model
             classification_mode: user_turn
             session_affinity: false
@@ -657,6 +673,7 @@ data:
         local/camera-analysis: hosted_vllm/unsloth/gemma-4-12b-it-qat-camera
         local/chat: hosted_vllm/unsloth/qwen3.8-27b
         local/coder: hosted_vllm/unsloth/qwen3.8-27b-coding
+        local/decisions: hosted_vllm/d3-mini
         local/document-analysis: hosted_vllm/unsloth/qwen3.8-27b-documents
         local/document-best: hosted_vllm/unsloth/qwen3.8-27b-analysis
         local/embedding: hosted_vllm/majentik/qwen3-embedding-4b
@@ -672,8 +689,11 @@ data:
         openai/gpt-6-luna: chatgpt/gpt-6-luna
         openai/gpt-6-sol: chatgpt/gpt-6-sol
         openai/gpt-6.1-sol: chatgpt/gpt-6.1-sol
-      # Scope failover to service aliases so explicit model names and local routes stay predictable.
+      # Scope failover to service aliases so explicit model names stay predictable.
       fallbacks:
+        - local/decisions:
+            - model: cloud/decision
+              timeout: 2
         # Native modality checks cannot descend from main GLM to a Flash tier.
         - cloud/glm-auto:
             - model: cloud/glm-flash-high

@@ -3,10 +3,12 @@ import sys
 from functools import wraps
 
 import litellm
+from litellm.constants import INTERNAL_CALL_ORIGIN_METADATA_KEY
 from litellm.llms.chatgpt.responses.transformation import ChatGPTResponsesAPIConfig
 from litellm.llms.openai.chat.gpt_5_transformation import OpenAIGPT5Config
 from litellm.proxy.auth.route_checks import RouteChecks
 from litellm.router import Router
+from litellm.types.utils import AUTOROUTER_CLASSIFIER_CALL_ORIGIN
 
 import chatgpt_codex_catalog
 import chatgpt_responses_streaming_patch
@@ -173,6 +175,30 @@ def patch_chatgpt_responses_request_transform():
     ChatGPTResponsesAPIConfig.transform_responses_api_request = (
         transform_responses_api_request
     )
+
+
+def patch_local_decision_classifier_fallbacks():
+    """Allow native local-to-cloud failover despite rc.4's classifier override."""
+    original = Router.async_function_with_fallbacks
+    if getattr(original, "_local_decision_classifier_fallbacks_patch", False):
+        return
+
+    @wraps(original)
+    async def async_function_with_fallbacks(self, *args, **kwargs):
+        metadata = kwargs.get("metadata") or kwargs.get("litellm_metadata") or {}
+        if (
+            kwargs.get("model") == "local/decisions"
+            and metadata.get(INTERNAL_CALL_ORIGIN_METADATA_KEY)
+            == AUTOROUTER_CLASSIFIER_CALL_ORIGIN
+        ):
+            kwargs["disable_fallbacks"] = False
+            # The classifier's outer 5s deadline covers both attempts. Use the
+            # configured per-deployment timeouts so local cannot spend it all.
+            kwargs.pop("timeout", None)
+        return await original(self, *args, **kwargs)
+
+    async_function_with_fallbacks._local_decision_classifier_fallbacks_patch = True
+    Router.async_function_with_fallbacks = async_function_with_fallbacks
 
 
 def patch_router_response_retries():
@@ -501,6 +527,7 @@ def worker_startup_hook():
     patch_virtual_key_model_discovery_routes()
     patch_chatgpt_responses_string_input()
     openrouter_rerank.worker_startup_hook()
+    patch_local_decision_classifier_fallbacks()
 
     # Retained implementations and mounts allow selective restoration by
     # uncommenting calls below. Review compatibility before re-enabling.
