@@ -125,7 +125,7 @@ def patch_chatgpt_responses_string_input():
             input = [
                 {"role": "user", "content": [{"type": "input_text", "text": input}]}
             ]
-        return original_transform(
+        request = original_transform(
             self,
             model=model,
             input=input,
@@ -133,6 +133,8 @@ def patch_chatgpt_responses_string_input():
             litellm_params=litellm_params,
             headers=headers,
         )
+        _move_system_input_items_to_instructions(request)
+        return request
 
     transform_responses_api_request._chatgpt_responses_string_input_patch = True
     ChatGPTResponsesAPIConfig.transform_responses_api_request = (
