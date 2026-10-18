@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: litellm-guardrail-fingerprints
+    namespace: ai
+type: Opaque
+stringData:
+    GUARDRAIL_SECRETS_FINGERPRINTS: ENC[AES256_GCM,data:biTENHOcPaOXJ4smwobxnzmpSzEhissDtoN3PH7j/iF0YuqRWk9ZVgfRng+2/Xcp/3UKv+4IJDCp6ObzYbWBz/fYzA26coaEbUdOYYuJe0OTXiu9ouR51sItGwYNQ/nTpQCxCra5FZXl3dTAOIi6YmZugFQil0w+TfnCMGolMiXfE9bpE4JhP3L1uQTKIY/o4m/bVeoI1Ej/y72b7TxLt5CrhBK4t8tyy7qTagFghEDG51EjacAmKY6FOtNPizDiVom0ZemSWLM04wK7gFM2erSRROBujDEyV4nHkr1SS8/1nXFsmR+FyWJhRW9fahmEOBgwpqrnVQyus0aiXhORYL3H8i/ygclpttTG5r3x9C4I+Oz4pyo/PsvLQiSse9h9Y6zyRXykWuQvsY09xUiDEmPdVx5tw09yrqUn+xOWk+W+j9Vw+fi932dLh9WATmyFgVjCteoFDmLJGF3OLfo2wne/rd82Xne8ssFyuN0qOAKSb4YqdcgeibbrfBeDf/6aSxFjOuNJXILoddLCCeyxvBP2mb2RHpTfCKXmfbQxFmfPhNm8bubs6R3OcK4K5lMcgfETTxdC7rc3HcBpRuqdmPmLg0EeYhnTLrZXC/2BxDT5SNOV5cLJS7/mMF7uK6N0QoZdJEblwAq6kCXiRIrrB6XYoKIoWs5wSsIiTurWJkj3csCfxlwJ+/Y8a8eelkvoWZ/boEfx,iv:zpKd4hjOCnnZ21DmF4x4aKqSmnuWw+oyC6XwY3enxQY=,tag:WJa0Tjkq104MwffQYR5DeQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBsVEVLVy8vWVE1WEp5OThH
+            OXlUa1VGUzlrS0FDNUJxQ1QzYTM4TFZRTXpNCmN0OW5PMzNpZkpyVnhOdTlwQldY
+            MGxEY1ZZR1NrUUZYcTRtTGZqeVlxMTgKLS0tIHJBazRjaHlVSDl1VVhhanlrS0gv
+            SkVEZ1J5SGJoYlpzWk9MbGxHK2k4L00KnC7lS+cxKXA5HDdiyeq6bc2yewz6MRd4
+            i2Bb96u6lUxB2s2it/i9IC0k9fsfTJWJJczqIrWd4pQv3gTBF/xFeQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-18T17:21:42Z"
+    mac: ENC[AES256_GCM,data:uEwzWzYBxE25vd6wjwVwayZreqFR2QUcjOa9OMIh1fABXcqAFCylcUE3wQvJ1VWEKFu2YeNBra6iHKbcD728BiYwEHiXmpb1SGg8Y/G3ZAndwjeNyKOhAZyvyGJ0VAAq+vsUvu8w/olqefU4tdLln5EkqeqF7fyYrsAUGUmoKTg=,iv:/npE8QN48Nm/1EdpWTAlLGQKHoxJrlbxHaVm+1E8Yik=,tag:+/xzlgUDcYf4Cx6E3khTwg==,type:str]
+    version: 3.13.3

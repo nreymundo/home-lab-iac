@@ -21,11 +21,13 @@ configMapGenerator:
       - scripts/openrouter_rerank.py
       - scripts/sitecustomize.py
       - scripts/vllm_model_discovery.py
+      - scripts/secrets_guardrail.py
 
 resources:
   - configmap.yaml
   - litellm-credentials.sops.yaml
   - litellm-db-secrets.sops.yaml
   - litellm-secrets.sops.yaml
+  - litellm-guardrail-fingerprints.sops.yaml
   - cnpg-cluster.yaml
   - helmrelease.yaml

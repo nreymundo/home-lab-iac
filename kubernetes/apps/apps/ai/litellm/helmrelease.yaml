@@ -59,10 +59,13 @@ spec:
               GENERIC_USER_ROLE_ATTRIBUTE: litellm_role
               PROXY_BASE_URL: https://litellm.lan.${CLUSTER_DOMAIN}
               AUTO_REDIRECT_UI_LOGIN_TO_SSO: "true"
-              SET_DEBUG: "True"
+              SET_DEBUG: "False"
+              GUARDRAIL_SECRETS_DRY_RUN: "1"
             envFrom:
               - secretRef:
                   name: litellm-credentials
+              - secretRef:
+                  name: litellm-guardrail-fingerprints
             ports:
               - name: http
                 containerPort: 4000
@@ -313,4 +316,7 @@ spec:
                 readOnly: true
               - path: /etc/litellm/sitecustomize.py
                 subPath: sitecustomize.py
+                readOnly: true
+              - path: /etc/litellm/secrets_guardrail.py
+                subPath: secrets_guardrail.py
                 readOnly: true

@@ -10,9 +10,9 @@ description: >-
 
 # LiteLLM Config Change
 
-This deployment uses ConfigMap-mounted Python compatibility patches, a separate
-Valkey controller for response caching, Authentik SSO, and a CNPG database.
-Headroom and its installation initContainer are no longer present.
+This deployment uses ConfigMap-mounted Python integrations, a separate Valkey
+controller for response caching, Authentik SSO, a CNPG database, and a Headroom
+sidecar used for request compression.
 
 ## Source and activation contract
 
@@ -29,6 +29,9 @@ All paths below are relative to `kubernetes/apps/apps/ai/litellm/`:
 - `cnpg-cluster.yaml`: database and backup configuration.
 - `litellm-credentials.sops.yaml`: provider credentials consumed through `envFrom`.
 - `litellm-secrets.sops.yaml`: master and salt keys.
+- `litellm-guardrail-fingerprints.sops.yaml`: hashes used by the observe-only
+  secrets guardrail. Its JSON value is delivered through `envFrom`; it contains
+  only SHA-256 fingerprints, not source credentials.
 - `litellm-db-secrets.sops.yaml`: database credentials and URL.
 
 The Authentik-owned `litellm-sso-secret` comes from
@@ -57,6 +60,16 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   `reasoning_effort`. This is request normalization; model selection stays native.
   Direct model requests keep client effort precedence. Keep the scope restricted
   to these auto routes and test both chat and Responses before changing the hook.
+- `secrets-observer` runs after Headroom and is intentionally observe-only. It uses
+  native pre-call and deployment hooks because unified translations omit Decisions,
+  some rerank/Responses fields, and cloud fallbacks after local dispatch. It records
+  detector counts and timing but never rewrites or blocks requests; the applied
+  guardrail header indicates observation, not sanitization. `SET_DEBUG` must remain
+  disabled to avoid request-payload debug logging. Keep fingerprints in the
+  workload-owned SOPS Secret and rotate them by hashing current source values
+  locally without printing values or hashes. Exact fingerprints match intact values
+  only; they do not detect arbitrary truncation or encoding. Images, binary payloads,
+  and MCP gateway traffic are not scanned.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
