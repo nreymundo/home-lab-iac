@@ -123,6 +123,9 @@ spec:
               HEADROOM_BEACON: "off"
               # LiteLLM owns provider calls; this container only compresses/retrieves.
               HEADROOM_SKIP_UPSTREAM_CHECK: "1"
+              # Session replay preserves user instructions; compress tool results.
+              HEADROOM_COMPRESS_USER_MESSAGES: "0"
+              HEADROOM_WORKERS: "1"
             probes:
               liveness:
                 enabled: true
@@ -281,6 +284,9 @@ spec:
                 readOnly: true
               - path: /etc/litellm/cache_bypass.py
                 subPath: cache_bypass.py
+                readOnly: true
+              - path: /etc/litellm/headroom_compression.py
+                subPath: headroom_compression.py
                 readOnly: true
               - path: /etc/litellm/vllm_model_discovery.py
                 subPath: vllm_model_discovery.py
