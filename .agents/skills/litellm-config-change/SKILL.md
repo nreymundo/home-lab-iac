@@ -68,9 +68,10 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   `redact`, `observe`, or `off`: redact replaces spans found by every detector
   and continues processing, observe reports without modifying payloads, and off
   bypasses scanning. The safe default is `observe`; Helm explicitly selects
-  `redact`. Redacted requests receive a model-context notice and an
-  assistant-visible notice, including streamed responses; chat-compatible inputs
-  only receive model notices. Direct `apply_guardrail` calls scan extracted text
+  `redact`. Redacted chat requests receive a model-context notice and an
+  assistant-visible notice, including streamed completions. Non-streaming Responses
+  API output receives an assistant-visible notice in its `output_text` block.
+  Direct `apply_guardrail` calls scan extracted text
   inputs and redact the caller-owned text list in place. The response header
   `X-LiteLLM-Secrets-Guardrail: redacted` marks sanitized requests. The
   applied-guardrail header indicates evaluation, not sanitization. Scanner and reporting failures

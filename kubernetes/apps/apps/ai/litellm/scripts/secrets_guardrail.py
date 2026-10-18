@@ -25,6 +25,7 @@ from litellm.proxy.common_utils.callback_utils import (
 _AUDIT_LOGGER = logging.getLogger("LiteLLM Proxy.secrets_observer")
 _AUDIT_LOGGER.setLevel(logging.INFO)
 _REDACTED_THIS_CALL: ContextVar[bool] = ContextVar("secrets_guardrail_redacted", default=False)
+_MODEL_NOTICE_ADDED: ContextVar[bool] = ContextVar("secrets_guardrail_model_notice", default=False)
 _REDACTION_NOTICE = (
     "[Security notice: LiteLLM detected and redacted sensitive credential-like content "
     "from this request before sending it to the model. Do not infer, reconstruct, or ask "
@@ -325,37 +326,33 @@ def _is_local_destination(data: dict[str, Any]) -> bool:
 
 
 def _add_model_notice(data: dict[str, Any], call_type: str | None) -> None:
-    if call_type not in {"completion", "acompletion", "responses", "aresponses"}:
+    if (
+        _MODEL_NOTICE_ADDED.get()
+        or call_type not in {"completion", "acompletion", "responses", "aresponses"}
+    ):
         return
     messages = data.get("messages")
     if isinstance(messages, list):
         messages.insert(0, {"role": "system", "content": _REDACTION_NOTICE})
+        _MODEL_NOTICE_ADDED.set(True)
         return
     inputs = data.get("input")
     if isinstance(inputs, list) and all(
         isinstance(item, dict) and isinstance(item.get("role"), str) for item in inputs
     ):
         inputs.insert(0, {"role": "system", "content": _REDACTION_NOTICE})
+        _MODEL_NOTICE_ADDED.set(True)
         return
     for key in ("instructions", "instruction", "prompt", "input"):
         value = data.get(key)
         if isinstance(value, str):
             data[key] = f"{_REDACTION_NOTICE}\n\n{value}"
+            _MODEL_NOTICE_ADDED.set(True)
             return
 
 
-def _has_model_notice(value: Any) -> bool:
-    if isinstance(value, str):
-        return _REDACTION_NOTICE in value
-    if isinstance(value, dict):
-        return any(_has_model_notice(item) for item in value.values())
-    if isinstance(value, (list, tuple)):
-        return any(_has_model_notice(item) for item in value)
-    return False
-
-
-def _was_redacted(data: Any) -> bool:
-    return _REDACTED_THIS_CALL.get() or _has_model_notice(data)
+def _was_redacted() -> bool:
+    return _REDACTED_THIS_CALL.get()
 
 
 def _prepend_assistant_notice(message: dict[str, Any], notice: str) -> None:
@@ -366,6 +363,33 @@ def _prepend_assistant_notice(message: dict[str, Any], notice: str) -> None:
         message["content"] = [{"type": "text", "text": notice}, *content]
     elif content is None:
         message["content"] = notice
+
+
+def _prepend_responses_notice(response: Any, notice: str) -> None:
+    output = response.get("output") if isinstance(response, dict) else response.output
+    if not isinstance(output, list):
+        return
+    for item in output:
+        item_type = item.get("type") if isinstance(item, dict) else getattr(item, "type", None)
+        if item_type != "message":
+            continue
+        content = item.get("content") if isinstance(item, dict) else getattr(item, "content", None)
+        if not isinstance(content, list):
+            continue
+        for block in content:
+            block_type = block.get("type") if isinstance(block, dict) else getattr(block, "type", None)
+            text = block.get("text") if isinstance(block, dict) else getattr(block, "text", None)
+            if block_type == "output_text" and isinstance(text, str):
+                if isinstance(block, dict):
+                    block["text"] = f"{notice}\n\n{text}"
+                else:
+                    block.text = f"{notice}\n\n{text}"
+                return
+        content.insert(0, {"type": "output_text", "text": notice})
+        return
+    output.append(
+        {"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": notice}]}
+    )
 
 
 class SecretsObserverGuardrail(CustomGuardrail):
@@ -483,7 +507,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         litellm_call_info=None,
     ):
         """Expose redaction status without copying request content into headers."""
-        if not _was_redacted(data):
+        if not _was_redacted():
             return {}
         return {
             "X-LiteLLM-Secrets-Guardrail": "redacted",
@@ -491,6 +515,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
         _REDACTED_THIS_CALL.set(False)
+        _MODEL_NOTICE_ADDED.set(False)
         return self._process(data, "ingress", call_type=call_type)
 
     async def async_pre_call_deployment_hook(self, kwargs, call_type):
@@ -503,7 +528,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         return inputs
 
     async def async_post_call_success_hook(self, data, user_api_key_dict, response):
-        if not _was_redacted(data):
+        if not _was_redacted():
             return response
         notice = "Notice: sensitive credential-like content was redacted before processing."
         try:
@@ -513,6 +538,11 @@ class SecretsObserverGuardrail(CustomGuardrail):
                     message = choices[0].get("message")
                     if isinstance(message, dict):
                         _prepend_assistant_notice(message, notice)
+                elif "output" in response:
+                    _prepend_responses_notice(response, notice)
+                return response
+            if hasattr(response, "output"):
+                _prepend_responses_notice(response, notice)
                 return response
             message = response.choices[0].message
             content = message.content
@@ -527,7 +557,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         return response
 
     async def async_post_call_streaming_iterator_hook(self, user_api_key_dict, response, request_data):
-        if not _was_redacted(request_data):
+        if not _was_redacted():
             async for chunk in response:
                 yield chunk
             return
