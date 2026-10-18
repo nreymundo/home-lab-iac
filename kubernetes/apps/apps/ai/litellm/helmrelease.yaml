@@ -60,7 +60,7 @@ spec:
               PROXY_BASE_URL: https://litellm.lan.${CLUSTER_DOMAIN}
               AUTO_REDIRECT_UI_LOGIN_TO_SSO: "true"
               SET_DEBUG: "False"
-              GUARDRAIL_SECRETS_MODE: "enforce"
+              GUARDRAIL_SECRETS_MODE: "redact"
             envFrom:
               - secretRef:
                   name: litellm-credentials

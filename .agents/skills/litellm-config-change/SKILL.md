@@ -63,12 +63,12 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
 - `secrets-observer` runs after Headroom and uses native pre-call and deployment
   hooks because unified translations omit Decisions, some rerank/Responses fields,
   and cloud fallbacks after local dispatch. `GUARDRAIL_SECRETS_MODE` accepts
-  `enforce`, `observe`, or `off`: enforce blocks only exact configured fingerprint
-  matches, observe never blocks, and off bypasses scanning. Heuristic token,
-  assignment, and private-key findings remain warnings in every scanning mode.
-  The applied-guardrail header indicates evaluation, not sanitization.
-  Scanner and reporting failures fail open; enforce requires a non-empty fingerprint
-  set. Keep `SET_DEBUG` disabled to avoid request-payload debug logging. Keep
+  `redact`, `observe`, or `off`: redact replaces spans found by every detector
+  and continues processing, observe reports without modifying payloads, and off
+  bypasses scanning. Redacted requests receive a model-context notice and an
+  assistant-visible notice, including streamed responses. The applied-guardrail
+  header indicates evaluation, not sanitization. Scanner and reporting failures
+  fail open. Keep `SET_DEBUG` disabled to avoid request-payload debug logging. Keep
   fingerprints in the workload-owned SOPS Secret and rotate them by hashing current
   source values locally without printing values or hashes. Exact fingerprints match
   intact values only; they do not detect arbitrary truncation or encoding. Credential
@@ -80,10 +80,8 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   skipped while cloud fallbacks are checked again at deployment. Direct
   `apply_guardrail` calls scan extracted text inputs. Sanitized audit summaries
   include mode, outcome, detector counts, duration, and correlation ID; matched
-  content is never logged. Fingerprint blocks return a client-readable 400 with a
-  stable error code, detection ID, and no matched value, including when a local
-  failure wraps a blocked cloud fallback. Heuristic findings add safe warning
-  headers.
+  content is never logged. Redaction preserves surrounding request structure and
+  local-route exemptions remain intact.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
