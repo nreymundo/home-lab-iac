@@ -633,32 +633,40 @@ class SecretsObserverGuardrail(CustomGuardrail):
             if isinstance(response, dict):
                 choices = response.get("choices")
                 if isinstance(choices, list) and choices:
-                    message = choices[0].get("message")
+                    choice = choices[0]
+                    message = choice.get("message") if isinstance(choice, dict) else None
                     if isinstance(message, dict):
                         _prepend_assistant_notice(message, notice)
-                elif "output" in response:
-                    _prepend_responses_notice(response, notice)
-                elif "choices" in response and response["choices"]:
-                    choice = response["choices"][0]
-                    if isinstance(choice, dict) and isinstance(choice.get("text"), str):
+                    elif isinstance(choice, dict) and isinstance(choice.get("text"), str):
                         if not choice["text"].startswith(notice):
                             choice["text"] = f"{notice}\n\n{choice['text']}"
+                elif "output" in response:
+                    _prepend_responses_notice(response, notice)
                 return response
             if hasattr(response, "output"):
                 _prepend_responses_notice(response, notice)
                 return response
-            message = response.choices[0].message
-            content = message.content
-            if isinstance(content, str):
-                message.content = f"{notice}\n\n{content}"
-            elif isinstance(content, list):
-                message.content = [{"type": "text", "text": notice}, *content]
-            elif content is None:
-                message.content = notice
-            if hasattr(response.choices[0], "text"):
-                text = response.choices[0].text
+            choice = response.choices[0]
+            if hasattr(choice, "message"):
+                message = choice.message
+                content = message.content
+                if isinstance(content, str):
+                    if not content.startswith(notice):
+                        message.content = f"{notice}\n\n{content}"
+                elif isinstance(content, list):
+                    if not any(
+                        isinstance(item, dict)
+                        and isinstance(item.get("text"), str)
+                        and item["text"].startswith(notice)
+                        for item in content
+                    ):
+                        message.content = [{"type": "text", "text": notice}, *content]
+                elif content is None:
+                    message.content = notice
+            elif hasattr(choice, "text"):
+                text = choice.text
                 if isinstance(text, str) and not text.startswith(notice):
-                    response.choices[0].text = f"{notice}\n\n{text}"
+                    choice.text = f"{notice}\n\n{text}"
         except (AttributeError, IndexError, KeyError, TypeError):
             pass
         return response
