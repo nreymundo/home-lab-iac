@@ -24,6 +24,7 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Validate changes with the most direct evidence available for the kind of change you made.
 
 ## Change Discipline
+- Do not create README files, per-folder documentation, evaluation guides, or runbooks unless the user explicitly requests that documentation. Touching a folder or implementing a feature does not authorize adding documentation there. Keep implementation explanations and validation results in the chat or PR description; do not substitute another documentation filename for an unsolicited README.
 - Across every app and layer, do not create a new test folder or commit an ad hoc test harness unless the user explicitly requests it. When no test folder exists for the affected code, keep one-off validation scripts outside the repository. Authorization to validate a change does not authorize adding test infrastructure.
 - Before editing, check the planned changes against every applicable repo and skill requirement, including ownership, reference patterns, asset formats, and validation. Do not replace those requirements with implementation preferences.
 - For an unfamiliar configuration or integration change, finish evidence gathering and state the complete proposed source change, validation, and expected rollout before editing.
