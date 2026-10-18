@@ -685,6 +685,11 @@ data:
           unreachable_fallback: fail_open
           timeout: 5
           ccr_retrieval: false
+      - guardrail_name: secrets-observer
+        litellm_params:
+          guardrail: secrets_guardrail.SecretsObserverGuardrail
+          mode: pre_call
+          default_on: true
 
     litellm_settings:
       callbacks:
