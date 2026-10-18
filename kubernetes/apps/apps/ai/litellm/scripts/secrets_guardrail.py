@@ -24,7 +24,7 @@ logger = logging.getLogger("LiteLLM Proxy")
 _SOPS_CIPHERTEXT = re.compile(r"ENC\[AES256_GCM,[^\]\r\n]*\]")
 _CANDIDATE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_./+=-]{14,}[A-Za-z0-9+/=]")
 _ASSIGNMENT = re.compile(
-    r"(?i)(?<![A-Za-z0-9_])(?P<key>[A-Za-z_][A-Za-z0-9_-]*)"
+    r"(?i)(?<![A-Za-z0-9_])(?P<key>\"[A-Za-z_][A-Za-z0-9_-]*\"|[A-Za-z_][A-Za-z0-9_-]*)"
     r"\s*(?:=|:)\s*(?P<value>\"[^\"\r\n]*\"|'[^'\r\n]*'|[^\s,}\]]+)"
 )
 _ENV_NAME_SEGMENTS = {
@@ -89,13 +89,22 @@ _CONTENT_ROOTS = (
 _NON_TEXT_KEYS = {
     "audio",
     "call_id",
-    "data",
     "file_id",
     "id",
     "image",
     "image_url",
     "role",
     "type",
+    "video",
+}
+_BINARY_OBJECT_TYPES = {
+    "audio",
+    "base64",
+    "file",
+    "image",
+    "input_audio",
+    "input_file",
+    "input_image",
     "video",
 }
 _LOCAL_MODEL_PREFIXES = ("local/", "hosted_vllm/")
@@ -134,16 +143,22 @@ def _load_fingerprints(raw: str | None) -> dict[str, bytes]:
     return fingerprints
 
 
-def _text_leaves(value: Any) -> Iterable[str]:
+def _text_leaves(value: Any, binary_context: bool = False) -> Iterable[str]:
     if isinstance(value, str):
-        yield value
+        if not binary_context:
+            yield value
     elif isinstance(value, list):
         for item in value:
-            yield from _text_leaves(item)
+            yield from _text_leaves(item, binary_context)
     elif isinstance(value, dict):
+        binary_object = binary_context or str(value.get("type", "")).lower() in _BINARY_OBJECT_TYPES
         for key, item in value.items():
-            if isinstance(key, str) and key.lower() not in _NON_TEXT_KEYS:
-                yield from _text_leaves(item)
+            if not isinstance(key, str):
+                continue
+            normalized_key = key.lower()
+            if normalized_key in _NON_TEXT_KEYS:
+                continue
+            yield from _text_leaves(item, binary_object)
 
 
 def _entropy(value: str) -> float:
@@ -202,7 +217,7 @@ def _scan_text(text: str, fingerprints: dict[str, bytes]) -> list[tuple[int, int
     matches.extend(_candidate_fingerprint_matches(scan_text, fingerprints))
 
     for assignment in _ASSIGNMENT.finditer(scan_text):
-        name = assignment.group("key")
+        name = assignment.group("key").strip("\"'")
         value = assignment.group("value").strip("\"'")
         if _sensitive_assignment_name(name) and len(value) >= 16 and _entropy(value) >= 3.0:
             matches.append((assignment.start("value"), assignment.end("value"), "sensitive_assignment", 60))
@@ -224,15 +239,34 @@ def _scan_text(text: str, fingerprints: dict[str, bytes]) -> list[tuple[int, int
 
 
 def _is_local_destination(data: dict[str, Any]) -> bool:
+    def endpoint(value: str) -> tuple[str, str, int | None] | None:
+        try:
+            parsed = urlsplit(value)
+            if not parsed.hostname:
+                return None
+            return parsed.scheme.lower(), parsed.hostname.lower(), parsed.port
+        except ValueError:
+            return None
+
     api_base = data.get("api_base")
     if isinstance(api_base, str):
-        try:
-            hostname = (urlsplit(api_base).hostname or "").lower()
-            return hostname in {"localhost", "127.0.0.1", "::1"} or hostname.endswith(
-                ".svc.cluster.local"
-            )
-        except ValueError:
+        destination = endpoint(api_base)
+        if destination is None:
             return False
+        _, hostname, _ = destination
+        if hostname in {"localhost", "127.0.0.1", "::1"} or hostname.endswith(
+            ".svc.cluster.local"
+        ):
+            return True
+
+        configured_bases = (
+            os.getenv("LITELLM_CREDENTIAL_LLAMA_SWAP_API_BASE"),
+            os.getenv("VLLM_API_BASE"),
+        )
+        return any(
+            configured_endpoint is not None and destination == configured_endpoint
+            for configured_endpoint in (endpoint(base) for base in configured_bases if base)
+        )
 
     model = data.get("model")
     return isinstance(model, str) and model.lower().startswith(_LOCAL_MODEL_PREFIXES)
@@ -257,7 +291,12 @@ class SecretsObserverGuardrail(CustomGuardrail):
             len(self._fingerprints),
         )
 
-    def _observe(self, data: dict[str, Any], stage: str) -> dict[str, Any]:
+    def _observe(
+        self,
+        data: dict[str, Any],
+        stage: str,
+        extra_content: Any = None,
+    ) -> dict[str, Any]:
         if not isinstance(data, dict):
             return data
         started = time.perf_counter()
@@ -272,20 +311,13 @@ class SecretsObserverGuardrail(CustomGuardrail):
                         continue
                     for text in _text_leaves(data[root]):
                         counts.update(label for _, _, label, _ in _scan_text(text, self._fingerprints))
+                for text in _text_leaves(extra_content):
+                    counts.update(label for _, _, label, _ in _scan_text(text, self._fingerprints))
         except Exception as exc:  # fail open; do not expose exception or request values
             outcome = "scan_error"
             _safe_log(logging.WARNING, "Secrets observer scan failed; category=%s", type(exc).__name__)
 
         elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
-        if counts:
-            _safe_log(
-                logging.WARNING,
-                "Secrets observer detected likely credentials; stage=%s detectors=%s counts=%s",
-                stage,
-                ",".join(sorted(counts)),
-                dict(sorted(counts.items())),
-            )
-
         audit = {
             "mode": "observe_only",
             "stage": stage,
@@ -293,11 +325,21 @@ class SecretsObserverGuardrail(CustomGuardrail):
             "detector_counts": dict(sorted(counts.items())),
             "duration_ms": elapsed_ms,
         }
+        correlation_id = data.get("litellm_call_id")
+        if isinstance(correlation_id, str) and re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", correlation_id):
+            audit["correlation_id"] = correlation_id
+        log_level = logging.WARNING if counts or outcome == "scan_error" else logging.INFO
+        _safe_log(
+            log_level,
+            "Secrets observer audit %s",
+            json.dumps(audit, sort_keys=True, separators=(",", ":")),
+        )
         try:
             self.add_standard_logging_guardrail_information_to_request_data(
                 guardrail_json_response=audit,
                 request_data=data,
                 guardrail_status="success",
+                duration=elapsed_ms / 1000,
             )
             if outcome == "scanned":
                 add_guardrail_to_applied_guardrails_header(
@@ -315,5 +357,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         return self._observe(kwargs, "deployment")
 
     async def apply_guardrail(self, inputs, request_data, input_type, logging_obj=None):
-        self._observe(request_data, f"apply_guardrail:{input_type}")
+        texts = inputs.get("texts") if isinstance(inputs, dict) else None
+        data = request_data if isinstance(request_data, dict) else {}
+        self._observe(data, f"apply_guardrail:{input_type}", extra_content=texts)
         return inputs
