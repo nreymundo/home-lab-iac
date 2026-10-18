@@ -39,67 +39,6 @@ Docker volume preserves the peer identity. If that volume is lost, create a new
 setup key for `netbird-proxy`, replace the encrypted value, and rerun the
 NetBird playbook.
 
-## OmniRoute
-
-`omniroute.sops.yml` is committed encrypted and holds the OmniRoute container
-runtime secrets. SOPS encrypts all `omniroute_*` values using the repository
-Age recipient:
-
-```yaml
-omniroute_initial_password: <dashboard admin password, >= 16 chars>
-omniroute_jwt_secret: <openssl rand -base64 48>
-omniroute_api_key_secret: <openssl rand -hex 32>
-omniroute_storage_encryption_key: <openssl rand -hex 32>
-omniroute_ws_bridge_secret: <openssl rand -base64 32>
-omniroute_oidc_allowed_subjects:
-  - <exact Authentik subject or verified user email>
-omniroute_openrouter_api_key: ""   # optional; empty skips that provider
-omniroute_glm_api_key: ""          # optional; empty skips that provider
-omniroute_llama_swap_api_key: ""   # empty skips the protected llama-swap provider
-```
-
-The runtime secrets are generated once. Add at least one exact Authentik
-subject or verified email to `omniroute_oidc_allowed_subjects`; OmniRoute
-refuses to enable OIDC with an empty allowlist. Optionally add the OpenRouter
-and Z.AI GLM Coding Plan API keys; empty provider keys make the management API
-bootstrap skip those providers instead of inventing credentials. The live
-llama-swap endpoint requires its own API key, so that integration is also
-skipped while `omniroute_llama_swap_api_key` is empty. The role reads the
-domain from the encrypted cluster-identity ConfigMap rather than
-copying it into the Ansible secret. Edit and verify with:
-
-```bash
-sops ansible/secrets/omniroute.sops.yml
-sops --decrypt ansible/secrets/omniroute.sops.yml >/dev/null
-```
-
-The Authentik OAuth client credentials for OmniRoute live in
-`kubernetes/infrastructure/security/authentik/install/omniroute-sso-secret.sops.yaml`;
-the Ansible role decrypts that same file so OmniRoute and Authentik always
-share one client identity.
-
-On the first run, the bootstrap authenticates with the initial password, creates
-an `ansible-bootstrap` API key with `admin` scope and no model access, stores its
-one-time raw value in `/etc/omniroute/bootstrap-api-keys.json` with mode `0600`,
-and disables password login. Later runs authenticate with that management key.
-Losing the root-owned key file requires recovery through an authenticated OIDC
-session before Ansible can manage OmniRoute again.
-
-The same output file stores one-time workload and operator keys created during
-Phase 1. Copy only the required value into each application's existing SOPS
-secret owner during that application's later cutover; never distribute the
-`ansible-bootstrap` management key. A creation response is written atomically
-before update-only permissions are patched, so rerunning after a partial
-failure reuses the key instead of regenerating it.
-
-The OpenRouter and GLM credentials may reuse the same provider credentials used
-by LiteLLM while both gateways run. The llama-swap credential is used by both
-the custom provider node and the authenticated built-in `llama-cpp` embedding
-connection. OmniRoute's native Codex connection is enrolled interactively and
-owns its rotating OAuth state; do not place ChatGPT OAuth tokens or LiteLLM's
-credential file in this Ansible secret. Recovery of an OAuth connection is an
-OmniRoute enrollment operation, not secret-file reconstruction.
-
 ## Proxmox
 
 `proxmox.sops.yml` holds the SMTP credentials for the Proxmox email

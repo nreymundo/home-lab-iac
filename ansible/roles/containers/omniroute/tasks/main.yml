@@ -1,9 +1,0 @@
----
-- name: Load and validate OmniRoute secrets
-  ansible.builtin.import_tasks: secrets.yml
-
-- name: Deploy OmniRoute
-  ansible.builtin.import_tasks: deployment.yml
-
-- name: Bootstrap OmniRoute API configuration
-  ansible.builtin.import_tasks: api-bootstrap.yml

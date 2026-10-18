@@ -24,7 +24,6 @@ that should all be run on every host.
 | `public_vps.yml` | `public_vps` | Common setup and selected Docker installation. Initial SSH/UFW/fail2ban hardening belongs to Terraform cloud-init. Requires the local inventory overlay. |
 | `development.yml` | `development_vms` | Development workstation tools and services. Refreshes an existing HashiCorp key before common APT tasks; see below. |
 | `hermes.yml` | `hermes_vms` | Native Hermes installation and services with the VM's host setup and tools. |
-| `omniroute.yml` | `omniroute_vms` | OmniRoute/Redis deployment and API reconciliation. Requires the [documented secrets and deployment prerequisites](roles/containers/omniroute/README.md). |
 | `netbird.yml` | `netbird` | NetBird stack and identity bootstrap. Requires its inventory host and [SOPS secrets](secrets/README.md#netbird). |
 | `garage_lxc.yml` | `garage_lxc` | LXC hardening/bootstrap and Garage installation. Requires a manually supplied Garage configuration. |
 | `emqx_lxc.yml` | `emqx_lxc` | LXC hardening/bootstrap and the playbook's pinned EMQX package. |
@@ -114,7 +113,6 @@ Keep the operation's update policy in mind when rerunning a playbook.
 | Garage | Ansible installs the binary and unit; `/etc/garage.toml` is manually supplied. The role can select newer releases within its configured major version. |
 | llama-swap | Ansible creates the model configuration only when absent; later edits remain manual. Runs resolve the latest stable binary release. See the [role guide](roles/llama_swap/README.md). |
 | llama.cpp / whisper.cpp | Source updates are opt-in; build markers also detect relevant build-setting changes. See [LLM runtime](roles/llm_runtime/README.md) and [Whisper runtime](roles/whisper_runtime/README.md). |
-| OmniRoute | Managed API declarations are reconciled on reruns; existing key values and native OAuth state are preserved. See the [role guide](roles/containers/omniroute/README.md). |
 
 Other feature switches retain their role-specific semantics. Inspect the role's
 defaults and tasks rather than assuming `false` means uninstall or cleanup.
@@ -129,7 +127,6 @@ The larger roles use role-local task files, imported in execution order from
 | `llm_runtime` | `preflight`, `packages`, `source`, `build`, `validation` |
 | `hermes` | `install-prerequisites`, `identity`, `install`, `default-gateway`, `named-profiles`, `dashboard` |
 | `netbird` | `secrets`, `networking`, `deployment`, `verification` |
-| `omniroute` | `secrets`, `deployment`, `api-bootstrap` |
 | `comfyui` | `preflight`, `deployment`, `openai-api`, `idle-restart`, `models`, `services` |
 
 These use static `ansible.builtin.import_tasks` so existing tasks remain
@@ -150,9 +147,7 @@ not apply category tags to the whole imported file. Existing dynamic includes
 for sudo, timers, and Ubuntu GRUB remain unchanged.
 
 Static helpers belong in role-local `files/`; templated configuration belongs
-in `templates/`. OmniRoute's `files/bootstrap_omniroute.py` is copied unchanged
-and consumes the separately rendered `templates/bootstrap-config.json.j2`.
-The same convention applies to Proxmox's shell files and CoreFreq unit, the
+in `templates/`. This convention applies to Proxmox's shell files and CoreFreq unit, the
 ASUS quiet fan policy service unit, and NetBird's CrowdSec acquisition config.
 
 ComfyUI's task imports preserve the original sequence, including model downloads

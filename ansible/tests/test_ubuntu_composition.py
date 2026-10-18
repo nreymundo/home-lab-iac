@@ -37,7 +37,7 @@ class UbuntuCompositionTests(unittest.TestCase):
 
     def test_aggregate_has_existing_vm_and_laptop_groups_only(self):
         self.assertEqual(set(self.inventory["ubuntu_hosts"]["children"]), {"all_vms", "headless_laptops", "ubuntu_baremetal"})
-        self.assertEqual(set(self.inventory["all_vms"]["children"]), {"development_vms", "hermes_vms", "k3s_nodes", "omniroute_vms"})
+        self.assertEqual(set(self.inventory["all_vms"]["children"]), {"development_vms", "hermes_vms", "k3s_nodes"})
         self.assertEqual(self.inventory["headless_laptops"]["hosts"], ["g14-2022"])
         self.assertEqual(set(self.inventory["ubuntu_baremetal"]["children"]), {"k3s_baremetal"})
 
@@ -123,7 +123,7 @@ class UbuntuCompositionTests(unittest.TestCase):
 
     def test_fleet_defaults_and_explicit_tools_survive_precedence(self):
         hosts = self.inventory["_meta"]["hostvars"]
-        for name in ["vm-dev", "vm-hermes", "vm-omniroute", "k3s-node-02", "g14-2022"]:
+        for name in ["vm-dev", "vm-hermes", "k3s-node-02", "g14-2022"]:
             with self.subTest(name=name):
                 values = hosts[name]
                 self.assertFalse(values["common_run_upgrade"])
@@ -132,7 +132,6 @@ class UbuntuCompositionTests(unittest.TestCase):
                 self.assertFalse(values["cockpit_enabled"])
         self.assertTrue(hosts["vm-dev"]["homebrew_install_enabled"])
         self.assertTrue(hosts["g14-2022"]["nodejs_runtime_install_enabled"])
-        self.assertTrue(hosts["vm-omniroute"]["ufw_enabled"])
         self.assertNotIn("common_passwordless_sudo", hosts["pve3"])
         self.assertIn("nfs-common", hosts["k3s-node-02"]["common_group_packages"])
         self.assertIn("intel-gpu-tools", hosts["k3s-node-02"]["common_extra_packages"])

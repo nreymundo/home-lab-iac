@@ -6,4 +6,3 @@ all:
         development_vms: {}
         hermes_vms: {}
         k3s_nodes: {}
-        omniroute_vms: {}
