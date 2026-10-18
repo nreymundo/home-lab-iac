@@ -696,7 +696,11 @@ class SecretsObserverGuardrail(CustomGuardrail):
 def install_proxy_response_hooks() -> None:
     """Carry redaction status to endpoints bypassing normal callback headers."""
     from litellm.proxy.common_request_processing import ProxyBaseLLMRequestProcessing
-    from litellm.responses.streaming_iterator import BaseResponsesAPIStreamingIterator
+    from litellm.responses.streaming_iterator import (
+        BaseResponsesAPIStreamingIterator,
+        CachedResponsesAPIStreamingIterator,
+        MockResponsesAPIStreamingIterator,
+    )
 
     original_headers = ProxyBaseLLMRequestProcessing.get_custom_headers
     if not getattr(original_headers, "secrets_guardrail_header_patch", False):
@@ -708,6 +712,20 @@ def install_proxy_response_hooks() -> None:
 
         get_custom_headers.secrets_guardrail_header_patch = True
         ProxyBaseLLMRequestProcessing.get_custom_headers = staticmethod(get_custom_headers)
+
+    for iterator_class in (CachedResponsesAPIStreamingIterator, MockResponsesAPIStreamingIterator):
+        original_set_events = iterator_class._set_events_from_response
+        if getattr(original_set_events, "secrets_guardrail_stream_patch", False):
+            continue
+
+        def set_events_from_response(self, transformed, logging_obj, _original=original_set_events):
+            if _was_redacted(getattr(self, "request_data", None)):
+                notice = "Notice: sensitive credential-like content was redacted before processing."
+                _prepend_responses_notice(transformed, notice)
+            return _original(self, transformed, logging_obj)
+
+        set_events_from_response.secrets_guardrail_stream_patch = True
+        iterator_class._set_events_from_response = set_events_from_response
 
     original_process_chunk = BaseResponsesAPIStreamingIterator._process_chunk
     if getattr(original_process_chunk, "secrets_guardrail_stream_patch", False):
