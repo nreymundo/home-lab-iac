@@ -13,6 +13,7 @@ import chatgpt_responses_streaming_patch
 import openrouter_rerank
 import vllm_model_discovery
 import zai_coding_catalog
+import secrets_guardrail
 
 
 _SYSTEM_INSTRUCTION_ROLES = {"system", "developer"}
@@ -501,6 +502,7 @@ def worker_startup_hook():
     patch_virtual_key_model_discovery_routes()
     patch_chatgpt_responses_string_input()
     openrouter_rerank.worker_startup_hook()
+    secrets_guardrail.install_proxy_response_hooks()
 
     # Retained implementations and mounts allow selective restoration by
     # uncommenting calls below. Review compatibility before re-enabling.
