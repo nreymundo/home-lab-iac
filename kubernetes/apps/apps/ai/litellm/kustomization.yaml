@@ -13,6 +13,7 @@ configMapGenerator:
     behavior: merge
     files:
       - scripts/cache_bypass.py
+      - scripts/headroom_compression.py
       - scripts/chatgpt_responses_streaming_patch.py
       - scripts/chatgpt_codex_catalog.py
       - scripts/zai_coding_catalog.py

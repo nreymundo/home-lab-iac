@@ -105,6 +105,77 @@ spec:
               limits:
                 memory: 2Gi
 
+          headroom:
+            image:
+              # renovate: datasource=docker depName=headroomlabs-ai/headroom registryUrl=https://ghcr.io
+              repository: ghcr.io/headroomlabs-ai/headroom
+              tag: 0.41.0
+            args:
+              - --host
+              - 127.0.0.1
+              - --port
+              - "8787"
+            env:
+              HOME: /home/nonroot
+              HEADROOM_WORKSPACE_DIR: /home/nonroot/.headroom
+              HEADROOM_CONFIG_DIR: /home/nonroot/.headroom/config
+              HEADROOM_TELEMETRY: "off"
+              HEADROOM_BEACON: "off"
+              # LiteLLM owns provider calls; this container only compresses/retrieves.
+              HEADROOM_SKIP_UPSTREAM_CHECK: "1"
+              # Session replay preserves user instructions; compress tool results.
+              HEADROOM_COMPRESS_USER_MESSAGES: "0"
+              HEADROOM_WORKERS: "1"
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - python
+                      - -c
+                      - >-
+                        import urllib.request;
+                        urllib.request.urlopen('http://127.0.0.1:8787/livez', timeout=3)
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - python
+                      - -c
+                      - >-
+                        import urllib.request;
+                        urllib.request.urlopen('http://127.0.0.1:8787/readyz', timeout=3)
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - python
+                      - -c
+                      - >-
+                        import urllib.request;
+                        urllib.request.urlopen('http://127.0.0.1:8787/livez', timeout=3)
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+
       valkey:
         containers:
           valkey:
@@ -177,6 +248,13 @@ spec:
                   port: http
 
     persistence:
+      headroom-data:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          main:
+            headroom:
+              - path: /home/nonroot
       data:
         enabled: true
         type: custom
@@ -206,6 +284,9 @@ spec:
                 readOnly: true
               - path: /etc/litellm/cache_bypass.py
                 subPath: cache_bypass.py
+                readOnly: true
+              - path: /etc/litellm/headroom_compression.py
+                subPath: headroom_compression.py
                 readOnly: true
               - path: /etc/litellm/vllm_model_discovery.py
                 subPath: vllm_model_discovery.py
