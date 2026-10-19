@@ -8,9 +8,10 @@ import logging
 import math
 import os
 import re
+import threading
 import time
 import uuid
-from collections import Counter
+from collections import Counter, OrderedDict
 from collections.abc import Iterable
 from contextvars import ContextVar
 from typing import Any
@@ -24,12 +25,26 @@ from litellm.proxy.common_utils.callback_utils import (
 
 _AUDIT_LOGGER = logging.getLogger("LiteLLM Proxy.secrets_observer")
 _AUDIT_LOGGER.setLevel(logging.INFO)
-_CALL_STATE: ContextVar[dict[str, bool] | None] = ContextVar("secrets_guardrail_call_state", default=None)
-_CALL_STATES: dict[str, dict[str, bool]] = {}
+_CALL_STATE: ContextVar[dict[str, Any] | None] = ContextVar("secrets_guardrail_call_state", default=None)
+_CALL_STATES: dict[str, dict[str, Any]] = {}
+# Spans already reported by this process. Redaction re-applies to every request
+# (replayed history still carries the raw text and must stay redacted in
+# flight), but user-facing notices only fire for spans this process has not
+# reported before, so a replayed conversation does not re-notify every turn.
+# Process-local by design: a pod restart re-notifies once per known span.
+_SEEN_SPANS: OrderedDict[str, None] = OrderedDict()
+_SEEN_SPANS_LOCK = threading.Lock()
+_SEEN_SPANS_CAP = 10_000
 _REDACTION_NOTICE = (
     "[Security notice: LiteLLM detected and redacted sensitive credential-like content "
     "from this request before sending it to the model. Do not infer, reconstruct, or ask "
     "for the redacted value. Continue using the remaining request content.]"
+)
+# Stable fragment shared by every generated model notice so notice-carrying
+# request content is recognized without matching one fixed sentence.
+_MODEL_NOTICE_MARK = "[Security notice: LiteLLM redacted"
+_GENERIC_RESPONSE_NOTICE = (
+    "Notice: sensitive credential-like content was redacted before processing."
 )
 _SOPS_CIPHERTEXT = re.compile(r"ENC\[AES256_GCM,[^\]\r\n]*\]")
 # Spans already carrying a redaction marker (an earlier pass, a cached
@@ -176,7 +191,7 @@ _BINARY_OBJECT_TYPES = {
 _LOCAL_MODEL_PREFIXES = ("local/", "hosted_vllm/")
 
 
-def _request_call_state(data: Any = None) -> dict[str, bool] | None:
+def _request_call_state(data: Any = None) -> dict[str, Any] | None:
     state = _CALL_STATE.get()
     call_id = data.get("litellm_call_id") if isinstance(data, dict) else None
     if isinstance(call_id, str):
@@ -338,35 +353,91 @@ def _scan_text(text: str, fingerprints: dict[str, bytes]) -> list[tuple[int, int
     return merged
 
 
-def _redact_text(text: str, fingerprints: dict[str, bytes]) -> tuple[str, Counter[str]]:
+def _format_model_notice(new_counts: Counter[str]) -> str:
+    total = sum(new_counts.values())
+    detail = ", ".join(f"{label} x{count}" for label, count in sorted(new_counts.items()))
+    return (
+        f"[Security notice: LiteLLM redacted {total} new credential-like value(s) "
+        f"({detail}) from this request before sending it to the model. Do not infer, "
+        "reconstruct, or ask for the redacted values. Continue using the remaining "
+        "request content.]"
+    )
+
+
+def _format_response_notice(new_counts: Counter[str]) -> str:
+    total = sum(new_counts.values())
+    detail = ", ".join(f"{label} x{count}" for label, count in sorted(new_counts.items()))
+    return f"Notice: {total} new credential-shaped value(s) redacted before processing: {detail}."
+
+
+def _response_notice(data: Any = None) -> str | None:
+    """Response-facing notice text, or None when nothing new was redacted.
+
+    Falls back to the generic notice when no call state exists but a redaction
+    was detected (cached-response paths), preserving pre-existing behavior.
+    """
+    state = _request_call_state(data)
+    if state is not None:
+        new_counts = state.get("new_counts")
+        if isinstance(new_counts, Counter) and new_counts:
+            return _format_response_notice(new_counts)
+        return None
+    if _was_redacted(data):
+        return _GENERIC_RESPONSE_NOTICE
+    return None
+
+
+def _register_spans(spans: Iterable[tuple[str, str]]) -> Counter[str]:
+    """Record spans as seen; count only spans this process has not reported."""
+    new_counts: Counter[str] = Counter()
+    with _SEEN_SPANS_LOCK:
+        for label, span_text in spans:
+            digest = hashlib.sha256(f"{label}|{span_text}".encode("utf-8")).hexdigest()
+            if digest in _SEEN_SPANS:
+                _SEEN_SPANS.move_to_end(digest)
+                continue
+            _SEEN_SPANS[digest] = None
+            new_counts[label] += 1
+        while len(_SEEN_SPANS) > _SEEN_SPANS_CAP:
+            _SEEN_SPANS.popitem(last=False)
+    return new_counts
+
+
+def _redact_text(text: str, fingerprints: dict[str, bytes]) -> tuple[str, Counter[str], Counter[str]]:
     matches = _scan_text(text, fingerprints)
     counts: Counter[str] = Counter()
     if not matches:
-        return text, counts
+        return text, counts, counts
     pieces: list[str] = []
+    spans: list[tuple[str, str]] = []
     cursor = 0
     for start, end, label, _ in matches:
         pieces.extend((text[cursor:start], f"[REDACTED: {label}]"))
+        spans.append((label, text[start:end]))
         cursor = end
         counts[label] += 1
     pieces.append(text[cursor:])
-    return "".join(pieces), counts
+    return "".join(pieces), counts, _register_spans(spans)
 
 
-def _redact_value(value: Any, fingerprints: dict[str, bytes], binary_context: bool = False):
+def _redact_value(
+    value: Any, fingerprints: dict[str, bytes], binary_context: bool = False
+) -> tuple[Any, Counter[str], Counter[str]]:
     counts: Counter[str] = Counter()
+    new_counts: Counter[str] = Counter()
     if isinstance(value, str):
         if binary_context:
-            return value, counts
-        redacted, counts = _redact_text(value, fingerprints)
-        return redacted, counts
+            return value, counts, new_counts
+        redacted, counts, new_counts = _redact_text(value, fingerprints)
+        return redacted, counts, new_counts
     if isinstance(value, list):
         result = []
         for item in value:
-            redacted, found = _redact_value(item, fingerprints, binary_context)
+            redacted, found, found_new = _redact_value(item, fingerprints, binary_context)
             result.append(redacted)
             counts.update(found)
-        return result, counts
+            new_counts.update(found_new)
+        return result, counts, new_counts
     if isinstance(value, dict):
         binary = binary_context or str(value.get("type", "")).lower() in _BINARY_OBJECT_TYPES
         result = {}
@@ -374,11 +445,12 @@ def _redact_value(value: Any, fingerprints: dict[str, bytes], binary_context: bo
             if not isinstance(key, str) or key.lower() in _NON_TEXT_KEYS:
                 result[key] = item
                 continue
-            redacted, found = _redact_value(item, fingerprints, binary)
+            redacted, found, found_new = _redact_value(item, fingerprints, binary)
             result[key] = redacted
             counts.update(found)
-        return result, counts
-    return value, counts
+            new_counts.update(found_new)
+        return result, counts, new_counts
+    return value, counts, new_counts
 
 
 def _is_local_destination(data: dict[str, Any]) -> bool:
@@ -415,7 +487,7 @@ def _is_local_destination(data: dict[str, Any]) -> bool:
     return isinstance(model, str) and model.lower().startswith(_LOCAL_MODEL_PREFIXES)
 
 
-def _add_model_notice(data: dict[str, Any], call_type: str | None) -> None:
+def _add_model_notice(data: dict[str, Any], call_type: str | None, notice: str = _REDACTION_NOTICE) -> None:
     if call_type not in {
         "completion",
         "acompletion",
@@ -430,7 +502,7 @@ def _add_model_notice(data: dict[str, Any], call_type: str | None) -> None:
         return
     messages = data.get("messages")
     if isinstance(messages, list):
-        messages.insert(0, {"role": "system", "content": _REDACTION_NOTICE})
+        messages.insert(0, {"role": "system", "content": notice})
         if state is not None:
             state["model_notice_added"] = True
         return
@@ -441,7 +513,7 @@ def _add_model_notice(data: dict[str, Any], call_type: str | None) -> None:
             {
                 "type": "message",
                 "role": "system",
-                "content": [{"type": "input_text", "text": _REDACTION_NOTICE}],
+                "content": [{"type": "input_text", "text": notice}],
             },
         )
         if state is not None:
@@ -450,7 +522,7 @@ def _add_model_notice(data: dict[str, Any], call_type: str | None) -> None:
     for key in ("instructions", "instruction", "prompt", "input"):
         value = data.get(key)
         if isinstance(value, str):
-            data[key] = f"{_REDACTION_NOTICE}\n\n{value}"
+            data[key] = f"{notice}\n\n{value}"
             if state is not None:
                 state["model_notice_added"] = True
             return
@@ -461,7 +533,7 @@ def _was_redacted(data: Any = None) -> bool:
     if state and state.get("redacted"):
         return True
     if isinstance(data, dict) and any(
-        _REDACTION_NOTICE in text
+        _MODEL_NOTICE_MARK in text
         for root in _CONTENT_ROOTS
         for text in _text_leaves(data.get(root))
     ):
@@ -587,6 +659,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         started = time.perf_counter()
         outcome = "scanned"
         counts: Counter[str] = Counter()
+        new_counts: Counter[str] = Counter()
         redacted = False
         call_id = data.get("litellm_call_id")
         if not isinstance(call_id, str) or not re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", call_id):
@@ -594,7 +667,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
             data["litellm_call_id"] = call_id
         state = _request_call_state(data)
         if state is None:
-            state = {"redacted": False, "model_notice_added": False}
+            state = {"redacted": False, "model_notice_added": False, "new_counts": Counter()}
             _CALL_STATE.set(state)
         _CALL_STATES[call_id] = state
         if len(_CALL_STATES) > 4096:
@@ -605,17 +678,21 @@ class SecretsObserverGuardrail(CustomGuardrail):
             elif self._mode == "redact":
                 for root in _CONTENT_ROOTS:
                     if root in data:
-                        data[root], found = _redact_value(data[root], self._fingerprints)
+                        data[root], found, found_new = _redact_value(data[root], self._fingerprints)
                         counts.update(found)
+                        new_counts.update(found_new)
                 if isinstance(extra_content, list):
-                    clean_extra, found = _redact_value(extra_content, self._fingerprints)
+                    clean_extra, found, found_new = _redact_value(extra_content, self._fingerprints)
                     counts.update(found)
+                    new_counts.update(found_new)
                     if found:
                         extra_content[:] = clean_extra
-                        extra_content.insert(0, _REDACTION_NOTICE)
+                    if found_new:
+                        extra_content.insert(0, _format_model_notice(new_counts))
                 redacted = bool(counts)
-                if redacted:
-                    _add_model_notice(data, call_type)
+                if new_counts:
+                    state["new_counts"] = new_counts
+                    _add_model_notice(data, call_type, _format_model_notice(new_counts))
             else:
                 for root in _CONTENT_ROOTS:
                     if root in data:
@@ -644,6 +721,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 for label, count in sorted(counts.items())
             ],
             "duration_ms": elapsed_ms,
+            "new_spans": int(sum(new_counts.values())),
             "correlation_id": correlation_id,
         }
         if heuristic_findings:
@@ -687,7 +765,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         }
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
-        state = {"redacted": False, "model_notice_added": False}
+        state = {"redacted": False, "model_notice_added": False, "new_counts": Counter()}
         _CALL_STATE.set(state)
         call_id = data.get("litellm_call_id") if isinstance(data, dict) else None
         if isinstance(call_id, str):
@@ -704,9 +782,9 @@ class SecretsObserverGuardrail(CustomGuardrail):
         return inputs
 
     async def async_post_call_success_hook(self, data, user_api_key_dict, response):
-        if not _was_redacted(data):
+        notice = _response_notice(data)
+        if notice is None:
             return response
-        notice = "Notice: sensitive credential-like content was redacted before processing."
         try:
             if isinstance(response, dict):
                 choices = response.get("choices")
@@ -750,7 +828,8 @@ class SecretsObserverGuardrail(CustomGuardrail):
         return response
 
     async def async_post_call_streaming_iterator_hook(self, user_api_key_dict, response, request_data):
-        if not _was_redacted(request_data):
+        notice = _response_notice(request_data)
+        if notice is None:
             async for chunk in response:
                 yield chunk
             return
@@ -760,7 +839,6 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 try:
                     delta = chunk.choices[0].delta
                     content = delta.content
-                    notice = "Notice: sensitive credential-like content was redacted before processing."
                     if isinstance(content, str) and content.startswith(notice):
                         notice_pending = False
                     elif content or getattr(delta, "tool_calls", None):
@@ -797,8 +875,8 @@ def install_proxy_response_hooks() -> None:
             continue
 
         def set_events_from_response(self, transformed, logging_obj, _original=original_set_events):
-            if _was_redacted(getattr(self, "request_data", None)):
-                notice = "Notice: sensitive credential-like content was redacted before processing."
+            notice = _response_notice(getattr(self, "request_data", None))
+            if notice is not None:
                 _prepend_responses_notice(transformed, notice)
             return _original(self, transformed, logging_obj)
 
@@ -814,7 +892,11 @@ def install_proxy_response_hooks() -> None:
         request_data = getattr(self, "request_data", None)
         if not (_was_redacted(request_data) or _was_redacted(getattr(self, "litellm_metadata", None))) or result is None:
             return result
-        notice = "Notice: sensitive credential-like content was redacted before processing."
+        notice = _response_notice(request_data)
+        if notice is None:
+            notice = _response_notice(getattr(self, "litellm_metadata", None))
+        if notice is None:
+            return result
         event_type = getattr(result, "type", None)
         event_type = getattr(event_type, "value", event_type)
         state = getattr(self, "_secrets_guardrail_state", None)
