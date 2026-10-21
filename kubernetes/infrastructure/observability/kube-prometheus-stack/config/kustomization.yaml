@@ -1,6 +1,8 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - grafana-dashboard-litellm.yaml
   - grafana-dashboard-opencode-observability.yaml
   - grafana-dashboard-k8s-views-global.yaml
   - grafana-dashboard-k8s-views-pods.yaml

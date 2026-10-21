@@ -31,3 +31,5 @@ resources:
   - cnpg-cluster.yaml
   - helmrelease.yaml
   - ingressroute.yaml
+  - metrics-service.yaml
+  - servicemonitor.yaml
