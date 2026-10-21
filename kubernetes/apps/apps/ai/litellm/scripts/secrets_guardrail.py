@@ -119,9 +119,15 @@ _PUBLISHED_PLACEHOLDERS = frozenset(
         ),
     }
 )
-# Bare environment references are pointers, never secret material; applies
-# to tier-2 assignment values only (format-detector captures never match).
-_ENV_REFERENCE_VALUE = re.compile(r"^(?:os\.environ/|env:)?\$?\{?[A-Z][A-Z0-9_]{2,}\}?$")
+# Environment references are pointers, never secret material; these exemptions
+# apply only to the assignment heuristic (format detectors still scan them).
+_ENV_REFERENCE_VALUE = re.compile(
+    r"(?:os\.environ/|env:)?\$?\{?[A-Z][A-Z0-9_]{2,}\}?"
+    r"|process\.env\.[A-Z_][A-Z0-9_]*!?"
+)
+_JS_ENV_REFERENCE_PREFIX = re.compile(
+    r"process\.env\.[A-Z_][A-Z0-9_]*!?(?=$|[^A-Za-z0-9_$])"
+)
 _PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("anthropic", re.compile(r"\bsk-ant-[A-Za-z0-9_-]{16,}\b")),
     ("openrouter", re.compile(r"\bsk-or-v1-[A-Za-z0-9_-]{16,}\b")),
@@ -277,6 +283,111 @@ def _is_placeholder(capture: str) -> bool:
     )
 
 
+def _assignment_reference_end(assignment: re.Match[str]) -> int | None:
+    """Return the end of a reference at the start of an assignment value."""
+    raw_value = assignment.group("value")
+    value_start, value_end = assignment.span("value")
+    value = raw_value.strip("\"'")
+    if _ENV_REFERENCE_VALUE.fullmatch(value):
+        return value_end
+    if raw_value[:1] in {"\"", "'"}:
+        return None
+
+    reference = _JS_ENV_REFERENCE_PREFIX.match(raw_value)
+    if reference is None:
+        return None
+    return value_start + reference.end()
+
+
+def _append_assignment_match(
+    text: str,
+    start: int,
+    end: int,
+    matches: list[tuple[int, int, str, int]],
+) -> None:
+    raw_value = text[start:end]
+    value = raw_value.strip("\"'")
+    if (
+        len(value) >= 16
+        and _entropy(value) >= 3.0
+        and _ENV_REFERENCE_VALUE.fullmatch(value) is None
+        and not _is_placeholder(value)
+    ):
+        if raw_value[:1] in {"\"", "'"} and raw_value[-1:] == raw_value[:1]:
+            start += 1
+            end -= 1
+        matches.append((start, end, "sensitive_assignment", 60))
+
+
+def _expression_continues_after_newline(text: str, index: int, start: int) -> bool:
+    line_start = text.rfind("\n", start, index) + 1
+    line_end = text.find("\n", index + 1)
+    if line_end < 0:
+        line_end = len(text)
+    previous = text[line_start:index].rstrip()
+    following = text[index + 1 : line_end].lstrip()
+    operators = (
+        "||",
+        "&&",
+        "??",
+        "===",
+        "!==",
+        "==",
+        "!=",
+        ">=",
+        "<=",
+        "+",
+        "-",
+        "*",
+        "/",
+        "?",
+        ":",
+        ".",
+    )
+    return any(previous.endswith(operator) or following.startswith(operator) for operator in operators)
+
+
+def _append_expression_string_matches(
+    text: str,
+    start: int,
+    matches: list[tuple[int, int, str, int]],
+) -> None:
+    quote: str | None = None
+    escaped = False
+    depth = 0
+    literal_start = 0
+    index = start
+
+    while index < len(text):
+        char = text[index]
+        if quote is not None:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                _append_assignment_match(text, literal_start + 1, index, matches)
+                quote = None
+        elif char in {"\"", "'"}:
+            previous = index - 1
+            while previous >= start and text[previous].isspace():
+                previous -= 1
+            if previous < start or text[previous] not in "=+-*/%&|^<>?:,.([":
+                index += 1
+                continue
+            quote = char
+            literal_start = index
+        elif char in "([{":
+            depth += 1
+        elif char in ")]}" and depth:
+            depth -= 1
+        elif depth == 0 and char in ",;}":
+            break
+        elif depth == 0 and char == "\n" and not _expression_continues_after_newline(text, index, start):
+            break
+        index += 1
+
+
 def _candidate_fingerprint_matches(text: str, fingerprints: dict[str, bytes]):
     if not fingerprints:
         return
@@ -325,19 +436,20 @@ def _scan_text(text: str, fingerprints: dict[str, bytes]) -> list[tuple[int, int
 
     for assignment in _ASSIGNMENT.finditer(scan_text):
         name = assignment.group("key").strip("\"'")
-        value = assignment.group("value").strip("\"'")
-        if (
-            _sensitive_assignment_name(name)
-            and len(value) >= 16
-            and _entropy(value) >= 3.0
-            and not _ENV_REFERENCE_VALUE.match(value)
-            and not _is_placeholder(value)
-        ):
-            value_start, value_end = assignment.span("value")
-            if scan_text[value_start:value_end][:1] in {"\"", "'"}:
-                value_start += 1
-                value_end -= 1
-            matches.append((value_start, value_end, "sensitive_assignment", 60))
+        if not _sensitive_assignment_name(name):
+            continue
+
+        value_start, value_end = assignment.span("value")
+        reference_end = _assignment_reference_end(assignment)
+        is_reference = reference_end is not None
+
+        if not is_reference:
+            _append_assignment_match(scan_text, value_start, value_end, matches)
+
+        if is_reference:
+            # Check literal operands separately; operators and the reference do
+            # not contribute to the credential heuristic.
+            _append_expression_string_matches(scan_text, reference_end, matches)
 
     if not matches:
         return []
