@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import atexit
 import hashlib
 import json
 import logging
@@ -14,7 +15,7 @@ import threading
 import time
 import urllib.request
 import uuid
-from collections import Counter, OrderedDict
+from collections import Counter, OrderedDict, deque
 from collections.abc import Iterable
 from contextvars import ContextVar
 from typing import Any
@@ -34,12 +35,18 @@ _CALL_STATE: ContextVar[dict[str, Any] | None] = ContextVar("secrets_guardrail_c
 _CALL_STATES: dict[str, dict[str, Any]] = {}
 # Spans already reported by this process. Redaction re-applies to every request
 # (replayed history still carries the raw text and must stay redacted in
-# flight), but user-facing notices only fire for spans this process has not
-# reported before, so a replayed conversation does not re-notify every turn.
-# Process-local by design: a pod restart re-notifies once per known span.
+# flight), but error reporting — WARNING-level audit lines, guardrail
+# intervention status, and user-facing notices — only fires for spans not
+# reported before. The `_SeenStore` below persists these digests in SQLite so
+# "reported before" survives pod restarts; without it, memory is the only
+# layer and a restart re-reports every known span once.
 _SEEN_SPANS: OrderedDict[str, None] = OrderedDict()
 _SEEN_SPANS_LOCK = threading.Lock()
 _SEEN_SPANS_CAP = 10_000
+# Durable layer: most-recently-reported spans kept in the store; anything
+# pruned past this bound simply reports again once when next redacted.
+_REPORTED_CAP = 20_000
+_REPORT_TASKS: set[asyncio.Future] = set()
 _REDACTION_NOTICE = (
     "[Security notice: LiteLLM detected and redacted sensitive credential-like content "
     "from this request before sending it to the model. Do not infer, reconstruct, or ask "
@@ -515,12 +522,21 @@ def _response_notice(data: Any = None) -> str | None:
     return None
 
 
-def _register_spans(spans: Iterable[tuple[str, str]]) -> Counter[str]:
-    """Record spans as seen; count only spans this process has not reported."""
+def _register_spans(
+    spans: Iterable[tuple[str, str]], store: _SeenStore | None = None
+) -> Counter[str]:
+    """Record spans as seen; count only spans not reported before.
+
+    Memory is authoritative on the request path; `store` mirrors every
+    digest (new and replay) to SQLite in the background so reported-ness
+    survives restarts, refreshing last_seen/hits for pruning.
+    """
     new_counts: Counter[str] = Counter()
+    digests: list[str] = []
     with _SEEN_SPANS_LOCK:
         for label, span_text in spans:
             digest = hashlib.sha256(f"{label}|{span_text}".encode("utf-8")).hexdigest()
+            digests.append(digest)
             if digest in _SEEN_SPANS:
                 _SEEN_SPANS.move_to_end(digest)
                 continue
@@ -528,11 +544,16 @@ def _register_spans(spans: Iterable[tuple[str, str]]) -> Counter[str]:
             new_counts[label] += 1
         while len(_SEEN_SPANS) > _SEEN_SPANS_CAP:
             _SEEN_SPANS.popitem(last=False)
+    if store is not None:
+        store.queue(digests)
     return new_counts
 
 
 def _redact_text(
-    text: str, fingerprints: dict[str, bytes], judge: _SpanJudge | None = None
+    text: str,
+    fingerprints: dict[str, bytes],
+    judge: _SpanJudge | None = None,
+    store: _SeenStore | None = None,
 ) -> tuple[str, Counter[str], Counter[str]]:
     matches = _scan_text(text, fingerprints)
     counts: Counter[str] = Counter()
@@ -564,7 +585,7 @@ def _redact_text(
         cursor = end
         counts[label] += 1
     pieces.append(text[cursor:])
-    return "".join(pieces), counts, _register_spans(spans)
+    return "".join(pieces), counts, _register_spans(spans, store)
 
 
 def _redact_value(
@@ -572,18 +593,19 @@ def _redact_value(
     fingerprints: dict[str, bytes],
     binary_context: bool = False,
     judge: _SpanJudge | None = None,
+    store: _SeenStore | None = None,
 ) -> tuple[Any, Counter[str], Counter[str]]:
     counts: Counter[str] = Counter()
     new_counts: Counter[str] = Counter()
     if isinstance(value, str):
         if binary_context:
             return value, counts, new_counts
-        redacted, counts, new_counts = _redact_text(value, fingerprints, judge)
+        redacted, counts, new_counts = _redact_text(value, fingerprints, judge, store)
         return redacted, counts, new_counts
     if isinstance(value, list):
         result = []
         for item in value:
-            redacted, found, found_new = _redact_value(item, fingerprints, binary_context, judge)
+            redacted, found, found_new = _redact_value(item, fingerprints, binary_context, judge, store)
             result.append(redacted)
             counts.update(found)
             new_counts.update(found_new)
@@ -595,7 +617,7 @@ def _redact_value(
             if not isinstance(key, str) or key.lower() in _NON_TEXT_KEYS:
                 result[key] = item
                 continue
-            redacted, found, found_new = _redact_value(item, fingerprints, binary, judge)
+            redacted, found, found_new = _redact_value(item, fingerprints, binary, judge, store)
             result[key] = redacted
             counts.update(found)
             new_counts.update(found_new)
@@ -1035,6 +1057,125 @@ class _SpanJudge:
                 self.schedule()
 
 
+class _SeenStore:
+    """Durable layer for reported spans, keyed by the seen-cache digest.
+
+    Request-path code only touches memory (`_SEEN_SPANS`) and a pending
+    deque; SQLite writes run on worker threads. At construction the newest
+    stored digests seed `_SEEN_SPANS`, so a pod restart does not re-report
+    known spans. Digests only — span text is never persisted.
+    """
+
+    def __init__(self, db_path: str) -> None:
+        self._db: sqlite3.Connection | None = None
+        self._pending: deque[str] = deque()
+        self._pending_lock = threading.Lock()
+        self._flushing = False
+        try:
+            self._db = sqlite3.connect(db_path, timeout=5.0, check_same_thread=False)
+            self._db.execute("PRAGMA journal_mode=WAL")
+            self._db.execute(
+                "CREATE TABLE IF NOT EXISTS reported_spans ("
+                "digest TEXT PRIMARY KEY, "
+                "first_seen REAL NOT NULL, "
+                "last_seen REAL NOT NULL, "
+                "hits INTEGER NOT NULL)"
+            )
+            with _SEEN_SPANS_LOCK:
+                rows = self._db.execute(
+                    "SELECT digest FROM reported_spans ORDER BY last_seen ASC LIMIT ?",
+                    (_SEEN_SPANS_CAP,),
+                ).fetchall()
+                for digest in rows:
+                    _SEEN_SPANS[digest[0]] = None  # ascending order: newest last
+                while len(_SEEN_SPANS) > _SEEN_SPANS_CAP:
+                    _SEEN_SPANS.popitem(last=False)
+            self._db.commit()
+            atexit.register(self._flush_sync)
+        except Exception as exc:
+            self._db = None
+            _safe_log(
+                logging.WARNING,
+                "Secrets observer report store disabled; category=%s",
+                type(exc).__name__,
+            )
+
+    @property
+    def ready(self) -> bool:
+        return self._db is not None
+
+    def queue(self, digests: Iterable[str]) -> None:
+        """Persist digests (new or replay) via a background flush task."""
+        if self._db is None:
+            return
+        with self._pending_lock:
+            self._pending.extend(digests)
+            while len(self._pending) > _SEEN_SPANS_CAP:
+                self._pending.popleft()
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return  # no loop (offline use): keep memory-only behavior
+        if self._flushing:
+            return
+        self._flushing = True
+        task = loop.create_task(self._flush())
+        _REPORT_TASKS.add(task)
+        task.add_done_callback(_REPORT_TASKS.discard)
+
+    async def _flush(self) -> None:
+        try:
+            while True:
+                with self._pending_lock:
+                    batch: list[str] = []
+                    while len(batch) < 256 and self._pending:
+                        batch.append(self._pending.popleft())
+                if not batch:
+                    break
+                await asyncio.to_thread(self._persist, batch)
+        finally:
+            self._flushing = False
+
+    def _persist(self, batch: list[str]) -> None:
+        db = self._db
+        if db is None:
+            return
+        now = time.time()
+        try:
+            with db:
+                db.executemany(
+                    "INSERT INTO reported_spans (digest, first_seen, last_seen, hits) "
+                    "VALUES (?, ?, ?, 1) "
+                    "ON CONFLICT(digest) DO UPDATE SET "
+                    "last_seen = excluded.last_seen, hits = hits + 1",
+                    [(digest, now, now) for digest in batch],
+                )
+                db.execute(
+                    "DELETE FROM reported_spans WHERE digest NOT IN "
+                    "(SELECT digest FROM reported_spans ORDER BY last_seen DESC LIMIT ?)",
+                    (_REPORTED_CAP,),
+                )
+        except Exception as exc:
+            _safe_log(
+                logging.WARNING,
+                "Secrets observer report store write failed; category=%s",
+                type(exc).__name__,
+            )
+
+    def _flush_sync(self) -> None:
+        """Best-effort drain at shutdown; drops quietly when unavailable."""
+        if self._db is None:
+            return
+        while True:
+            with self._pending_lock:
+                batch: list[str] = []
+                while len(batch) < 256 and self._pending:
+                    batch.append(self._pending.popleft())
+            if not batch:
+                break
+            self._persist(batch)
+
+
 class SecretsObserverGuardrail(CustomGuardrail):
     """Redact detector matches and continue with sanitized request content."""
 
@@ -1048,13 +1189,15 @@ class SecretsObserverGuardrail(CustomGuardrail):
         if self._mode not in {"redact", "observe", "off"}:
             raise ValueError("GUARDRAIL_SECRETS_MODE must be redact, observe, or off")
         self._judge = self._build_judge()
+        self._store = self._build_store()
         _safe_log(
             logging.INFO,
-            "Secrets observer started; mode=%s detectors=%d fingerprint_count=%d judge=%s",
+            "Secrets observer started; mode=%s detectors=%d fingerprint_count=%d judge=%s reports=%s",
             self._mode,
             len(_PATTERNS) + 2,
             len(self._fingerprints),
             "async" if self._judge is not None else "off",
+            "persist" if self._store is not None and self._store.ready else "memory",
         )
 
     def _build_judge(self) -> _SpanJudge | None:
@@ -1103,6 +1246,12 @@ class SecretsObserverGuardrail(CustomGuardrail):
             return None
         return judge
 
+    def _build_store(self) -> _SeenStore | None:
+        """Durable reported-spans layer; None falls back to memory-only."""
+        if os.getenv("GUARDRAIL_SECRETS_REPORTS_PERSIST", "on").lower() == "off":
+            return None
+        return _SeenStore(os.getenv("GUARDRAIL_SECRETS_REPORTS_DB") or _JUDGE_DB_PATH_DEFAULT)
+
     def _process(
         self,
         data: dict[str, Any],
@@ -1133,6 +1282,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
             _CALL_STATES.pop(next(iter(_CALL_STATES)))
         try:
             judge = self._judge
+            store = self._store
             if judge is not None:
                 judge.passed = 0
             if _is_local_destination(data):
@@ -1141,13 +1291,13 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 for root in _CONTENT_ROOTS:
                     if root in data:
                         data[root], found, found_new = _redact_value(
-                            data[root], self._fingerprints, judge=judge
+                            data[root], self._fingerprints, judge=judge, store=store
                         )
                         counts.update(found)
                         new_counts.update(found_new)
                 if isinstance(extra_content, list):
                     clean_extra, found, found_new = _redact_value(
-                        extra_content, self._fingerprints, judge=judge
+                        extra_content, self._fingerprints, judge=judge, store=store
                     )
                     counts.update(found)
                     new_counts.update(found_new)
@@ -1181,8 +1331,13 @@ class SecretsObserverGuardrail(CustomGuardrail):
         elif counts and outcome == "scanned":
             outcome = "warning"
 
+        # First-report gating: only spans never reported before (persisted in
+        # the seen-store) escalate the guardrail status to an intervention and
+        # the audit line to WARNING. Re-redactions of known spans — replayed
+        # history on every turn — stay redacted in flight but report quietly.
+        new_total = int(sum(new_counts.values()))
         guardrail_status = {
-            "redacted": "guardrail_intervened",
+            "redacted": "guardrail_intervened" if new_total else "success",
             "warning": "guardrail_flagged",
             "scan_error": "guardrail_failed_to_respond",
             "local_skip": "not_run",
@@ -1199,7 +1354,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 for label, count in sorted(counts.items())
             ],
             "duration_ms": elapsed_ms,
-            "new_spans": int(sum(new_counts.values())),
+            "new_spans": new_total,
             "correlation_id": correlation_id,
         }
         if self._judge is not None:
@@ -1210,7 +1365,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         if fingerprint_findings:
             audit["fingerprint_categories"] = [label.encode("utf-8").hex() for label in fingerprint_findings]
         _safe_log(
-            logging.WARNING if counts or outcome == "scan_error" else logging.INFO,
+            logging.WARNING if new_total or outcome == "scan_error" else logging.INFO,
             "Secrets observer audit %s",
             json.dumps(audit, sort_keys=True, separators=(",", ":")),
         )
@@ -1220,7 +1375,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 request_data=data,
                 guardrail_status=guardrail_status,
                 duration=elapsed_ms / 1000,
-                masked_entity_count=dict(counts) if redacted else None,
+                masked_entity_count=dict(new_counts) if new_counts else None,
             )
             if outcome not in {"local_skip", "scan_error"}:
                 add_guardrail_to_applied_guardrails_header(

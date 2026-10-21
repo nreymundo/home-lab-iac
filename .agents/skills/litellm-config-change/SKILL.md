@@ -124,6 +124,20 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   persistence run off the event loop, with no inference wait in request handling.
   Failed writes cannot grant a PASS. Audit lines carry judge_pass/judge_enqueued
   and content-free judge outcomes; the guardrail registers no Prometheus metrics.
+- Reported-span persistence (`GUARDRAIL_SECRETS_REPORTS_PERSIST`, default `on`;
+  `GUARDRAIL_SECRETS_REPORTS_DB` defaults to the judge store file) backs the
+  seen-cache with a `reported_spans` SQLite table (SHA-256 digests only,
+  first/last seen and hit counts; newest 20,000 kept). The in-memory seen-cache
+  is seeded from it at startup, so error reporting fires on the first report of
+  a span and stays quiet afterwards, including across pod restarts. Escalation
+  to `guardrail_intervened` status, a WARNING-level audit line, and
+  `masked_entity_count` requires at least one newly reported span
+  (`new_spans > 0`); re-redactions of known spans — replayed history on every
+  turn — stay redacted in flight but record `success` at INFO with
+  `new_spans: 0`. Deployment reports every existing replayed span exactly once,
+  then quiet. Request handling touches memory and a pending queue only; SQLite
+  writes run off the event loop, and database failures degrade the store to
+  memory-only behavior without changing redaction.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
