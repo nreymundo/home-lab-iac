@@ -21,7 +21,6 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from fastapi import HTTPException
-from prometheus_client import Counter as MetricCounter, Gauge, Histogram
 
 from litellm.integrations.custom_guardrail import CustomGuardrail
 from litellm.proxy.common_utils.callback_utils import (
@@ -809,34 +808,6 @@ _JUDGE_OVERLAY_CAP = 20_000
 _JUDGE_QUEUE_CAP = 128
 _JUDGE_QUEUE_TTL_S = 300.0
 _JUDGE_MAX_SPAN = 8192
-_JUDGE_EVENTS = MetricCounter(
-    "litellm_secrets_judge_events_total", "Background judge and verdict cache outcomes", ["outcome"]
-)
-_JUDGE_LATENCY = Histogram(
-    "litellm_secrets_judge_duration_seconds", "Background classification and persistence latency",
-    ["outcome"], buckets=(0.1, 0.5, 1, 2, 5, 10, 30, 60, 120),
-)
-_JUDGE_QUEUED = Gauge(
-    "litellm_secrets_judge_queued", "Queued classifications", multiprocess_mode="livesum"
-)
-_JUDGE_INFLIGHT = Gauge(
-    "litellm_secrets_judge_inflight", "Running classifications", multiprocess_mode="livesum"
-)
-_SCAN_FAILURES = MetricCounter("litellm_secrets_scan_failures_total", "Credential scanner failures")
-
-
-def _metric(metric, operation: str, *args) -> None:
-    try:
-        getattr(metric, operation)(*args)
-    except Exception:
-        pass
-
-
-def _judge_event(outcome: str) -> None:
-    try:
-        _JUDGE_EVENTS.labels(outcome=outcome).inc()
-    except Exception:
-        pass
 
 
 def _judge_context(text: str, start: int, end: int) -> tuple[str, str]:
@@ -935,7 +906,6 @@ class _SpanJudge:
                 self._db.close()
             self._db = None
             self._overlay.clear()
-            _judge_event("store_error")
             _safe_log(logging.WARNING, "Secrets observer judge store disabled; category=%s", type(exc).__name__)
 
     @property
@@ -954,15 +924,12 @@ class _SpanJudge:
         digest = self._key(detector, span, before, after)
         entry = self._overlay.get(digest)
         if entry is None:
-            _judge_event("cache_miss")
             return None
         verdict, expires = entry
         if expires <= time.time():
             del self._overlay[digest]
-            _judge_event("cache_expired")
             return None
         self._overlay.move_to_end(digest)
-        _judge_event("cache_" + verdict)
         return verdict
 
     def _prune_store(self) -> None:
@@ -988,8 +955,6 @@ class _SpanJudge:
             self._backoff.popitem(last=False)
         while self._candidates and next(iter(self._candidates.values()))[-1] + _JUDGE_QUEUE_TTL_S <= now:
             self._candidates.popitem(last=False)
-            _metric(_JUDGE_QUEUED, "dec")
-            _judge_event("queue_expired")
 
     def collect(self, detector: str, span: str, before: str, after: str) -> None:
         if not self.ready or detector != "sensitive_assignment":
@@ -998,16 +963,12 @@ class _SpanJudge:
         self._prune(now)
         digest = self._key(detector, span, before, after)
         if digest in self._inflight or digest in self._candidates:
-            _judge_event("deduplicated")
             return
         if now < self._paused_until or self._backoff.get(digest, 0) > now:
-            _judge_event("backoff")
             return
         if len(self._candidates) >= _JUDGE_QUEUE_CAP or len(span) > _JUDGE_MAX_SPAN:
-            _judge_event("queue_full")
             return
         self._candidates[digest] = (detector, span, before, after, now)
-        _metric(_JUDGE_QUEUED, "inc")
 
     def schedule(self) -> int:
         if not self.ready:
@@ -1021,13 +982,11 @@ class _SpanJudge:
         scheduled = 0
         while self._candidates and len(self._inflight) < self._cap and now >= self._paused_until:
             digest, candidate = self._candidates.popitem(last=False)
-            _metric(_JUDGE_QUEUED, "dec")
             # Another scan may have collected a now-decided span before scheduling.
             entry = self._overlay.get(digest)
             if entry is not None and entry[1] > time.time():
                 continue
             self._inflight.add(digest)
-            _metric(_JUDGE_INFLIGHT, "inc")
             task = loop.create_task(self._judge_one(digest, *candidate[:4]))
             _JUDGE_TASKS.add(task)
             task.add_done_callback(_JUDGE_TASKS.discard)
@@ -1035,7 +994,6 @@ class _SpanJudge:
         return scheduled
 
     async def _judge_one(self, digest: str, detector: str, span: str, before: str, after: str) -> None:
-        started = time.monotonic()
         outcome = "judge_error"
         cancelled = False
         try:
@@ -1055,11 +1013,9 @@ class _SpanJudge:
                 self._overlay.popitem(last=False)
             self._backoff.pop(digest, None)
             self._failures = 0
-            outcome = verdict
             _safe_log(logging.INFO, "Secrets observer judge verdict recorded; outcome=%s detector=%s", verdict, detector)
         except asyncio.CancelledError:
             cancelled = True
-            outcome = "cancelled"
             raise
         except Exception as exc:
             now = time.monotonic()
@@ -1075,12 +1031,6 @@ class _SpanJudge:
             )
         finally:
             self._inflight.discard(digest)
-            _metric(_JUDGE_INFLIGHT, "dec")
-            _judge_event(outcome)
-            try:
-                _JUDGE_LATENCY.labels(outcome=outcome).observe(time.monotonic() - started)
-            except Exception:
-                pass
             if not cancelled:
                 self.schedule()
 
@@ -1209,7 +1159,6 @@ class SecretsObserverGuardrail(CustomGuardrail):
                     try:
                         judge_enqueued = judge.schedule()
                     except Exception as exc:
-                        _judge_event("schedule_error")
                         _safe_log(logging.WARNING, "Secrets observer judge scheduling failed; category=%s", type(exc).__name__)
                 redacted = bool(counts)
                 if new_counts:
@@ -1222,7 +1171,6 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 counts.update(label for text in _text_leaves(extra_content) for _, _, label, _ in _scan_text(text, self._fingerprints))
         except Exception as exc:  # never expose exception or request values
             outcome = "scan_error"
-            _metric(_SCAN_FAILURES, "inc")
             _safe_log(logging.WARNING, "Secrets observer scan failed; category=%s", type(exc).__name__)
 
         fingerprint_findings = sorted(label for label in counts if label.startswith("fingerprint:"))
