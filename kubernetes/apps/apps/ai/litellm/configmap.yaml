@@ -693,7 +693,24 @@ data:
 
     litellm_settings:
       callbacks:
+        - prometheus
         - cache_bypass.proxy_handler_instance
+      prometheus_exclude_labels:
+        - hashed_api_key
+        - user_email
+        - user
+        - user_alias
+        - end_user
+        - client_ip
+        - user_agent
+        - team
+        - team_alias
+        - org_id
+        - org_alias
+        - project_id
+        - project_alias
+        - model_id
+      prometheus_metrics_max_series_per_metric: 2000
       check_provider_endpoint: true
       cache: true
       cache_params:

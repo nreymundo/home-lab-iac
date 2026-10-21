@@ -25,6 +25,7 @@ spec:
               LITELLM_WORKER_STARTUP_HOOKS: litellm_startup:worker_startup_hook
               STORE_MODEL_IN_DB: "True"
               CONFIG_FILE_PATH: /etc/litellm/config.yaml
+              PROMETHEUS_MULTIPROC_DIR: /var/lib/litellm-prometheus
               CHATGPT_TOKEN_DIR: /var/lib/litellm/chatgpt
               CHATGPT_AUTH_FILE: auth.json
               DATABASE_URL:
@@ -69,6 +70,13 @@ spec:
             ports:
               - name: http
                 containerPort: 4000
+              - name: metrics
+                containerPort: 4001
+            args:
+              - --port
+              - "4000"
+              - --prometheus_metrics_port
+              - "4001"
             probes:
               liveness:
                 enabled: true
@@ -260,6 +268,13 @@ spec:
           main:
             main:
               - path: /var/lib/litellm
+      prometheus-data:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          main:
+            main:
+              - path: /var/lib/litellm-prometheus
       valkey-data:
         enabled: true
         type: emptyDir

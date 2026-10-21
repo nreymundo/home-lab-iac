@@ -1,0 +1,112 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/v1/configmap.json
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-litellm
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  litellm.json: |-
+    {
+      "annotations": {"list": []},
+      "description": "LiteLLM proxy traffic, latency, tokens, spend, and cache activity. Caller identity labels are excluded at the exporter.",
+      "editable": true,
+      "id": null,
+      "panels": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "reqps"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "id": 1,
+          "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "sum by (status_code) (rate(litellm_proxy_total_requests_metric_total{api_key_alias=~\"$consumer\",requested_model=~\"$model\",api_provider=~\"$provider\"}[$__rate_interval]))", "legendFormat": "{{status_code}}", "refId": "A"}],
+          "title": "Proxy request rate",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "reqps"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "id": 2,
+          "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "sum by (exception_class) (rate(litellm_proxy_failed_requests_metric_total{api_key_alias=~\"$consumer\",requested_model=~\"$model\",api_provider=~\"$provider\"}[$__rate_interval]))", "legendFormat": "{{exception_class}}", "refId": "A"}],
+          "title": "Failed request rate",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "s"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "id": 3,
+          "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "histogram_quantile(0.50, sum by (le) (rate(litellm_request_total_latency_metric_bucket{api_key_alias=~\"$consumer\",requested_model=~\"$model\",api_provider=~\"$provider\"}[$__rate_interval])))", "legendFormat": "p50", "refId": "A"}, {"expr": "histogram_quantile(0.95, sum by (le) (rate(litellm_request_total_latency_metric_bucket{api_key_alias=~\"$consumer\",requested_model=~\"$model\",api_provider=~\"$provider\"}[$__rate_interval])))", "legendFormat": "p95", "refId": "B"}, {"expr": "histogram_quantile(0.99, sum by (le) (rate(litellm_request_total_latency_metric_bucket{api_key_alias=~\"$consumer\",requested_model=~\"$model\",api_provider=~\"$provider\"}[$__rate_interval])))", "legendFormat": "p99", "refId": "C"}],
+          "title": "End-to-end request latency",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "s"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "id": 4,
+          "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "histogram_quantile(0.95, sum by (le, model) (rate(litellm_llm_api_latency_metric_bucket{api_key_alias=~\"$consumer\",requested_model=~\"$model\",api_provider=~\"$provider\"}[$__rate_interval])))", "legendFormat": "{{model}}", "refId": "A"}],
+          "title": "Provider latency p95 by model",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+          "id": 5,
+          "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "sum by (requested_model) (rate(litellm_total_tokens_metric_total{api_key_alias=~\"$consumer\",requested_model=~\"$model\",api_provider=~\"$provider\"}[$__rate_interval]))", "legendFormat": "{{requested_model}}", "refId": "A"}],
+          "title": "Token throughput by requested model",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "currencyUSD"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+          "id": 6,
+          "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "sum by (requested_model) (increase(litellm_spend_metric_total{api_key_alias=~\"$consumer\",requested_model=~\"$model\",api_provider=~\"$provider\"}[$__range]))", "legendFormat": "{{requested_model}}", "refId": "A"}],
+          "title": "Spend in selected range",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+          "id": 7,
+          "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "sum by (api_provider) (rate(litellm_cache_hits_metric_total{api_key_alias=~\"$consumer\",api_provider=~\"$provider\"}[$__rate_interval]))", "legendFormat": "hits {{api_provider}}", "refId": "A"}, {"expr": "sum by (api_provider) (rate(litellm_cache_misses_metric_total{api_key_alias=~\"$consumer\",api_provider=~\"$provider\"}[$__rate_interval]))", "legendFormat": "misses {{api_provider}}", "refId": "B"}],
+          "title": "Cache hit and miss rate",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+          "id": 8,
+          "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "sum by (api_provider) (rate(litellm_proxy_total_requests_metric_total{api_key_alias=~\"$consumer\",requested_model=~\"$model\",api_provider=~\"$provider\"}[$__rate_interval]))", "legendFormat": "{{api_provider}}", "refId": "A"}],
+          "title": "Request rate by provider",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": ["litellm", "ai", "prometheus"],
+      "templating": {
+        "list": [
+          {"current": {"selected": true, "text": "All", "value": ".*"}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(litellm_proxy_total_requests_metric_total, api_key_alias)", "includeAll": true, "allValue": ".*", "label": "Consumer", "name": "consumer", "options": [], "query": "label_values(litellm_proxy_total_requests_metric_total, api_key_alias)", "refresh": 1, "type": "query", "multi": true},
+          {"current": {"selected": true, "text": "All", "value": ".*"}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(litellm_proxy_total_requests_metric_total, requested_model)", "includeAll": true, "allValue": ".*", "label": "Requested model", "name": "model", "options": [], "query": "label_values(litellm_proxy_total_requests_metric_total, requested_model)", "refresh": 1, "type": "query", "multi": true},
+          {"current": {"selected": true, "text": "All", "value": ".*"}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(litellm_proxy_total_requests_metric_total, api_provider)", "includeAll": true, "allValue": ".*", "label": "Provider", "name": "provider", "options": [], "query": "label_values(litellm_proxy_total_requests_metric_total, api_provider)", "refresh": 1, "type": "query", "multi": true}
+        ]
+      },
+      "time": {"from": "now-24h", "to": "now"},
+      "title": "LiteLLM",
+      "uid": "litellm-prometheus",
+      "version": 1
+    }
