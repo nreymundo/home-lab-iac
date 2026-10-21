@@ -702,7 +702,6 @@ data:
         - user_alias
         - end_user
         - client_ip
-        - user_agent
         - team
         - team_alias
         - org_id
