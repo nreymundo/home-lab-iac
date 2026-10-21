@@ -74,21 +74,24 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   Direct `apply_guardrail` calls scan extracted text
   inputs and redact the caller-owned text list in place. The response header
   `X-LiteLLM-Secrets-Guardrail: redacted` marks sanitized requests. The
-  applied-guardrail header indicates evaluation, not sanitization. Scanner and reporting failures
-  fail open. Keep `SET_DEBUG` disabled to avoid request-payload debug logging. Keep
+  applied-guardrail header indicates evaluation, not sanitization. In redact mode,
+  scanner failure stops cloud dispatch with a retryable 503; reporting failures
+  remain non-blocking. Observe/off and trusted local routes keep their policies.
+  Keep `SET_DEBUG` disabled to avoid request-payload debug logging. Keep
   fingerprints in the workload-owned SOPS Secret and rotate them by hashing current
   source values locally without printing values or hashes. Exact fingerprints match
   intact values only; they do not detect arbitrary truncation or encoding. Credential
   assignments include quoted JSON keys; assignments whose field name ends in a
   reference segment (`_name`, `_id`, `_ref`, `_url`, `_path`, `_label`, `_uri`,
   `_file`) are exempt from heuristic assignment redaction, while format and
-  fingerprint detectors still scan their values. Placeholder-shaped captures
-  (example/your/sample wording, long single-character runs, published sample
-  credentials such as the jwt.io default token, or bare environment
-  references like `os.environ/NAME`) are skipped by format and heuristic
-  detectors; fingerprint matches never skip. Redaction markers are typed per
-  detector (`[REDACTED:<detector>]`), and spans already carrying a marker are
-  not rescanned. Structured text fields named `data` are
+  fingerprint detectors still scan their values. Whole placeholder expressions,
+  bare environment references, bracket-form environment lookups, common getenv
+  calls and unquoted config/settings/credentials properties bypass assignment
+  heuristics; literal defaults and concatenations are still inspected. Format
+  detectors exempt only exact published examples or fully x-masked token payloads,
+  never placeholder substrings. Fingerprints scan original text, including SOPS
+  and redaction wrappers. Only known typed `[REDACTED: <detector>]` markers bypass
+  assignment scanning; format detection still inspects them. Structured text fields named `data` are
   scanned, while known audio, image, video, and file payloads are skipped. MCP
   gateway traffic is not scanned. Unresolved local routes use the stable `local/`
   and `hosted_vllm/` prefixes; a resolved `api_base` is authoritative and is also
@@ -97,6 +100,31 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   summaries include mode, outcome, detector counts, duration, and correlation ID; matched
   content is never logged. Redaction preserves surrounding request structure and
   local-route exemptions remain intact.
+- `GUARDRAIL_SECRETS_JUDGE` (default `off`, Helm selects `async`) adds a verdict cache
+  for ambiguous assignments only: captures without a cached verdict are redacted
+  fail-closed, then classified out-of-band by the local decisions model through the
+  llama-swap backend's native `/v1/systemone` Decisions API directly, not chat
+  completions (`GUARDRAIL_SECRETS_JUDGE_ENDPOINT`/`_AUTH` default to
+  the llama-swap credential env; `_MODEL` defaults to d3-mini, `_TIMEOUT` to 30 s,
+  `_MAX_INFLIGHT` to 2). Verdicts persist in SQLite on the litellm volume
+  (`GUARDRAIL_SECRETS_JUDGE_DB`, default under /var/lib/litellm) and store only
+  SHA-256 scoped digests, never span/context text. Cache keys include detector,
+  previous/current-line context, model, endpoint and policy version; appended turns
+  do not change existing line context. PASS lasts 24 hours and REDACT seven days
+  (`GUARDRAIL_SECRETS_JUDGE_PASS_TTL`/`_REDACT_TTL`, seconds). Bump
+  `GUARDRAIL_SECRETS_JUDGE_VERSION` when replacing a model behind the same name.
+  Legacy global verdicts are discarded. A PASS lets matching replays carry the
+  span verbatim; REDACT keeps redaction without re-judging until expiry. Only exact
+  normalized PASS/REDACT choices are accepted; malformed answers stay undecided.
+  Format detections and fingerprints are never judged. Judge failures write no verdict: the span stays
+  redacted, retries back off per span, and three consecutive failures pause
+  judging globally for five minutes. A bounded 128-item queue drains at the configured
+  concurrency; queued work expires after five minutes. Cache/database entries and
+  backoff state are capped at 20,000. Request lookups are memory-only; HTTP and
+  persistence run off the event loop, with no inference wait in request handling.
+  Failed writes cannot grant a PASS. Audit lines carry judge_pass/judge_enqueued;
+  `litellm_secrets_judge_*` and `litellm_secrets_scan_failures_total` expose bounded-label
+  outcomes, latency, queue and inflight counts without content or digest labels.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations

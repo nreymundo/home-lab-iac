@@ -62,6 +62,7 @@ spec:
               AUTO_REDIRECT_UI_LOGIN_TO_SSO: "true"
               SET_DEBUG: "False"
               GUARDRAIL_SECRETS_MODE: "redact"
+              GUARDRAIL_SECRETS_JUDGE: "async"
             envFrom:
               - secretRef:
                   name: litellm-credentials
