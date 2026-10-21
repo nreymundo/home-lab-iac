@@ -710,6 +710,13 @@ class SecretsObserverGuardrail(CustomGuardrail):
         elif counts and outcome == "scanned":
             outcome = "warning"
 
+        guardrail_status = {
+            "redacted": "guardrail_intervened",
+            "warning": "guardrail_flagged",
+            "scan_error": "guardrail_failed_to_respond",
+            "local_skip": "not_run",
+        }.get(outcome, "success")
+
         elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
         correlation_id = call_id
         audit = {
@@ -737,8 +744,9 @@ class SecretsObserverGuardrail(CustomGuardrail):
             self.add_standard_logging_guardrail_information_to_request_data(
                 guardrail_json_response=audit,
                 request_data=data,
-                guardrail_status="success",
+                guardrail_status=guardrail_status,
                 duration=elapsed_ms / 1000,
+                masked_entity_count=dict(counts) if redacted else None,
             )
             if outcome not in {"local_skip", "scan_error"}:
                 add_guardrail_to_applied_guardrails_header(
