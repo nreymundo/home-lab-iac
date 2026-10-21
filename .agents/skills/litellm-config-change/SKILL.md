@@ -205,10 +205,6 @@ pre-commit run --files <changed-file> [<changed-file>...]
 Include changed `scripts/*.py` files explicitly. Documentation-only skill changes
 need skill validation and applicable file hooks, not cluster or inference tests.
 
-`scripts/test_litellm_guardrail.py` exercises scanner, cache, HTTP, lifecycle and
-failure behavior with synthetic fixtures. `.github/workflows/litellm-guardrail.yml`
-runs it offline in the HelmRelease's selected image.
-
 Run Python integration tests that import the full proxy in a separate local
 runtime matching the deployed image, with provider HTTP mocked. Extra proxy
 interpreters inside the production container share its memory limit and have
