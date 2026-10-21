@@ -16,7 +16,7 @@ spec:
             image:
               # renovate: datasource=docker depName=vectorize-io/hindsight-api registryUrl=https://ghcr.io
               repository: ghcr.io/vectorize-io/hindsight-api
-              tag: 1.0.0-slim
+              tag: 1.1.0-slim
             env:
               TZ: Europe/Berlin
               HINDSIGHT_ENABLE_API: "true"
@@ -119,7 +119,7 @@ spec:
             image:
               # renovate: datasource=docker depName=vectorize-io/hindsight-api registryUrl=https://ghcr.io
               repository: ghcr.io/vectorize-io/hindsight-api
-              tag: 1.0.0-slim
+              tag: 1.1.0-slim
             command:
               - hindsight-worker
             env:
@@ -230,7 +230,7 @@ spec:
             image:
               # renovate: datasource=docker depName=vectorize-io/hindsight-control-plane registryUrl=https://ghcr.io
               repository: ghcr.io/vectorize-io/hindsight-control-plane
-              tag: 1.0.0
+              tag: 1.1.0
             env:
               TZ: Europe/Berlin
               HINDSIGHT_ENABLE_API: "false"
