@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+---
+name: LiteLLM Guardrail
+
+"on":
+  pull_request:
+    paths:
+      - kubernetes/apps/apps/ai/litellm/**
+      - scripts/test_litellm_guardrail.py
+      - .github/workflows/litellm-guardrail.yml
+  push:
+    branches: [master]
+    paths:
+      - kubernetes/apps/apps/ai/litellm/**
+      - scripts/test_litellm_guardrail.py
+      - .github/workflows/litellm-guardrail.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guardrail:
+    name: Guardrail Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Test with the deployed image version
+        run: |
+          image="$(awk '/repository: ghcr.io\/berriai\/litellm/ {getline; print "ghcr.io/berriai/litellm:" $2}' \
+            kubernetes/apps/apps/ai/litellm/helmrelease.yaml)"
+          test -n "$image"
+          docker run --rm --network none --entrypoint python \
+            -e LITELLM_LOCAL_MODEL_COST_MAP=True -e PYTHONDONTWRITEBYTECODE=1 \
+            -v "$PWD:/review:ro" "$image" /review/scripts/test_litellm_guardrail.py
