@@ -256,7 +256,7 @@ data:
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "In flight for the selected time range and dashboard filters.",
+          "description": "Current number of LiteLLM requests in flight; this panel is not affected by dashboard filters.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3293,5 +3293,5 @@ data:
       "timezone": "browser",
       "title": "LiteLLM / Operations",
       "uid": "litellm-prometheus",
-      "version": 6
+      "version": 7
     }
