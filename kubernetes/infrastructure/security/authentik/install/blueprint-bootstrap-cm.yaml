@@ -183,6 +183,13 @@ data:
           invalid_response_action: "retry"
           policy_engine_mode: "any"
 
+      - model: authentik_brands.brand
+        state: present
+        identifiers:
+          default: true
+        attrs:
+          flow_authentication: !KeyOf passwordless-passkeys-flow
+
       - model: authentik_stages_identification.identificationstage
         state: present
         identifiers:
