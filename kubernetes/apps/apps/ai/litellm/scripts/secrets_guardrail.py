@@ -508,8 +508,8 @@ def _format_response_notice(new_counts: Counter[str]) -> str:
 def _response_notice(data: Any = None) -> str | None:
     """Response-facing notice text, or None when nothing new was redacted.
 
-    Falls back to the generic notice when no call state exists but a redaction
-    was detected (cached-response paths), preserving pre-existing behavior.
+    Streaming/cached responses can lose call state; use their audit metadata
+    to preserve first-report gating before falling back to a generic notice.
     """
     state = _request_call_state(data)
     if state is not None:
@@ -517,6 +517,9 @@ def _response_notice(data: Any = None) -> str | None:
         if isinstance(new_counts, Counter) and new_counts:
             return _format_response_notice(new_counts)
         return None
+    audits = list(_redaction_audits(data))
+    if audits:
+        return _GENERIC_RESPONSE_NOTICE if any(audit.get("new_spans", 1) for audit in audits) else None
     if _was_redacted(data):
         return _GENERIC_RESPONSE_NOTICE
     return None
@@ -710,6 +713,11 @@ def _was_redacted(data: Any = None) -> bool:
         for text in _text_leaves(data.get(root))
     ):
         return True
+    return any(_redaction_audits(data))
+
+
+def _redaction_audits(data: Any) -> Iterable[dict[str, Any]]:
+    """Find sanitized redaction records in native request/response metadata."""
     pending = [data]
     seen: set[int] = set()
     while pending:
@@ -719,13 +727,14 @@ def _was_redacted(data: Any = None) -> bool:
         seen.add(id(value))
         if isinstance(value, dict):
             records = value.get("standard_logging_guardrail_information")
-            if isinstance(records, list) and any(
-                isinstance(record, dict)
-                and isinstance(record.get("guardrail_response"), dict)
-                and record["guardrail_response"].get("outcome") == "redacted"
-                for record in records
-            ):
-                return True
+            if isinstance(records, list):
+                for record in records:
+                    if (
+                        isinstance(record, dict)
+                        and isinstance(record.get("guardrail_response"), dict)
+                        and record["guardrail_response"].get("outcome") == "redacted"
+                    ):
+                        yield record["guardrail_response"]
             pending.extend(
                 child
                 for key, child in value.items()
@@ -734,7 +743,6 @@ def _was_redacted(data: Any = None) -> bool:
             )
         elif isinstance(value, list):
             pending.extend(child for child in value if isinstance(child, (dict, list)))
-    return False
 
 
 def _prepend_assistant_notice(message: dict[str, Any], notice: str) -> None:
@@ -1083,10 +1091,10 @@ class _SeenStore:
             )
             with _SEEN_SPANS_LOCK:
                 rows = self._db.execute(
-                    "SELECT digest FROM reported_spans ORDER BY last_seen ASC LIMIT ?",
+                    "SELECT digest FROM reported_spans ORDER BY last_seen DESC LIMIT ?",
                     (_SEEN_SPANS_CAP,),
                 ).fetchall()
-                for digest in rows:
+                for digest in reversed(rows):
                     _SEEN_SPANS[digest[0]] = None  # ascending order: newest last
                 while len(_SEEN_SPANS) > _SEEN_SPANS_CAP:
                     _SEEN_SPANS.popitem(last=False)
@@ -1250,7 +1258,11 @@ class SecretsObserverGuardrail(CustomGuardrail):
         """Durable reported-spans layer; None falls back to memory-only."""
         if os.getenv("GUARDRAIL_SECRETS_REPORTS_PERSIST", "on").lower() == "off":
             return None
-        return _SeenStore(os.getenv("GUARDRAIL_SECRETS_REPORTS_DB") or _JUDGE_DB_PATH_DEFAULT)
+        return _SeenStore(
+            os.getenv("GUARDRAIL_SECRETS_REPORTS_DB")
+            or os.getenv("GUARDRAIL_SECRETS_JUDGE_DB")
+            or _JUDGE_DB_PATH_DEFAULT
+        )
 
     def _process(
         self,
@@ -1365,7 +1377,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         if fingerprint_findings:
             audit["fingerprint_categories"] = [label.encode("utf-8").hex() for label in fingerprint_findings]
         _safe_log(
-            logging.WARNING if new_total or outcome == "scan_error" else logging.INFO,
+            logging.WARNING if new_total or outcome in {"warning", "scan_error"} else logging.INFO,
             "Secrets observer audit %s",
             json.dumps(audit, sort_keys=True, separators=(",", ":")),
         )
