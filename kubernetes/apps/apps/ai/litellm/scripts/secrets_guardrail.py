@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import logging
 import math
 import os
 import re
+import sqlite3
 import threading
 import time
+import urllib.request
 import uuid
 from collections import Counter, OrderedDict
 from collections.abc import Iterable
 from contextvars import ContextVar
+from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -517,7 +521,9 @@ def _register_spans(spans: Iterable[tuple[str, str]]) -> Counter[str]:
     return new_counts
 
 
-def _redact_text(text: str, fingerprints: dict[str, bytes]) -> tuple[str, Counter[str], Counter[str]]:
+def _redact_text(
+    text: str, fingerprints: dict[str, bytes], judge: _SpanJudge | None = None
+) -> tuple[str, Counter[str], Counter[str]]:
     matches = _scan_text(text, fingerprints)
     counts: Counter[str] = Counter()
     if not matches:
@@ -526,8 +532,26 @@ def _redact_text(text: str, fingerprints: dict[str, bytes]) -> tuple[str, Counte
     spans: list[tuple[str, str]] = []
     cursor = 0
     for start, end, label, _ in matches:
+        span_text = text[start:end]
+        if (
+            judge is not None
+            and not label.startswith("fingerprint:")
+            and judge.lookup(span_text) == "pass"
+        ):
+            # Cached acquittal: keep the span verbatim and move on.
+            pieces.append(text[cursor:end])
+            judge.passed += 1
+            cursor = end
+            continue
         pieces.extend((text[cursor:start], f"[REDACTED: {label}]"))
-        spans.append((label, text[start:end]))
+        spans.append((label, span_text))
+        if judge is not None and not label.startswith("fingerprint:"):
+            judge.collect(
+                label,
+                span_text,
+                text[max(0, start - _JUDGE_RADIUS):start],
+                text[end:end + _JUDGE_RADIUS],
+            )
         cursor = end
         counts[label] += 1
     pieces.append(text[cursor:])
@@ -535,19 +559,22 @@ def _redact_text(text: str, fingerprints: dict[str, bytes]) -> tuple[str, Counte
 
 
 def _redact_value(
-    value: Any, fingerprints: dict[str, bytes], binary_context: bool = False
+    value: Any,
+    fingerprints: dict[str, bytes],
+    binary_context: bool = False,
+    judge: _SpanJudge | None = None,
 ) -> tuple[Any, Counter[str], Counter[str]]:
     counts: Counter[str] = Counter()
     new_counts: Counter[str] = Counter()
     if isinstance(value, str):
         if binary_context:
             return value, counts, new_counts
-        redacted, counts, new_counts = _redact_text(value, fingerprints)
+        redacted, counts, new_counts = _redact_text(value, fingerprints, judge)
         return redacted, counts, new_counts
     if isinstance(value, list):
         result = []
         for item in value:
-            redacted, found, found_new = _redact_value(item, fingerprints, binary_context)
+            redacted, found, found_new = _redact_value(item, fingerprints, binary_context, judge)
             result.append(redacted)
             counts.update(found)
             new_counts.update(found_new)
@@ -559,7 +586,7 @@ def _redact_value(
             if not isinstance(key, str) or key.lower() in _NON_TEXT_KEYS:
                 result[key] = item
                 continue
-            redacted, found, found_new = _redact_value(item, fingerprints, binary)
+            redacted, found, found_new = _redact_value(item, fingerprints, binary, judge)
             result[key] = redacted
             counts.update(found)
             new_counts.update(found_new)
@@ -739,6 +766,237 @@ def _prepend_responses_notice(response: Any, notice: str) -> None:
         )
 
 
+# --- Span judge: cached LLM verdicts for uncertain detector matches ----------
+#
+# Tier-1/tier-2 captures that survive the placeholder rules are redacted
+# fail-closed on first sighting, then judged out-of-band by the local
+# decisions model through the llama-swap backend (never through this proxy,
+# which would recursively scan the judge's own request). A verdict is cached
+# in a SQLite store on the persistent volume: PASS spans pass through every
+# later request, REDACT spans keep today's behavior without re-judging, so
+# replayed history stops costing judgment calls. Tier-0 fingerprints are
+# never judged; an exact house-key match always redacts. The store holds
+# SHA-256 digests and verdict labels only, never span text. Judge failure
+# (endpoint down, timeout, unparseable reply) writes no verdict: the span
+# stays redacted and is retried after a per-span backoff, with a global
+# pause after repeated failures.
+
+_JUDGE_DB_PATH_DEFAULT = "/var/lib/litellm/secrets_guardrail_verdicts.sqlite3"
+_JUDGE_SYSTEM_PROMPT = (
+    "You are a security classifier for a secrets redaction proxy. Decide "
+    "whether the marked value in the user's context is a REAL live "
+    "credential that must be redacted, or documentation filler (a tutorial "
+    "example, placeholder, sample value, published sample key, or a "
+    "regex/source-code pattern) that should pass through. Answer with "
+    "exactly one word: REDACT or PASS."
+)
+_JUDGE_RADIUS = 200
+_JUDGE_VERDICT_RE = re.compile(r"\b(REDACT|PASS)\b")
+_JUDGE_RETRY_AFTER_S = 600.0
+_JUDGE_PAUSE_AFTER_S = 300.0
+_JUDGE_PAUSE_FAILURES = 3
+_JUDGE_TASKS: set[asyncio.Future] = set()
+_JUDGE_OVERLAY_CAP = 20_000
+
+
+def _span_digest(span: str) -> str:
+    return hashlib.sha256(span.encode("utf-8")).hexdigest()
+
+
+def _judge_http(endpoint: str, auth: str, model: str, user_msg: str, timeout_s: float) -> str:
+    """One synchronous chat completion against the local backend."""
+    body = json.dumps(
+        {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": _JUDGE_SYSTEM_PROMPT},
+                {"role": "user", "content": user_msg},
+            ],
+            "max_tokens": 8,
+            "temperature": 0,
+        }
+    ).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    if auth:
+        headers["Authorization"] = f"Bearer {auth}"
+    request = urllib.request.Request(endpoint + "/chat/completions", data=body, headers=headers)
+    with urllib.request.urlopen(request, timeout=timeout_s) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    choices = payload.get("choices") if isinstance(payload, dict) else None
+    if isinstance(choices, list) and choices:
+        message = choices[0].get("message") if isinstance(choices[0], dict) else None
+        content = message.get("content") if isinstance(message, dict) else None
+        if isinstance(content, str):
+            return content
+    return ""
+
+
+class _SpanJudge:
+    """Persistent verdict cache plus out-of-band classification of spans."""
+
+    def __init__(
+        self,
+        db_path: str,
+        endpoint: str,
+        auth: str,
+        model: str,
+        timeout_s: float,
+        cap: int,
+    ) -> None:
+        self._endpoint = endpoint.rstrip("/")
+        self._auth = auth
+        self._model = model
+        self._timeout_s = timeout_s
+        self._cap = max(1, cap)
+        self._db: sqlite3.Connection | None = None
+        self._db_lock = threading.Lock()
+        self._overlay: OrderedDict[str, str] = OrderedDict()
+        self._inflight: set[str] = set()
+        self._backoff: dict[str, float] = {}
+        self._paused_until = 0.0
+        self._failures = 0
+        self._candidates: dict[str, tuple[str, str, str, str]] = {}
+        # Approximate per-process counter of spans skipped by cached PASS
+        # verdicts; races between concurrent requests only blur the audit.
+        self.passed = 0
+        try:
+            self._db = sqlite3.connect(db_path, check_same_thread=False, timeout=5.0)
+            self._db.execute("PRAGMA journal_mode=WAL")
+            self._db.execute(
+                "CREATE TABLE IF NOT EXISTS verdicts ("
+                "digest TEXT PRIMARY KEY, "
+                "detector TEXT NOT NULL, "
+                "verdict TEXT NOT NULL, "
+                "model TEXT NOT NULL, "
+                "created_at TEXT NOT NULL)"
+            )
+            self._db.commit()
+        except Exception as exc:
+            self._db = None
+            _safe_log(
+                logging.WARNING,
+                "Secrets observer judge store disabled; category=%s",
+                type(exc).__name__,
+            )
+
+    @property
+    def ready(self) -> bool:
+        return self._db is not None and bool(self._endpoint)
+
+    def lookup(self, span: str) -> str | None:
+        """Cached verdict for a span: 'pass', 'redact', or None when undecided."""
+        if self._db is None:
+            return None
+        digest = _span_digest(span)
+        with self._db_lock:
+            verdict = self._overlay.get(digest)
+            if verdict is not None:
+                self._overlay.move_to_end(digest)
+                return verdict
+            try:
+                row = self._db.execute(
+                    "SELECT verdict FROM verdicts WHERE digest = ?", (digest,)
+                ).fetchone()
+            except Exception:
+                return None
+            if row is None:
+                return None
+            verdict = row[0]
+            self._overlay[digest] = verdict
+            while len(self._overlay) > _JUDGE_OVERLAY_CAP:
+                self._overlay.popitem(last=False)
+            return verdict
+
+    def record(self, span: str, detector: str, verdict: str) -> None:
+        """Persist a verdict; only span digests are stored, never span text."""
+        if self._db is None or verdict not in {"pass", "redact"}:
+            return
+        digest = _span_digest(span)
+        created = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._db_lock:
+            try:
+                self._db.execute(
+                    "INSERT OR REPLACE INTO verdicts "
+                    "(digest, detector, verdict, model, created_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (digest, detector, verdict, self._model, created),
+                )
+                self._db.commit()
+            except Exception:
+                return
+            self._overlay[digest] = verdict
+            while len(self._overlay) > _JUDGE_OVERLAY_CAP:
+                self._overlay.popitem(last=False)
+        self._backoff.pop(digest, None)
+
+    def collect(self, detector: str, span: str, before: str, after: str) -> None:
+        """Queue an undecided span for judgment after this request is handled."""
+        self._candidates.setdefault(_span_digest(span), (detector, span, before, after))
+
+    def schedule(self) -> int:
+        """Spawn judge tasks for queued spans; returns how many were spawned."""
+        if not self._candidates or self._db is None:
+            self._candidates.clear()
+            return 0
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            self._candidates.clear()
+            return 0
+        now = time.monotonic()
+        spawned = 0
+        if now >= self._paused_until:
+            for digest, item in self._candidates.items():
+                if len(self._inflight) >= self._cap:
+                    break
+                if digest in self._inflight or self._backoff.get(digest, 0.0) > now:
+                    continue
+                self._inflight.add(digest)
+                task = loop.create_task(self._judge_one(digest, item))
+                _JUDGE_TASKS.add(task)
+                task.add_done_callback(_JUDGE_TASKS.discard)
+                spawned += 1
+        self._candidates.clear()
+        return spawned
+
+    async def _judge_one(self, digest: str, item: tuple[str, str, str, str]) -> None:
+        detector, span, before, after = item
+        try:
+            user_msg = (
+                f"Detector: {detector}\n"
+                f"Context:\n{before}[[[ {span} ]]]{after}\n\n"
+                "Is the bracketed value a real live credential (REDACT) "
+                "or documentation/example filler (PASS)?"
+            )
+            content = await asyncio.to_thread(
+                _judge_http, self._endpoint, self._auth, self._model, user_msg, self._timeout_s
+            )
+            match = _JUDGE_VERDICT_RE.search((content or "").upper())
+            if match is None:
+                raise ValueError("unparseable judge response")
+            self.record(span, detector, "redact" if match.group(1) == "REDACT" else "pass")
+            self._failures = 0
+            _safe_log(
+                logging.INFO,
+                "Secrets observer judge verdict recorded; outcome=%s detector=%s",
+                "redact" if match.group(1) == "REDACT" else "pass",
+                detector,
+            )
+        except Exception as exc:
+            now = time.monotonic()
+            self._backoff[digest] = now + _JUDGE_RETRY_AFTER_S
+            self._failures += 1
+            if self._failures >= _JUDGE_PAUSE_FAILURES:
+                self._paused_until = now + _JUDGE_PAUSE_AFTER_S
+            _safe_log(
+                logging.WARNING,
+                "Secrets observer judge call failed; category=%s",
+                type(exc).__name__,
+            )
+        finally:
+            self._inflight.discard(digest)
+
+
 class SecretsObserverGuardrail(CustomGuardrail):
     """Redact detector matches and continue with sanitized request content."""
 
@@ -751,13 +1009,56 @@ class SecretsObserverGuardrail(CustomGuardrail):
         self._mode = os.getenv("GUARDRAIL_SECRETS_MODE", "observe").lower()
         if self._mode not in {"redact", "observe", "off"}:
             raise ValueError("GUARDRAIL_SECRETS_MODE must be redact, observe, or off")
+        self._judge = self._build_judge()
         _safe_log(
             logging.INFO,
-            "Secrets observer started; mode=%s detectors=%d fingerprint_count=%d",
+            "Secrets observer started; mode=%s detectors=%d fingerprint_count=%d judge=%s",
             self._mode,
             len(_PATTERNS) + 2,
             len(self._fingerprints),
+            "async" if self._judge is not None else "off",
         )
+
+    def _build_judge(self) -> _SpanJudge | None:
+        """Optional verdict cache + out-of-band judge; None keeps old behavior."""
+        mode = os.getenv("GUARDRAIL_SECRETS_JUDGE", "off").lower()
+        if mode == "off":
+            return None
+        if mode != "async":
+            _safe_log(
+                logging.WARNING,
+                "Secrets observer judge mode invalid; value=%s using off",
+                mode,
+            )
+            return None
+        try:
+            judge = _SpanJudge(
+                db_path=os.getenv("GUARDRAIL_SECRETS_JUDGE_DB") or _JUDGE_DB_PATH_DEFAULT,
+                endpoint=(
+                    os.getenv("GUARDRAIL_SECRETS_JUDGE_ENDPOINT")
+                    or os.getenv("LITELLM_CREDENTIAL_LLAMA_SWAP_API_BASE")
+                    or ""
+                ).rstrip("/"),
+                auth=(
+                    os.getenv("GUARDRAIL_SECRETS_JUDGE_AUTH")
+                    or os.getenv("LITELLM_CREDENTIAL_LLAMA_SWAP_API_KEY")
+                    or ""
+                ),
+                model=os.getenv("GUARDRAIL_SECRETS_JUDGE_MODEL", "d3-mini"),
+                timeout_s=float(os.getenv("GUARDRAIL_SECRETS_JUDGE_TIMEOUT", "30")),
+                cap=int(os.getenv("GUARDRAIL_SECRETS_JUDGE_MAX_INFLIGHT", "2")),
+            )
+        except Exception as exc:
+            _safe_log(
+                logging.WARNING,
+                "Secrets observer judge disabled; category=%s",
+                type(exc).__name__,
+            )
+            return None
+        if not judge.ready:
+            _safe_log(logging.WARNING, "Secrets observer judge unavailable; store_or_endpoint_missing")
+            return None
+        return judge
 
     def _process(
         self,
@@ -772,6 +1073,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
             return data
         started = time.perf_counter()
         outcome = "scanned"
+        judge_enqueued = 0
         counts: Counter[str] = Counter()
         new_counts: Counter[str] = Counter()
         redacted = False
@@ -787,22 +1089,31 @@ class SecretsObserverGuardrail(CustomGuardrail):
         if len(_CALL_STATES) > 4096:
             _CALL_STATES.pop(next(iter(_CALL_STATES)))
         try:
+            judge = self._judge
+            if judge is not None:
+                judge.passed = 0
             if _is_local_destination(data):
                 outcome = "local_skip"
             elif self._mode == "redact":
                 for root in _CONTENT_ROOTS:
                     if root in data:
-                        data[root], found, found_new = _redact_value(data[root], self._fingerprints)
+                        data[root], found, found_new = _redact_value(
+                            data[root], self._fingerprints, judge=judge
+                        )
                         counts.update(found)
                         new_counts.update(found_new)
                 if isinstance(extra_content, list):
-                    clean_extra, found, found_new = _redact_value(extra_content, self._fingerprints)
+                    clean_extra, found, found_new = _redact_value(
+                        extra_content, self._fingerprints, judge=judge
+                    )
                     counts.update(found)
                     new_counts.update(found_new)
                     if found:
                         extra_content[:] = clean_extra
                     if found_new:
                         extra_content.insert(0, _format_model_notice(new_counts))
+                if judge is not None:
+                    judge_enqueued = judge.schedule()
                 redacted = bool(counts)
                 if new_counts:
                     state["new_counts"] = new_counts
@@ -845,6 +1156,9 @@ class SecretsObserverGuardrail(CustomGuardrail):
             "new_spans": int(sum(new_counts.values())),
             "correlation_id": correlation_id,
         }
+        if self._judge is not None:
+            audit["judge_pass"] = self._judge.passed
+            audit["judge_enqueued"] = judge_enqueued
         if heuristic_findings:
             audit["warning"] = "possible_credential_may_be_example"
         if fingerprint_findings:
