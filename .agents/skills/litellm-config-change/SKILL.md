@@ -100,13 +100,15 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
 - `GUARDRAIL_SECRETS_JUDGE` (default `off`, Helm selects `async`) adds a verdict cache
   for uncertain spans: tier-1/tier-2 captures without a cached verdict are redacted
   fail-closed, then classified out-of-band by the local decisions model through the
-  llama-swap backend directly (`GUARDRAIL_SECRETS_JUDGE_ENDPOINT`/`_AUTH` default to
+  llama-swap backend's native `/v1/systemone` Decisions API directly, not chat
+  completions (`GUARDRAIL_SECRETS_JUDGE_ENDPOINT`/`_AUTH` default to
   the llama-swap credential env; `_MODEL` defaults to d3-mini, `_TIMEOUT` to 30 s,
   `_MAX_INFLIGHT` to 2). Verdicts persist in SQLite on the litellm volume
   (`GUARDRAIL_SECRETS_JUDGE_DB`, default under /var/lib/litellm) and store only
   SHA-256 span digests, never span text. A PASS verdict lets later requests carry
-  the span verbatim; REDACT keeps redaction without re-judging. Fingerprints
-  (tier-0) are never judged. Judge failures write no verdict: the span stays
+  the span verbatim; REDACT keeps redaction without re-judging. Only exact
+  normalized PASS/REDACT choices are accepted; malformed answers stay undecided.
+  Fingerprints (tier-0) are never judged. Judge failures write no verdict: the span stays
   redacted, retries back off per span, and three consecutive failures pause
   judging globally for five minutes. Audit lines carry judge_pass/judge_enqueued.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names

@@ -533,11 +533,9 @@ def _redact_text(
     cursor = 0
     for start, end, label, _ in matches:
         span_text = text[start:end]
-        if (
-            judge is not None
-            and not label.startswith("fingerprint:")
-            and judge.lookup(span_text) == "pass"
-        ):
+        judge_eligible = judge is not None and not label.startswith("fingerprint:")
+        verdict = judge.lookup(span_text) if judge_eligible else None
+        if verdict == "pass":
             # Cached acquittal: keep the span verbatim and move on.
             pieces.append(text[cursor:end])
             judge.passed += 1
@@ -545,7 +543,7 @@ def _redact_text(
             continue
         pieces.extend((text[cursor:start], f"[REDACTED: {label}]"))
         spans.append((label, span_text))
-        if judge is not None and not label.startswith("fingerprint:"):
+        if judge_eligible and verdict is None:
             judge.collect(
                 label,
                 span_text,
@@ -791,7 +789,7 @@ _JUDGE_SYSTEM_PROMPT = (
     "exactly one word: REDACT or PASS."
 )
 _JUDGE_RADIUS = 200
-_JUDGE_VERDICT_RE = re.compile(r"\b(REDACT|PASS)\b")
+_JUDGE_VERDICT_RE = re.compile(r"(REDACT|PASS)")
 _JUDGE_RETRY_AFTER_S = 600.0
 _JUDGE_PAUSE_AFTER_S = 300.0
 _JUDGE_PAUSE_FAILURES = 3
@@ -804,30 +802,37 @@ def _span_digest(span: str) -> str:
 
 
 def _judge_http(endpoint: str, auth: str, model: str, user_msg: str, timeout_s: float) -> str:
-    """One synchronous chat completion against the local backend."""
+    """One native Decisions request against the local backend."""
     body = json.dumps(
         {
             "model": model,
-            "messages": [
-                {"role": "system", "content": _JUDGE_SYSTEM_PROMPT},
-                {"role": "user", "content": user_msg},
-            ],
-            "max_tokens": 8,
-            "temperature": 0,
+            "state": user_msg,
+            "questions": {
+                "verdict": {
+                    "type": "choice",
+                    "instructions": _JUDGE_SYSTEM_PROMPT,
+                    "criteria": {
+                        "REDACT": "A real or potentially real credential; redact when uncertain.",
+                        "PASS": "Clearly documentation filler, a non-secret reference, or source-code syntax.",
+                    },
+                },
+            },
         }
     ).encode("utf-8")
     headers = {"Content-Type": "application/json"}
     if auth:
         headers["Authorization"] = f"Bearer {auth}"
-    request = urllib.request.Request(endpoint + "/chat/completions", data=body, headers=headers)
+    # Match the hosted_vllm Decisions route, bypassing proxy/cloud fallbacks.
+    url = endpoint.rstrip("/").removesuffix("/v1") + "/v1/systemone"
+    request = urllib.request.Request(url, data=body, headers=headers)
     with urllib.request.urlopen(request, timeout=timeout_s) as response:
         payload = json.loads(response.read().decode("utf-8"))
-    choices = payload.get("choices") if isinstance(payload, dict) else None
-    if isinstance(choices, list) and choices:
-        message = choices[0].get("message") if isinstance(choices[0], dict) else None
-        content = message.get("content") if isinstance(message, dict) else None
-        if isinstance(content, str):
-            return content
+    answers = payload.get("answers") if isinstance(payload, dict) else None
+    verdict = answers.get("verdict") if isinstance(answers, dict) else None
+    if isinstance(verdict, dict) and verdict.get("type") == "choice":
+        choice = verdict.get("choice")
+        if isinstance(choice, str):
+            return choice
     return ""
 
 
@@ -971,7 +976,7 @@ class _SpanJudge:
             content = await asyncio.to_thread(
                 _judge_http, self._endpoint, self._auth, self._model, user_msg, self._timeout_s
             )
-            match = _JUDGE_VERDICT_RE.search((content or "").upper())
+            match = _JUDGE_VERDICT_RE.fullmatch((content or "").strip().upper())
             if match is None:
                 raise ValueError("unparseable judge response")
             self.record(span, detector, "redact" if match.group(1) == "REDACT" else "pass")
