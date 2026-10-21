@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/traefik.io/ingressroute_v1alpha1.json
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: litellm
+  namespace: ai
+  annotations:
+    external-dns.kubernetes.io/hostname: litellm.lan.${CLUSTER_DOMAIN}
+    external-dns.kubernetes.io/target: ${TRAEFIK_LB_IP}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`litellm.lan.${CLUSTER_DOMAIN}`) && !PathPrefix(`/metrics`)
+      kind: Rule
+      services:
+        - name: litellm-main
+          port: 4000

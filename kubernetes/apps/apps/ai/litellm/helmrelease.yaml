@@ -242,18 +242,6 @@ spec:
           valkey:
             port: 6379
 
-    ingress:
-      main:
-        annotations:
-          external-dns.kubernetes.io/hostname: litellm.lan.${CLUSTER_DOMAIN}
-        hosts:
-          - host: litellm.lan.${CLUSTER_DOMAIN}
-            paths:
-              - path: /
-                service:
-                  identifier: main
-                  port: http
-
     persistence:
       headroom-data:
         enabled: true
