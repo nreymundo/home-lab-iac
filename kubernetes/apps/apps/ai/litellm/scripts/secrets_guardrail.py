@@ -73,6 +73,8 @@ _ENV_NAME_SEGMENTS = {
 # `secret_id`, `token_ref`, etc. Tier-0 fingerprints and tier-1 format
 # detectors still scan these values unconditionally.
 _REFERENCE_NAME_SEGMENTS = {
+    "DIR",
+    "ENDPOINT",
     "FILE",
     "ID",
     "LABEL",
