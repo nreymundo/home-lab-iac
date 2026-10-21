@@ -122,9 +122,8 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   concurrency; queued work expires after five minutes. Cache/database entries and
   backoff state are capped at 20,000. Request lookups are memory-only; HTTP and
   persistence run off the event loop, with no inference wait in request handling.
-  Failed writes cannot grant a PASS. Audit lines carry judge_pass/judge_enqueued;
-  `litellm_secrets_judge_*` and `litellm_secrets_scan_failures_total` expose bounded-label
-  outcomes, latency, queue and inflight counts without content or digest labels.
+  Failed writes cannot grant a PASS. Audit lines carry judge_pass/judge_enqueued
+  and content-free judge outcomes; the guardrail registers no Prometheus metrics.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
