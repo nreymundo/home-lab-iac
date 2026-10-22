@@ -11,7 +11,7 @@ spec:
   values:
     controllers:
       main:
-        replicas: 0
+        replicas: 1
         strategy: Recreate
         pod:
           terminationGracePeriodSeconds: 300
@@ -280,7 +280,7 @@ spec:
         type: custom
         volumeSpec:
           persistentVolumeClaim:
-            claimName: litellm
+            claimName: litellm-data
         advancedMounts:
           main:
             main:
