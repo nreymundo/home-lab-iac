@@ -12,7 +12,10 @@ spec:
     controllers:
       main:
         replicas: 1
-        strategy: Recreate
+        strategy: RollingUpdate
+        rollingUpdate:
+          maxSurge: 1
+          maxUnavailable: 0
         pod:
           terminationGracePeriodSeconds: 300
         annotations:
@@ -88,7 +91,7 @@ spec:
             lifecycle:
               preStop:
                 exec:
-                  command: ["/bin/sh", "-c", "sleep 15"]
+                  command: ["sleep", "15"]
             probes:
               liveness:
                 enabled: true
@@ -154,7 +157,7 @@ spec:
               preStop:
                 exec:
                   # Cover endpoint propagation plus the five-second compression timeout.
-                  command: ["/bin/sh", "-c", "sleep 20"]
+                  command: ["sleep", "20"]
             probes:
               liveness:
                 enabled: true
