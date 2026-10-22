@@ -1574,6 +1574,9 @@ class SecretsObserverGuardrail(CustomGuardrail):
                     decisions[digest] = self._judge.lookup(label, span, before, after)
                 state["judge_decisions"] = decisions
             await self._prepare_valkey_reports(data, extra_content)
+        except asyncio.CancelledError:
+            _clear_request_scan_state(_request_call_state(data))
+            raise
         except Exception as exc:
             _clear_request_scan_state(_request_call_state(data))
             _safe_log(logging.WARNING, "Secrets observer scan failed; category=%s", type(exc).__name__)
