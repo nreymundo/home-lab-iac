@@ -1,0 +1,10 @@
+{
+  "repo": {{ audio_cpp_runtime_repo | to_json }},
+  "ref": {{ audio_cpp_runtime_ref | to_json }},
+  "backend": "vulkan",
+  "build_dir": {{ audio_cpp_runtime_build_dir | to_json }},
+  "native_model_manager": true,
+  "deployment_build": true,
+  "system_openssl": true,
+  "extra_cmake_args": {{ audio_cpp_runtime_extra_cmake_args | to_json }}
+}

@@ -1,0 +1,110 @@
+---
+- name: Provision native audio.cpp runtime
+  when: audio_cpp_runtime_enabled | bool
+  block:
+    - name: Validate audio.cpp operating system
+      ansible.builtin.assert:
+        that:
+          - ansible_os_family == 'RedHat'
+        fail_msg: audio_cpp_runtime supports Fedora/RedHat containers
+
+    - name: Check audio.cpp GPU device
+      ansible.builtin.stat:
+        path: /dev/dri/renderD128
+      register: audio_cpp_runtime_render_node
+
+    - name: Validate audio.cpp GPU access
+      ansible.builtin.assert:
+        that:
+          - audio_cpp_runtime_render_node.stat.exists
+        fail_msg: The Vulkan runtime requires /dev/dri/renderD128 in the container
+
+    - name: Install audio.cpp build and runtime dependencies
+      ansible.builtin.dnf:
+        name: "{{ audio_cpp_runtime_packages }}"
+        state: present
+        install_weak_deps: false
+
+    - name: Create audio.cpp directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      loop:
+        - "{{ audio_cpp_runtime_dir | dirname }}"
+        - "{{ audio_cpp_runtime_config_dir }}"
+        - "{{ audio_cpp_runtime_voice_dir }}"
+        - "{{ audio_cpp_runtime_models_dir }}"
+
+    - name: Check out pinned audio.cpp source
+      ansible.builtin.git:
+        repo: "{{ audio_cpp_runtime_repo }}"
+        dest: "{{ audio_cpp_runtime_dir }}"
+        version: "{{ audio_cpp_runtime_ref }}"
+        depth: 1
+        single_branch: true
+        recursive: false
+      register: audio_cpp_runtime_git
+
+    - name: Seed bundled audio.cpp reference voices
+      ansible.builtin.copy:
+        src: "{{ audio_cpp_runtime_dir }}/webui/native/demo_voices/{{ item }}"
+        dest: "{{ audio_cpp_runtime_voice_dir }}/{{ item }}"
+        remote_src: true
+        force: false
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - demo_1_man.wav
+        - demo_2_man.wav
+        - demo_3_woman.wav
+        - demo_4_woman.wav
+        - prompt_text
+
+    - name: Render desired audio.cpp build marker
+      ansible.builtin.template:
+        src: build-marker.json.j2
+        dest: /tmp/audio-cpp-runtime-build-marker.json
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Compare audio.cpp build marker
+      ansible.builtin.command:
+        argv:
+          - cmp
+          - -s
+          - /tmp/audio-cpp-runtime-build-marker.json
+          - "{{ audio_cpp_runtime_marker_path }}"
+      register: audio_cpp_runtime_marker_cmp
+      changed_when: false
+      failed_when: audio_cpp_runtime_marker_cmp.rc > 2
+      check_mode: false
+
+    - name: Determine whether audio.cpp needs rebuilding
+      ansible.builtin.set_fact:
+        audio_cpp_runtime_rebuild_required: >-
+          {{ audio_cpp_runtime_force_rebuild | bool or audio_cpp_runtime_git.changed
+             or audio_cpp_runtime_marker_cmp.rc != 0 }}
+
+    - name: Build and install audio.cpp
+      ansible.builtin.import_tasks: build.yml
+      when:
+        - audio_cpp_runtime_rebuild_required | bool
+        - not ansible_check_mode
+
+    - name: Configure resident Higgs TTS backend
+      ansible.builtin.template:
+        src: higgs.json.j2
+        dest: "{{ audio_cpp_runtime_config_dir }}/higgs.json"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Validate installed audio.cpp server
+      ansible.builtin.command: /usr/local/bin/audiocpp_server --help
+      changed_when: false
+      when: not ansible_check_mode
