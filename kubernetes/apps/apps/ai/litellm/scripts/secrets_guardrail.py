@@ -216,6 +216,13 @@ def _request_call_state(data: Any = None) -> dict[str, Any] | None:
     return state
 
 
+def _clear_request_scan_state(state: dict[str, Any] | None) -> None:
+    if state is not None:
+        state.pop("scan_matches", None)
+        state.pop("judge_candidates", None)
+        state.pop("judge_decisions", None)
+
+
 def _safe_log(level: int, message: str, *args: Any) -> None:
     try:
         _AUDIT_LOGGER.log(level, message, *args)
@@ -497,6 +504,20 @@ def _scan_text(text: str, fingerprints: dict[str, bytes]) -> list[tuple[int, int
     return merged
 
 
+def _scan_text_cached(text: str, fingerprints: dict[str, bytes]) -> list[tuple[int, int, str, int]]:
+    state = _request_call_state()
+    if state is None:
+        return _scan_text(text, fingerprints)
+    # The request processor removes this raw-text cache before retaining call state.
+    cache = state.setdefault("scan_matches", {})
+    cached = cache.get(id(text))
+    if cached is not None and cached[0] is text:
+        return cached[1]
+    matches = _scan_text(text, fingerprints)
+    cache[id(text)] = (text, matches)
+    return matches
+
+
 def _format_model_notice(new_counts: Counter[str]) -> str:
     total = sum(new_counts.values())
     detail = ", ".join(f"{label} x{count}" for label, count in sorted(new_counts.items()))
@@ -576,7 +597,7 @@ def _redact_text(
     judge: _SpanJudge | None = None,
     store: _SeenStore | None = None,
 ) -> tuple[str, Counter[str], Counter[str]]:
-    matches = _scan_text(text, fingerprints)
+    matches = _scan_text_cached(text, fingerprints)
     counts: Counter[str] = Counter()
     if not matches:
         return text, counts, counts
@@ -1419,24 +1440,35 @@ class SecretsObserverGuardrail(CustomGuardrail):
             or _is_local_destination(data)
         ):
             return 0
+        if self._store_backend != "valkey" and (not judge.ready or self._judge_wait_s <= 0):
+            return 0
+        state = _request_call_state(data)
+        if state is None and self._store_backend == "valkey":
+            state = {"redacted": False, "model_notice_added": False, "new_counts": Counter()}
+            _CALL_STATE.set(state)
+        if (
+            self._store_backend != "valkey" and state is not None
+            and state.get("judge_wait_deadline", math.inf) <= time.monotonic()
+        ):
+            return 0
         candidates: dict[str, tuple[str, str, str, str]] = {}
         values = [data[root] for root in _CONTENT_ROOTS if root in data]
         if isinstance(extra_content, list):
             values.append(extra_content)
         for value in values:
             for text in _text_leaves(value):
-                for start, end, detector, _ in _scan_text(text, self._fingerprints):
+                for start, end, detector, _ in _scan_text_cached(text, self._fingerprints):
                     if detector != "sensitive_assignment":
                         continue
                     before, after = _judge_context(text, start, end)
                     digest = judge._key(detector, text[start:end], before, after)
                     candidates[digest] = (detector, text[start:end], before, after)
 
-        # Valkey cache reads run even with a zero judge wait budget. SQLite's
-        # existing zero-wait path remains unchanged.
+        if state is not None:
+            state["judge_candidates"] = candidates
+
+        # Valkey cache reads run even with a zero judge wait budget.
         await judge.load_shared(candidates)
-        if self._store_backend != "valkey" and self._judge_wait_s <= 0:
-            return 0
 
         undecided: set[str] = set()
         for digest, (detector, span, before, after) in candidates.items():
@@ -1489,7 +1521,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
             values.append(extra_content)
         for value in values:
             for text in _text_leaves(value):
-                for start, end, label, _ in _scan_text(text, self._fingerprints):
+                for start, end, label, _ in _scan_text_cached(text, self._fingerprints):
                     if label == "sensitive_assignment" and judge is not None:
                         before, after = _judge_context(text, start, end)
                         digest = judge._key(label, text[start:end], before, after)
@@ -1503,6 +1535,9 @@ class SecretsObserverGuardrail(CustomGuardrail):
         if not spans:
             return
         try:
+            # Claim before notice/audit construction to make first-report gating
+            # atomic across pods; a later processing failure can retain this claim
+            # until its 90-day TTL expires.
             shared_seen = await asyncio.to_thread(store.claim_reported, spans)
         except Exception as exc:
             _store_warning("reported-span lookup", exc)
@@ -1534,19 +1569,13 @@ class SecretsObserverGuardrail(CustomGuardrail):
                     state = {"redacted": False, "model_notice_added": False, "new_counts": Counter()}
                     _CALL_STATE.set(state)
                 decisions: dict[str, str | None] = {}
-                values = [data[root] for root in _CONTENT_ROOTS if root in data]
-                if isinstance(extra_content, list):
-                    values.append(extra_content)
-                for value in values:
-                    for text in _text_leaves(value):
-                        for start, end, label, _ in _scan_text(text, self._fingerprints):
-                            if label == "sensitive_assignment":
-                                before, after = _judge_context(text, start, end)
-                                digest = self._judge._key(label, text[start:end], before, after)
-                                decisions[digest] = self._judge.lookup(label, text[start:end], before, after)
+                candidates = state.get("judge_candidates", {})
+                for digest, (label, span, before, after) in candidates.items():
+                    decisions[digest] = self._judge.lookup(label, span, before, after)
                 state["judge_decisions"] = decisions
             await self._prepare_valkey_reports(data, extra_content)
         except Exception as exc:
+            _clear_request_scan_state(_request_call_state(data))
             _safe_log(logging.WARNING, "Secrets observer scan failed; category=%s", type(exc).__name__)
             raise HTTPException(status_code=503, detail="Credential scanning unavailable; retry the request.") from None
         return self._process(data, stage, extra_content, call_type, judge_enqueued=enqueued)
@@ -1616,8 +1645,8 @@ class SecretsObserverGuardrail(CustomGuardrail):
             else:
                 for root in _CONTENT_ROOTS:
                     if root in data:
-                        counts.update(label for text in _text_leaves(data[root]) for _, _, label, _ in _scan_text(text, self._fingerprints))
-                counts.update(label for text in _text_leaves(extra_content) for _, _, label, _ in _scan_text(text, self._fingerprints))
+                        counts.update(label for text in _text_leaves(data[root]) for _, _, label, _ in _scan_text_cached(text, self._fingerprints))
+                counts.update(label for text in _text_leaves(extra_content) for _, _, label, _ in _scan_text_cached(text, self._fingerprints))
         except Exception as exc:  # never expose exception or request values
             outcome = "scan_error"
             _safe_log(logging.WARNING, "Secrets observer scan failed; category=%s", type(exc).__name__)
@@ -1683,6 +1712,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 )
         except Exception as exc:  # reporting failure must not change request handling
             _safe_log(logging.WARNING, "Secrets observer audit reporting failed; category=%s", type(exc).__name__)
+        _clear_request_scan_state(state)
         if outcome == "scan_error" and self._mode == "redact":
             raise HTTPException(status_code=503, detail="Credential scanning unavailable; retry the request.")
         return data
