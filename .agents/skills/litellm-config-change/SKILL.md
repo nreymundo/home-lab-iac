@@ -101,12 +101,19 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   content is never logged. Redaction preserves surrounding request structure and
   local-route exemptions remain intact.
 - `GUARDRAIL_SECRETS_JUDGE` (default `off`, Helm selects `async`) adds a verdict cache
-  for ambiguous assignments only: captures without a cached verdict are redacted
-  fail-closed, then classified out-of-band by the local decisions model through the
+  for ambiguous assignments only, classified by the local decisions model through the
   llama-swap backend's native `/v1/systemone` Decisions API directly, not chat
   completions (`GUARDRAIL_SECRETS_JUDGE_ENDPOINT`/`_AUTH` default to
   the llama-swap credential env; `_MODEL` defaults to d3-mini, `_TIMEOUT` to 30 s,
-  `_MAX_INFLIGHT` to 2). Verdicts persist in SQLite on the litellm volume
+  `_MAX_INFLIGHT` to 2). `GUARDRAIL_SECRETS_JUDGE_WAIT_SECONDS` defaults to `0`
+  (immediate redaction); Helm selects `3`. Async request hooks share one wait
+  deadline across all undecided spans and lifecycle stages. A verdict persisted
+  within the budget applies to the current request; unresolved spans are redacted
+  at the deadline while judging continues in the background. Timeouts and client
+  cancellation do not cancel shared judging. Cached verdicts, strong detections,
+  and trusted local routes need no wait. Fast PASS decisions avoid first-request
+  intervention reporting; timed-out redactions can still count before a later PASS.
+  Verdicts persist in SQLite on the litellm volume
   (`GUARDRAIL_SECRETS_JUDGE_DB`, default under /var/lib/litellm) and store only
   SHA-256 scoped digests, never span/context text. Cache keys include detector,
   previous/current-line context, model, endpoint and policy version; appended turns
@@ -121,7 +128,7 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   judging globally for five minutes. A bounded 128-item queue drains at the configured
   concurrency; queued work expires after five minutes. Cache/database entries and
   backoff state are capped at 20,000. Request lookups are memory-only; HTTP and
-  persistence run off the event loop, with no inference wait in request handling.
+  persistence run off the event loop; the bounded request wait also yields the event loop.
   Failed writes cannot grant a PASS. Audit lines carry judge_pass/judge_enqueued
   and content-free judge outcomes; the guardrail registers no Prometheus metrics.
 - Reported-span persistence (`GUARDRAIL_SECRETS_REPORTS_PERSIST`, default `on`;

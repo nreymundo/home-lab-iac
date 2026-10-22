@@ -63,6 +63,7 @@ spec:
               SET_DEBUG: "False"
               GUARDRAIL_SECRETS_MODE: "redact"
               GUARDRAIL_SECRETS_JUDGE: "async"
+              GUARDRAIL_SECRETS_JUDGE_WAIT_SECONDS: "3"
             envFrom:
               - secretRef:
                   name: litellm-credentials

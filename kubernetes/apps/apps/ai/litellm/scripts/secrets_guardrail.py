@@ -807,9 +807,9 @@ def _prepend_responses_notice(response: Any, notice: str) -> None:
 
 # --- Span judge: cached LLM verdicts for uncertain detector matches ----------
 #
-# Ambiguous assignment captures that survive the deterministic rules are redacted
-# fail-closed on first sighting, then judged out-of-band by the local
-# decisions model through the llama-swap backend (never through this proxy,
+# Ambiguous assignment captures that survive the deterministic rules are judged
+# by the local decisions model with an optional bounded request wait. Undecided
+# spans are redacted while judging continues through llama-swap (never this proxy,
 # which would recursively scan the judge's own request). A verdict is cached
 # in SQLite. Verdicts expire and are scoped to context, model and policy.
 # Format and fingerprint matches are never judged. The store holds only
@@ -910,6 +910,7 @@ class _SpanJudge:
         self._db_lock = threading.Lock()
         self._overlay: OrderedDict[str, tuple[str, float]] = OrderedDict()
         self._inflight: set[str] = set()
+        self._changed = asyncio.Event()
         self._backoff: OrderedDict[str, float] = OrderedDict()
         self._paused_until = 0.0
         self._failures = 0
@@ -986,19 +987,35 @@ class _SpanJudge:
         while self._candidates and next(iter(self._candidates.values()))[-1] + _JUDGE_QUEUE_TTL_S <= now:
             self._candidates.popitem(last=False)
 
-    def collect(self, detector: str, span: str, before: str, after: str) -> None:
+    def collect(self, detector: str, span: str, before: str, after: str) -> str | None:
         if not self.ready or detector != "sensitive_assignment":
             return
         now = time.monotonic()
         self._prune(now)
         digest = self._key(detector, span, before, after)
         if digest in self._inflight or digest in self._candidates:
-            return
+            return digest
         if now < self._paused_until or self._backoff.get(digest, 0) > now:
             return
         if len(self._candidates) >= _JUDGE_QUEUE_CAP or len(span) > _JUDGE_MAX_SPAN:
             return
         self._candidates[digest] = (detector, span, before, after, now)
+        return digest
+
+    async def wait(self, digests: set[str], deadline: float) -> None:
+        """Wait for this request's work without cancelling shared judge tasks."""
+        while any(
+            digest in self._inflight
+            or (digest in self._candidates and time.monotonic() >= self._paused_until)
+            for digest in digests
+        ):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return
+            try:
+                await asyncio.wait_for(self._changed.wait(), timeout=remaining)
+            except TimeoutError:
+                return
 
     def schedule(self) -> int:
         if not self.ready:
@@ -1061,6 +1078,8 @@ class _SpanJudge:
             )
         finally:
             self._inflight.discard(digest)
+            self._changed.set()
+            self._changed = asyncio.Event()
             if not cancelled:
                 self.schedule()
 
@@ -1197,15 +1216,23 @@ class SecretsObserverGuardrail(CustomGuardrail):
         if self._mode not in {"redact", "observe", "off"}:
             raise ValueError("GUARDRAIL_SECRETS_MODE must be redact, observe, or off")
         self._judge = self._build_judge()
+        try:
+            self._judge_wait_s = float(os.getenv("GUARDRAIL_SECRETS_JUDGE_WAIT_SECONDS", "0"))
+            if not math.isfinite(self._judge_wait_s) or self._judge_wait_s < 0:
+                raise ValueError("Judge wait must be finite and nonnegative")
+        except ValueError:
+            self._judge_wait_s = 0.0
+            _safe_log(logging.WARNING, "Secrets observer judge wait invalid; using immediate redaction")
         self._store = self._build_store()
         _safe_log(
             logging.INFO,
-            "Secrets observer started; mode=%s detectors=%d fingerprint_count=%d judge=%s reports=%s",
+            "Secrets observer started; mode=%s detectors=%d fingerprint_count=%d judge=%s reports=%s judge_wait_s=%g",
             self._mode,
             len(_PATTERNS) + 2,
             len(self._fingerprints),
             "async" if self._judge is not None else "off",
             "persist" if self._store is not None and self._store.ready else "memory",
+            self._judge_wait_s,
         )
 
     def _build_judge(self) -> _SpanJudge | None:
@@ -1264,12 +1291,67 @@ class SecretsObserverGuardrail(CustomGuardrail):
             or _JUDGE_DB_PATH_DEFAULT
         )
 
+    async def _await_judge(self, data: dict[str, Any], extra_content: Any = None) -> int:
+        judge = self._judge
+        if (
+            self._mode != "redact" or judge is None or not judge.ready
+            or not self._judge_wait_s or not isinstance(data, dict) or _is_local_destination(data)
+        ):
+            return 0
+        state = _request_call_state(data)
+        if state is not None and state.get("judge_wait_deadline", math.inf) <= time.monotonic():
+            return 0
+        digests: set[str] = set()
+        values = [data[root] for root in _CONTENT_ROOTS if root in data]
+        if isinstance(extra_content, list):
+            values.append(extra_content)
+        for value in values:
+            for text in _text_leaves(value):
+                matches = _scan_text(text, self._fingerprints)
+                for start, end, detector, _ in matches:
+                    if detector != "sensitive_assignment":
+                        continue
+                    before, after = _judge_context(text, start, end)
+                    try:
+                        if judge.lookup(detector, text[start:end], before, after) is None:
+                            digest = judge.collect(detector, text[start:end], before, after)
+                            if digest is not None:
+                                digests.add(digest)
+                    except Exception as exc:
+                        _safe_log(logging.WARNING, "Secrets observer judge collection failed; category=%s", type(exc).__name__)
+                        return 0
+        if not digests:
+            return 0
+        if state is None:
+            state = {"redacted": False, "model_notice_added": False, "new_counts": Counter()}
+            _CALL_STATE.set(state)
+        # One deadline across all spans and lifecycle hooks, including fallbacks.
+        deadline = state.setdefault("judge_wait_deadline", time.monotonic() + self._judge_wait_s)
+        enqueued = 0
+        try:
+            enqueued = judge.schedule()
+            await judge.wait(digests, deadline)
+        except Exception as exc:
+            _safe_log(logging.WARNING, "Secrets observer judge wait failed; category=%s", type(exc).__name__)
+        return enqueued
+
+    async def _process_with_judge(
+        self, data: dict[str, Any], stage: str, extra_content: Any = None, call_type: str | None = None,
+    ) -> dict[str, Any]:
+        try:
+            enqueued = await self._await_judge(data, extra_content)
+        except Exception as exc:
+            _safe_log(logging.WARNING, "Secrets observer scan failed; category=%s", type(exc).__name__)
+            raise HTTPException(status_code=503, detail="Credential scanning unavailable; retry the request.") from None
+        return self._process(data, stage, extra_content, call_type, judge_enqueued=enqueued)
+
     def _process(
         self,
         data: dict[str, Any],
         stage: str,
         extra_content: Any = None,
         call_type: str | None = None,
+        judge_enqueued: int = 0,
     ) -> dict[str, Any]:
         if not isinstance(data, dict):
             return data
@@ -1277,7 +1359,6 @@ class SecretsObserverGuardrail(CustomGuardrail):
             return data
         started = time.perf_counter()
         outcome = "scanned"
-        judge_enqueued = 0
         counts: Counter[str] = Counter()
         new_counts: Counter[str] = Counter()
         redacted = False
@@ -1319,7 +1400,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
                         extra_content.insert(0, _format_model_notice(new_counts))
                 if judge is not None:
                     try:
-                        judge_enqueued = judge.schedule()
+                        judge_enqueued += judge.schedule()
                     except Exception as exc:
                         _safe_log(logging.WARNING, "Secrets observer judge scheduling failed; category=%s", type(exc).__name__)
                 redacted = bool(counts)
@@ -1421,15 +1502,15 @@ class SecretsObserverGuardrail(CustomGuardrail):
         call_id = data.get("litellm_call_id") if isinstance(data, dict) else None
         if isinstance(call_id, str):
             _CALL_STATES[call_id] = state
-        return self._process(data, "ingress", call_type=call_type)
+        return await self._process_with_judge(data, "ingress", call_type=call_type)
 
     async def async_pre_call_deployment_hook(self, kwargs, call_type):
-        return self._process(kwargs, "deployment", call_type=call_type)
+        return await self._process_with_judge(kwargs, "deployment", call_type=call_type)
 
     async def apply_guardrail(self, inputs, request_data, input_type, logging_obj=None):
         texts = inputs.get("texts") if isinstance(inputs, dict) else None
         data = request_data if isinstance(request_data, dict) else {}
-        self._process(data, f"apply_guardrail:{input_type}", extra_content=texts)
+        await self._process_with_judge(data, f"apply_guardrail:{input_type}", extra_content=texts)
         return inputs
 
     async def async_post_call_success_hook(self, data, user_api_key_dict, response):
