@@ -64,6 +64,8 @@ spec:
               GUARDRAIL_SECRETS_MODE: "redact"
               GUARDRAIL_SECRETS_JUDGE: "async"
               GUARDRAIL_SECRETS_JUDGE_WAIT_SECONDS: "3"
+              GUARDRAIL_SECRETS_JUDGE_STORE: "valkey"
+              GUARDRAIL_SECRETS_JUDGE_REDIS_URL: redis://litellm-valkey:6379/1
             envFrom:
               - secretRef:
                   name: litellm-credentials

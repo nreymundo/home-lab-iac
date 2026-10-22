@@ -37,16 +37,16 @@ _CALL_STATES: dict[str, dict[str, Any]] = {}
 # (replayed history still carries the raw text and must stay redacted in
 # flight), but error reporting — WARNING-level audit lines, guardrail
 # intervention status, and user-facing notices — only fires for spans not
-# reported before. The `_SeenStore` below persists these digests in SQLite so
-# "reported before" survives pod restarts; without it, memory is the only
-# layer and a restart re-reports every known span once.
+# reported before. SQLite persists digests by default; Valkey mode uses a
+# shared atomic claim and keeps this bounded cache for outage degradation.
 _SEEN_SPANS: OrderedDict[str, None] = OrderedDict()
 _SEEN_SPANS_LOCK = threading.Lock()
 _SEEN_SPANS_CAP = 10_000
-# Durable layer: most-recently-reported spans kept in the store; anything
-# pruned past this bound simply reports again once when next redacted.
+# SQLite durable layer cap; Valkey uses its 90-day sliding key TTL instead.
 _REPORTED_CAP = 20_000
 _REPORT_TASKS: set[asyncio.Future] = set()
+_STORE_WARNINGS: dict[str, float] = {}
+_STORE_WARNINGS_LOCK = threading.Lock()
 _REDACTION_NOTICE = (
     "[Security notice: LiteLLM detected and redacted sensitive credential-like content "
     "from this request before sending it to the model. Do not infer, reconstruct, or ask "
@@ -221,6 +221,15 @@ def _safe_log(level: int, message: str, *args: Any) -> None:
         _AUDIT_LOGGER.log(level, message, *args)
     except Exception:
         pass
+
+
+def _store_warning(operation: str, exc: Exception) -> None:
+    now = time.monotonic()
+    with _STORE_WARNINGS_LOCK:
+        if now - _STORE_WARNINGS.get(operation, 0.0) < 60.0:
+            return
+        _STORE_WARNINGS[operation] = now
+    _safe_log(logging.WARNING, "Secrets observer Valkey %s failed; category=%s", operation, type(exc).__name__)
 
 
 def _load_fingerprints(raw: str | None) -> dict[str, bytes]:
@@ -526,20 +535,29 @@ def _response_notice(data: Any = None) -> str | None:
 
 
 def _register_spans(
-    spans: Iterable[tuple[str, str]], store: _SeenStore | None = None
+    spans: Iterable[tuple[str, str]], store: Any = None
 ) -> Counter[str]:
     """Record spans as seen; count only spans not reported before.
 
-    Memory is authoritative on the request path; `store` mirrors every
-    digest (new and replay) to SQLite in the background so reported-ness
-    survives restarts, refreshing last_seen/hits for pruning.
+    Memory is authoritative on the request path; SQLite mirrors every digest
+    in the background. Valkey mode claims digests before this function runs.
     """
     new_counts: Counter[str] = Counter()
     digests: list[str] = []
+    state = _request_call_state()
+    prepared = state.get("reported_digest_status", {}) if state is not None else {}
+    consumed = state.setdefault("reported_digest_consumed", set()) if state is not None else set()
     with _SEEN_SPANS_LOCK:
         for label, span_text in spans:
             digest = hashlib.sha256(f"{label}|{span_text}".encode("utf-8")).hexdigest()
             digests.append(digest)
+            if digest in prepared:
+                if prepared[digest] and digest not in consumed:
+                    new_counts[label] += 1
+                consumed.add(digest)
+                _SEEN_SPANS[digest] = None
+                _SEEN_SPANS.move_to_end(digest)
+                continue
             if digest in _SEEN_SPANS:
                 _SEEN_SPANS.move_to_end(digest)
                 continue
@@ -547,7 +565,7 @@ def _register_spans(
             new_counts[label] += 1
         while len(_SEEN_SPANS) > _SEEN_SPANS_CAP:
             _SEEN_SPANS.popitem(last=False)
-    if store is not None:
+    if store is not None and hasattr(store, "queue"):
         store.queue(digests)
     return new_counts
 
@@ -569,7 +587,12 @@ def _redact_text(
         span_text = text[start:end]
         judge_eligible = judge is not None and label == "sensitive_assignment"
         before, after = _judge_context(text, start, end) if judge_eligible else ("", "")
-        verdict = judge.lookup(label, span_text, before, after) if judge_eligible else None
+        verdict = None
+        if judge_eligible:
+            digest = judge._key(label, span_text, before, after)
+            state = _request_call_state()
+            decisions = state.get("judge_decisions", {}) if state is not None else {}
+            verdict = decisions[digest] if digest in decisions else judge.lookup(label, span_text, before, after)
         if verdict == "pass":
             # Cached acquittal: keep the span verbatim and move on.
             pieces.append(text[cursor:end])
@@ -810,8 +833,8 @@ def _prepend_responses_notice(response: Any, notice: str) -> None:
 # Ambiguous assignment captures that survive the deterministic rules are judged
 # by the local decisions model with an optional bounded request wait. Undecided
 # spans are redacted while judging continues through llama-swap (never this proxy,
-# which would recursively scan the judge's own request). A verdict is cached
-# in SQLite. Verdicts expire and are scoped to context, model and policy.
+# which would recursively scan the judge's own request). Verdicts are cached in
+# the selected SQLite or Valkey store and scoped to context, model and policy.
 # Format and fingerprint matches are never judged. The store holds only
 # digests and verdict metadata, never span text. Judge failure
 # (endpoint down, timeout, unparseable reply) writes no verdict: the span
@@ -839,6 +862,62 @@ _JUDGE_QUEUE_CAP = 128
 _JUDGE_QUEUE_TTL_S = 300.0
 _JUDGE_MAX_SPAN = 8192
 
+
+class _ValkeyGuardrailStore:
+    """Shared digest-only verdict and reported-span store."""
+
+    def __init__(self, url: str) -> None:
+        import redis
+
+        self._client = redis.Redis.from_url(
+            url,
+            decode_responses=True,
+            socket_connect_timeout=0.5,
+            socket_timeout=0.5,
+            retry_on_timeout=False,
+            max_connections=16,
+        )
+
+    @property
+    def ready(self) -> bool:
+        return True
+
+    def load_verdicts(self, digests: Iterable[str]) -> dict[str, tuple[str, float]]:
+        values = list(dict.fromkeys(digests))
+        if not values:
+            return {}
+        pipe = self._client.pipeline(transaction=False)
+        for digest in values:
+            key = f"guardrail:v:{digest}"
+            pipe.get(key)
+            pipe.pttl(key)
+        results = pipe.execute()
+        now = time.time()
+        found: dict[str, tuple[str, float]] = {}
+        for index, digest in enumerate(values):
+            verdict, ttl_ms = results[index * 2 : index * 2 + 2]
+            if verdict in {"pass", "redact"} and isinstance(ttl_ms, int) and ttl_ms > 0:
+                found[digest] = (verdict, now + ttl_ms / 1000)
+        return found
+
+    def store_verdict(self, digest: str, verdict: str, expires: float) -> None:
+        ttl = math.ceil(expires - time.time())
+        if ttl > 0:
+            self._client.set(f"guardrail:v:{digest}", verdict, ex=ttl)
+
+    def claim_reported(self, digests: Iterable[str]) -> dict[str, bool]:
+        values = list(dict.fromkeys(digests))
+        if not values:
+            return {}
+        pipe = self._client.pipeline(transaction=False)
+        for digest in values:
+            pipe.execute_command("SET", f"guardrail:s:{digest}", "1", "GET", "EX", 7_776_000)
+        try:
+            replies = pipe.execute()
+        except Exception as exc:
+            _store_warning("reported-span lookup", exc)
+            return {}
+        return {digest: previous is not None for digest, previous in zip(values, replies)}
 
 def _judge_context(text: str, start: int, end: int) -> tuple[str, str]:
     # Previous/current line stay stable when later conversation turns are appended.
@@ -896,6 +975,8 @@ class _SpanJudge:
         self, db_path: str, endpoint: str, auth: str, model: str, timeout_s: float, cap: int,
         pass_ttl_s: float = 86400, redact_ttl_s: float = 604800,
         version: str = _JUDGE_POLICY_VERSION,
+        backend: str = "sqlite",
+        shared_store: _ValkeyGuardrailStore | None = None,
     ) -> None:
         self._endpoint = endpoint.rstrip("/")
         self._auth = auth
@@ -906,6 +987,8 @@ class _SpanJudge:
         if not all(math.isfinite(v) and v > 0 for v in (*self._ttls.values(), timeout_s)):
             raise ValueError("Judge timeouts and TTLs must be finite and positive")
         self._version = version
+        self._backend = backend
+        self._shared_store = shared_store
         self._db: sqlite3.Connection | None = None
         self._db_lock = threading.Lock()
         self._overlay: OrderedDict[str, tuple[str, float]] = OrderedDict()
@@ -916,32 +999,34 @@ class _SpanJudge:
         self._failures = 0
         self._candidates: OrderedDict[str, tuple[str, str, str, str, float]] = OrderedDict()
         self.passed = 0
-        try:
-            self._db = sqlite3.connect(db_path, timeout=5.0, check_same_thread=False)
-            self._db.execute("PRAGMA journal_mode=WAL")
-            # Global legacy acquittals must never survive the narrower policy.
-            self._db.execute("DROP TABLE IF EXISTS verdicts")
-            self._db.execute(
-                "CREATE TABLE IF NOT EXISTS scoped_verdicts ("
-                "digest TEXT PRIMARY KEY, verdict TEXT NOT NULL, expires_at REAL NOT NULL)"
-            )
-            self._prune_store()
-            self._overlay.update(
-                (digest, (verdict, expires)) for digest, verdict, expires in self._db.execute(
-                    "SELECT digest, verdict, expires_at FROM scoped_verdicts"
-                ) if verdict in self._ttls
-            )
-            self._db.commit()
-        except Exception as exc:
-            if self._db is not None:
-                self._db.close()
-            self._db = None
-            self._overlay.clear()
-            _safe_log(logging.WARNING, "Secrets observer judge store disabled; category=%s", type(exc).__name__)
+        if backend == "sqlite":
+            try:
+                self._db = sqlite3.connect(db_path, timeout=5.0, check_same_thread=False)
+                self._db.execute("PRAGMA journal_mode=WAL")
+                # Global legacy acquittals must never survive narrower policy.
+                self._db.execute("DROP TABLE IF EXISTS verdicts")
+                self._db.execute(
+                    "CREATE TABLE IF NOT EXISTS scoped_verdicts ("
+                    "digest TEXT PRIMARY KEY, verdict TEXT NOT NULL, expires_at REAL NOT NULL)"
+                )
+                self._prune_store()
+                self._overlay.update(
+                    (digest, (verdict, expires)) for digest, verdict, expires in self._db.execute(
+                        "SELECT digest, verdict, expires_at FROM scoped_verdicts"
+                    ) if verdict in self._ttls
+                )
+                self._db.commit()
+            except Exception as exc:
+                if self._db is not None:
+                    self._db.close()
+                self._db = None
+                self._overlay.clear()
+                _safe_log(logging.WARNING, "Secrets observer judge store disabled; category=%s", type(exc).__name__)
 
     @property
     def ready(self) -> bool:
-        return self._db is not None and bool(self._endpoint)
+        durable_store_ready = self._db is not None if self._backend == "sqlite" else self._shared_store is not None
+        return durable_store_ready and bool(self._endpoint)
 
     def _key(self, detector: str, span: str, before: str, after: str) -> str:
         return _span_digest(json.dumps(
@@ -973,6 +1058,11 @@ class _SpanJudge:
 
     def _store(self, digest: str, verdict: str, expires: float) -> None:
         # Worker-thread I/O: never hold database locks on the request path.
+        if self._backend == "valkey":
+            if self._shared_store is None:
+                raise RuntimeError("Valkey store unavailable")
+            self._shared_store.store_verdict(digest, verdict, expires)
+            return
         with self._db_lock:
             with self._db:
                 self._db.execute(
@@ -980,6 +1070,18 @@ class _SpanJudge:
                     (digest, verdict, expires),
                 )
                 self._prune_store()
+
+    async def load_shared(self, digests: Iterable[str]) -> None:
+        if self._backend != "valkey" or self._shared_store is None:
+            return
+        try:
+            entries = await asyncio.to_thread(self._shared_store.load_verdicts, list(dict.fromkeys(digests)))
+        except Exception as exc:
+            _store_warning("verdict lookup", exc)
+            return
+        self._overlay.update(entries)
+        while len(self._overlay) > _JUDGE_OVERLAY_CAP:
+            self._overlay.popitem(last=False)
 
     def _prune(self, now: float) -> None:
         while self._backoff and next(iter(self._backoff.values())) <= now:
@@ -1073,9 +1175,12 @@ class _SpanJudge:
             self._failures += 1
             if self._failures >= _JUDGE_PAUSE_FAILURES:
                 self._paused_until = now + _JUDGE_PAUSE_AFTER_S
-            _safe_log(
-                logging.WARNING, "Secrets observer judge failed; outcome=%s category=%s", outcome, type(exc).__name__
-            )
+            if outcome == "store_error" and self._backend == "valkey":
+                _store_warning("verdict write", exc)
+            else:
+                _safe_log(
+                    logging.WARNING, "Secrets observer judge failed; outcome=%s category=%s", outcome, type(exc).__name__
+                )
         finally:
             self._inflight.discard(digest)
             self._changed.set()
@@ -1215,7 +1320,14 @@ class SecretsObserverGuardrail(CustomGuardrail):
         self._mode = os.getenv("GUARDRAIL_SECRETS_MODE", "observe").lower()
         if self._mode not in {"redact", "observe", "off"}:
             raise ValueError("GUARDRAIL_SECRETS_MODE must be redact, observe, or off")
+        self._store_backend = os.getenv("GUARDRAIL_SECRETS_JUDGE_STORE", "sqlite").lower()
+        if self._store_backend not in {"sqlite", "valkey"}:
+            _safe_log(logging.WARNING, "Secrets observer store backend invalid; using sqlite")
+            self._store_backend = "sqlite"
+        self._store = self._build_store() if self._store_backend == "valkey" else None
         self._judge = self._build_judge()
+        if self._store_backend == "sqlite":
+            self._store = self._build_store()
         try:
             self._judge_wait_s = float(os.getenv("GUARDRAIL_SECRETS_JUDGE_WAIT_SECONDS", "0"))
             if not math.isfinite(self._judge_wait_s) or self._judge_wait_s < 0:
@@ -1223,7 +1335,6 @@ class SecretsObserverGuardrail(CustomGuardrail):
         except ValueError:
             self._judge_wait_s = 0.0
             _safe_log(logging.WARNING, "Secrets observer judge wait invalid; using immediate redaction")
-        self._store = self._build_store()
         _safe_log(
             logging.INFO,
             "Secrets observer started; mode=%s detectors=%d fingerprint_count=%d judge=%s reports=%s judge_wait_s=%g",
@@ -1268,6 +1379,8 @@ class SecretsObserverGuardrail(CustomGuardrail):
                 pass_ttl_s=float(os.getenv("GUARDRAIL_SECRETS_JUDGE_PASS_TTL", "86400")),
                 redact_ttl_s=float(os.getenv("GUARDRAIL_SECRETS_JUDGE_REDACT_TTL", "604800")),
                 version=_JUDGE_POLICY_VERSION + ":" + os.getenv("GUARDRAIL_SECRETS_JUDGE_VERSION", "1"),
+                backend=self._store_backend,
+                shared_store=self._store if isinstance(self._store, _ValkeyGuardrailStore) else None,
             )
         except Exception as exc:
             _safe_log(
@@ -1281,8 +1394,16 @@ class SecretsObserverGuardrail(CustomGuardrail):
             return None
         return judge
 
-    def _build_store(self) -> _SeenStore | None:
+    def _build_store(self) -> Any:
         """Durable reported-spans layer; None falls back to memory-only."""
+        if self._store_backend == "valkey":
+            try:
+                return _ValkeyGuardrailStore(
+                    os.getenv("GUARDRAIL_SECRETS_JUDGE_REDIS_URL", "redis://litellm-valkey:6379/1")
+                )
+            except Exception as exc:
+                _store_warning("connection", exc)
+                return None
         if os.getenv("GUARDRAIL_SECRETS_REPORTS_PERSIST", "on").lower() == "off":
             return None
         return _SeenStore(
@@ -1294,52 +1415,137 @@ class SecretsObserverGuardrail(CustomGuardrail):
     async def _await_judge(self, data: dict[str, Any], extra_content: Any = None) -> int:
         judge = self._judge
         if (
-            self._mode != "redact" or judge is None or not judge.ready
-            or not self._judge_wait_s or not isinstance(data, dict) or _is_local_destination(data)
+            self._mode != "redact" or judge is None or not isinstance(data, dict)
+            or _is_local_destination(data)
         ):
             return 0
-        state = _request_call_state(data)
-        if state is not None and state.get("judge_wait_deadline", math.inf) <= time.monotonic():
-            return 0
-        digests: set[str] = set()
+        candidates: dict[str, tuple[str, str, str, str]] = {}
         values = [data[root] for root in _CONTENT_ROOTS if root in data]
         if isinstance(extra_content, list):
             values.append(extra_content)
         for value in values:
             for text in _text_leaves(value):
-                matches = _scan_text(text, self._fingerprints)
-                for start, end, detector, _ in matches:
+                for start, end, detector, _ in _scan_text(text, self._fingerprints):
                     if detector != "sensitive_assignment":
                         continue
                     before, after = _judge_context(text, start, end)
-                    try:
-                        if judge.lookup(detector, text[start:end], before, after) is None:
-                            digest = judge.collect(detector, text[start:end], before, after)
-                            if digest is not None:
-                                digests.add(digest)
-                    except Exception as exc:
-                        _safe_log(logging.WARNING, "Secrets observer judge collection failed; category=%s", type(exc).__name__)
-                        return 0
-        if not digests:
+                    digest = judge._key(detector, text[start:end], before, after)
+                    candidates[digest] = (detector, text[start:end], before, after)
+
+        # Valkey cache reads run even with a zero judge wait budget. SQLite's
+        # existing zero-wait path remains unchanged.
+        await judge.load_shared(candidates)
+        if self._store_backend != "valkey" and self._judge_wait_s <= 0:
+            return 0
+
+        undecided: set[str] = set()
+        for digest, (detector, span, before, after) in candidates.items():
+            if judge.lookup(detector, span, before, after) is not None:
+                continue
+            if judge.ready:
+                try:
+                    collected = judge.collect(detector, span, before, after)
+                    if collected is not None:
+                        undecided.add(collected)
+                except Exception as exc:
+                    _safe_log(logging.WARNING, "Secrets observer judge collection failed; category=%s", type(exc).__name__)
+                    return 0
+        if not undecided or not judge.ready:
+            return 0
+        if self._judge_wait_s <= 0:
+            try:
+                return judge.schedule()
+            except Exception as exc:
+                _safe_log(logging.WARNING, "Secrets observer judge scheduling failed; category=%s", type(exc).__name__)
+                return 0
+
+        state = _request_call_state(data)
+        if state is not None and state.get("judge_wait_deadline", math.inf) <= time.monotonic():
             return 0
         if state is None:
             state = {"redacted": False, "model_notice_added": False, "new_counts": Counter()}
             _CALL_STATE.set(state)
-        # One deadline across all spans and lifecycle hooks, including fallbacks.
         deadline = state.setdefault("judge_wait_deadline", time.monotonic() + self._judge_wait_s)
         enqueued = 0
         try:
             enqueued = judge.schedule()
-            await judge.wait(digests, deadline)
+            await judge.wait(undecided, deadline)
         except Exception as exc:
             _safe_log(logging.WARNING, "Secrets observer judge wait failed; category=%s", type(exc).__name__)
         return enqueued
+
+    async def _prepare_valkey_reports(self, data: dict[str, Any], extra_content: Any = None) -> None:
+        store = self._store
+        if (
+            not isinstance(store, _ValkeyGuardrailStore)
+            or os.getenv("GUARDRAIL_SECRETS_REPORTS_PERSIST", "on").lower() == "off"
+            or self._mode != "redact" or _is_local_destination(data)
+        ):
+            return
+        spans: dict[str, tuple[str, str]] = {}
+        judge = self._judge
+        values = [data[root] for root in _CONTENT_ROOTS if root in data]
+        if isinstance(extra_content, list):
+            values.append(extra_content)
+        for value in values:
+            for text in _text_leaves(value):
+                for start, end, label, _ in _scan_text(text, self._fingerprints):
+                    if label == "sensitive_assignment" and judge is not None:
+                        before, after = _judge_context(text, start, end)
+                        digest = judge._key(label, text[start:end], before, after)
+                        state = _request_call_state(data)
+                        decisions = state.get("judge_decisions", {}) if state is not None else {}
+                        verdict = decisions[digest] if digest in decisions else judge.lookup(label, text[start:end], before, after)
+                        if verdict == "pass":
+                            continue
+                    digest = hashlib.sha256(f"{label}|{text[start:end]}".encode("utf-8")).hexdigest()
+                    spans[digest] = (label, text[start:end])
+        if not spans:
+            return
+        try:
+            shared_seen = await asyncio.to_thread(store.claim_reported, spans)
+        except Exception as exc:
+            _store_warning("reported-span lookup", exc)
+            shared_seen = {}
+        state = _request_call_state(data)
+        if state is None:
+            state = {"redacted": False, "model_notice_added": False, "new_counts": Counter()}
+            _CALL_STATE.set(state)
+        statuses: dict[str, bool] = {}
+        with _SEEN_SPANS_LOCK:
+            for digest in spans:
+                locally_seen = digest in _SEEN_SPANS
+                statuses[digest] = not locally_seen and not shared_seen.get(digest, False)
+                _SEEN_SPANS[digest] = None
+                _SEEN_SPANS.move_to_end(digest)
+            while len(_SEEN_SPANS) > _SEEN_SPANS_CAP:
+                _SEEN_SPANS.popitem(last=False)
+        state["reported_digest_status"] = statuses
+        state["reported_digest_consumed"] = set()
 
     async def _process_with_judge(
         self, data: dict[str, Any], stage: str, extra_content: Any = None, call_type: str | None = None,
     ) -> dict[str, Any]:
         try:
             enqueued = await self._await_judge(data, extra_content)
+            if self._store_backend == "valkey" and self._judge is not None:
+                state = _request_call_state(data)
+                if state is None:
+                    state = {"redacted": False, "model_notice_added": False, "new_counts": Counter()}
+                    _CALL_STATE.set(state)
+                decisions: dict[str, str | None] = {}
+                values = [data[root] for root in _CONTENT_ROOTS if root in data]
+                if isinstance(extra_content, list):
+                    values.append(extra_content)
+                for value in values:
+                    for text in _text_leaves(value):
+                        for start, end, label, _ in _scan_text(text, self._fingerprints):
+                            if label == "sensitive_assignment":
+                                before, after = _judge_context(text, start, end)
+                                digest = self._judge._key(label, text[start:end], before, after)
+                                decisions[digest] = self._judge.lookup(label, text[start:end], before, after)
+                state["judge_decisions"] = decisions
+            await self._prepare_valkey_reports(data, extra_content)
         except Exception as exc:
             _safe_log(logging.WARNING, "Secrets observer scan failed; category=%s", type(exc).__name__)
             raise HTTPException(status_code=503, detail="Credential scanning unavailable; retry the request.") from None
@@ -1369,7 +1575,7 @@ class SecretsObserverGuardrail(CustomGuardrail):
         state = _request_call_state(data)
         if state is None:
             state = {"redacted": False, "model_notice_added": False, "new_counts": Counter()}
-            _CALL_STATE.set(state)
+        _CALL_STATE.set(state)
         _CALL_STATES[call_id] = state
         if len(_CALL_STATES) > 4096:
             _CALL_STATES.pop(next(iter(_CALL_STATES)))
