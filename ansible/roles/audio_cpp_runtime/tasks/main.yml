@@ -38,6 +38,15 @@
         - "{{ audio_cpp_runtime_voice_dir }}"
         - "{{ audio_cpp_runtime_models_dir }}"
 
+    - name: Link audio.cpp UI downloads to shared model storage
+      ansible.builtin.file:
+        src: "{{ audio_cpp_runtime_models_dir }}"
+        dest: "{{ audio_cpp_runtime_ui_models_dir }}"
+        state: link
+        owner: root
+        group: root
+        follow: false
+
     - name: Check out pinned audio.cpp source
       ansible.builtin.git:
         repo: "{{ audio_cpp_runtime_repo }}"

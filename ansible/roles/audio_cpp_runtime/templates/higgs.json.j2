@@ -13,6 +13,14 @@
       "path": {{ audio_cpp_runtime_model_path | to_json }},
       "task": "tts",
       "mode": "offline"
+    },
+    {
+      "id": {{ audio_cpp_runtime_chatterbox_model_id | to_json }},
+      "family": "chatterbox_turbo",
+      "path": {{ audio_cpp_runtime_chatterbox_model_path | to_json }},
+      "task": "tts",
+      "mode": "offline",
+      "lazy": true
     }
   ]
 }

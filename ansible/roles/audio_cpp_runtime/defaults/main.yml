@@ -30,7 +30,12 @@ audio_cpp_runtime_packages:
 audio_cpp_runtime_config_dir: /etc/audio-cpp
 audio_cpp_runtime_voice_dir: /var/lib/audio-cpp/voices
 audio_cpp_runtime_models_dir: /opt/ai/models
-audio_cpp_runtime_model_id: bosonai/higgs-tts-3-4b
+# The native model manager defaults to a models directory beside its binary.
+audio_cpp_runtime_ui_models_dir: /usr/local/bin/models
+audio_cpp_runtime_model_id: higgs-audio-tts
 audio_cpp_runtime_model_path: >-
   {{ audio_cpp_runtime_models_dir }}/Higgs-Audio-v3-TTS-4B-GGUF/higgs-audio-v3-tts-4b-q8_0.gguf
+audio_cpp_runtime_chatterbox_model_id: chatterbox-turbo
+audio_cpp_runtime_chatterbox_model_path: >-
+  {{ audio_cpp_runtime_models_dir }}/Chatterbox-Turbo-GGUF/chatterbox-turbo-q8_0.gguf
 audio_cpp_runtime_threads: 8
