@@ -11,6 +11,10 @@ spec:
   values:
     controllers:
       main:
+        replicas: 0
+        strategy: Recreate
+        pod:
+          terminationGracePeriodSeconds: 300
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
@@ -81,6 +85,10 @@ spec:
               - "4000"
               - --prometheus_metrics_port
               - "4001"
+            lifecycle:
+              preStop:
+                exec:
+                  command: ["/bin/sh", "-c", "sleep 15"]
             probes:
               liveness:
                 enabled: true
@@ -142,6 +150,11 @@ spec:
               # Preserve user instructions; compress tool results.
               HEADROOM_COMPRESS_USER_MESSAGES: "0"
               HEADROOM_WORKERS: "1"
+            lifecycle:
+              preStop:
+                exec:
+                  # Cover endpoint propagation plus the five-second compression timeout.
+                  command: ["/bin/sh", "-c", "sleep 20"]
             probes:
               liveness:
                 enabled: true
