@@ -1,7 +1,9 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - vane-pvc.yaml
   - sillytavern-pvc.yaml
   - litellm-pvc.yaml
+  - litellm-data-pvc.yaml
   - open-webui-pvc.yaml
