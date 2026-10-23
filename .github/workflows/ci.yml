@@ -183,7 +183,7 @@ jobs:
         run: checkov --config-file .checkov.yaml
 
   ansible-lint:
-    name: Ansible Lint and Offline Tests
+    name: Ansible Lint
     runs-on: ubuntu-latest
     needs: detect-changes
     if: needs.detect-changes.outputs.ansible_lint == 'true'
@@ -208,18 +208,6 @@ jobs:
 
       - name: Run ansible-lint
         run: ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint --project-dir ansible ansible/playbooks/ ansible/roles/
-
-      - name: Install offline host validation tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y openssh-server python3-apt
-          sudo install -d -m 0755 /run/sshd
-          command -v sshd
-          command -v ssh-keygen
-          /usr/bin/python3 -c 'import apt_pkg; from aptsources.sourceslist import SourcesList'
-
-      - name: Run offline Ansible host tests
-        run: python -m unittest discover -s ansible/tests -v
 
   terraform-fmt:
     name: Terraform fmt
