@@ -105,9 +105,9 @@
         - audio_cpp_runtime_rebuild_required | bool
         - not ansible_check_mode
 
-    - name: Configure resident Higgs TTS backend
+    - name: Configure native audio.cpp TTS backend
       ansible.builtin.template:
-        src: higgs.json.j2
+        src: audio-cpp.json.j2
         dest: "{{ audio_cpp_runtime_config_dir }}/higgs.json"
         owner: root
         group: root
