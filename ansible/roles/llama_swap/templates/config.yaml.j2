@@ -42,3 +42,37 @@ models:
 {% endfor %}
     name: {{ (model.path | basename | regex_replace('\\.bin$', '')) | to_json }}
 {% endfor %}
+{% if llama_swap_audio_cpp_model_enabled | bool %}
+  audiocpp_auto:
+    cmd: >-
+      /usr/local/bin/audiocpp_server
+      --config {{ llama_swap_audio_cpp_config_path | quote }}
+      --host 127.0.0.1
+      --port ${PORT}
+      --ui
+      --ui-management
+    name: "Higgs TTS 3 4B Q8_0"
+    description: "Native audio.cpp TTS runtime"
+    aliases:
+      - higgs-audio-tts
+      - chatterbox-turbo
+    checkEndpoint: /health
+    ttl: 0
+    env:
+      - OMP_WAIT_POLICY=PASSIVE
+      - KMP_BLOCKTIME=0
+    capabilities:
+      in:
+        - text
+        - audio
+      out:
+        - audio
+    disableAuto: true
+groups:
+  audio-cpp:
+    swap: false
+    exclusive: false
+    persistent: true
+    members:
+      - audiocpp_auto
+{% endif %}

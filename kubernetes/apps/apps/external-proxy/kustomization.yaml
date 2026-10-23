@@ -17,7 +17,6 @@ resources:
   - llama-swap.yaml
   - omniroute.yaml
   - comfyui.yaml
-  - chatterbox.yaml
   - audiomuse.yaml
   - syncthing.yaml
   - dev.yaml

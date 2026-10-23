@@ -1,0 +1,60 @@
+---
+# The pinned source ships the compiled UI; CMake otherwise embeds a placeholder.
+- name: Check bundled audio.cpp WebUI
+  ansible.builtin.stat:
+    path: "{{ audio_cpp_runtime_dir }}/webui/native/dist/index.html"
+  register: audio_cpp_runtime_webui
+
+- name: Require the compiled audio.cpp WebUI
+  ansible.builtin.assert:
+    that:
+      - audio_cpp_runtime_webui.stat.exists
+      - audio_cpp_runtime_webui.stat.size > 100000
+    fail_msg: The pinned audio.cpp source must include its compiled native WebUI
+
+- name: Configure audio.cpp Vulkan build
+  ansible.builtin.command:
+    argv: >-
+      {{ ['cmake', '-S', audio_cpp_runtime_dir, '-B', audio_cpp_runtime_build_dir, '-G', 'Ninja',
+          '-DCMAKE_BUILD_TYPE=Release',
+          '-DENGINE_ENABLE_VULKAN=ON', '-DENGINE_ENABLE_HIP=OFF', '-DENGINE_ENABLE_CUDA=OFF',
+          '-DAUDIOCPP_BUILD_NATIVE_MODEL_MANAGER=ON', '-DAUDIOCPP_USE_SYSTEM_OPENSSL=ON',
+          '-DAUDIOCPP_DEPLOYMENT_BUILD=ON'] + audio_cpp_runtime_extra_cmake_args }}
+  changed_when: true
+
+- name: Compile audio.cpp server and native tools
+  ansible.builtin.command:
+    argv:
+      - cmake
+      - --build
+      - "{{ audio_cpp_runtime_build_dir }}"
+      - --parallel
+      - "{{ audio_cpp_runtime_build_jobs | string }}"
+      - --target
+      - audiocpp_server
+      - audiocpp_cli
+      - audiocpp_model_manager
+  changed_when: true
+
+# Copy only the statically linked tools, not GGML libraries shared with llama.cpp.
+- name: Install native audio.cpp binaries
+  ansible.builtin.copy:
+    src: "{{ audio_cpp_runtime_build_dir }}/bin/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - audiocpp_server
+    - audiocpp_cli
+    - audiocpp_model_manager
+
+- name: Record successful audio.cpp build
+  ansible.builtin.copy:
+    src: /tmp/audio-cpp-runtime-build-marker.json
+    dest: "{{ audio_cpp_runtime_marker_path }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0644"

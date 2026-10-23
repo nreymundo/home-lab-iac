@@ -1,0 +1,41 @@
+---
+audio_cpp_runtime_enabled: true
+audio_cpp_runtime_repo: https://github.com/0xShug0/audio.cpp.git
+# Includes the upstream C++17 structured-binding portability fix.
+audio_cpp_runtime_ref: 837f6c1ef007857a956d8ca1c62d03b36da6e4c4
+audio_cpp_runtime_dir: /opt/audio.cpp
+audio_cpp_runtime_build_dir: "{{ audio_cpp_runtime_dir }}/build-vulkan"
+audio_cpp_runtime_marker_path: "{{ audio_cpp_runtime_dir }}/.ansible-build.json"
+audio_cpp_runtime_build_jobs: "{{ [ansible_processor_vcpus | default(4), 16] | min }}"
+audio_cpp_runtime_force_rebuild: false
+audio_cpp_runtime_extra_cmake_args: []
+audio_cpp_runtime_packages:
+  - cmake
+  - gcc-c++
+  - git
+  - ninja-build
+  - python3
+  - openssl-devel
+  - libgomp
+  - mesa-vulkan-drivers
+  - vulkan-loader
+  - vulkan-headers
+  - vulkan-loader-devel
+  - glslc
+  - glslang
+  - spirv-tools
+  - spirv-headers-devel
+  - ffmpeg-free
+
+audio_cpp_runtime_config_dir: /etc/audio-cpp
+audio_cpp_runtime_voice_dir: /var/lib/audio-cpp/voices
+audio_cpp_runtime_models_dir: /opt/ai/models
+# The native model manager defaults to a models directory beside its binary.
+audio_cpp_runtime_ui_models_dir: /usr/local/bin/models
+audio_cpp_runtime_model_id: higgs-audio-tts
+audio_cpp_runtime_model_path: >-
+  {{ audio_cpp_runtime_models_dir }}/Higgs-Audio-v3-TTS-4B-GGUF/higgs-audio-v3-tts-4b-q8_0.gguf
+audio_cpp_runtime_chatterbox_model_id: chatterbox-turbo
+audio_cpp_runtime_chatterbox_model_path: >-
+  {{ audio_cpp_runtime_models_dir }}/Chatterbox-Turbo-GGUF/chatterbox-turbo-q8_0.gguf
+audio_cpp_runtime_threads: 8

@@ -163,10 +163,10 @@ spec:
                 icon: audiomuse-ai.png
                 description: "AI-powered music analysis and playlist generation"
                 href: https://audiomuse.lan.${CLUSTER_DOMAIN}
-            - Chatterbox:
-                icon: https://i.imgur.com/w9QDXK0.png
-                description: "Text-to-speech API"
-                href: https://chatterbox.lan.${CLUSTER_DOMAIN}
+            - Audio.cpp:
+                icon: "https://api.iconify.design/mdi/waveform.svg?color=%23ffffff"
+                description: "Text-to-speech and voice-cloning UI"
+                href: https://llama.lan.${CLUSTER_DOMAIN}/audiocpp/
             - Code Server:
                 icon: code-server.png
                 description: "Development VM IDE"

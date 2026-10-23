@@ -195,12 +195,23 @@ data:
           timeout: 900
           response_format: b64_json
 
-      - model_name: openai/chatterbox
+      - model_name: openai/higgs-audio-tts
         model_info:
           mode: audio_speech
-          health_check_voice: Abigail.wav
         litellm_params:
-          model: openai/chatterbox
+          model: openai/higgs-audio-tts
+          custom_llm_provider: openai
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+
+      - model_name: openai/chatterbox-turbo
+        model_info:
+          mode: audio_speech
+        litellm_params:
+          model: openai/chatterbox-turbo
           custom_llm_provider: openai
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -748,7 +759,7 @@ data:
         local/rerank: hosted_vllm/qwen/qwen3-reranker-0.6b
         local/stt-fast: hosted_vllm/whisper/large-v3-turbo-q5_0
         local/stt-large: hosted_vllm/whisper/large-v3-q5_0
-        local/tts: openai/chatterbox
+        local/tts: openai/higgs-audio-tts
         openai/gpt-5.6-luna: chatgpt/gpt-5.6-luna
         openai/gpt-5.6-sol: chatgpt/gpt-5.6-sol
         openai/gpt-5.6-terra: chatgpt/gpt-5.6-terra
