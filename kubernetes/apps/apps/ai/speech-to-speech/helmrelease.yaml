@@ -127,6 +127,6 @@ spec:
       shim:
         enabled: true
         type: configMap
-        nameOverride: speech-to-speech-shim
+        name: speech-to-speech-shim
         globalMounts:
           - path: /shim
