@@ -195,11 +195,23 @@ data:
           timeout: 900
           response_format: b64_json
 
-      - model_name: openai/*
+      - model_name: openai/higgs-audio-tts
         model_info:
           mode: audio_speech
         litellm_params:
-          model: openai/*
+          model: openai/higgs-audio-tts
+          custom_llm_provider: openai
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+
+      - model_name: openai/chatterbox-turbo
+        model_info:
+          mode: audio_speech
+        litellm_params:
+          model: openai/chatterbox-turbo
           custom_llm_provider: openai
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0

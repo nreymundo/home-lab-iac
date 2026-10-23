@@ -18,6 +18,8 @@ llama_swap_log_level: info
 llama_swap_log_to_stdout: proxy
 llama_swap_start_port: 10001
 llama_swap_global_ttl: 0
+llama_swap_audio_cpp_model_enabled: true
+llama_swap_audio_cpp_config_path: /etc/audio-cpp/higgs.json
 
 llama_swap_models_dir: /opt/ai/models
 llama_swap_default_context_size: 8192
