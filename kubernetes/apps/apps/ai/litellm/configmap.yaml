@@ -451,6 +451,22 @@ data:
             - pve3
           guardrails: []
 
+      - model_name: hosted_vllm/adilkairolla/zeta-2.1
+        model_info:
+          mode: chat
+          max_input_tokens: 32768
+          max_output_tokens: 8192
+        litellm_params:
+          model: hosted_vllm/adilkairolla/zeta-2.1
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: llama-swap
+          input_cost_per_token: 0.0
+          output_cost_per_token: 0.0
+          tags:
+            - llama-swap
+            - pve3
+          guardrails: []
+
       # Native GLM routing uses the same cloud classifier and user-turn policy.
       - model_name: cloud/glm-auto
         model_info:
@@ -751,6 +767,7 @@ data:
         local/camera-analysis: hosted_vllm/unsloth/gemma-4-12b-it-qat-camera
         local/chat: hosted_vllm/unsloth/qwen3.8-27b
         local/coder: hosted_vllm/unsloth/qwen3.8-27b-coding
+        local/completions: hosted_vllm/adilkairolla/zeta-2.1
         local/decision: hosted_vllm/d3-mini
         local/document-analysis: hosted_vllm/unsloth/qwen3.8-27b-documents
         local/document-best: hosted_vllm/unsloth/qwen3.8-27b-analysis
