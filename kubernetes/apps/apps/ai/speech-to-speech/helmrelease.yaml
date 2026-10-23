@@ -33,8 +33,9 @@ spec:
                 if ! /venv/bin/python -c 'import torch, torchaudio; assert torch.version.cuda is None and torchaudio.__version__.endswith("+cpu")'; then
                   python -m venv --clear /venv
                   /venv/bin/pip install --no-cache-dir --upgrade pip
-                  /venv/bin/pip install --no-cache-dir speech-to-speech
-                  /venv/bin/pip install --no-cache-dir torch==2.11.0+cpu torchaudio==2.11.0+cpu --index-url https://download.pytorch.org/whl/cpu
+                  printf 'torch==2.11.0+cpu\ntorchaudio==2.11.0+cpu\n' > /tmp/torch-constraints.txt
+                  /venv/bin/pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu torch==2.11.0+cpu torchaudio==2.11.0+cpu
+                  /venv/bin/pip install --no-cache-dir --constraint /tmp/torch-constraints.txt speech-to-speech
                 fi
         containers:
           main:
