@@ -61,7 +61,7 @@ spec:
                 --openai_tts_sample_rate 24000
                 --openai_tts_api_key "$LLAMA_SWAP_API_KEY"
                 --llm_backend chat-completions
-                --responses_api_base_url http://hermes.external-proxy.svc.cluster.local:9119/api/plugins/conduit_push/local-live/v1
+                --responses_api_base_url https://hermes.lan.${CLUSTER_DOMAIN}/api/plugins/conduit_push/local-live/v1
                 --responses_api_api_key "$LOCAL_LIVE_API_KEY"
                 --model_name conduit
                 --stream_batch_sentences 1
