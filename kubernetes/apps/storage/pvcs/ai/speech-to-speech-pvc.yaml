@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://json.schemastore.org/v1/persistentvolumeclaim.json
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: speech-to-speech
+  namespace: ai
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-r1
+  resources:
+    requests:
+      storage: 3Gi

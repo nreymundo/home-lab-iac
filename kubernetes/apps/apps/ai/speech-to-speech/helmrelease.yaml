@@ -1,0 +1,132 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: speech-to-speech
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      labels:
+        observability_multiline_profile: level_prefix
+    controllers:
+      main:
+        replicas: 1
+        strategy: Recreate
+        pod:
+          annotations:
+            reloader.stakater.com/auto: "true"
+        initContainers:
+          venv:
+            image:
+              repository: docker.io/library/python
+              tag: 3.12-slim
+            command:
+              - /bin/sh
+              - -c
+            args:
+              - |
+                set -eu
+                if [ ! -x /venv/bin/speech-to-speech ]; then
+                  python -m venv /venv
+                  /venv/bin/pip install --no-cache-dir --upgrade pip
+                  /venv/bin/pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+                  /venv/bin/pip install --no-cache-dir speech-to-speech
+                fi
+        containers:
+          main:
+            image:
+              repository: docker.io/library/python
+              tag: 3.12-slim
+            command:
+              - /bin/sh
+              - -c
+            args:
+              - >
+                exec /venv/bin/speech-to-speech serve
+                --host 0.0.0.0 --port 8765
+                --stt openai
+                --openai_stt_base_url http://llama-swap.external-proxy.svc.cluster.local:8080/v1
+                --openai_stt_model whisper/large-v3-turbo-q5_0
+                --openai_stt_api_key "$LLAMA_SWAP_API_KEY"
+                --tts openai
+                --openai_tts_base_url http://127.0.0.1:8766/v1
+                --openai_tts_model higgs-audio-tts
+                --openai_tts_voice Rachel
+                --openai_tts_stream true
+                --openai_tts_sample_rate 24000
+                --openai_tts_api_key "$LLAMA_SWAP_API_KEY"
+                --llm_backend chat-completions
+                --responses_api_base_url http://hermes.external-proxy.svc.cluster.local:9119/api/plugins/conduit_push/local-live/v1
+                --responses_api_api_key "$LOCAL_LIVE_API_KEY"
+                --model_name conduit
+                --stream_batch_sentences 1
+                --num_pipelines 2
+            env:
+              TZ: Europe/Berlin
+              LLAMA_SWAP_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: speech-to-speech-secrets
+                    key: LLAMA_SWAP_API_KEY
+              LOCAL_LIVE_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: speech-to-speech-secrets
+                    key: LOCAL_LIVE_API_KEY
+            ports:
+              - name: http
+                containerPort: 8765
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+          shim:
+            image:
+              repository: docker.io/library/python
+              tag: 3.12-slim
+            command:
+              - python3
+              - /shim/tts_shim.py
+            env:
+              TZ: Europe/Berlin
+              LLAMA_SWAP_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: speech-to-speech-secrets
+                    key: LLAMA_SWAP_API_KEY
+            ports:
+              - name: shim
+                containerPort: 8766
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 128Mi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8765
+    persistence:
+      venv:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: speech-to-speech
+        globalMounts:
+          - path: /venv
+      shim:
+        enabled: true
+        type: configMap
+        nameOverride: speech-to-speech-shim
+        globalMounts:
+          - path: /shim
