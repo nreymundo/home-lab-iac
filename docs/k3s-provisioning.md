@@ -93,6 +93,3 @@ Check playbook syntax from `ansible/` with:
 ```sh
 ansible-playbook playbooks/k3s_cluster.yml --syntax-check
 ```
-
-See the [offline test guide](../ansible/tests/README.md); fixtures do not prove
-live etcd, networking, storage persistence or service recovery.

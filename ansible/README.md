@@ -87,15 +87,13 @@ For an intended live run, use the selected playbook's guide and limit the hosts.
 skipped in check mode are not validated by it. Narrow tags can depend on an
 earlier full run.
 
-Offline validation is available through the existing lint and test suite:
+Offline lint validation:
 
 ```bash
 ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint --project-dir ansible ansible/playbooks/ ansible/roles/
-python -m unittest discover -s ansible/tests -v
 ```
 
-See [tests/README.md](tests/README.md) for fixture coverage and controller
-prerequisites, and [AGENTS.md](AGENTS.md) for editing rules.
+See [AGENTS.md](AGENTS.md) for editing rules.
 
 ## Reruns and feature switches
 

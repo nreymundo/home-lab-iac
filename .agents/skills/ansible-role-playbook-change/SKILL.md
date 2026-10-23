@@ -100,9 +100,6 @@ host or subgroup for a live run.
 ANSIBLE_CONFIG=ansible/ansible.cfg ansible-lint --project-dir ansible ansible/playbooks/ ansible/roles/
 ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/<playbook>.yml --syntax-check
 
-# Offline host fixtures
-python -m unittest discover -s ansible/tests -v
-
 # Against reachable target hosts only (live)
 ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/<playbook>.yml --check
 ```
@@ -111,11 +108,8 @@ ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/<playbook>
 routine validation prefer `ansible-lint` and `--syntax-check`.
 
 Pre-commit runs `ansible-lint`. The
-[CI workflow](../../../.github/workflows/ci.yml) runs Ansible lint and offline
-host tests for applicable changes and pins the controller and collection
-versions. See the [test guide](../../../ansible/tests/README.md) for fixture
-coverage and prerequisites, including local Unix socket access. Offline
-fixtures do not establish live host convergence.
+[CI workflow](../../../.github/workflows/ci.yml) runs Ansible lint for
+applicable changes and pins the controller and collection versions.
 
 ## Anti-patterns
 

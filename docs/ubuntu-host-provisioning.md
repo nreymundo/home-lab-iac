@@ -71,5 +71,4 @@ From the repository root:
 
 ```sh
 ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/playbooks/ubuntu.yml --syntax-check
-python -m unittest discover -s ansible/tests -v
 ```
