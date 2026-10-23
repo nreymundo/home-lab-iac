@@ -47,6 +47,18 @@
         group: root
         follow: false
 
+    - name: Check for an existing audio.cpp checkout
+      ansible.builtin.stat:
+        path: "{{ audio_cpp_runtime_dir }}/.git"
+      register: audio_cpp_runtime_git_dir
+
+    - name: Refresh audio.cpp tags even when upstream moved a tag # noqa: command-instead-of-module
+      ansible.builtin.command: git fetch --tags --force origin
+      args:
+        chdir: "{{ audio_cpp_runtime_dir }}"
+      changed_when: false
+      when: audio_cpp_runtime_git_dir.stat.isdir | default(false)
+
     - name: Check out pinned audio.cpp source
       ansible.builtin.git:
         repo: "{{ audio_cpp_runtime_repo }}"
