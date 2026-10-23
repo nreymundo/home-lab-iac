@@ -1,0 +1,26 @@
+{
+  "host": "127.0.0.1",
+  "backend": "vulkan",
+  "threads": {{ audio_cpp_runtime_threads | int }},
+  "lazy_load": false,
+  "idle_unload_ms": 0,
+  "max_loaded_models": 1,
+  "voice_dir": {{ audio_cpp_runtime_voice_dir | to_json }},
+  "models": [
+    {
+      "id": {{ audio_cpp_runtime_model_id | to_json }},
+      "family": "higgs_audio_tts",
+      "path": {{ audio_cpp_runtime_model_path | to_json }},
+      "task": "tts",
+      "mode": "offline"
+    },
+    {
+      "id": {{ audio_cpp_runtime_chatterbox_model_id | to_json }},
+      "family": "chatterbox_turbo",
+      "path": {{ audio_cpp_runtime_chatterbox_model_path | to_json }},
+      "task": "tts",
+      "mode": "offline",
+      "lazy": true
+    }
+  ]
+}
