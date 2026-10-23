@@ -49,10 +49,6 @@ spec:
               - >
                 exec /venv/bin/speech-to-speech serve
                 --host 0.0.0.0 --port 8765
-                --stt openai
-                --openai_stt_base_url http://llama-swap.external-proxy.svc.cluster.local:8080/v1
-                --openai_stt_model whisper/large-v3-turbo-q5_0
-                --openai_stt_api_key "$LLAMA_SWAP_API_KEY"
                 --tts openai
                 --openai_tts_base_url http://127.0.0.1:8766/v1
                 --openai_tts_model higgs-audio-tts
@@ -68,6 +64,7 @@ spec:
                 --num_pipelines 2
             env:
               TZ: Europe/Berlin
+              HF_HOME: /venv/hf-cache
               LLAMA_SWAP_API_KEY:
                 valueFrom:
                   secretKeyRef:
@@ -84,9 +81,9 @@ spec:
             resources:
               requests:
                 cpu: 100m
-                memory: 512Mi
+                memory: 1Gi
               limits:
-                memory: 2Gi
+                memory: 4Gi
           shim:
             image:
               repository: docker.io/library/python
