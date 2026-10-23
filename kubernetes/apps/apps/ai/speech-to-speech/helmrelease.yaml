@@ -30,11 +30,11 @@ spec:
             args:
               - |
                 set -eu
-                if [ ! -x /venv/bin/speech-to-speech ]; then
-                  python -m venv /venv
+                if ! /venv/bin/python -c 'import torch, torchaudio; assert torch.version.cuda is None and torchaudio.__version__.endswith("+cpu")'; then
+                  python -m venv --clear /venv
                   /venv/bin/pip install --no-cache-dir --upgrade pip
-                  /venv/bin/pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
                   /venv/bin/pip install --no-cache-dir speech-to-speech
+                  /venv/bin/pip install --no-cache-dir torch==2.11.0+cpu torchaudio==2.11.0+cpu --index-url https://download.pytorch.org/whl/cpu
                 fi
         containers:
           main:

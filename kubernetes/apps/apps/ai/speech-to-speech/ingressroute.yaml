@@ -17,5 +17,5 @@ spec:
         - name: traefik-lan-allowlist
           namespace: traefik
       services:
-        - name: speech-to-speech-main
+        - name: speech-to-speech
           port: 8765
