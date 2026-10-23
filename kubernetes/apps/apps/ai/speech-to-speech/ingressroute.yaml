@@ -14,7 +14,7 @@ spec:
     - match: Host(`s2s.lan.${CLUSTER_DOMAIN}`)
       kind: Rule
       middlewares:
-        - name: traefik-lan-allowlist
+        - name: lan-allowlist
           namespace: traefik
       services:
         - name: speech-to-speech
