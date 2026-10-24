@@ -64,6 +64,20 @@ jobs:
             head_sha="$GITHUB_SHA"
           fi
 
+          if ! git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
+            echo "::warning::Base commit $base_sha is unavailable; running all checks"
+            {
+              echo "checkov=true"
+              echo "kubeconform=true"
+              echo "trivy=true"
+              echo "ansible_lint=true"
+              echo "terraform_fmt=true"
+              echo "packer_fmt=true"
+              echo "shell=true"
+            } >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
 
           matches() {
@@ -308,10 +322,17 @@ jobs:
             head_sha="$GITHUB_SHA"
           fi
 
-          mapfile -d '' changed_scripts < <(
-            git diff --name-only --diff-filter=d -z "$base_sha" "$head_sha" \
-              -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh'
-          )
+          if git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
+            mapfile -d '' changed_scripts < <(
+              git diff --name-only --diff-filter=d -z "$base_sha" "$head_sha" \
+                -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh'
+            )
+          else
+            echo "::warning::Base commit $base_sha is unavailable; checking all standalone shell scripts"
+            mapfile -d '' changed_scripts < <(
+              git ls-files -z -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh'
+            )
+          fi
 
           if (( ${#changed_scripts[@]} == 0 )); then
             echo "No standalone shell scripts changed in this event range"
