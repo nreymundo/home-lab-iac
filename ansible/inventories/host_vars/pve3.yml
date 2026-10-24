@@ -24,4 +24,4 @@ proxmox_power_tuning_cron_entries_to_remove:
   - "@reboot /usr/sbin/powertop --auto-tune"
 
 proxmox_smartd_device_overrides:
-  - "/dev/nvme1 -d nvme -H 0xfb -f -t -l error -n standby -m root -M exec /usr/share/smartmontools/smartd-runner"
+  - "/dev/disk/by-id/nvme-WD_BLACK_SN850X_4000GB_25474E800997 -d nvme -H 0xfb -f -t -l error -n standby -m root -M exec /usr/share/smartmontools/smartd-runner"
