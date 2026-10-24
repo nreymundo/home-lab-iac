@@ -759,6 +759,7 @@ data:
         ssl: false
 
     general_settings:
+      disable_env_credential_login: true
       # Keep GitOps config authoritative; LiteLLM DB config rows otherwise override router_settings.
       store_model_in_db: false
       # Team MCP grants are ceilings; virtual keys need an explicit per-key grant.

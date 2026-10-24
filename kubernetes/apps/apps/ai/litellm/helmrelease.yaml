@@ -50,6 +50,16 @@ spec:
                   secretKeyRef:
                     name: litellm-secrets
                     key: LITELLM_SALT_KEY
+              LITELLM_BREAKGLASS_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm-secrets
+                    key: LITELLM_BREAKGLASS_USERNAME
+              LITELLM_BREAKGLASS_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm-secrets
+                    key: LITELLM_BREAKGLASS_PASSWORD
               GENERIC_CLIENT_ID:
                 valueFrom:
                   secretKeyRef:
