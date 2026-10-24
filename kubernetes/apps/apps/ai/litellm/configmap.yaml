@@ -694,6 +694,12 @@ data:
         credential_info:
           custom_llm_provider: zai
 
+    search_tools:
+      - search_tool_name: searxng-search
+        litellm_params:
+          search_provider: searxng
+          api_base: http://searxng-main.utils.svc.cluster.local:8080
+
     mcp_servers:
       context7:
         url: https://mcp.context7.com/mcp
@@ -701,6 +707,13 @@ data:
         auth_type: bearer_token
         auth_value: os.environ/CONTEXT7_API_KEY
         allow_all_keys: true
+      dawarich:
+        url: http://dawarich-main.utils.svc.cluster.local:3000/api/v1/mcp
+        transport: http
+        auth_type: bearer_token
+        auth_value: os.environ/DAWARICH_API_KEY
+        allow_all_keys: false
+        available_on_public_internet: false
 
     guardrails:
       - guardrail_name: headroom-compression
