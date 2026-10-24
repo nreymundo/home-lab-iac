@@ -849,4 +849,6 @@ data:
       allowed_fails: 3
       cooldown_time: 5
       retry_after: 0
-      enable_pre_call_checks: false
+      enable_pre_call_checks: true
+      optional_pre_call_checks:
+        - encrypted_content_affinity
