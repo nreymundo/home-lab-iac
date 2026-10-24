@@ -422,7 +422,7 @@ spec:
                 description: "Media request manager"
                 href: https://seerr.lan.${CLUSTER_DOMAIN}
             - SparkyFitness:
-                icon: https://assets.web.${CLUSTER_DOMAIN}/icons/sparkyfitness.png
+                icon: https://assets.web.${CLUSTER_DOMAIN}/icons/sparkyfitness.svg
                 description: "Fitness, nutrition and health tracking"
                 href: https://fitness.${CLUSTER_DOMAIN}
             - SillyTavern:
