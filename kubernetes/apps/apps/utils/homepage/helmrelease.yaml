@@ -421,6 +421,10 @@ spec:
                 icon: seerr.png
                 description: "Media request manager"
                 href: https://seerr.lan.${CLUSTER_DOMAIN}
+            - SparkyFitness:
+                icon: https://assets.web.${CLUSTER_DOMAIN}/icons/sparkyfitness.png
+                description: "Fitness, nutrition and health tracking"
+                href: https://fitness.${CLUSTER_DOMAIN}
             - SillyTavern:
                 icon: "https://upload.wikimedia.org/wikipedia/commons/6/6b/SillyTavern_logo_%28dark_background%29.png"
                 description: "Chat interface for LLM roleplay"
