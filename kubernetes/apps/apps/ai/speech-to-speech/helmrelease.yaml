@@ -90,8 +90,9 @@ spec:
                 memory: 6Gi
           parakeet:
             image:
+              # renovate: datasource=docker depName=mudler/parakeet.cpp-server registryUrl=https://ghcr.io
               repository: ghcr.io/mudler/parakeet.cpp-server
-              tag: latest
+              tag: v0.6.1
             command:
               - parakeet-server
             args:
