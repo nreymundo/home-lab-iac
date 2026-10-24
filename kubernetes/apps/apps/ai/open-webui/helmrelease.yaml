@@ -113,9 +113,14 @@ spec:
                     name: open-webui-secrets
                     key: OPENAI_API_KEYS
               ENABLE_WEB_SEARCH: "true"
-              WEB_SEARCH_ENGINE: searxng
-              SEARXNG_QUERY_URL: http://searxng-main.utils.svc.cluster.local:8080/search?q=<query>
-              WEB_SEARCH_RESULT_COUNT: "5"
+              WEB_SEARCH_ENGINE: perplexity_search
+              PERPLEXITY_SEARCH_API_URL: http://litellm-main.ai.svc.cluster.local:4000/search/searxng-search
+              PERPLEXITY_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: open-webui-secrets
+                    key: LITELLM_API_KEY
+              WEB_SEARCH_RESULT_COUNT: "20"
               # Consumed by the separately imported OpenRouter pipe, not Open WebUI core.
               OPENROUTER_API_BASE_URL: https://openrouter.ai/api/v1
               OPENROUTER_API_KEY:
