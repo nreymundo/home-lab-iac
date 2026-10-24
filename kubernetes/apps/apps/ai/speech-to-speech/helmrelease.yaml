@@ -46,22 +46,48 @@ spec:
               - /bin/sh
               - -c
             args:
-              - >
-                exec /venv/bin/speech-to-speech serve
-                --host 0.0.0.0 --port 8765
-                --tts openai
-                --openai_tts_base_url http://127.0.0.1:8766/v1
-                --openai_tts_model higgs-audio-tts
-                --openai_tts_voice Rachel
-                --openai_tts_stream true
-                --openai_tts_sample_rate 24000
-                --openai_tts_api_key "$LLAMA_SWAP_API_KEY"
-                --llm_backend chat-completions
-                --responses_api_base_url https://hermes.lan.${CLUSTER_DOMAIN}/api/plugins/conduit_push/local-live/v1
-                --responses_api_api_key "$LOCAL_LIVE_API_KEY"
-                --model_name conduit
-                --stream_batch_sentences 1
-                --num_pipelines 2
+              - |
+                set -eu
+                /venv/bin/python - <<'PY'
+                import time
+                import urllib.error
+                import urllib.request
+
+                endpoint = "http://127.0.0.1:8767/health"
+                deadline = time.monotonic() + 120
+                last_error = "no response"
+                while True:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise SystemExit(f"Parakeet readiness timed out after 120s: {endpoint}: {last_error}")
+                    try:
+                        with urllib.request.urlopen(endpoint, timeout=min(5, remaining)) as response:
+                            if 200 <= response.status < 300:
+                                break
+                            last_error = f"HTTP {response.status}"
+                    except (urllib.error.URLError, OSError) as error:
+                        last_error = str(error)
+                    time.sleep(min(1, max(0, deadline - time.monotonic())))
+                PY
+                exec /venv/bin/speech-to-speech serve \
+                  --host 0.0.0.0 --port 8765 \
+                  --stt openai \
+                  --openai_stt_base_url http://127.0.0.1:8767/v1 \
+                  --openai_stt_model parakeet \
+                  --openai_stt_api_key notneeded \
+                  --tts openai \
+                  --openai_tts_base_url http://127.0.0.1:8766/v1 \
+                  --openai_tts_model higgs-audio-tts \
+                  --openai_tts_voice Rachel \
+                  --openai_tts_stream true \
+                  --openai_tts_sample_rate 24000 \
+                  --openai_tts_api_key "$LLAMA_SWAP_API_KEY" \
+                  --llm_backend chat-completions \
+                  --responses_api_base_url https://hermes.lan.${CLUSTER_DOMAIN}/api/plugins/conduit_push/local-live/v1 \
+                  --responses_api_api_key "$LOCAL_LIVE_API_KEY" \
+                  --model_name conduit \
+                  --stream_batch_sentences 1 \
+                  --num_pipelines 2
             env:
               TZ: Europe/Berlin
               HF_HOME: /venv/hf-cache
@@ -84,6 +110,32 @@ spec:
                 memory: 2Gi
               limits:
                 memory: 6Gi
+          parakeet:
+            image:
+              # renovate: datasource=docker depName=mudler/parakeet.cpp-server registryUrl=https://ghcr.io
+              repository: ghcr.io/mudler/parakeet.cpp-server
+              tag: v0.6.1
+            command:
+              - parakeet-server
+            args:
+              - --host
+              - 127.0.0.1
+              - --port
+              - "8767"
+              - --model
+              - tdt-0.6b-v3-q5_k.gguf
+              - --cache-dir
+              - /models
+            ports:
+              - name: parakeet
+                containerPort: 8767
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 2Gi
           shim:
             image:
               repository: docker.io/library/python
@@ -122,6 +174,11 @@ spec:
             claimName: speech-to-speech
         globalMounts:
           - path: /venv
+        advancedMounts:
+          main:
+            parakeet:
+              - path: /models
+                subPath: models
       shim:
         enabled: true
         type: configMap
