@@ -89,8 +89,8 @@ comfyui_disabled_custom_nodes:
   - ComfyUI-AMDGPUMonitor
 
 comfyui_idle_restart_enabled: true
-comfyui_idle_restart_after_seconds: 300
-comfyui_idle_restart_check_interval: 60
+comfyui_idle_restart_after_seconds: 60
+comfyui_idle_restart_check_interval: 15
 comfyui_idle_restart_queue_url: "http://127.0.0.1:{{ comfyui_host_port }}/queue"
 comfyui_idle_restart_history_url: "http://127.0.0.1:{{ comfyui_host_port }}/history"
 
