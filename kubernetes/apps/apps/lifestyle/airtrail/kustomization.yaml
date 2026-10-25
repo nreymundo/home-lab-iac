@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - airtrail-db-secrets.sops.yaml
   - airtrail-integration-secrets.sops.yaml
+  - cnpg-cluster.yaml
