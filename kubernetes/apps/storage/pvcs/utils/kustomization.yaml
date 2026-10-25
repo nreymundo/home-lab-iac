@@ -11,3 +11,4 @@ resources:
   - karakeep-pvc.yaml
   - karakeep-meilisearch-pvc.yaml
   - searxng-pvc.yaml
+  - sparkyfitness-pvc.yaml

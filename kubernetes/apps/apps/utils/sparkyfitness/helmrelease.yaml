@@ -1,0 +1,374 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sparkyfitness
+  namespace: utils
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      frontend:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            runAsGroup: 101
+            fsGroup: 101
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+        containers:
+          frontend:
+            image:
+              # renovate: datasource=docker depName=codewithcj/sparkyfitness-frontend registryUrl=https://ghcr.io
+              repository: ghcr.io/codewithcj/sparkyfitness-frontend
+              tag: v1.9.0
+            env:
+              NGINX_LISTEN_PORT: '8080'
+              SPARKY_FITNESS_FRONTEND_URL: https://fitness.${CLUSTER_DOMAIN}
+              SPARKY_FITNESS_SERVER_HOST: sparkyfitness-server.utils.svc.cluster.local
+              SPARKY_FITNESS_SERVER_PORT: '3010'
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                - ALL
+            ports:
+            - name: http
+              containerPort: 8080
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 90
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+      server:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+        containers:
+          server:
+            image:
+              # renovate: datasource=docker depName=codewithcj/sparkyfitness-server registryUrl=https://ghcr.io
+              repository: ghcr.io/codewithcj/sparkyfitness-server
+              tag: v1.9.0
+            env:
+              TZ: Europe/Berlin
+              NODE_ENV: production
+              SPARKY_FITNESS_LOG_LEVEL: info
+              SPARKY_FITNESS_SERVER_PORT: '3010'
+              SPARKY_FITNESS_FRONTEND_URL: https://fitness.${CLUSTER_DOMAIN}
+              SPARKY_FITNESS_TRUSTED_PROXY_HOPS: '2'
+              GARMIN_MICROSERVICE_URL: http://sparkyfitness-garmin.utils.svc.cluster.local:8000
+              # Initialization uses a session lock: never use transaction-pooling PgBouncer here.
+              SPARKY_FITNESS_DB_HOST: sparkyfitness-pg-rw.utils.svc.cluster.local
+              SPARKY_FITNESS_DB_PORT: '5432'
+              SPARKY_FITNESS_DB_NAME: sparkyfitness
+              SPARKY_FITNESS_DB_USER: sparkyfitness
+              SPARKY_FITNESS_DB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: sparkyfitness-db-owner
+                    key: password
+              SPARKY_FITNESS_APP_DB_USER: sparkyfitness_app
+              SPARKY_FITNESS_APP_DB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: sparkyfitness-db-app
+                    key: password
+              SPARKY_FITNESS_OIDC_AUTH_ENABLED: 'true'
+              SPARKY_FITNESS_OIDC_PROVIDER_SLUG: authentik
+              SPARKY_FITNESS_OIDC_PROVIDER_NAME: Authentik
+              SPARKY_FITNESS_OIDC_ISSUER_URL: https://sso.${CLUSTER_DOMAIN}/application/o/sparkyfitness/
+              SPARKY_FITNESS_OIDC_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: sparkyfitness-sso-secret
+                    key: CLIENT_ID
+              SPARKY_FITNESS_OIDC_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: sparkyfitness-sso-secret
+                    key: CLIENT_SECRET
+              SPARKY_FITNESS_OIDC_ADMIN_GROUP: sparkyfitness-admins
+              SPARKY_FITNESS_OIDC_AUTO_REGISTER: 'true'
+              # Allow future Authentik group members to register via OIDC, not local passwords.
+              SPARKY_FITNESS_DISABLE_SIGNUP: 'false'
+              SPARKY_FITNESS_DISABLE_EMAIL_LOGIN: 'true'
+              SPARKY_FITNESS_DISABLE_PASSKEY_LOGIN: 'true'
+              ALLOW_PRIVATE_NETWORK_AI: 'true'
+              SPARKY_FITNESS_API_ENCRYPTION_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: sparkyfitness-secrets
+                    key: SPARKY_FITNESS_API_ENCRYPTION_KEY
+              BETTER_AUTH_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: sparkyfitness-secrets
+                    key: BETTER_AUTH_SECRET
+              SPARKY_FITNESS_EMAIL_HOST: smtp.purelymail.com
+              SPARKY_FITNESS_EMAIL_PORT: '587'
+              SPARKY_FITNESS_EMAIL_SECURE: 'false'
+              SPARKY_FITNESS_EMAIL_FROM: fitness@${CLUSTER_DOMAIN}
+              SPARKY_FITNESS_EMAIL_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: sparkyfitness-secrets
+                    key: SPARKY_FITNESS_EMAIL_USER
+              SPARKY_FITNESS_EMAIL_PASS:
+                valueFrom:
+                  secretKeyRef:
+                    name: sparkyfitness-secrets
+                    key: SPARKY_FITNESS_EMAIL_PASS
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                - ALL
+            ports:
+            - name: http
+              containerPort: 3010
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 3010
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 3010
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 3010
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 90
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 2Gi
+      garmin:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1
+            runAsGroup: 1
+            fsGroup: 1
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+        containers:
+          garmin:
+            image:
+              # renovate: datasource=docker depName=codewithcj/sparkyfitness-garmin registryUrl=https://ghcr.io
+              repository: ghcr.io/codewithcj/sparkyfitness-garmin
+              tag: v1.9.0
+            env:
+              GARMIN_SERVICE_PORT: '8000'
+              PYTHONDONTWRITEBYTECODE: '1'
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                - ALL
+            ports:
+            - name: http
+              containerPort: 8000
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 8000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 8000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 8000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 90
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 512Mi
+    service:
+      frontend:
+        controller: frontend
+        ports:
+          http:
+            port: 8080
+      server:
+        controller: server
+        ports:
+          http:
+            port: 3010
+      garmin:
+        controller: garmin
+        ports:
+          http:
+            port: 8000
+    ingress:
+      main:
+        annotations:
+          external-dns.kubernetes.io/hostname: fitness.${CLUSTER_DOMAIN}
+        hosts:
+        - host: fitness.${CLUSTER_DOMAIN}
+          paths:
+          - path: /
+            service:
+              identifier: frontend
+              port: http
+    persistence:
+      frontend-tmp:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          frontend:
+            frontend:
+            - path: /tmp
+      nginx-cache:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          frontend:
+            frontend:
+            - path: /var/cache/nginx
+      nginx-run:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          frontend:
+            frontend:
+            - path: /run
+      nginx-conf:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          frontend:
+            frontend:
+            - path: /etc/nginx/conf.d
+      data:
+        enabled: true
+        type: custom
+        advancedMounts:
+          server:
+            server:
+            - path: /app/SparkyFitnessServer/uploads
+              subPath: uploads
+            - path: /app/SparkyFitnessServer/backup
+              subPath: backup
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: sparkyfitness
+      temp-uploads:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          server:
+            server:
+            - path: /app/SparkyFitnessServer/temp_uploads
+      server-tmp:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          server:
+            server:
+            - path: /tmp
+      garmin-tmp:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          garmin:
+            garmin:
+            - path: /tmp

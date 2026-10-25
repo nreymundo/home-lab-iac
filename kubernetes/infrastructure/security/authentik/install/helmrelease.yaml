@@ -128,6 +128,16 @@ spec:
             secretKeyRef:
               name: dawarich-sso-secret
               key: CLIENT_SECRET
+        - name: SPARKYFITNESS_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: sparkyfitness-sso-secret
+              key: CLIENT_ID
+        - name: SPARKYFITNESS_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: sparkyfitness-sso-secret
+              key: CLIENT_SECRET
         - name: AIRTRAIL_CLIENT_ID
           valueFrom:
             secretKeyRef:
