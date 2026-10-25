@@ -8,5 +8,4 @@ resources:
 - helmrelease.yaml
 - cnpg-cluster.yaml
 - sparkyfitness-secrets.sops.yaml
-- sparkyfitness-db-owner.sops.yaml
-- sparkyfitness-db-app.sops.yaml
+- sparkyfitness-db-secrets.sops.yaml

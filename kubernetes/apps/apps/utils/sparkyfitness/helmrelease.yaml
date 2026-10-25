@@ -140,8 +140,9 @@ spec:
                     key: CLIENT_SECRET
               SPARKY_FITNESS_OIDC_ADMIN_GROUP: sparkyfitness-admins
               SPARKY_FITNESS_OIDC_AUTO_REGISTER: 'true'
-              # TEMPORARY public bootstrap: close signup in Git after the owner's first OIDC admin login.
+              # Allow future Authentik group members to register via OIDC, not local passwords.
               SPARKY_FITNESS_DISABLE_SIGNUP: 'false'
+              SPARKY_FITNESS_DISABLE_EMAIL_LOGIN: 'true'
               ALLOW_PRIVATE_NETWORK_AI: 'true'
               SPARKY_FITNESS_API_ENCRYPTION_KEY:
                 valueFrom:
