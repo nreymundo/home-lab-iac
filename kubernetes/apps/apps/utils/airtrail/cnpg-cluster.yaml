@@ -1,8 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/cluster_v1.json
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: airtrail-pg
   namespace: utils
+  annotations:
+    cnpg.io/hibernation: "on"
   labels:
     release: observability-kube-prometheus-stack
 spec:
@@ -60,6 +63,7 @@ spec:
       serverName: "airtrail-pg-v1"
     retentionPolicy: "21d"
 ---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/scheduledbackup_v1.json
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
 metadata:
