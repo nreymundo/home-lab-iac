@@ -739,6 +739,10 @@ data:
           default_on: true
 
     litellm_settings:
+      ui_theme_config:
+        logo_url: https://assets.web.${CLUSTER_DOMAIN}/icons/litellm-logo-light.png
+        logo_url_dark: https://assets.web.${CLUSTER_DOMAIN}/icons/litellm-logo-dark.png
+        favicon_url: https://assets.web.${CLUSTER_DOMAIN}/icons/litellm-favicon.ico
       callbacks:
         - prometheus
         - cache_bypass.proxy_handler_instance
