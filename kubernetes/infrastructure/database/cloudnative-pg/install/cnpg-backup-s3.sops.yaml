@@ -4,7 +4,7 @@ metadata:
     name: cnpg-backup-s3
     namespace: cnpg-system
     annotations:
-        replicator.v1.mittwald.de/replicate-to: authentik,security,automation,immich,paperless,nextcloud,ai,media,utils,reddit,comms
+        replicator.v1.mittwald.de/replicate-to: authentik,security,automation,immich,paperless,nextcloud,ai,media,utils,reddit,comms,lifestyle
 type: Opaque
 stringData:
     ACCESS_KEY_ID: ENC[AES256_GCM,data:+h4VmIAIl9LBtEC5QDPmIVhj3M9xXCfudmQ=,iv:BWQxrKtKy1KWmv4XpdOPnhdYlpykZQAXaPURg2MpqSo=,tag:qJztYNSaQ0XsM7eeSyB2lQ==,type:str]
@@ -22,6 +22,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-10-03T01:54:47Z"
-    mac: ENC[AES256_GCM,data:Yna+bBGO5Nk98BRhYpJ2ortWu+k/Qe/ov6y1Gwc8FePGl6Ck5KjIh+78ZZtYeVlKrUjVoZcq9FgC2iLeFPlPyaBaJYkoWw0U0Z6EECmH9OiXQXlWk3sE4Iavlz24ixiFWqiHAwP3N4y0GWwK7gcteNL6TXVQ0x7rr5Qx3OJQw5U=,iv:zDYjSldgtyOmBf8C9TzMwn5fLgRN/gqH6YxKLzt/fVo=,tag:xd4QwxQShCI7zNUcWKkIVQ==,type:str]
+    lastmodified: "2026-10-25T14:37:31Z"
+    mac: ENC[AES256_GCM,data:0Usj6/CMr7dKGc3PGrsk6cQh/2FKgqGI3ulpheGmN9MhmIjHuvZ5vFsLHjicFI2fP6omit1K4kk4N/suuXu+nJ2ySXoTy1jUc76rZlkiV5n2bloO5va609uacrGgxtBnzKPazZbABTdeDhozrxnH564OtcENO0FGNoQWxFJduZ4=,iv:06QbE55tBynVJRUN4fLmdmWsec8n++V205/hvduDQ70=,tag:PZ9i+7ORfZ7Pd+RWSCAXtQ==,type:str]
     version: 3.13.3
