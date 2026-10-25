@@ -71,6 +71,7 @@ metadata:
   namespace: utils
 spec:
   schedule: "0 0 0 * * 0"  # Weekly Sunday at midnight
+  suspend: true
   backupOwnerReference: self
   cluster:
     name: airtrail-pg
