@@ -22,6 +22,7 @@ resources:
   - ../apps/utils/camofox
   - ../apps/utils/dawarich
   - ../apps/utils/airtrail
+  - ../apps/lifestyle/airtrail
   - ../apps/utils/sparkyfitness
   - ../apps/utils/karakeep
   - ../apps/comms/mailflow
