@@ -32,15 +32,30 @@ spec:
 
   bootstrap:
     recovery:
+      source: origin
       database: airtrail
       owner: airtrail
       secret:
         name: airtrail-db-secrets
-      volumeSnapshots:
-        storage:
-          name: airtrail-pg-copy
-          kind: PersistentVolumeClaim
-          apiGroup: ""
+
+  externalClusters:
+    - name: origin
+      barmanObjectStore:
+        destinationPath: "s3://cloudnative-pg/airtrail"
+        endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+        serverName: "airtrail-pg-v2"
+        s3Credentials:
+          accessKeyId:
+            name: cnpg-backup-s3
+            key: ACCESS_KEY_ID
+          secretAccessKey:
+            name: cnpg-backup-s3
+            key: ACCESS_SECRET_KEY
+          region:
+            name: cnpg-backup-s3
+            key: AWS_DEFAULT_REGION
+        wal:
+          maxParallel: 8
 
   backup:
     barmanObjectStore:
@@ -60,7 +75,7 @@ spec:
           key: AWS_DEFAULT_REGION
       destinationPath: "s3://cloudnative-pg/airtrail"
       endpointURL: "https://s3.${CLUSTER_DOMAIN}"
-      serverName: "airtrail-pg-v2"
+      serverName: "airtrail-pg-v3"
     retentionPolicy: "21d"
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/scheduledbackup_v1.json
