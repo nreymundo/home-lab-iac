@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/cluster_v1.json
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -31,15 +32,30 @@ spec:
 
   bootstrap:
     recovery:
+      source: origin
       database: dawarich
       owner: dawarich
       secret:
         name: dawarich-db-secrets
-      volumeSnapshots:
-        storage:
-          name: dawarich-pg-copy
-          kind: PersistentVolumeClaim
-          apiGroup: ""
+
+  externalClusters:
+    - name: origin
+      barmanObjectStore:
+        destinationPath: "s3://cloudnative-pg/dawarich"
+        endpointURL: "https://s3.${CLUSTER_DOMAIN}"
+        serverName: "dawarich-pg-v2"
+        s3Credentials:
+          accessKeyId:
+            name: cnpg-backup-s3
+            key: ACCESS_KEY_ID
+          secretAccessKey:
+            name: cnpg-backup-s3
+            key: ACCESS_SECRET_KEY
+          region:
+            name: cnpg-backup-s3
+            key: AWS_DEFAULT_REGION
+        wal:
+          maxParallel: 8
 
   backup:
     barmanObjectStore:
@@ -60,9 +76,10 @@ spec:
           key: AWS_DEFAULT_REGION
       destinationPath: "s3://cloudnative-pg/dawarich"
       endpointURL: "https://s3.${CLUSTER_DOMAIN}"
-      serverName: "dawarich-pg-v2"
+      serverName: "dawarich-pg-v3"
     retentionPolicy: "21d"
 ---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/scheduledbackup_v1.json
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
 metadata:

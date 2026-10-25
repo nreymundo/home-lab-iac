@@ -29,15 +29,29 @@ spec:
       archive_mode: 'on'
   bootstrap:
     recovery:
+      source: origin
       database: sparkyfitness
       owner: sparkyfitness
       secret:
         name: sparkyfitness-db-owner
-      volumeSnapshots:
-        storage:
-          name: sparkyfitness-pg-copy
-          kind: PersistentVolumeClaim
-          apiGroup: ""
+  externalClusters:
+    - name: origin
+      barmanObjectStore:
+        destinationPath: s3://cloudnative-pg/sparkyfitness
+        endpointURL: https://s3.${CLUSTER_DOMAIN}
+        serverName: sparkyfitness-pg-v2
+        s3Credentials:
+          accessKeyId:
+            name: cnpg-backup-s3
+            key: ACCESS_KEY_ID
+          secretAccessKey:
+            name: cnpg-backup-s3
+            key: ACCESS_SECRET_KEY
+          region:
+            name: cnpg-backup-s3
+            key: AWS_DEFAULT_REGION
+        wal:
+          maxParallel: 8
   backup:
     barmanObjectStore:
       wal:
@@ -56,19 +70,19 @@ spec:
           key: AWS_DEFAULT_REGION
       destinationPath: s3://cloudnative-pg/sparkyfitness
       endpointURL: https://s3.${CLUSTER_DOMAIN}
-      serverName: sparkyfitness-pg-v2
+      serverName: sparkyfitness-pg-v3
     retentionPolicy: 21d
   managed:
     roles:
-    - name: sparkyfitness_app
-      ensure: present
-      login: true
-      superuser: false
-      bypassrls: false
-      createdb: false
-      createrole: false
-      passwordSecret:
-        name: sparkyfitness-db-app
+      - name: sparkyfitness_app
+        ensure: present
+        login: true
+        superuser: false
+        bypassrls: false
+        createdb: false
+        createrole: false
+        passwordSecret:
+          name: sparkyfitness-db-app
 
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/scheduledbackup_v1.json

@@ -5,9 +5,6 @@ resources:
   - bambuddy-data-pvc.yaml
   - bambuddy-logs-pvc.yaml
   - camofox-pvc.yaml
-  - dawarich-pvc.yaml
-  - dawarich-redis-pvc.yaml
   - karakeep-pvc.yaml
   - karakeep-meilisearch-pvc.yaml
   - searxng-pvc.yaml
-  - sparkyfitness-pvc.yaml
