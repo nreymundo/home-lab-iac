@@ -13,3 +13,4 @@ resources:
   - ../pvcs/comms
   - ../pvcs/security
   - ../pvcs/utils
+  - ../pvcs/lifestyle
