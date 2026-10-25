@@ -40,6 +40,7 @@ spec:
         storage:
           name: airtrail-pg-copy
           kind: PersistentVolumeClaim
+          apiGroup: ""
 
   backup:
     barmanObjectStore:
