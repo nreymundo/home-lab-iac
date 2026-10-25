@@ -714,6 +714,13 @@ data:
         auth_value: os.environ/DAWARICH_API_KEY
         allow_all_keys: false
         available_on_public_internet: false
+      sparkyfitness:
+        url: http://sparkyfitness-server.lifestyle.svc.cluster.local:3010/mcp
+        transport: http
+        auth_type: bearer_token
+        auth_value: os.environ/SPARKYFITNESS_API_KEY
+        allow_all_keys: false
+        available_on_public_internet: false
 
     guardrails:
       - guardrail_name: headroom-compression
