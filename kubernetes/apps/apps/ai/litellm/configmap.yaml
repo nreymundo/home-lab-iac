@@ -708,7 +708,7 @@ data:
         auth_value: os.environ/CONTEXT7_API_KEY
         allow_all_keys: true
       dawarich:
-        url: http://dawarich-main.utils.svc.cluster.local:3000/api/v1/mcp
+        url: http://dawarich-main.lifestyle.svc.cluster.local:3000/api/v1/mcp
         transport: http
         auth_type: bearer_token
         auth_value: os.environ/DAWARICH_API_KEY

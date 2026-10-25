@@ -1,8 +1,9 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/monitoring.coreos.com/scrapeconfig_v1alpha1.json
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: dawarich
-  namespace: utils
+  namespace: lifestyle
   labels:
     release: observability-kube-prometheus-stack
 spec:
@@ -19,4 +20,4 @@ spec:
     - labels:
         job: dawarich
       targets:
-        - dawarich-main.utils.svc.cluster.local:3000
+        - dawarich-main.lifestyle.svc.cluster.local:3000

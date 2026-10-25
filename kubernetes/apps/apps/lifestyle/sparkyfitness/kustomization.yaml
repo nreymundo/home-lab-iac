@@ -1,6 +1,11 @@
 # yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+components:
+  - ../../../../components/bjw-s-defaults
+  - ../../../../components/ingress/traefik-base
 resources:
   - sparkyfitness-secrets.sops.yaml
   - sparkyfitness-db-secrets.sops.yaml
+  - cnpg-cluster.yaml
+  - helmrelease.yaml
