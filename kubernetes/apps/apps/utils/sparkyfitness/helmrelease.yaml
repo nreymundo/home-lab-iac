@@ -336,26 +336,19 @@ spec:
           frontend:
             frontend:
             - path: /etc/nginx/conf.d
-      uploads:
+      data:
         enabled: true
         type: custom
         advancedMounts:
           server:
             server:
             - path: /app/SparkyFitnessServer/uploads
-        volumeSpec:
-          persistentVolumeClaim:
-            claimName: sparkyfitness-uploads
-      backup:
-        enabled: true
-        type: custom
-        advancedMounts:
-          server:
-            server:
+              subPath: uploads
             - path: /app/SparkyFitnessServer/backup
+              subPath: backup
         volumeSpec:
           persistentVolumeClaim:
-            claimName: sparkyfitness-backup
+            claimName: sparkyfitness
       temp-uploads:
         enabled: true
         type: emptyDir
