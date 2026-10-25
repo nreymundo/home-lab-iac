@@ -39,7 +39,7 @@ spec:
       barmanObjectStore:
         destinationPath: s3://cloudnative-pg/sparkyfitness
         endpointURL: https://s3.${CLUSTER_DOMAIN}
-        serverName: sparkyfitness-pg-v2
+        serverName: sparkyfitness-pg-v3
         s3Credentials:
           accessKeyId:
             name: cnpg-backup-s3
@@ -70,7 +70,7 @@ spec:
           key: AWS_DEFAULT_REGION
       destinationPath: s3://cloudnative-pg/sparkyfitness
       endpointURL: https://s3.${CLUSTER_DOMAIN}
-      serverName: sparkyfitness-pg-v3
+      serverName: sparkyfitness-pg-v4
     retentionPolicy: 21d
   managed:
     roles:

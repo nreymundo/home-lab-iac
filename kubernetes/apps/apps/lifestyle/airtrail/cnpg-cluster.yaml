@@ -43,7 +43,7 @@ spec:
       barmanObjectStore:
         destinationPath: "s3://cloudnative-pg/airtrail"
         endpointURL: "https://s3.${CLUSTER_DOMAIN}"
-        serverName: "airtrail-pg-v2"
+        serverName: "airtrail-pg-v3"
         s3Credentials:
           accessKeyId:
             name: cnpg-backup-s3
@@ -75,7 +75,7 @@ spec:
           key: AWS_DEFAULT_REGION
       destinationPath: "s3://cloudnative-pg/airtrail"
       endpointURL: "https://s3.${CLUSTER_DOMAIN}"
-      serverName: "airtrail-pg-v3"
+      serverName: "airtrail-pg-v4"
     retentionPolicy: "21d"
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/scheduledbackup_v1.json
