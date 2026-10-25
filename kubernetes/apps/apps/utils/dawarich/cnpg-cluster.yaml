@@ -3,6 +3,8 @@ kind: Cluster
 metadata:
   name: dawarich-pg
   namespace: utils
+  annotations:
+    cnpg.io/hibernation: "on"
   labels:
     release: observability-kube-prometheus-stack
 spec:
@@ -67,6 +69,7 @@ metadata:
   namespace: utils
 spec:
   schedule: "0 0 0 * * 0"  # Weekly Sunday at midnight
+  suspend: true
   backupOwnerReference: self
   cluster:
     name: dawarich-pg

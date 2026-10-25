@@ -21,8 +21,10 @@ resources:
   - ../apps/utils/searxng
   - ../apps/utils/camofox
   - ../apps/utils/dawarich
+  - ../apps/lifestyle/dawarich
   - ../apps/lifestyle/airtrail
   - ../apps/utils/sparkyfitness
+  - ../apps/lifestyle/sparkyfitness
   - ../apps/utils/karakeep
   - ../apps/comms/mailflow
   - ../apps/nextcloud

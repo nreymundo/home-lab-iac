@@ -11,6 +11,7 @@ spec:
   values:
     controllers:
       frontend:
+        replicas: 0
         type: deployment
         strategy: Recreate
         annotations:
@@ -82,6 +83,7 @@ spec:
               limits:
                 memory: 256Mi
       server:
+        replicas: 0
         type: deployment
         strategy: Recreate
         annotations:
@@ -217,6 +219,7 @@ spec:
               limits:
                 memory: 2Gi
       garmin:
+        replicas: 0
         type: deployment
         strategy: Recreate
         annotations:
@@ -300,6 +303,7 @@ spec:
             port: 8000
     ingress:
       main:
+        enabled: false
         annotations:
           external-dns.kubernetes.io/hostname: fitness.${CLUSTER_DOMAIN}
         hosts:

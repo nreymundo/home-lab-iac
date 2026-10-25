@@ -18,6 +18,7 @@ spec:
 
     controllers:
       main:
+        replicas: 0
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
@@ -164,6 +165,7 @@ spec:
                 memory: 4Gi
 
       sidekiq:
+        replicas: 0
         annotations:
           reloader.stakater.com/auto: "true"
         pod:
@@ -310,6 +312,7 @@ spec:
                 memory: 4Gi
 
       redis:
+        replicas: 0
         containers:
           redis:
             image:
@@ -378,6 +381,7 @@ spec:
 
     ingress:
       main:
+        enabled: false
         annotations:
           external-dns.kubernetes.io/hostname: dawarich.${CLUSTER_DOMAIN}
         hosts:
