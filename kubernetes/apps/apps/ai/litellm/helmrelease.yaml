@@ -145,7 +145,7 @@ spec:
             image:
               # renovate: datasource=docker depName=headroomlabs-ai/headroom registryUrl=https://ghcr.io
               repository: ghcr.io/headroomlabs-ai/headroom
-              tag: 0.41.0
+              tag: 0.42.0
             args:
               - --host
               - 127.0.0.1
