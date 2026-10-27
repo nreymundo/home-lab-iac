@@ -37,6 +37,7 @@ resources:
   - ../apps/media/bazarr
   - ../apps/media/prowlarr
   - ../apps/development/gitea
+  - ../apps/development/forgejo
   - ../apps/ai/sillytavern
   - ../apps/ai/hindsight
   - ../apps/ai/vane

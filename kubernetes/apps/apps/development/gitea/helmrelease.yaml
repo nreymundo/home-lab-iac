@@ -11,6 +11,7 @@ spec:
     fullnameOverride: gitea
     controllers:
       main:
+        replicas: 0
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
@@ -164,6 +165,7 @@ spec:
             targetPort: 22
     ingress:
       main:
+        enabled: false
         annotations:
           external-dns.kubernetes.io/hostname: git.${CLUSTER_DOMAIN}
           # gethomepage.dev/widget.type: "gitea"

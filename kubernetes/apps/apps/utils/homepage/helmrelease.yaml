@@ -311,8 +311,8 @@ spec:
                 icon: garage.png
                 description: "Object store admin UI"
                 href: https://garage.lan.${CLUSTER_DOMAIN}
-            - Gitea:
-                icon: gitea.png
+            - Forgejo:
+                icon: forgejo.png
                 description: "Git service"
                 href: https://git.${CLUSTER_DOMAIN}
             - Grafana:

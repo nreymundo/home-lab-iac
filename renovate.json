@@ -164,6 +164,22 @@
       "automergeSchedule": ["at any time"]
     },
     {
+      "description": "Track stable Forgejo container releases",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["forgejo/forgejo"],
+      "matchPackageNames": ["forgejo/forgejo", "codeberg.org/forgejo/forgejo"],
+      "versioning": "semver",
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/",
+      "groupName": "Forgejo"
+    },
+    {
+      "description": "Keep the stopped Gitea fallback pinned during the Forgejo rollback window",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["docker.gitea.com/gitea"],
+      "matchPaths": ["kubernetes/apps/apps/development/gitea/helmrelease.yaml"],
+      "enabled": false
+    },
+    {
       "description": "Group Hindsight API, worker, and control plane image updates",
       "matchDatasources": ["docker"],
       "matchPackageNames": [

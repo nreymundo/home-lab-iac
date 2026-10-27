@@ -103,6 +103,16 @@ spec:
             secretKeyRef:
               name: gitea-sso-secret
               key: CLIENT_SECRET
+        - name: FORGEJO_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-sso-secret
+              key: CLIENT_ID
+        - name: FORGEJO_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-sso-secret
+              key: CLIENT_SECRET
         - name: IMMICH_CLIENT_ID
           valueFrom:
             secretKeyRef:

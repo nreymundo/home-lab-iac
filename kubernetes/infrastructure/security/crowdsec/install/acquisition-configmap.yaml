@@ -16,7 +16,7 @@ data:
           podName: authentik-*
           program: authentik
         - namespace: development
-          podName: gitea-*
+          podName: forgejo-*
           program: gitea
       additionalAcquisition:
         - source: file
