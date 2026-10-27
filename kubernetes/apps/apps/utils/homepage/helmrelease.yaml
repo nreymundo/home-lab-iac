@@ -314,7 +314,7 @@ spec:
             - Forgejo:
                 icon: forgejo.png
                 description: "Git service"
-                href: https://git.${CLUSTER_DOMAIN}
+                href: https://git.${CLUSTER_DOMAIN}/user/login
             - Grafana:
                 icon: grafana.png
                 description: "Dashboards"

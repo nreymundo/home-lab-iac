@@ -39,6 +39,7 @@ spec:
               FORGEJO__migrations__ALLOWED_DOMAINS: ""
               FORGEJO__service__DISABLE_REGISTRATION: "true"
               FORGEJO__service__ALLOW_ONLY_EXTERNAL_REGISTRATION: "true"
+              FORGEJO__service__ENABLE_INTERNAL_SIGNIN: "false"
               FORGEJO__service__ENABLE_BASIC_AUTHENTICATION: "false"
               FORGEJO__service__ENABLE_PASSWORD_SIGNIN_FORM: "false"
               FORGEJO__service__ENABLE_PASSKEY_AUTHENTICATION: "false"
