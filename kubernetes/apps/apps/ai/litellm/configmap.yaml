@@ -530,6 +530,7 @@ data:
             - image
           supports_image_input: true
           supports_vision: true
+          supports_response_schema: true
         litellm_params:
           model: zai/glm-5.3-flash
           reasoning_effort: low
@@ -557,6 +558,7 @@ data:
             - image
           supports_image_input: true
           supports_vision: true
+          supports_response_schema: true
         litellm_params:
           model: zai/glm-5.3-flash
           reasoning_effort: high
@@ -573,6 +575,7 @@ data:
         model_info:
           mode: chat
           supports_vision: false
+          supports_response_schema: true
           reasoning_options:
             - type: effort
               values:
@@ -596,6 +599,7 @@ data:
         model_info:
           mode: chat
           supports_vision: false
+          supports_response_schema: true
           reasoning_options:
             - type: effort
               values:
@@ -625,6 +629,7 @@ data:
                 - high
                 - max
           default_reasoning_effort: max
+          supports_response_schema: true
         litellm_params:
           model: zai/glm-5.3
           custom_llm_provider: zai
@@ -651,6 +656,7 @@ data:
             - image
           supports_image_input: true
           supports_vision: true
+          supports_response_schema: true
         litellm_params:
           model: zai/glm-5.3-flash
           custom_llm_provider: zai
