@@ -173,13 +173,6 @@
       "groupName": "Forgejo"
     },
     {
-      "description": "Keep the stopped Gitea fallback pinned during the Forgejo rollback window",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["docker.gitea.com/gitea"],
-      "matchPaths": ["kubernetes/apps/apps/development/gitea/helmrelease.yaml"],
-      "enabled": false
-    },
-    {
       "description": "Group Hindsight API, worker, and control plane image updates",
       "matchDatasources": ["docker"],
       "matchPackageNames": [

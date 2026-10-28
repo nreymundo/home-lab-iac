@@ -1,4 +1,5 @@
 # yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: authentik
@@ -15,7 +16,6 @@ resources:
   - komga-sso-secret.sops.yaml
   - bookorbit-sso-secret.sops.yaml
   - forgejo-sso-secret.sops.yaml
-  - gitea-sso-secret.sops.yaml
   - immich-sso-secret.sops.yaml
   - paperless-sso-secret.sops.yaml
   - dawarich-sso-secret.sops.yaml

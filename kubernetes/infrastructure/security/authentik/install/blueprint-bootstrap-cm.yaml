@@ -460,28 +460,6 @@ data:
       labels:
         blueprints.goauthentik.io/instantiate: "true"
     entries:
-      # Retire the Gitea OIDC entry after the Forgejo data import.
-      - model: authentik_core.application
-        state: absent
-        identifiers:
-          slug: "gitea"
-      - model: authentik_providers_oauth2.oauth2provider
-        state: absent
-        identifiers:
-          name: "Gitea"
-      - model: authentik_providers_oauth2.scopemapping
-        state: absent
-        identifiers:
-          name: "Gitea Role Scope"
-      - model: authentik_core.group
-        state: absent
-        identifiers:
-          name: "gituser"
-      - model: authentik_core.group
-        state: absent
-        identifiers:
-          name: "gitadmin"
-
       # The bootstrap account retains administrator access in Forgejo.
       - model: authentik_core.group
         state: present

@@ -93,16 +93,6 @@ spec:
             secretKeyRef:
               name: bookorbit-sso-secret
               key: CLIENT_SECRET
-        - name: GITEA_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: gitea-sso-secret
-              key: CLIENT_ID
-        - name: GITEA_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: gitea-sso-secret
-              key: CLIENT_SECRET
         - name: FORGEJO_CLIENT_ID
           valueFrom:
             secretKeyRef:
