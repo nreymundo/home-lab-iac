@@ -2712,7 +2712,7 @@ data:
         attrs:
           name: "BookOrbit"
           provider: !KeyOf bookorbit-provider
-          icon: "https://raw.githubusercontent.com/selfhst/icons/main/svg/bookorbit.svg"
+          icon: "https://raw.githubusercontent.com/bookorbit/bookorbit/main/docs/images/bookorbit-icon.png"
           group: "Kubernetes"
           policy_engine_mode: "any"
 
