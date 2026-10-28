@@ -13,7 +13,7 @@ data:
           mode: responses
           # auto_router/* is unknown to LiteLLM's model catalog, so the router
           # must declare the window itself; 272k is the common input budget
-          # across Luna and Astra, while the Sol tier declares 500k below.
+          # across Luna and Astra, while Sol and Terra tiers declare more below.
           max_input_tokens: 272000
           max_output_tokens: 128000
         litellm_params:
@@ -26,9 +26,9 @@ data:
                 litellm_params:
                   reasoning_effort: low
               MEDIUM:
-                model_name: cloud/codex-luna-high
+                model_name: cloud/codex-terra-low
                 litellm_params:
-                  reasoning_effort: high
+                  reasoning_effort: low
               COMPLEX:
                 model_name: cloud/codex-sol-high
                 litellm_params:
@@ -70,18 +70,18 @@ data:
           cache_read_input_token_cost: 0.00000001
           reasoning_effort: low
 
-      - model_name: cloud/codex-luna-high
+      - model_name: cloud/codex-terra-low
         model_info:
           mode: responses
-          max_input_tokens: 272000
+          max_input_tokens: 922000
           supports_vision: true
         litellm_params:
-          model: chatgpt/gpt-6-luna
-          # Shadow pricing at first-party openai/gpt-6-luna API rates ($0.10/$0.50 per M; $0.01/M cached).
-          input_cost_per_token: 0.0000001
-          output_cost_per_token: 0.0000005
-          cache_read_input_token_cost: 0.00000001
-          reasoning_effort: high
+          model: chatgpt/gpt-6.1-terra
+          # Shadow pricing at first-party OpenAI rates ($1/$5 per M; $0.05/M cached).
+          input_cost_per_token: 0.000001
+          output_cost_per_token: 0.000005
+          cache_read_input_token_cost: 0.00000005
+          reasoning_effort: low
 
       - model_name: cloud/codex-sol-high
         model_info:
@@ -110,6 +110,18 @@ data:
           reasoning_effort: high
 
       # Expose only ChatGPT models verified against this subscription.
+      - model_name: chatgpt/gpt-6.1-terra
+        model_info:
+          mode: responses
+          max_input_tokens: 922000
+          supports_vision: true
+        litellm_params:
+          model: chatgpt/gpt-6.1-terra
+          # Shadow pricing at first-party OpenAI rates ($1/$5 per M; $0.05/M cached).
+          input_cost_per_token: 0.000001
+          output_cost_per_token: 0.000005
+          cache_read_input_token_cost: 0.00000005
+
       - model_name: chatgpt/gpt-6.1-sol
         model_info:
           mode: responses
@@ -149,36 +161,6 @@ data:
           input_cost_per_token: 0.0000001
           output_cost_per_token: 0.0000005
           cache_read_input_token_cost: 0.00000001
-
-      - model_name: chatgpt/gpt-5.6-sol
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-5.6-sol
-          # Shadow pricing at first-party openai/gpt-5.6-sol API rates ($4/$20 per M; $0.40/M cached).
-          input_cost_per_token: 0.000004
-          output_cost_per_token: 0.00002
-          cache_read_input_token_cost: 0.0000004
-
-      - model_name: chatgpt/gpt-5.6-terra
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-5.6-terra
-          # Shadow pricing at first-party openai/gpt-5.6-terra API rates ($2/$12 per M; $0.20/M cached).
-          input_cost_per_token: 0.000002
-          output_cost_per_token: 0.000012
-          cache_read_input_token_cost: 0.0000002
-
-      - model_name: chatgpt/gpt-5.6-luna
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-5.6-luna
-          # Shadow pricing at first-party openai/gpt-5.6-luna API rates ($0.20/$1.20 per M; $0.02/M cached).
-          input_cost_per_token: 0.0000002
-          output_cost_per_token: 0.0000012
-          cache_read_input_token_cost: 0.00000002
 
       - model_name: comfyimage/qwen-image-2.1-turbo
         model_info:
@@ -810,13 +792,11 @@ data:
         local/stt-fast: hosted_vllm/whisper/large-v3-turbo-q5_0
         local/stt-large: hosted_vllm/whisper/large-v3-q5_0
         local/tts: openai/higgs-audio-tts
-        openai/gpt-5.6-luna: chatgpt/gpt-5.6-luna
-        openai/gpt-5.6-sol: chatgpt/gpt-5.6-sol
-        openai/gpt-5.6-terra: chatgpt/gpt-5.6-terra
         openai/gpt-6-astra: chatgpt/gpt-6-astra
         openai/gpt-6-luna: chatgpt/gpt-6-luna
         openai/gpt-6-sol: chatgpt/gpt-6-sol
         openai/gpt-6.1-sol: chatgpt/gpt-6.1-sol
+        openai/gpt-6.1-terra: chatgpt/gpt-6.1-terra
       # Scope failover to service aliases so explicit model names stay predictable.
       fallbacks:
         - local/decision:
@@ -843,9 +823,9 @@ data:
         - cloud/codex-luna-low:
             - model: cloud/fast-fallback
               reasoning_effort: low
-        - cloud/codex-luna-high:
+        - cloud/codex-terra-low:
             - model: cloud/fast-fallback
-              reasoning_effort: high
+              reasoning_effort: low
         - cloud/codex-sol-high:
             - model: cloud/deep-fallback
               reasoning_effort: high
