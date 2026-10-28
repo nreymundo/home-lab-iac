@@ -14,6 +14,7 @@ resources:
   - ../apps/reddit/apollo-backend
   - ../apps/comms/bark
   - ../apps/comms/apprise
+  - ../apps/comms/ntfy
   - ../apps/comms/discord-presence
   - ../apps/utils/homepage
   - ../apps/utils/bambuddy

@@ -1,0 +1,129 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ntfy
+  namespace: comms
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=binwiederhier/ntfy registryUrl=https://docker.io
+              repository: docker.io/binwiederhier/ntfy
+              tag: v2.34.0
+            args:
+              - serve
+            env:
+              TZ: Europe/Berlin
+              NTFY_BASE_URL: https://ntfy.${CLUSTER_DOMAIN}
+              NTFY_LISTEN_HTTP: :8080
+              NTFY_BEHIND_PROXY: "true"
+              NTFY_CACHE_FILE: /var/lib/ntfy/cache.db
+              NTFY_CACHE_DURATION: 24h
+              NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
+              NTFY_AUTH_DEFAULT_ACCESS: deny-all
+              NTFY_AUTH_ACCESS: nreymundo:*:rw,apprise:homelab-*:wo,apprise:hermes-*:wo
+              NTFY_AUTH_USERS:
+                valueFrom:
+                  secretKeyRef:
+                    name: ntfy-secrets
+                    key: auth-users
+              NTFY_AUTH_TOKENS:
+                valueFrom:
+                  secretKeyRef:
+                    name: ntfy-secrets
+                    key: auth-tokens
+              NTFY_ENABLE_LOGIN: "true"
+              NTFY_REQUIRE_LOGIN: "true"
+              NTFY_ENABLE_SIGNUP: "false"
+              NTFY_UPSTREAM_BASE_URL: https://ntfy.sh
+              NTFY_WEB_PUSH_FILE: /var/lib/ntfy/webpush.db
+              NTFY_WEB_PUSH_EMAIL_ADDRESS: ntfy@${CLUSTER_DOMAIN}
+              NTFY_WEB_PUSH_PUBLIC_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: ntfy-secrets
+                    key: web-push-public-key
+              NTFY_WEB_PUSH_PRIVATE_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: ntfy-secrets
+                    key: web-push-private-key
+            ports:
+              - name: http
+                containerPort: 8080
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/health
+                    port: 8080
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/ready
+                    port: 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/health
+                    port: 8080
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8080
+
+    ingress:
+      main:
+        annotations:
+          external-dns.kubernetes.io/hostname: ntfy.${CLUSTER_DOMAIN}
+        hosts:
+          - host: ntfy.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: ntfy
+        advancedMounts:
+          main:
+            main:
+              - path: /var/lib/ntfy
