@@ -20,7 +20,7 @@ spec:
             image:
               # renovate: datasource=docker depName=forgejo/forgejo registryUrl=https://codeberg.org
               repository: codeberg.org/forgejo/forgejo
-              tag: 15.0.11
+              tag: 17.0.1
             env:
               TZ: Europe/Berlin
               USER_UID: 99
@@ -97,7 +97,7 @@ spec:
             image:
               # renovate: datasource=docker depName=forgejo/forgejo registryUrl=https://codeberg.org
               repository: codeberg.org/forgejo/forgejo
-              tag: 15.0.11
+              tag: 17.0.1
             command:
               - /bin/sh
               - -c
