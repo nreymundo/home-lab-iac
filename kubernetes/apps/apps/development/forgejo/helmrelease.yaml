@@ -187,6 +187,7 @@ spec:
     ingress:
       main:
         annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
           external-dns.kubernetes.io/hostname: git.${CLUSTER_DOMAIN}
         hosts:
           - host: git.${CLUSTER_DOMAIN}
