@@ -15,7 +15,6 @@ resources:
   - omada.yaml
   - kopia.yaml
   - llama-swap.yaml
-  - omniroute.yaml
   - comfyui.yaml
   - audiomuse.yaml
   - syncthing.yaml
