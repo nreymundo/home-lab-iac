@@ -29,7 +29,7 @@ spec:
             image:
               # renovate: datasource=docker depName=codewithcj/sparkyfitness-frontend registryUrl=https://ghcr.io
               repository: ghcr.io/codewithcj/sparkyfitness-frontend
-              tag: v1.9.0
+              tag: v1.10.0
             env:
               NGINX_LISTEN_PORT: '8080'
               SPARKY_FITNESS_FRONTEND_URL: https://fitness.${CLUSTER_DOMAIN}
