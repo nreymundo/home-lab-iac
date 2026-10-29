@@ -5,6 +5,5 @@ resources:
   - vane-pvc.yaml
   - speech-to-speech-pvc.yaml
   - sillytavern-pvc.yaml
-  - litellm-pvc.yaml
   - litellm-data-pvc.yaml
   - open-webui-pvc.yaml

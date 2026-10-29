@@ -10,9 +10,10 @@
 # STORM_CONTAINERS=10, STORM_NAMESPACES=2, STORM_HOURS=24,
 # FS_WARN_PERCENT=80, FS_CRIT_PERCENT=90, MEM_WARN_PERCENT=85,
 # MEM_CRIT_PERCENT=92, PVC_WARN_PERCENT=80, PVC_CRIT_PERCENT=90,
-# AVAILABILITY_PERCENT=99.9, FAILURE_HOURS=24, RENEWAL_GRACE_HOURS=24,
+# FAILURE_HOURS=24, RENEWAL_GRACE_HOURS=24,
 # FLUX_INTERVAL_MULTIPLIER=2, EVENT_HOURS=6, EVENT_STORM_COUNT=10,
 # TRAEFIK_REPLICAS=3, STREAM_SECONDS=180.
+# Flux Kustomization readiness alerts wait 10 minutes after becoming not Ready.
 # String overrides: PROM_NAMESPACE=observability,
 # PROM_SERVICE=observability-kube-prometh-prometheus. Uses a random loopback
 # port owned by this invocation, never an existing listener. kubectl inherits
@@ -95,7 +96,7 @@ for setting in TIMEOUT=15 FORWARD_WAIT=15 CERT_WARN_DAYS=30 CERT_CRIT_DAYS=14 \
   CA_WARN_DAYS=365 CA_CRIT_DAYS=180 RESTART_WARN=3 RESTART_HOURS=24 \
   STORM_CONTAINERS=10 STORM_NAMESPACES=2 STORM_HOURS=24 FS_WARN_PERCENT=80 \
   FS_CRIT_PERCENT=90 MEM_WARN_PERCENT=85 MEM_CRIT_PERCENT=92 PVC_WARN_PERCENT=80 \
-  PVC_CRIT_PERCENT=90 AVAILABILITY_PERCENT=99.9 FAILURE_HOURS=24 \
+  PVC_CRIT_PERCENT=90 FAILURE_HOURS=24 \
   RENEWAL_GRACE_HOURS=24 FLUX_INTERVAL_MULTIPLIER=2 EVENT_HOURS=6 \
   EVENT_STORM_COUNT=10 TRAEFIK_REPLICAS=3 STREAM_SECONDS=180; do
   name=${setting%%=*}
@@ -311,10 +312,6 @@ prometheus() {
     rows "$WORK/restarts" '.[] | (try (.value[1]|tonumber|select(isfinite and (isnan|not))) catch empty) as $v |
       [(if $v >= $warn then "WARN" else "OK" end), "restarts \(.metric.namespace)/\(.metric.pod) uid=\(.metric.uid) increase_\($hours)h=\($v)"]' --argjson warn "$RESTART_WARN" --arg hours "$RESTART_HOURS"
   fi
-  if query availability 'apiserver_request:availability30d{verb="all"}'; then
-    rows "$WORK/availability" '.[] | (try (.value[1]|tonumber|select(isfinite and (isnan|not))) catch empty) as $v |
-      [(if $v*100 < $threshold then "WARN" else "OK" end), "API request-based availability30d \(.metric|tojson) percent=\($v*100)"]' --argjson threshold "$AVAILABILITY_PERCENT"
-  fi
   if query targets 'up'; then
     rows "$WORK/targets" '.[] | (try (.value[1]|tonumber|select(isfinite and (isnan|not))) catch empty) as $v |
       [(if $v==0 then "WARN" else "OK" end), "Prometheus scrape \(.metric|tojson) up=\($v)"]'
@@ -365,11 +362,21 @@ longhorn_nodes() {
 }
 flux() {
   get_json flux kustomizations.kustomize.toolkit.fluxcd.io,helmreleases.helm.toolkit.fluxcd.io -A --show-managed-fields
-  local object suspended ready stalled interval timestamp epoch seconds
-  while IFS=$'\t' read -r object suspended ready stalled interval timestamp; do
+  local object suspended ready stalled interval timestamp ready_since epoch seconds
+  while IFS=$'\t' read -r object suspended ready stalled interval timestamp ready_since; do
     if [[ "$suspended" == true ]]; then
       record INFO "Flux $object suspended"
       continue
+    fi
+    if [[ "$object" == 'Kustomization '* && "$ready" != True ]]; then
+      if [[ "$ready_since" == '-' ]] || ! epoch=$(date -d "$ready_since" +%s 2> /dev/null); then
+        unavailable "Flux $object Ready=$ready readiness transition time"
+        continue
+      fi
+      if ((NOW - epoch <= 600)); then
+        record OK "Flux $object Ready=$ready since=$ready_since (10-minute grace period)"
+        continue
+      fi
     fi
     if [[ "$stalled" == True ]]; then
       record CRIT "Flux $object Stalled=True"
@@ -396,7 +403,9 @@ flux() {
     ([.status.conditions[]?|select(.type=="Stalled")][0].status // "False"), .spec.interval,
     (if .kind=="HelmRelease" then
       [.metadata.managedFields[]? | select(.manager=="helm-controller" and .subresource=="status") | .time]
-    else [.status.history[]?.lastReconciled] end | max // "-")] | @tsv' "$WORK/flux")
+    else [.status.history[]?.lastReconciled] end | max // "-"),
+    ([.status.conditions[]?|select(.type=="Ready")][0] as $condition |
+      if $condition == null then (.metadata.creationTimestamp // "-") else ($condition.lastTransitionTime // "-") end)] | @tsv' "$WORK/flux")
 }
 events() {
   get_json events events -A --field-selector=type=Warning
@@ -457,9 +466,19 @@ streaming() {
 }
 jobs() {
   get_json jobs jobs -A
-  rows "$WORK/jobs" '.items[] |
-    [(if any(.status.conditions[]?; .type=="Failed" and .status=="True") or
-      ((.status.failed // 0)>0 and (.status.succeeded // 0)==0) then "WARN" else "OK" end),
+  # Only completed runs count toward recovery; running jobs do not hide failures.
+  rows "$WORK/jobs" '.items as $jobs | .items[] |
+    ([.metadata.ownerReferences[]? | select(.kind=="CronJob" and .controller==true) | .uid][0] // null) as $owner |
+    (any(.status.conditions[]?; .type=="Failed" and .status=="True") or
+      ((.status.failed // 0)>0 and (.status.succeeded // 0)==0)) as $failed |
+    (if $owner == null then false else
+      [$jobs[] | select(any(.metadata.ownerReferences[]?; .kind=="CronJob" and .controller==true and .uid==$owner)) |
+        select(any(.status.conditions[]?; (.type=="Complete" or .type=="Failed") and .status=="True") or
+          ((.status.failed // 0)>0 and (.status.succeeded // 0)==0 and (.status.active // 0)==0))] |
+      sort_by(.metadata.creationTimestamp, .metadata.name) | reverse | .[0:2] |
+      length == 2 and all(.[]; any(.status.conditions[]?; .type=="Complete" and .status=="True"))
+    end) as $recovered |
+    [(if $failed and ($recovered|not) then "WARN" else "OK" end),
     "Job \(.metadata.namespace)/\(.metadata.name) failed=\(.status.failed // 0) succeeded=\(.status.succeeded // 0) active=\(.status.active // 0)"]'
 }
 
