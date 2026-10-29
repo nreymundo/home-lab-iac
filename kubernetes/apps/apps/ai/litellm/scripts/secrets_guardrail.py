@@ -100,7 +100,7 @@ _PLACEHOLDER_VALUE = re.compile(
     r"[xX]{6,}|\*{6,}|<YOUR_[A-Z_]+>)"
 )
 _MASKED_FORMAT_VALUE = re.compile(
-    r"(?:sk-(?:ant-|or-v1-|proj-)?|gh[pousr]_|github_pat_|glpat-|gsk_|xox[baprs]-|(?i:Bearer) )"
+    r"(?:sk-(?:ant-|or-v1-|proj-)?|gh[pousr]_|github_pat_|glpat-|gsk_|exp_|xox[baprs]-|(?i:Bearer) )"
     r"[xX]{16,}"
 )
 # Sample credentials published verbatim by their own documentation pages,
@@ -143,6 +143,7 @@ _PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("slack", re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{16,}\b")),
     ("gitlab", re.compile(r"\bglpat-[A-Za-z0-9_-]{16,}\b")),
     ("groq", re.compile(r"\bgsk_[A-Za-z0-9_-]{16,}\b")),
+    ("executor", re.compile(r"\bexp_[A-Za-z0-9]{32,}\b")),
     ("sendgrid", re.compile(r"\bSG\.[\w-]{16,}\.[\w-]{16,}\b")),
     ("stripe", re.compile(r"\b(?:sk_live_|rk_live_)[A-Za-z0-9]{16,}\b")),
     (
