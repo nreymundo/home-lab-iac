@@ -50,7 +50,7 @@ spec:
               HINDSIGHT_API_EMBEDDINGS_LITELLM_MODEL: local/embedding
               HINDSIGHT_API_RERANKER_PROVIDER: litellm
               HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000/v1
-              HINDSIGHT_API_RERANKER_LITELLM_MODEL: openrouter/voyageai/rerank-2.5-lite
+              HINDSIGHT_API_RERANKER_LITELLM_MODEL: openrouter/voyageai/rerank-3-lite
               HINDSIGHT_API_RERANKER_MAX_CANDIDATES: "100"
               HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
               HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
@@ -153,7 +153,7 @@ spec:
               HINDSIGHT_API_EMBEDDINGS_LITELLM_MODEL: local/embedding
               HINDSIGHT_API_RERANKER_PROVIDER: litellm
               HINDSIGHT_API_RERANKER_LITELLM_API_BASE: http://litellm-main.ai.svc.cluster.local:4000/v1
-              HINDSIGHT_API_RERANKER_LITELLM_MODEL: openrouter/voyageai/rerank-2.5-lite
+              HINDSIGHT_API_RERANKER_LITELLM_MODEL: openrouter/voyageai/rerank-3-lite
               HINDSIGHT_API_RERANKER_MAX_CANDIDATES: "100"
               HINDSIGHT_API_RERANKER_LITELLM_MAX_TOKENS_PER_DOC: "8192"
               HINDSIGHT_API_RERANKER_LITELLM_TIMEOUT: "60"
