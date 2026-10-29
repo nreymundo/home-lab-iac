@@ -173,6 +173,9 @@ pods() {
   rows "$WORK/pods" '.items[] | . as $p |
     (select(.status.phase | IN("Pending","Failed","Unknown")) |
       ["WARN", "pod \(.metadata.namespace)/\(.metadata.name) phase=\(.status.phase)"]),
+    (select(.metadata.deletionTimestamp==null and .status.phase=="Running") |
+      ([.status.conditions[]? | select(.type=="Ready")][0].status // "Missing") as $ready |
+      select($ready!="True") | ["WARN", "pod \(.metadata.namespace)/\(.metadata.name) Ready=\($ready)"]),
     ((.status.containerStatuses[]?, .status.initContainerStatuses[]?) |
       select(.state.waiting.reason // "" | test("^(CrashLoopBackOff|ImagePullBackOff|ErrImagePull)$")) |
       ["WARN", "pod \($p.metadata.namespace)/\($p.metadata.name) container=\(.name) waiting=\(.state.waiting.reason)"])'
@@ -238,9 +241,6 @@ cert_manager() {
     else unavailable "certificate $obj notAfter"; fi
     if [[ "$ready" != True ]]; then record "$level" "certificate $obj Ready=$ready renewalTime=$renewal notAfter=$notafter"; fi
     if [[ "$renewal" != '-' ]] && epoch=$(date -d "$renewal" +%s 2> /dev/null); then
-      if ((epoch > NOW)); then
-        expiry "certificate $obj scheduled renewal deadline (not hard expiry)" "$((epoch - NOW))" "$CERT_WARN_DAYS" "$CERT_CRIT_DAYS" "renewalTime=$renewal notAfter=$notafter"
-      fi
       if jq -en --argjson age "$((NOW - epoch))" --argjson grace "$RENEWAL_GRACE_HOURS" '$age > $grace*3600' > /dev/null; then
         record WARN "certificate $obj renewal overdue beyond grace (not proof of failure) renewalTime=$renewal notAfter=$notafter"
       fi
@@ -334,7 +334,7 @@ top_usage() {
 }
 pvcs() {
   get_json pvcs pvc -A
-  rows "$WORK/pvcs" '.items[] | [ (if .status.phase=="Pending" then "WARN" else "OK" end),
+  rows "$WORK/pvcs" '.items[] | [ (if .status.phase=="Lost" then "CRIT" elif .status.phase=="Bound" then "OK" else "WARN" end),
     "PVC \(.metadata.namespace)/\(.metadata.name) phase=\(.status.phase)"]'
 }
 longhorn() {
