@@ -143,7 +143,7 @@ _PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("slack", re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{16,}\b")),
     ("gitlab", re.compile(r"\bglpat-[A-Za-z0-9_-]{16,}\b")),
     ("groq", re.compile(r"\bgsk_[A-Za-z0-9_-]{16,}\b")),
-    ("executor", re.compile(r"\bexp_[A-Za-z0-9_-]{16,}\b")),
+    ("executor", re.compile(r"\bexp_[A-Za-z0-9]{32,}\b")),
     ("sendgrid", re.compile(r"\bSG\.[\w-]{16,}\.[\w-]{16,}\b")),
     ("stripe", re.compile(r"\b(?:sk_live_|rk_live_)[A-Za-z0-9]{16,}\b")),
     (
