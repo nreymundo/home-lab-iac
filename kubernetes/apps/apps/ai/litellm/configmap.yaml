@@ -658,13 +658,13 @@ data:
             - zai
             - coding-plan
 
-      - model_name: openrouter/voyageai/rerank-2.5-lite
+      - model_name: openrouter/voyageai/rerank-3-lite
         model_info:
           mode: rerank
-          max_input_tokens: 8192
+          max_input_tokens: 32000
         litellm_params:
           # Registered by openrouter_rerank.py until upstream supports reranking.
-          model: openrouter/voyageai/rerank-2.5-lite
+          model: openrouter/voyageai/rerank-3-lite
           custom_llm_provider: openrouter
           api_base: https://openrouter.ai/api/v1
           litellm_credential_name: openrouter
@@ -785,14 +785,14 @@ data:
       model_group_alias:
         cloud/coder: zai-coding/glm-5.3
         cloud/coder-fallback: chatgpt/gpt-6.1-sol
-        cloud/deep: chatgpt/gpt-6-sol
+        cloud/deep: chatgpt/gpt-6.1-sol
         cloud/deep-fallback: zai-coding/glm-5.3
         cloud/decision: openrouter/~typesafe/jev-latest
         cloud/fast: chatgpt/gpt-6-luna
         cloud/fast-fallback: zai-coding/glm-5.3-flash
-        cloud/general: zai-coding/glm-5.3
-        cloud/general-fallback: chatgpt/gpt-6.1-sol
-        cloud/rerank: openrouter/voyageai/rerank-2.5-lite
+        cloud/general: chatgpt/gpt-6.1-terra
+        cloud/general-fallback: zai-coding/glm-5.3-flash
+        cloud/rerank: openrouter/voyageai/rerank-3-lite
         local/analysis: hosted_vllm/unsloth/qwen3.8-27b-analysis
         local/automation-lite: hosted_vllm/unsloth/gemma-4-e4b-it-qat
         local/camera-analysis: hosted_vllm/unsloth/gemma-4-12b-it-qat-camera
