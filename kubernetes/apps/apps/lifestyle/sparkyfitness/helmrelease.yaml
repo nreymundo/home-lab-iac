@@ -29,7 +29,7 @@ spec:
             image:
               # renovate: datasource=docker depName=codewithcj/sparkyfitness-frontend registryUrl=https://ghcr.io
               repository: ghcr.io/codewithcj/sparkyfitness-frontend
-              tag: v1.9.0
+              tag: v1.10.0
             env:
               NGINX_LISTEN_PORT: '8080'
               SPARKY_FITNESS_FRONTEND_URL: https://fitness.${CLUSTER_DOMAIN}
@@ -100,7 +100,7 @@ spec:
             image:
               # renovate: datasource=docker depName=codewithcj/sparkyfitness-server registryUrl=https://ghcr.io
               repository: ghcr.io/codewithcj/sparkyfitness-server
-              tag: v1.9.0
+              tag: v1.10.0
             env:
               TZ: Europe/Berlin
               NODE_ENV: production
@@ -235,7 +235,7 @@ spec:
             image:
               # renovate: datasource=docker depName=codewithcj/sparkyfitness-garmin registryUrl=https://ghcr.io
               repository: ghcr.io/codewithcj/sparkyfitness-garmin
-              tag: v1.9.0
+              tag: v1.10.0
             env:
               GARMIN_SERVICE_PORT: '8000'
               PYTHONDONTWRITEBYTECODE: '1'

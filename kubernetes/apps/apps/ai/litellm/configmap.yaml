@@ -216,6 +216,14 @@ data:
             - pve3
           guardrails: []
 
+      - model_name: openai/*
+        litellm_params:
+          model: openai/*
+          custom_llm_provider: openai
+          litellm_credential_name: openai
+          max_budget: 95.0
+          budget_duration: 30d
+
       - model_name: openrouter/*
         model_info:
           mode: chat
@@ -669,6 +677,12 @@ data:
         credential_info:
           custom_llm_provider: openai
 
+      - credential_name: openai
+        credential_values:
+          api_key: os.environ/LITELLM_CREDENTIAL_OPENAI_API_KEY
+        credential_info:
+          custom_llm_provider: openai
+
       - credential_name: openrouter
         credential_values:
           api_key: os.environ/LITELLM_CREDENTIAL_OPENROUTER_API_KEY
@@ -765,6 +779,8 @@ data:
       require_key_mcp_access_defined: true
 
     router_settings:
+      redis_host: litellm-valkey
+      redis_port: 6379
       # Friendly names select primaries; cloud service aliases have explicit failover below.
       model_group_alias:
         cloud/coder: zai-coding/glm-5.3
@@ -792,11 +808,6 @@ data:
         local/stt-fast: hosted_vllm/whisper/large-v3-turbo-q5_0
         local/stt-large: hosted_vllm/whisper/large-v3-q5_0
         local/tts: openai/higgs-audio-tts
-        openai/gpt-6-astra: chatgpt/gpt-6-astra
-        openai/gpt-6-luna: chatgpt/gpt-6-luna
-        openai/gpt-6-sol: chatgpt/gpt-6-sol
-        openai/gpt-6.1-sol: chatgpt/gpt-6.1-sol
-        openai/gpt-6.1-terra: chatgpt/gpt-6.1-terra
       # Scope failover to service aliases so explicit model names stay predictable.
       fallbacks:
         - local/decision:
