@@ -278,7 +278,6 @@ query() {
     return 1
   fi
   jq '.data.result' "$WORK/query" > "$WORK/$name"
-  : > "$WORK/prom-query-succeeded"
   if [[ $(jq length "$WORK/$name") == 0 ]]; then unavailable "Prometheus $name"; fi
   rows "$WORK/$name" '.[] | select((try (.value[1]|tonumber|isfinite and (isnan|not)) catch false)|not) |
     ["INFO", "Prometheus \($name) nonfinite/invalid sample \(.metric|tojson) signal unavailable (N/A)"]' --arg name "$name"
@@ -286,6 +285,9 @@ query() {
 capacity() {
   local name=$1 expression=$2 warn=$3 crit=$4
   query "$name" "$expression" || return 0
+  if jq -e 'any(.[]; try (.value[1]|tonumber|isfinite and (isnan|not)) catch false)' "$WORK/$name" > /dev/null; then
+    : > "$WORK/available-$name"
+  fi
   rows "$WORK/$name" '.[] | (try (.value[1]|tonumber|select(isfinite and (isnan|not))) catch empty) as $v |
     [(if $v >= $crit then "CRIT" elif $v >= $warn then "WARN" else "OK" end),
     "\($name) \(.metric|tojson) used_percent=\($v)"]' --arg name "$name" --argjson warn "$warn" --argjson crit "$crit"
@@ -325,8 +327,8 @@ top_usage() {
     record OK 'Top-5 pod memory consumers (current metrics-server usage):'
     while IFS= read -r line; do record OK "$line"; done < <(sed -n '1,6p' "$WORK/top-pods")
   else unavailable 'kubectl top pods -A'; fi
-  if [[ "$PROM_READY" != true ]]; then
-    unavailable 'Prometheus history/rates; falling back to current kubectl top nodes/pods'
+  if [[ ! -f "$WORK/available-memory" || ! -f "$WORK/available-filesystem" ]]; then
+    unavailable 'Prometheus node memory/filesystem coverage; falling back to current kubectl top nodes/pods (no filesystem/history coverage)'
     if kube top nodes > "$WORK/top-nodes"; then
       while IFS= read -r line; do record OK "current node usage $line"; done < "$WORK/top-nodes"
     else unavailable 'kubectl top nodes'; fi
@@ -362,7 +364,7 @@ longhorn_nodes() {
     (select(.spec.allowScheduling==false) | ["INFO", "Longhorn node \(.metadata.name) scheduling disabled"])'
 }
 flux() {
-  get_json flux kustomizations.kustomize.toolkit.fluxcd.io,helmreleases.helm.toolkit.fluxcd.io -A
+  get_json flux kustomizations.kustomize.toolkit.fluxcd.io,helmreleases.helm.toolkit.fluxcd.io -A --show-managed-fields
   local object suspended ready stalled interval timestamp epoch seconds
   while IFS=$'\t' read -r object suspended ready stalled interval timestamp; do
     if [[ "$suspended" == true ]]; then
@@ -374,7 +376,8 @@ flux() {
     elif [[ "$ready" != True ]]; then
       record WARN "Flux $object Ready=$ready"
     else record OK "Flux $object Ready=True"; fi
-    # Transitions, Helm release times and manual reconcile requests are not ticks.
+    # Helm status writes track controller activity, not manual requests/releases.
+    # managedFields time is a freshness proxy, not an exact reconcile timestamp.
     if [[ "$timestamp" == '-' ]]; then
       unavailable "Flux $object last-reconcile timestamp"
       continue
@@ -391,7 +394,9 @@ flux() {
   done < <(jq -r '.items[] | [.kind+" "+.metadata.namespace+"/"+.metadata.name, (.spec.suspend // false),
     ([.status.conditions[]?|select(.type=="Ready")][0].status // "Missing"),
     ([.status.conditions[]?|select(.type=="Stalled")][0].status // "False"), .spec.interval,
-    ([.status.history[]?.lastReconciled] | max // "-")] | @tsv' "$WORK/flux")
+    (if .kind=="HelmRelease" then
+      [.metadata.managedFields[]? | select(.manager=="helm-controller" and .subresource=="status") | .time]
+    else [.status.history[]?.lastReconciled] end | max // "-")] | @tsv' "$WORK/flux")
 }
 events() {
   get_json events events -A --field-selector=type=Warning
@@ -459,11 +464,8 @@ jobs() {
 }
 
 for collector in nodes readyz pods k3s_certs cert_manager pvcs longhorn longhorn_nodes flux events edge streaming jobs; do run "$collector"; done
-PROM_READY=false
 if prom_start; then
-  PROM_READY=true
   run prometheus
-  if [[ ! -f "$WORK/prom-query-succeeded" ]]; then PROM_READY=false; fi
 else unavailable 'Prometheus loopback port-forward'; fi
 run top_usage
 record OK 'Health check complete'
