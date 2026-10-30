@@ -715,6 +715,13 @@ data:
         auth_type: bearer_token
         auth_value: os.environ/EXECUTOR_API_KEY
         allow_all_keys: false
+      executor-local:
+        url: https://executor.lan.${CLUSTER_DOMAIN}/org/executor/mcp
+        transport: http
+        auth_type: bearer_token
+        auth_value: os.environ/EXECUTOR_LOCAL_API_KEY
+        allow_all_keys: false
+        available_on_public_internet: false
       dawarich:
         url: http://dawarich-main.lifestyle.svc.cluster.local:3000/api/v1/mcp
         transport: http
