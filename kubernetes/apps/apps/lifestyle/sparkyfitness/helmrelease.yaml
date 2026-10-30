@@ -235,7 +235,7 @@ spec:
             image:
               # renovate: datasource=docker depName=codewithcj/sparkyfitness-garmin registryUrl=https://ghcr.io
               repository: ghcr.io/codewithcj/sparkyfitness-garmin
-              tag: v1.10.0
+              tag: v1.11.0
             env:
               GARMIN_SERVICE_PORT: '8000'
               PYTHONDONTWRITEBYTECODE: '1'
