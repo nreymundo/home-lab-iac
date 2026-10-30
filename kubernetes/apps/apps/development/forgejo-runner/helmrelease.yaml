@@ -98,8 +98,6 @@ spec:
             env:
               - name: BUILDKIT_HOST
                 value: tcp://127.0.0.1:1234
-              - name: PATH
-                value: /tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
             resources:
               requests:
                 cpu: 100m
@@ -108,7 +106,8 @@ spec:
                 memory: 2Gi
             volumeMounts:
               - name: tools
-                mountPath: /tools
+                mountPath: /usr/local/bin/buildctl
+                subPath: buildctl
                 readOnly: true
         volumes:
           - name: tools
