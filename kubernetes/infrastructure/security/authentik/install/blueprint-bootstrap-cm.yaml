@@ -1053,7 +1053,7 @@ data:
           slug: "executor"
         attrs:
           name: "Executor"
-          icon: "https://raw.githubusercontent.com/UsefulSoftwareCo/executor/executor%402.0.0-beta.32/apps/docs/public/executor-og-logo.svg"
+          icon: "https://raw.githubusercontent.com/UsefulSoftwareCo/executor/main/apps/cloud/public/favicon-192.png"
           provider: !KeyOf executor-provider
           group: "Kubernetes"
       - model: authentik_policies.policybinding
