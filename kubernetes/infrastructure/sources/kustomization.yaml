@@ -21,3 +21,4 @@ resources:
   - intel.yaml
   - netbird.yaml
   - open-telemetry.yaml
+  - forgejo-runner.yaml

@@ -41,6 +41,7 @@ spec:
               FORGEJO__service__ALLOW_ONLY_EXTERNAL_REGISTRATION: "true"
               FORGEJO__service__ENABLE_INTERNAL_SIGNIN: "false"
               FORGEJO__service__ENABLE_BASIC_AUTHENTICATION: "false"
+              FORGEJO__service__REQUIRE_SIGNIN_VIEW: "false"
               FORGEJO__service__ENABLE_PASSWORD_SIGNIN_FORM: "false"
               FORGEJO__service__ENABLE_PASSKEY_AUTHENTICATION: "false"
               FORGEJO__openid__ENABLE_OPENID_SIGNIN: "false"
