@@ -24,7 +24,7 @@ spec:
         cronjob:
           schedule: "0 */6 * * *"
           timeZone: Etc/UTC
-          suspend: true
+          suspend: false
           concurrencyPolicy: Forbid
           successfulJobsHistory: 1
           failedJobsHistory: 2
@@ -44,7 +44,7 @@ spec:
               NEXTCLOUD_PRIMARY_CALENDAR: Personal
               SYNC_START_DATE: "2026-01-01"
               SYNC_STATE_PATH: /data/sync-state.sqlite3
-              SYNC_APPLY: "false"
+              SYNC_APPLY: "true"
               SYNC_REQUIRE_EXISTING_STATE: "true"
               LITELLM_API_KEY:
                 valueFrom:
