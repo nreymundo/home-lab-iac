@@ -1,0 +1,81 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: personal-data-sync
+  namespace: automation
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+    controllers:
+      main:
+        type: cronjob
+        cronjob:
+          schedule: "0 */6 * * *"
+          timeZone: Etc/UTC
+          suspend: true
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 2
+          activeDeadlineSeconds: 3600
+          backoffLimit: 0
+        containers:
+          main:
+            image:
+              repository: git.${CLUSTER_DOMAIN}/nreymundo/personal-data-sync
+              tag: sha-db00c514b0ba0f90d9d84658a6b36edca43fecee
+              pullPolicy: IfNotPresent
+            env:
+              GOOGLE_ACCOUNT_ID: acc_369793a7-710d-4680-9d81-f03c4ab0ae98
+              EXECUTOR_MCP_URL: https://litellm.lan.lainternetdelpantano.xyz/executor/mcp
+              NEXTCLOUD_URL: https://cloud.lainternetdelpantano.xyz
+              NEXTCLOUD_USER: nreymundo
+              NEXTCLOUD_PRIMARY_CALENDAR: Personal
+              SYNC_START_DATE: "2026-01-01"
+              SYNC_STATE_PATH: /data/sync-state.sqlite3
+              SYNC_APPLY: "false"
+              SYNC_REQUIRE_EXISTING_STATE: "true"
+              LITELLM_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: personal-data-sync
+                    key: LITELLM_API_KEY
+              NEXTCLOUD_APP_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: personal-data-sync
+                    key: NEXTCLOUD_APP_PASSWORD
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
+    persistence:
+      data:
+        enabled: true
+        existingClaim: personal-data-sync-state
+        globalMounts:
+          - path: /data
+      tmp:
+        enabled: true
+        type: emptyDir
+        sizeLimit: 32Mi
+        globalMounts:
+          - path: /tmp

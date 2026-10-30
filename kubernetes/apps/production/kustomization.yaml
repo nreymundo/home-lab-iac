@@ -13,6 +13,7 @@ resources:
   - ../apps/external-observability/omada-exporter
   - ../apps/automation/n8n
   - ../apps/automation/esphome-builder
+  - ../apps/automation/personal-data-sync
   - ../apps/reddit/apollo-backend
   - ../apps/comms/bark
   - ../apps/comms/apprise
