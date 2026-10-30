@@ -716,7 +716,7 @@ data:
         auth_value: os.environ/EXECUTOR_API_KEY
         allow_all_keys: false
       executor-local:
-        url: https://executor.lan.${CLUSTER_DOMAIN}/org/executor/mcp
+        url: http://executor.ai.svc.cluster.local:4400/org/executor/mcp
         transport: http
         auth_type: bearer_token
         auth_value: os.environ/EXECUTOR_LOCAL_API_KEY
