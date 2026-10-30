@@ -355,6 +355,10 @@ spec:
                 icon: "https://i.imgur.com/WLHbWAK.png"
                 description: "Lidarr YouTube downloader"
                 href: https://lidatube.lan.${CLUSTER_DOMAIN}
+            - Executor:
+                icon: https://raw.githubusercontent.com/UsefulSoftwareCo/executor/main/apps/cloud/public/favicon-192.png
+                description: "Private services and MCP gateway"
+                href: https://executor.lan.${CLUSTER_DOMAIN}
             - LiteLLM:
                 icon: litlellm.png
                 description: "LLM gateway"
