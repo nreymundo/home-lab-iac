@@ -1,0 +1,132 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: executor
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    controllers:
+      main:
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          terminationGracePeriodSeconds: 30
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=usefulsoftwareco/executor-selfhost registryUrl=https://ghcr.io
+              repository: ghcr.io/usefulsoftwareco/executor-selfhost
+              tag: 2.0.0-beta.32
+            env:
+              BETTER_AUTH_URL: https://executor.lan.${CLUSTER_DOMAIN}
+              SSO_DISCOVERY_URL: https://sso.${CLUSTER_DOMAIN}/application/o/executor/.well-known/openid-configuration
+              SSO_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: executor-sso-secret
+                    key: CLIENT_ID
+              SSO_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: executor-sso-secret
+                    key: CLIENT_SECRET
+              SSO_ALLOWED_DOMAINS:
+                valueFrom:
+                  secretKeyRef:
+                    name: executor-secrets
+                    key: SSO_ALLOWED_DOMAINS
+              BETTER_AUTH_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: executor-secrets
+                    key: BETTER_AUTH_SECRET
+              EXECUTOR_ENCRYPTION_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: executor-secrets
+                    key: EXECUTOR_ENCRYPTION_KEY
+              EXECUTOR_APPS_ALLOW_PRIVATE_FETCH: "true"
+              EXECUTOR_URL_ALLOW_HTTP_ORIGINS: '["https://sso.${CLUSTER_DOMAIN}"]'
+              EXECUTOR_APP_WORKERS: "16"
+              EXECUTOR_APP_WORKER_IDLE_SECONDS: "300"
+              DO_NOT_TRACK: "1"
+              OTEL_EXPORTER_OTLP_ENDPOINT: http://opentelemetry-collector.observability.svc.cluster.local:4318
+              OTEL_EXPORTER_OTLP_HEADERS:
+                valueFrom:
+                  secretKeyRef:
+                    name: executor-otel-secret
+                    key: OTEL_EXPORTER_OTLP_HEADERS
+            ports:
+              - name: http
+                containerPort: 4400
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 4400
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 4400
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 4400
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 500m
+                memory: 1Gi
+              limits:
+                memory: 4Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 4400
+    ingress:
+      main:
+        annotations:
+          external-dns.kubernetes.io/hostname: executor.lan.${CLUSTER_DOMAIN}
+        hosts:
+          - host: executor.lan.${CLUSTER_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: http
+    persistence:
+      data:
+        enabled: true
+        type: custom
+        volumeSpec:
+          persistentVolumeClaim:
+            claimName: executor
+        advancedMounts:
+          main:
+            main:
+              - path: /app/data

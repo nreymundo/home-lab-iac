@@ -148,6 +148,16 @@ spec:
             secretKeyRef:
               name: airtrail-sso-secret
               key: CLIENT_SECRET
+        - name: EXECUTOR_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: executor-sso-secret
+              key: CLIENT_ID
+        - name: EXECUTOR_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: executor-sso-secret
+              key: CLIENT_SECRET
         - name: KARAKEEP_CLIENT_ID
           valueFrom:
             secretKeyRef:
