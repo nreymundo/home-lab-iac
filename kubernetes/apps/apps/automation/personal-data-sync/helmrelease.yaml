@@ -34,13 +34,18 @@ spec:
           main:
             image:
               repository: git.${CLUSTER_DOMAIN}/nreymundo/personal-data-sync
-              tag: sha-db00c514b0ba0f90d9d84658a6b36edca43fecee
+              tag: sha-f4e045611861fd0feae358847c7b96de3575b480
               pullPolicy: IfNotPresent
             env:
               GOOGLE_ACCOUNT_ID: acc_369793a7-710d-4680-9d81-f03c4ab0ae98
-              EXECUTOR_MCP_URL: https://litellm.lan.lainternetdelpantano.xyz/executor/mcp
-              NEXTCLOUD_URL: https://cloud.lainternetdelpantano.xyz
-              NEXTCLOUD_USER: nreymundo
+              EXECUTOR_MCP_URL: http://litellm-main.ai.svc.cluster.local:4000/executor/mcp
+              NEXTCLOUD_URL: https://nextcloud-main.nextcloud.svc.cluster.local
+              NEXTCLOUD_CANONICAL_URL: https://cloud.${CLUSTER_DOMAIN}
+              NEXTCLOUD_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: personal-data-sync
+                    key: NEXTCLOUD_USER
               NEXTCLOUD_PRIMARY_CALENDAR: Personal
               SYNC_START_DATE: "2026-01-01"
               SYNC_STATE_PATH: /data/sync-state.sqlite3
