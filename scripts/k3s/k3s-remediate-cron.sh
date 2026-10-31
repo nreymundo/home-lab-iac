@@ -9,8 +9,8 @@
 # script fails the syntax check on origin/master the run is skipped
 # rather than executing a broken version. Sibling scripts are resolved
 # relative to this file's own directory.
-# Intended crontab entry (every 30 minutes):
-#   */30 * * * * /bin/bash ~/ops/home-lab-iac/scripts/k3s/k3s-remediate-cron.sh >> ~/.local/state/k3s-remediate/cron.log 2>&1
+# Intended crontab entry (hourly):
+#   0 * * * * /bin/bash ~/ops/home-lab-iac/scripts/k3s/k3s-remediate-cron.sh >> ~/.local/state/k3s-remediate/cron.log 2>&1
 set -uo pipefail
 export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
 CLONE=${K3S_OPS_CLONE:-$HOME/ops/home-lab-iac}
