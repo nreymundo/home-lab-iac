@@ -263,10 +263,6 @@ spec:
                 icon: air-trail.png
                 description: "Flight history tracker"
                 href: https://airtrail.lan.${CLUSTER_DOMAIN}
-            - Apprise:
-                icon: apprise.png
-                description: "Notification routing"
-                href: https://apprise.lan.${CLUSTER_DOMAIN}
             - ntfy:
                 icon: ntfy.png
                 description: "Push notifications"
