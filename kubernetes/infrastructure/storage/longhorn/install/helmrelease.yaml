@@ -45,6 +45,7 @@ spec:
 
     defaultSettings:
       allowRecurringJobWhileVolumeDetached: true
+      autoCleanupSnapshotAfterOnDemandBackupCompleted: true
       concurrentAutomaticEngineUpgradePerNodeLimit: 1
       guaranteedInstanceManagerCPU: '{"v1":"8","v2":"8"}'
     persistence:
