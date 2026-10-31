@@ -7,12 +7,14 @@
 # so worker worktrees and feature checkouts never fight over it. Repo
 # updates take effect on the next run after merging to master; if a
 # script fails the syntax check on origin/master the run is skipped
-# rather than executing a broken version.
+# rather than executing a broken version. Sibling scripts are resolved
+# relative to this file's own directory.
 # Intended crontab entry (every 30 minutes):
-#   */30 * * * * /bin/bash ~/ops/home-lab-iac/scripts/k3s-remediate-cron.sh >> ~/.local/state/k3s-remediate/cron.log 2>&1
+#   */30 * * * * /bin/bash ~/ops/home-lab-iac/scripts/k3s/k3s-remediate-cron.sh >> ~/.local/state/k3s-remediate/cron.log 2>&1
 set -uo pipefail
 export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
 CLONE=${K3S_OPS_CLONE:-$HOME/ops/home-lab-iac}
+DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 STAMP() { date -u +%FT%TZ; }
 
 mkdir -p "${K3S_REM_STATE:-$HOME/.local/state/k3s-remediate}" || exit 1
@@ -28,18 +30,18 @@ git reset --hard --quiet origin/master || {
   echo "$(STAMP) git reset failed"
   exit 1
 }
-bash -n scripts/k3s-health-check.sh || {
+bash -n "$DIR/k3s-health-check.sh" || {
   echo "$(STAMP) k3s-health-check.sh failed syntax check on origin/master"
   exit 1
 }
-bash -n scripts/k3s-remediate.sh || {
+bash -n "$DIR/k3s-remediate.sh" || {
   echo "$(STAMP) k3s-remediate.sh failed syntax check on origin/master"
   exit 1
 }
 
 # Non-zero health-check exits are normal findings, not wrapper errors.
-bash scripts/k3s-health-check.sh > /dev/null 2>&1 || true
-bash scripts/k3s-remediate.sh --apply > /dev/null 2>&1
+bash "$DIR/k3s-health-check.sh" > /dev/null 2>&1 || true
+bash "$DIR/k3s-remediate.sh" --apply > /dev/null 2>&1
 rc=$?
 # 0 = ran clean, 2 = circuit breaker (expected protection, logged); only
 # real errors surface here.
