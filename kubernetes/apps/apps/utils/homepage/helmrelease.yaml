@@ -263,14 +263,6 @@ spec:
                 icon: air-trail.png
                 description: "Flight history tracker"
                 href: https://airtrail.lan.${CLUSTER_DOMAIN}
-            - Apprise:
-                icon: apprise.png
-                description: "Notification routing"
-                href: https://apprise.lan.${CLUSTER_DOMAIN}
-            - ntfy:
-                icon: ntfy.png
-                description: "Push notifications"
-                href: https://ntfy.${CLUSTER_DOMAIN}
             - Audiobookshelf:
                 icon: audiobookshelf.png
                 description: "Audiobook server"
@@ -307,6 +299,14 @@ spec:
                 icon: discord.png
                 description: "Web instance for Discord with Steam and Plex rich presence"
                 href: https://discord1.lan.${CLUSTER_DOMAIN}
+            - Executor:
+                icon: https://raw.githubusercontent.com/UsefulSoftwareCo/executor/main/apps/cloud/public/favicon-192.png
+                description: "Private services and MCP gateway"
+                href: https://executor.lan.${CLUSTER_DOMAIN}
+            - Forgejo:
+                icon: forgejo.png
+                description: "Git service"
+                href: https://git.${CLUSTER_DOMAIN}/user/login
             - Frigate:
                 icon: frigate.png
                 description: "NVR with AI detection"
@@ -315,10 +315,6 @@ spec:
                 icon: garage.png
                 description: "Object store admin UI"
                 href: https://garage.lan.${CLUSTER_DOMAIN}
-            - Forgejo:
-                icon: forgejo.png
-                description: "Git service"
-                href: https://git.${CLUSTER_DOMAIN}/user/login
             - Grafana:
                 icon: grafana.png
                 description: "Dashboards"
@@ -355,10 +351,6 @@ spec:
                 icon: "https://i.imgur.com/WLHbWAK.png"
                 description: "Lidarr YouTube downloader"
                 href: https://lidatube.lan.${CLUSTER_DOMAIN}
-            - Executor:
-                icon: https://raw.githubusercontent.com/UsefulSoftwareCo/executor/main/apps/cloud/public/favicon-192.png
-                description: "Private services and MCP gateway"
-                href: https://executor.lan.${CLUSTER_DOMAIN}
             - LiteLLM:
                 icon: litlellm.png
                 description: "LLM gateway"
@@ -381,6 +373,10 @@ spec:
                 icon: nextcloud.png
                 description: "File sync and share"
                 href: https://cloud.${CLUSTER_DOMAIN}
+            - ntfy:
+                icon: ntfy.png
+                description: "Push notifications"
+                href: https://ntfy.${CLUSTER_DOMAIN}
             - Open WebUI:
                 icon: open-webui.png
                 description: "Chat interface for AI models"
@@ -429,10 +425,6 @@ spec:
                 icon: seerr.png
                 description: "Media request manager"
                 href: https://seerr.lan.${CLUSTER_DOMAIN}
-            - SparkyFitness:
-                icon: https://assets.web.${CLUSTER_DOMAIN}/icons/sparkyfitness.svg
-                description: "Fitness, nutrition and health tracking"
-                href: https://fitness.${CLUSTER_DOMAIN}
             - SillyTavern:
                 icon: "https://upload.wikimedia.org/wikipedia/commons/6/6b/SillyTavern_logo_%28dark_background%29.png"
                 description: "Chat interface for LLM roleplay"
@@ -441,6 +433,10 @@ spec:
                 icon: sonarr.png
                 description: "TV automation"
                 href: https://sonarr.lan.${CLUSTER_DOMAIN}
+            - SparkyFitness:
+                icon: https://assets.web.${CLUSTER_DOMAIN}/icons/sparkyfitness.svg
+                description: "Fitness, nutrition and health tracking"
+                href: https://fitness.${CLUSTER_DOMAIN}
             - Tautulli:
                 icon: tautulli.png
                 description: "Plex monitoring"

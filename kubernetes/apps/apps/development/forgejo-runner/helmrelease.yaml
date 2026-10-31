@@ -1,0 +1,118 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: forgejo-runner
+  namespace: forgejo-ci
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: forgejo-runner
+      version: 13.2.1
+      sourceRef:
+        kind: HelmRepository
+        name: forgejo-runner
+        namespace: flux-system
+  values:
+    forgejo:
+      url: http://forgejo.development.svc.cluster.local:3000
+      existingSecret: forgejo-runner
+    runnerConfig: |
+      cache:
+        enabled: false
+      container:
+        docker_host: "-"
+        workdir_parent: shared/workdir
+      plugins:
+        k8s:
+          address: unix:///plugin/forgejo-runner-k8s.sock
+          options:
+            namespace: forgejo-ci
+            poll_timeout: 10m
+            resources: |
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+      runner:
+        capacity: 1
+        labels:
+          - ubuntu-k8s:k8s:///config/podspec-default.yaml
+          - buildkit-k8s:k8s:///config/podspec-buildkit.yaml
+        timeout: 3h
+        shutdown_timeout: 3m
+    podSpecs:
+      podspec-default.yaml: |
+        automountServiceAccountToken: false
+        containers:
+          - name: main
+            image: ghcr.io/bjw-s-labs/forgejo-runner:ubuntu-24.04
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 2Gi
+        restartPolicy: Never
+      podspec-buildkit.yaml: |
+        automountServiceAccountToken: false
+        securityContext:
+          fsGroup: 1000
+        initContainers:
+          - name: buildctl
+            image: moby/buildkit:v0.34.1-rootless
+            command: ["sh", "-c", "cp /usr/bin/buildctl /tools/buildctl"]
+            volumeMounts:
+              - name: tools
+                mountPath: /tools
+          - name: buildkit
+            image: moby/buildkit:v0.34.1-rootless
+            restartPolicy: Always
+            args: ["--addr", "tcp://127.0.0.1:1234", "--oci-worker-no-process-sandbox"]
+            startupProbe:
+              exec:
+                command: ["buildctl", "--addr", "tcp://127.0.0.1:1234", "debug", "workers"]
+              periodSeconds: 2
+              failureThreshold: 60
+            securityContext:
+              runAsUser: 1000
+              runAsGroup: 1000
+              seccompProfile:
+                type: Unconfined
+              appArmorProfile:
+                type: Unconfined
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 2Gi
+            volumeMounts:
+              - name: buildkit-data
+                mountPath: /home/user/.local/share/buildkit
+        containers:
+          - name: main
+            image: ghcr.io/bjw-s-labs/forgejo-runner:ubuntu-24.04
+            env:
+              - name: BUILDKIT_HOST
+                value: tcp://127.0.0.1:1234
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 2Gi
+            volumeMounts:
+              - name: tools
+                mountPath: /usr/local/bin/buildctl
+                subPath: buildctl
+                readOnly: true
+        volumes:
+          - name: tools
+            emptyDir: {}
+          - name: buildkit-data
+            emptyDir:
+              sizeLimit: 10Gi
+        restartPolicy: Never
