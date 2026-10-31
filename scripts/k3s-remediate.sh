@@ -84,11 +84,6 @@ kube() { timeout "${TIMEOUT}s" kubectl --request-timeout="${TIMEOUT}s" "$@" 2> /
 breaker=$(awk -F'\t' -v cutoff=$((NOW - OWNER_COOLDOWN_HOURS * 3600)) \
   '$1 > cutoff && $3 == "delete-pod" { seen[$2] = 1 } END { n = 0; for (k in seen) n++; print n }' \
   "$LEDGER" 2> /dev/null) || breaker=0
-if ((breaker >= BREAKER_KEYS)); then
-  logf "circuit-breaker-open mode=$MODE pod_owners_acted_24h=$breaker"
-  printf 'circuit-breaker-open pod_owners_acted_24h=%s\n' "$breaker"
-  exit 2
-fi
 
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/k3s-remediate.XXXXXXXX") || exit 1
 trap 'rm -rf -- "$WORK"' EXIT
@@ -129,15 +124,15 @@ if ! jq -r --argjson now "$NOW" --argjson minage "$((POD_MIN_AGE_MIN * 60))" --a
   --argjson reasons '["CrashLoopBackOff", "ImagePullBackOff", "ErrImagePull"]' '
   .items[]
   | select(.metadata.deletionTimestamp == null)
-  | select(.status.phase == "Running")
+  | select(.status.phase == "Running" or .status.phase == "Pending")
   | select(.metadata.namespace as $ns | ($prot | split(" ") | index($ns) | not))
-  | select(([.spec.volumes[]?.persistentVolumeClaim] | length) == 0)
+  | select(any(.spec.volumes[]?; .persistentVolumeClaim != null) | not)
   | ([.metadata.ownerReferences[]? | select(.controller == true)][0]) as $owner
   | select($owner != null and ($kinds | index($owner.kind)))
   | ($now - (.metadata.creationTimestamp | fromdateiso8601)) as $age
   | select($age > $minage)
   | [(.status.containerStatuses[]?, .status.initContainerStatuses[]?)
-    | .state.waiting.reason // empty | select($reasons | index(.))] as $waiting
+    | .state.waiting.reason // empty | . as $reason | select($reasons | index($reason))] as $waiting
   | select($waiting | length > 0)
   | [$owner.uid, $owner.kind, .metadata.namespace, .metadata.name,
     (($age / 60) | floor | tostring), ($waiting | unique | join(","))]
@@ -180,6 +175,9 @@ done < "$WORK/tier0"
 
 while IFS=$'\t' read -r key kind ns name age reasons; do
   [[ -n "$key" ]] || continue
+  if ((breaker >= BREAKER_KEYS)); then
+    break
+  fi
   if cooldown_active "$key" || ((acted >= MAX_ACTIONS_PER_RUN)); then
     skipped=$((skipped + 1))
     continue
@@ -189,6 +187,7 @@ while IFS=$'\t' read -r key kind ns name age reasons; do
       printf '%s\t%s\tdelete-pod\t%s/%s\n' "$NOW" "$key" "$ns" "$name" >> "$LEDGER"
       logf "applied tier=1 action=delete-pod owner=$kind object=$ns/$name age_min=$age reasons=$reasons"
       acted=$((acted + 1))
+      breaker=$((breaker + 1))
     else
       logf "error tier=1 action=delete-pod object=$ns/$name delete-failed"
     fi
@@ -199,5 +198,10 @@ while IFS=$'\t' read -r key kind ns name age reasons; do
 done < "$WORK/tier1"
 
 logf "run-end mode=$MODE actions=$acted skipped=$skipped"
+if ((breaker >= BREAKER_KEYS)); then
+  logf "circuit-breaker-open mode=$MODE pod_owners_acted_24h=$breaker"
+  printf 'circuit-breaker-open pod_owners_acted_24h=%s\n' "$breaker"
+  exit 2
+fi
 printf 'mode=%s actions=%s skipped=%s\n' "$MODE" "$acted" "$skipped"
 exit 0
