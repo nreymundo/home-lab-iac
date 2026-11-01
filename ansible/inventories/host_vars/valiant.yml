@@ -19,7 +19,7 @@ docker_install_enabled: true
 # Enable Homebrew installation on this host
 homebrew_install_enabled: true
 homebrew_taps: [ublue-os/tap]
-homebrew_casks: [asusctl-linux]
+homebrew_casks: [ublue-os/tap/asusctl-linux]
 homebrew_auto_update_enabled: true
 homebrew_auto_update_services: [asusd.service, asus-shutdown.service]
 

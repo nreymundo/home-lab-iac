@@ -12,17 +12,32 @@
     NONINTERACTIVE: "1"
   when: not ansible_check_mode or homebrew_brew_binary.stat.exists
 
-- name: Trust Homebrew taps for casks
+- name: Inspect Homebrew trust entries
   ansible.builtin.command:
-    argv: ["{{ homebrew_prefix }}/bin/brew", trust, "{{ item }}"]
-  loop: "{{ homebrew_taps }}"
+    argv: ["{{ homebrew_prefix }}/bin/brew", trust, --json=v1]
+  register: homebrew_trust_entries
+  changed_when: false
+  become: true
+  become_user: "{{ homebrew_user }}"
+  environment:
+    HOME: "{{ getent_passwd[homebrew_user][4] }}"
+  when:
+    - homebrew_casks | length > 0
+    - not ansible_check_mode or homebrew_brew_binary.stat.exists
+
+- name: Trust individual Homebrew casks
+  ansible.builtin.command:
+    argv: ["{{ homebrew_prefix }}/bin/brew", trust, --cask, "{{ item }}"]
+  loop: "{{ homebrew_casks }}"
   become: true
   become_user: "{{ homebrew_user }}"
   environment:
     HOME: "{{ getent_passwd[homebrew_user][4] }}"
     NONINTERACTIVE: "1"
-  changed_when: false
-  when: not ansible_check_mode
+  changed_when: true
+  when:
+    - not ansible_check_mode
+    - item not in (homebrew_trust_entries.stdout | from_json).casks
 
 - name: Inspect installed Homebrew casks
   ansible.builtin.command:
@@ -49,7 +64,7 @@
   changed_when: true
   when:
     - not ansible_check_mode
-    - item not in (homebrew_installed_casks.stdout_lines | map('split') | map('first') | list)
+    - (item | basename) not in (homebrew_installed_casks.stdout_lines | map('split') | map('first') | list)
 
 - name: Install Homebrew update units
   ansible.builtin.template:
