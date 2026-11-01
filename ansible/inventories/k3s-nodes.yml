@@ -18,15 +18,3 @@
             "homelab.lan/runtime": "vm"
             "topology.kubernetes.io/zone": "pve2"
           "node_os": "ubuntu"
-        "k3s-node-03":
-          "ansible_host": "192.168.10.52"
-          "ansible_port": 22
-          "ansible_user": "ubuntu"
-          "k3s_node_labels":
-            "homelab.lan/cpu-vendor": "amd"
-            "homelab.lan/gpu": "none"
-            "homelab.lan/hypervisor": "proxmox"
-            "homelab.lan/role": "general"
-            "homelab.lan/runtime": "vm"
-            "topology.kubernetes.io/zone": "pve3"
-          "node_os": "ubuntu"

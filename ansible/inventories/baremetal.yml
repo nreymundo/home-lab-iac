@@ -37,3 +37,4 @@ all:
     k3s_baremetal:
       hosts:
         daring: {}
+        valiant: {}

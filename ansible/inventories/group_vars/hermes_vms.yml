@@ -36,12 +36,12 @@ ufw_inbound_rules:
     comment: Hermes webhook relay from k3s-node-02
   - port: "8645"
     proto: tcp
-    from_ip: 192.168.10.52
-    comment: Hermes webhook relay from k3s-node-03
-  - port: "8645"
-    proto: tcp
     from_ip: 192.168.10.30
     comment: Hermes webhook relay from daring
+  - port: "8645"
+    proto: tcp
+    from_ip: 192.168.10.31
+    comment: Hermes webhook relay from valiant
   - port: "9119"
     proto: tcp
     from_ip: 192.168.0.0/16

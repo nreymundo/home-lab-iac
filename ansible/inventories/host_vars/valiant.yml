@@ -14,7 +14,22 @@ common_journald_system_max_file_size: 128M
 common_journald_max_retention_sec: 30day
 common_journald_max_file_sec: 1week
 
-docker_install_enabled: true
+docker_install_enabled: false
+
+common_apparmor_disabled_profiles:
+  - wg-quick
+  - wg
+common_apparmor_containerd_stacked_signals: true
+
+k3s_iface: enx6c1ff7c01df8
+k3s_storage_mode: manual
+k3s_storage_expected_uuid: a60a7437-c536-473f-80be-1a8ea264b219
+k3s_allow_workloads: true
+k3s_node_labels:
+  homelab.lan/cpu-vendor: amd
+  homelab.lan/role: general
+  homelab.lan/runtime: baremetal
+  topology.kubernetes.io/zone: valiant
 
 # Enable Homebrew installation on this host
 homebrew_install_enabled: true
