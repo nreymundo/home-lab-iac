@@ -177,6 +177,46 @@ data:
           timeout: 900
           response_format: b64_json
 
+      # Venice's OpenAI-compatible image API uses moderation=low for unblurred output.
+      - model_name: venice/lustify-v8
+        model_info:
+          mode: image_generation
+        litellm_params:
+          model: hosted_vllm/lustify-v8
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: venice
+          output_cost_per_image: 0.01
+          response_format: b64_json
+          timeout: 900
+          extra_body:
+            moderation: low
+
+      - model_name: venice/z-image-turbo
+        model_info:
+          mode: image_generation
+        litellm_params:
+          model: hosted_vllm/z-image-turbo
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: venice
+          output_cost_per_image: 0.01
+          response_format: b64_json
+          timeout: 900
+          extra_body:
+            moderation: low
+
+      # Other image models use Venice pricing; LiteLLM has no configured rate for them.
+      - model_name: venice/*
+        model_info:
+          mode: image_generation
+        litellm_params:
+          model: hosted_vllm/*
+          custom_llm_provider: hosted_vllm
+          litellm_credential_name: venice
+          response_format: b64_json
+          timeout: 900
+          extra_body:
+            moderation: low
+
       - model_name: openai/higgs-audio-tts
         model_info:
           mode: audio_speech
@@ -688,6 +728,13 @@ data:
           api_key: os.environ/LITELLM_CREDENTIAL_OPENROUTER_API_KEY
         credential_info:
           custom_llm_provider: openrouter
+
+      - credential_name: venice
+        credential_values:
+          api_base: https://api.venice.ai/api/v1
+          api_key: os.environ/LITELLM_CREDENTIAL_VENICE_API_KEY
+        credential_info:
+          custom_llm_provider: hosted_vllm
 
       - credential_name: zai-coding
         credential_values:

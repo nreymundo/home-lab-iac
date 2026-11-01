@@ -5,7 +5,7 @@ metadata:
     namespace: ai
 type: Opaque
 stringData:
-    GUARDRAIL_SECRETS_FINGERPRINTS: ENC[AES256_GCM,data:LrHv400O0RZwz6G4MzNWfTzIzsnkdmUt2L4gimo/prjokOHiGHwd35Xi3u2oXe8hEl6gnj9BZue/C/SmDEUhQushmUBQcjh0S2EnBuJQy4Ck8c8E88OlLxfS3zxcfUhbjYebMwPpyJs5EEgDfOvpFILkFi/nz8c9pzKMLMf7fBbo1uvkiPWLt0zC7IAEQ2T/9ifSjcTR4vMNf64CpPFMTq1wh+3lJEVWPy/2RgouNg9k/Mvby67xeHP1BtJmxEJp2guCpHIYQghMyiM+DoSz1/SBkfcIctbswIpzwU7Qx240b73QhOzgkn8HNE/UJY3i80oWmh3NWidDAywHuoPGxtSpfxzUdgQZxsxB+6LRrG2mhOOfxBu02X13lxuUEnl5I6mM3INzkWK7StixXGUjb6AbrtKnzinj4Zid+K3HRbeK/w8Zr1FoEu4TySCosi7kdHF40Ndg6Hkr5UgMmzZI8togw7sVeAe+KWg30yMNRKckw9DNmeHkqkHepUHqcHdvDuGzya+uWzMnodLU4kP6JMv/wmjJx6B17TrnljwiBJyOnD73lgE5Gy/8DlvmoLwFQgf7jGEWliVe2FNrEzRHXNZXuhovwiEuxzdWSudlGsjzWTRPTyRsb2TwFegTz22w4Cc4mmFxeH5LHKLcD8iTTo0YL720PgCJaBy5gaTYrw8Tn/lrkfo=,iv:mm1sfZxlHuuLILgILao5Qjy9HhN39cVkZNk2FI0AN0Y=,tag:iKfN8eIl+bs58vHHHM/cYQ==,type:str]
+    GUARDRAIL_SECRETS_FINGERPRINTS: ENC[AES256_GCM,data:FBMG9UD1gpSs2AWCzCCBCIaMOxJG06hEUhZYi1M8fIcnTol/kQQ7AWOIZ9EDuOlbfz2z6w7d+8VQ11Nx+t+8w8kRelsMXcXHidAji0SQu4Jgs4XPt/Y4vsWk/bXJMImUN5ZIIt9sa5wNYPRqjMnEwDEugcYBvucdER60PHrV4mpnCC8VQLVf49qAx+bz9/5w0ZKVIiAi25CwPQXNgy9VhWYRTU2sdja3mNAoQz0u9GkYf8mvo0NAXqGoOAfAdYbbTtFA6idrk3OjkaTferjx7QuVrmIA/VWaebVngSfdhcnz5ONmRaZyA2RszhoWQlGCdbgctu9TwpGnzATbtf3rN2aHw5orMOOEkv5EkmSMhgxaP+Z62gmvBoyqNTnWOHS1LbbV/j9CfFSXLw4U5kY+vKb4BnIp++Y23yX31k/D32RRvzU7AF6WetY3S7m0XM9T5XGUTPSdNJbKj5sKbH9l9r5NPeeGTRkMKRoI3kSY9awodDhVGOKwIuAa8E1FS5YiyBGFTMvD3D3n19l0XH+TpHNFt230qHejIyfewULE75+X/YRo/QiVMQM/yEGXx+TKwpea9QnGeUAnCRQbaheDo9wIJWSfpbPLbg1o/ekV/RQEYBK75+OphN/dB7NFMuB9Gp88bZJxRtk75GpCtBxa533ebKbUNzdtQvirw8oslhCscOIvg0G4iusHqLFecauo6ac0blWpx6fVTspFgG1OTA9FMOSi3820NsRdYMLat4qhbIMe2tDbDkXZuY9o59yt/xCfmtTxHMvE83krRJCGgyimtdTPL9DO6Jg=,iv:13rxJJ4aX8ELs+ILoRTtryZqi/rF1dBVRBKQpjrW+O4=,tag:mFJlfehS7sDInCtaRTplIg==,type:str]
 sops:
     age:
         - enc: |
@@ -18,6 +18,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-10-29T22:53:10Z"
-    mac: ENC[AES256_GCM,data:q5j+xr2U53qHjWipfb78MofT7id32PnD7i0arL81ru1ne/z91pN9w5J3XMz8V7bTX7P/r3cecyaqOQqd7K67NMKEDvU5FHXDN/WKIRqCr3r/WmyjMwA5AvBs0gpT9HrI1bGFz2hP4hseWXvPS+HtWFm4DXmzp2AhZez0ZGO4UT0=,iv:4bJewhs7DNgl0eyXFAsYx5QnhNQwHRe4sf870CUYXxw=,tag:SbUmAyC1+ujDIJPii6Y05w==,type:str]
+    lastmodified: "2026-11-01T10:43:59Z"
+    mac: ENC[AES256_GCM,data:k5wdA+V6UzWzub2Jk3UoDK1KLj2QS4d5ZlEuhb5DDnBDgfFesKtS32/pbPMFW4LsjAUNnVRBlNYR+4mOPt4HkPw4TRpMfwGg7YOq9Uu0gpdpZxsxC8KVba780NSzrYTmtIJgxlOUe/iZQJzSUwZTyum+1+p1OrHPcNLBguj5QrU=,iv:C1cY/h5G8R+mGPzYU1u0tpXvKQbMtgwWQsJbK5gF4I4=,tag:3bO9f8OUI1IDzORV7Rgi7w==,type:str]
     version: 3.13.3
