@@ -14,9 +14,9 @@ all:
     pve3:
       ansible_host: 192.168.1.6
       ansible_user: root
-    g14-2022:
-      ansible_host: 192.168.10.11
-      ansible_user: alx0s
+    valiant:
+      ansible_host: 192.168.10.31
+      ansible_user: ubuntu
     daring:
       ansible_host: 192.168.10.30
       ansible_user: ubuntu
@@ -33,7 +33,7 @@ all:
         pve3: {}
     headless_laptops:
       hosts:
-        g14-2022: {}
+        valiant: {}
     k3s_baremetal:
       hosts:
         daring: {}

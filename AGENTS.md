@@ -24,6 +24,7 @@ This file defines durable repo-wide behavior. Read the nearest subtree `AGENTS.m
 - Validate changes with the most direct evidence available for the kind of change you made.
 
 ## Change Discipline
+- Keep one-time remediation, cleanup, and migration steps out of persistent code, configuration, roles, and variables unless the user explicitly requests they be persisted. Perform authorized one-time operations separately; commit only the ongoing desired state.
 - Do not create README files, per-folder documentation, evaluation guides, or runbooks unless the user explicitly requests that documentation. Touching a folder or implementing a feature does not authorize adding documentation there. Keep detailed explanations in the chat; do not substitute another documentation filename or expand the PR description to hold unsolicited documentation. PR descriptions must follow the concise policy in `CONTRIBUTING.md`.
 - Across every app and layer, do not create a new test folder or commit an ad hoc test harness unless the user explicitly requests it. When no test folder exists for the affected code, keep one-off validation scripts outside the repository. Authorization to validate a change does not authorize adding test infrastructure.
 - Before editing, check the planned changes against every applicable repo and skill requirement, including ownership, reference patterns, asset formats, and validation. Do not replace those requirements with implementation preferences.

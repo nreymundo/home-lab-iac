@@ -29,12 +29,12 @@
       tags: [ssh]
     - role: host_hardware
     - role: host_power
-    - role: headless_laptop
-      when: "'headless_laptops' in group_names"
-      tags: [laptop]
     - role: homebrew
       when: homebrew_install_enabled | default(false) | bool
       tags: [homebrew]
+    - role: headless_laptop
+      when: "'headless_laptops' in group_names"
+      tags: [laptop]
     - role: docker
       when: docker_install_enabled | default(false) | bool
       tags: [docker]
