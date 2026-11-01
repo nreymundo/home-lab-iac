@@ -1,0 +1,88 @@
+---
+- name: Install Homebrew taps
+  community.general.homebrew_tap:
+    name: "{{ item }}"
+    state: present
+    path: "{{ homebrew_prefix }}/bin"
+  loop: "{{ homebrew_taps }}"
+  become: true
+  become_user: "{{ homebrew_user }}"
+  environment:
+    HOME: "{{ getent_passwd[homebrew_user][4] }}"
+    NONINTERACTIVE: "1"
+  when: not ansible_check_mode or homebrew_brew_binary.stat.exists
+
+- name: Trust Homebrew taps for casks
+  ansible.builtin.command:
+    argv: ["{{ homebrew_prefix }}/bin/brew", trust, "{{ item }}"]
+  loop: "{{ homebrew_taps }}"
+  become: true
+  become_user: "{{ homebrew_user }}"
+  environment:
+    HOME: "{{ getent_passwd[homebrew_user][4] }}"
+    NONINTERACTIVE: "1"
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Inspect installed Homebrew casks
+  ansible.builtin.command:
+    argv: ["{{ homebrew_prefix }}/bin/brew", list, --cask, --versions]
+  register: homebrew_installed_casks
+  changed_when: false
+  become: true
+  become_user: "{{ homebrew_user }}"
+  environment:
+    HOME: "{{ getent_passwd[homebrew_user][4] }}"
+  when:
+    - homebrew_casks | length > 0
+    - not ansible_check_mode or homebrew_brew_binary.stat.exists
+
+- name: Install Homebrew casks
+  ansible.builtin.command:
+    argv: ["{{ homebrew_prefix }}/bin/brew", install, --cask, "{{ item }}"]
+  loop: "{{ homebrew_casks }}"
+  become: true
+  become_user: "{{ homebrew_user }}"
+  environment:
+    HOME: "{{ getent_passwd[homebrew_user][4] }}"
+    NONINTERACTIVE: "1"
+  changed_when: true
+  when:
+    - not ansible_check_mode
+    - item not in (homebrew_installed_casks.stdout_lines | map('split') | map('first') | list)
+
+- name: Install Homebrew update units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: [homebrew-update.service, homebrew-update.timer]
+  register: homebrew_update_units
+  when: homebrew_auto_update_enabled | bool
+
+- name: Enable Homebrew update timer
+  ansible.builtin.systemd:
+    name: homebrew-update.timer
+    enabled: true
+    state: started
+    daemon_reload: "{{ homebrew_update_units.changed }}"
+  when:
+    - homebrew_auto_update_enabled | bool
+    - not ansible_check_mode
+
+- name: Inspect disabled Homebrew update timer
+  ansible.builtin.stat:
+    path: /etc/systemd/system/homebrew-update.timer
+  register: homebrew_disabled_timer
+  when: not homebrew_auto_update_enabled | bool
+
+- name: Disable Homebrew update timer
+  ansible.builtin.systemd:
+    name: homebrew-update.timer
+    enabled: false
+    state: stopped
+  when:
+    - not homebrew_auto_update_enabled | bool
+    - homebrew_disabled_timer.stat.exists

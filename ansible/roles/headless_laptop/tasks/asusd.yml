@@ -1,0 +1,113 @@
+---
+- name: Inspect ASUS daemon installation
+  ansible.builtin.stat:
+    path: /etc/systemd/system/asusd.service
+  register: headless_laptop_asusd_unit
+
+- name: Configure ASUS daemon ownership
+  when:
+    - headless_laptop_asusd_unit.stat.exists
+    - not ansible_check_mode
+  block:
+    - name: Gather power management services
+      ansible.builtin.service_facts:
+
+    - name: Disable competing power profiles daemon
+      ansible.builtin.systemd:
+        name: power-profiles-daemon.service
+        enabled: false
+        state: stopped
+        masked: true
+      when: "'power-profiles-daemon.service' in ansible_facts.services"
+
+    - name: Enable ASUS system services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+        daemon_reload: true
+      loop: [asusd.service, asus-shutdown.service]
+
+    - name: Inspect ASUS charge limit
+      ansible.builtin.command:
+        argv: ["{{ homebrew_prefix }}/bin/asusctl", battery, info]
+      register: headless_laptop_asus_battery
+      changed_when: false
+      failed_when: "'Current battery charge limit:' not in headless_laptop_asus_battery.stdout"
+
+    - name: Set ASUS charge limit
+      ansible.builtin.command:
+        argv: ["{{ homebrew_prefix }}/bin/asusctl", battery, limit, "{{ headless_laptop_battery_charge_limit | string }}"]
+      changed_when: true
+      when: "('Current battery charge limit: ' ~ headless_laptop_battery_charge_limit ~ '%') not in headless_laptop_asus_battery.stdout"
+
+    - name: Inspect available ASUS profiles
+      ansible.builtin.command:
+        argv: ["{{ homebrew_prefix }}/bin/asusctl", profile, list]
+      register: headless_laptop_asus_profile_choices
+      changed_when: false
+      failed_when: >-
+        'LowPower' not in headless_laptop_asus_profile_choices.stdout_lines and
+        'Quiet' not in headless_laptop_asus_profile_choices.stdout_lines
+
+    - name: Select lowest-power ASUS profile
+      ansible.builtin.set_fact:
+        headless_laptop_asus_power_profile: >-
+          {{ 'LowPower' if 'LowPower' in headless_laptop_asus_profile_choices.stdout_lines else 'Quiet' }}
+
+    - name: Inspect ASUS profiles
+      ansible.builtin.command:
+        argv: ["{{ homebrew_prefix }}/bin/asusctl", profile, get]
+      register: headless_laptop_asus_profiles
+      changed_when: false
+      failed_when: "'AC profile' not in headless_laptop_asus_profiles.stdout or 'Battery profile' not in headless_laptop_asus_profiles.stdout"
+
+    - name: Set ASUS power-saving profiles
+      ansible.builtin.command:
+        argv: ["{{ homebrew_prefix }}/bin/asusctl", profile, set, "{{ headless_laptop_asus_power_profile }}", "{{ item.flag }}"]
+      loop:
+        - {flag: --ac, prefix: 'AC profile '}
+        - {flag: --battery, prefix: 'Battery profile '}
+      changed_when: true
+      when: (item.prefix ~ headless_laptop_asus_power_profile) not in headless_laptop_asus_profiles.stdout
+
+    - name: Apply ASUS power-saving profile now
+      ansible.builtin.command:
+        argv: ["{{ homebrew_prefix }}/bin/asusctl", profile, set, "{{ headless_laptop_asus_power_profile }}"]
+      changed_when: true
+      when: "('Active profile: ' ~ headless_laptop_asus_power_profile) not in headless_laptop_asus_profiles.stdout"
+
+    - name: Verify ASUS charge limit
+      ansible.builtin.command:
+        argv: ["{{ homebrew_prefix }}/bin/asusctl", battery, info]
+      register: headless_laptop_asus_battery_verify
+      changed_when: false
+      failed_when: "('Current battery charge limit: ' ~ headless_laptop_battery_charge_limit ~ '%') not in headless_laptop_asus_battery_verify.stdout"
+
+    - name: Verify ASUS power-saving profiles
+      ansible.builtin.command:
+        argv: ["{{ homebrew_prefix }}/bin/asusctl", profile, get]
+      register: headless_laptop_asus_profiles_verify
+      changed_when: false
+      failed_when: >-
+        ('Active profile: ' ~ headless_laptop_asus_power_profile) not in headless_laptop_asus_profiles_verify.stdout or
+        ('AC profile ' ~ headless_laptop_asus_power_profile) not in headless_laptop_asus_profiles_verify.stdout or
+        ('Battery profile ' ~ headless_laptop_asus_power_profile) not in headless_laptop_asus_profiles_verify.stdout
+
+    - name: Disable legacy battery charge service
+      ansible.builtin.systemd:
+        name: battery-charge-limit.service
+        state: stopped
+        enabled: false
+      when: "'battery-charge-limit.service' in ansible_facts.services"
+
+- name: Report ASUS daemon installation pending in check mode
+  ansible.builtin.debug:
+    msg: ASUS services and hardware policy will be configured after the Homebrew cask is installed.
+  when: ansible_check_mode and not headless_laptop_asusd_unit.stat.exists
+
+- name: Require ASUS daemon installation
+  ansible.builtin.assert:
+    that: headless_laptop_asusd_unit.stat.exists
+    fail_msg: Install the asusctl Homebrew cask before configuring the ASUS daemon.
+  when: not ansible_check_mode

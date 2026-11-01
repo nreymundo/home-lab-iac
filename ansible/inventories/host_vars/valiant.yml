@@ -18,8 +18,12 @@ docker_install_enabled: true
 
 # Enable Homebrew installation on this host
 homebrew_install_enabled: true
+homebrew_taps: [ublue-os/tap]
+homebrew_casks: [asusctl-linux]
+homebrew_auto_update_enabled: true
+homebrew_auto_update_services: [asusd.service, asus-shutdown.service]
 
-swapfile_enabled: true
+swapfile_enabled: false
 
 ssh_hardening_sshd_settings:
   PermitRootLogin: "no"
@@ -27,12 +31,13 @@ ssh_hardening_sshd_settings:
   ChallengeResponseAuthentication: "no"
   UsePAM: "yes"
 
-host_power_backend: power-profiles-daemon
-host_power_profile: power-saver
+host_power_backend: none
 nodejs_runtime_install_enabled: true
 common_kernel_params_add: [crashkernel=0]
 headless_laptop_battery_charge_limit: 60
-headless_laptop_asus_quiet_fan_percent: 20
+headless_laptop_asus_quiet_fan_policy_enabled: false
+headless_laptop_asusd_enabled: true
+host_hardware_extra_packages: [nvtop]
 common_extra_packages:
   # System diagnostics
   - htop

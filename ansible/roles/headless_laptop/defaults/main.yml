@@ -17,6 +17,7 @@ headless_laptop_sleep_targets:
   - suspend-then-hibernate.target
 
 headless_laptop_battery_charge_limit: 80
+headless_laptop_asusd_enabled: false
 
 headless_laptop_asus_quiet_fan_policy_enabled: true
 headless_laptop_asus_quiet_fan_percent: 30

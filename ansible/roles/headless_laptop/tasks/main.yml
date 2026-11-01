@@ -20,3 +20,8 @@
 
 - name: Configure battery charge limit
   ansible.builtin.include_tasks: battery_charge_limit.yml
+  when: not headless_laptop_asusd_enabled | bool
+
+- name: Configure ASUS daemon
+  ansible.builtin.include_tasks: asusd.yml
+  when: headless_laptop_asusd_enabled | bool

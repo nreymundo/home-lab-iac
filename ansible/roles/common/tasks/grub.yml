@@ -21,7 +21,7 @@
 - name: Install managed Ubuntu GRUB kernel parameter drop-in
   ansible.builtin.template:
     src: 99-ansible-kernel-params.cfg.j2
-    dest: /etc/default/grub.d/99-ansible-kernel-params.cfg
+    dest: /etc/default/grub.d/zz-ansible-kernel-params.cfg
     owner: root
     group: root
     mode: "0644"
@@ -35,7 +35,7 @@
 
 - name: Remove managed Ubuntu GRUB drop-in when no parameters are requested
   ansible.builtin.file:
-    path: /etc/default/grub.d/99-ansible-kernel-params.cfg
+    path: /etc/default/grub.d/zz-ansible-kernel-params.cfg
     state: absent
   when: common_grub_add | length == 0 and common_grub_remove | length == 0
   register: common_grub_configuration_removed
@@ -45,8 +45,22 @@
   tags:
     - boot
 
+- name: Remove superseded Ubuntu GRUB parameter drop-in
+  ansible.builtin.file:
+    path: /etc/default/grub.d/99-ansible-kernel-params.cfg
+    state: absent
+  register: common_grub_legacy_removed
+  notify:
+    - Update grub
+    - Mark GRUB reboot required
+  tags:
+    - boot
+
 - name: Mark reboot required after GRUB configuration changes
   ansible.builtin.set_fact:
-    common_grub_configuration_changed: "{{ (common_grub_configuration.changed | default(false)) or (common_grub_configuration_removed.changed | default(false)) }}"
+    common_grub_configuration_changed: >-
+      {{ (common_grub_configuration.changed | default(false)) or
+         (common_grub_configuration_removed.changed | default(false)) or
+         (common_grub_legacy_removed.changed | default(false)) }}
   tags:
     - boot

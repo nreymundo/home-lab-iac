@@ -45,3 +45,7 @@
 - name: Install configured Homebrew packages
   ansible.builtin.include_tasks: brew-packages.yml
   when: homebrew_install_enabled | bool
+
+- name: Configure Homebrew taps, casks and updates
+  ansible.builtin.include_tasks: maintenance.yml
+  when: homebrew_install_enabled | bool

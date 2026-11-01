@@ -1,0 +1,10 @@
+[Unit]
+Description=Scheduled Homebrew package updates
+
+[Timer]
+OnCalendar={{ homebrew_auto_update_calendar }}
+Persistent=true
+Unit=homebrew-update.service
+
+[Install]
+WantedBy=timers.target

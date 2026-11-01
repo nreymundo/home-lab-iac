@@ -33,3 +33,8 @@ homebrew_packages_redhat:
 # Homebrew packages to install after bootstrap.
 # Intended for host/group overrides in inventory vars.
 homebrew_brew_packages: []
+homebrew_taps: []
+homebrew_casks: []
+homebrew_auto_update_enabled: false
+homebrew_auto_update_calendar: "*-*-* 05:00:00"
+homebrew_auto_update_services: []

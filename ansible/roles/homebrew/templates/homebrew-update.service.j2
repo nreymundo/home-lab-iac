@@ -1,0 +1,16 @@
+[Unit]
+Description=Update Homebrew packages
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User={{ homebrew_user }}
+Environment=HOME={{ getent_passwd[homebrew_user][4] }}
+Environment=PATH={{ homebrew_prefix }}/bin:{{ homebrew_prefix }}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=NONINTERACTIVE=1
+ExecStart={{ homebrew_prefix }}/bin/brew update
+ExecStart={{ homebrew_prefix }}/bin/brew upgrade
+{% for service in homebrew_auto_update_services %}
+ExecStopPost=+/usr/bin/systemctl start {{ service }}
+{% endfor %}
