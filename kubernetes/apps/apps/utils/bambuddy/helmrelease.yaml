@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -12,7 +13,7 @@ spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       nodeSelector:
-        kubernetes.io/hostname: k3s-node-03
+        kubernetes.io/hostname: daring
     controllers:
       main:
         strategy: Recreate
