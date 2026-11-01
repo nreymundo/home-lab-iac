@@ -48,6 +48,7 @@ spec:
       autoCleanupSnapshotAfterOnDemandBackupCompleted: true
       concurrentAutomaticEngineUpgradePerNodeLimit: 1
       guaranteedInstanceManagerCPU: '{"v1":"8","v2":"8"}'
+      storageReservedPercentageForDefaultDisk: "0"
     persistence:
       defaultClass: false # we will create our own StorageClass + mark it default
     # S3 Backup Target (Garage)
