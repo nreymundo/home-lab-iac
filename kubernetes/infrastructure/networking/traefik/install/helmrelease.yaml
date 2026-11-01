@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -122,6 +123,8 @@ spec:
 
     deployment:
       replicas: 3
+      podAnnotations:
+        maintenance.lainternetdelpantano.xyz/plugin-cache-reload: "2026-11-01"
       podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
