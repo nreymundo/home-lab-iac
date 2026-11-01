@@ -58,3 +58,11 @@
     - common_apparmor_disabled_profiles | length > 0
   tags:
     - apparmor
+
+- name: Allow containerd default profile signals to stacked peers
+  ansible.builtin.import_tasks: containerd-apparmor.yml
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - common_apparmor_containerd_stacked_signals | bool
+  tags:
+    - apparmor

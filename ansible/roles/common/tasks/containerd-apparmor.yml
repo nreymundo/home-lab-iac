@@ -1,0 +1,10 @@
+---
+- name: Install containerd default AppArmor profile with stacked-peer signals
+  ansible.builtin.copy:
+    src: cri-containerd.apparmor.d
+    dest: /etc/apparmor.d/cri-containerd.apparmor.d
+    owner: root
+    group: root
+    mode: "0644"
+    validate: apparmor_parser --skip-kernel-load --skip-read-cache %s
+  notify: Load containerd default AppArmor profile

@@ -44,3 +44,13 @@
     name: systemd-journald
     state: restarted
   when: not ansible_check_mode
+
+- name: Load containerd default AppArmor profile
+  ansible.builtin.command:
+    argv:
+      - apparmor_parser
+      - --replace
+      - --skip-read-cache
+      - /etc/apparmor.d/cri-containerd.apparmor.d
+  changed_when: true
+  when: not ansible_check_mode

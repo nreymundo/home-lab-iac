@@ -4,6 +4,7 @@
 common_apparmor_disabled_profiles:
   - wg-quick
   - wg
+common_apparmor_containerd_stacked_signals: true
 
 host_power_backend: sysfs
 host_power_cpu_governor: powersave
