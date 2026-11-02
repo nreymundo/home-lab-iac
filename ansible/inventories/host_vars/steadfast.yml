@@ -1,0 +1,54 @@
+---
+common_kernel_params_add:
+  # Preserve Framework's previous 108 GiB TTM allowance (4 KiB pages).
+  - ttm.pages_limit=28311552
+  - ttm.page_pool_size=28311552
+  - crashkernel=0
+
+common_extra_packages:
+  - btop
+  - tmux
+  - tree
+  - ripgrep
+  - fd-find
+  - iotop
+  - iftop
+  - nethogs
+  - restic
+  - build-essential
+  - pkg-config
+  - cmake
+  - ninja-build
+  - python3-venv
+  - pipx
+
+host_hardware_gpu_profiles: [amd]
+host_hardware_validate_gpu: true
+host_hardware_validate_vulkan: true
+host_hardware_extra_packages:
+  - nvtop
+  - amd-smi
+  - rocm-smi
+  - rocminfo
+  - libdrm-tests
+  - mesa-utils
+  - ffmpeg
+
+host_power_backend: sysfs
+host_power_cpu_governor: powersave
+host_power_cpu_epp: power
+host_power_cpu_boost: false
+host_power_platform_profile: low-power
+host_power_powertop_auto_tune: true
+
+k3s_iface: enp191s0
+k3s_storage_mode: manual
+k3s_storage_expected_uuid: 6446d218-0a57-48af-830d-23dc44919e91
+k3s_allow_workloads: true
+k3s_node_labels:
+  homelab.lan/cpu-vendor: amd
+  homelab.lan/gpu: amd
+  homelab.lan/role: general
+  homelab.lan/runtime: baremetal
+  topology.kubernetes.io/zone: steadfast
+swapfile_enabled: false
