@@ -1,4 +1,6 @@
 ---
+common_apparmor_containerd_stacked_signals: true
+
 common_kernel_params_add:
   # Preserve Framework's previous 108 GiB TTM allowance (4 KiB pages).
   - ttm.pages_limit=28311552
