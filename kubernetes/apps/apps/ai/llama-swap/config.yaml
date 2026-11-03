@@ -89,7 +89,7 @@ models:
     proxy: http://127.0.0.1:${PORT}
   chatterbox-turbo:
     name: Chatterbox Turbo Q8_0
-    description: On-demand offline speech synthesis and voice cloning; independent GPU backend
+    description: On-demand offline speech synthesis; independent GPU backend
     checkEndpoint: /health
     ttl: 900
     capabilities:

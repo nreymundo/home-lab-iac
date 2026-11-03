@@ -42,6 +42,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(400, "invalid JSON body")
             return
         request["stream"] = True
+        # Streamed audio defaults to PCM; explicit PCM trips the MP3 frontend.
+        if request.get("response_format") == "pcm":
+            request.pop("response_format")
 
         conn = http.client.HTTPConnection(UPSTREAM_HOST, UPSTREAM_PORT, timeout=600)
         try:
