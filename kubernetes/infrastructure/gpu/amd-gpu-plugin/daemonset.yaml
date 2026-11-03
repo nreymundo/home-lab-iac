@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: amd-gpu-plugin
+  namespace: gpu-system
+  annotations:
+    checkov.io/skip1: CKV_K8S_23=Device registration requires access to the root-owned kubelet socket directory.
+    checkov.io/skip2: CKV_K8S_40=Device registration requires UID 0 for the kubelet socket directory.
+    checkov.io/skip3: CKV2_K8S_6=Node device registration uses Unix sockets; this plugin has no workload API.
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: amd-gpu-plugin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: amd-gpu-plugin
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        seccompProfile:
+          type: RuntimeDefault
+      priorityClassName: system-node-critical
+      nodeSelector:
+        kubernetes.io/hostname: steadfast
+      tolerations:
+        - operator: Exists
+          effect: NoExecute
+        - operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: plugin
+          # renovate: datasource=docker depName=squat/generic-device-plugin registryUrl=https://docker.io
+          image: docker.io/squat/generic-device-plugin:latest@sha256:8dc84958301f054bf72d9753a7a2c9af3d6642a9844b34d1171b3f2cdb4a15f6
+          args:
+            - --device
+            # Slots share one physical GPU; they do not reserve GPU memory.
+            - >-
+              {"name":"amd-gpu","groups":[{"count":32,"paths":[
+              {"path":"/dev/kfd"},{"path":"/dev/dri/renderD128"},{"path":"/dev/dri/card1"}]}]}
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: device-plugins
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: devices
+              mountPath: /dev
+              readOnly: true
+      volumes:
+        - name: device-plugins
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+            type: Directory
+        - name: devices
+          hostPath:
+            path: /dev
+            type: Directory
