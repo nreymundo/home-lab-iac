@@ -22,13 +22,71 @@ groups:
       - majentik/qwen3-embedding-4b
       - qwen/qwen3-reranker-0.6b
       - d3-mini
+      - audiocpp_auto
+  chatterbox-on-demand:
+    swap: false
+    exclusive: false
+    persistent: false
+    members:
+      - chatterbox-turbo
 hooks:
   on_startup:
     preload:
       - majentik/qwen3-embedding-4b
       - qwen/qwen3-reranker-0.6b
       - d3-mini
+      - audiocpp_auto
 models:
+  audiocpp_auto:
+    name: Higgs TTS 3 4B Q8_0
+    description: Boson AI multilingual speech and voice cloning; native audio.cpp, resident low-idle backend
+    aliases: [higgs-audio-tts]
+    useModelName: higgs-audio-tts
+    checkEndpoint: /health
+    ttl: 0
+    capabilities:
+      in: [text, audio]
+      out: [audio]
+      disableAuto: true
+    cmd: >-
+      kubeswap serve --namespace ai-backends --model audiocpp_auto
+      --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
+      --image ghcr.io/mostlygeek/llama-swap:unified-vulkan-269@sha256:bcb532139b072e4c34ba1dece004db1c5c25cbffd8d099fa26d92caa29edc2a3
+      --command /bin/sh --command -c
+      --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
+      --request cpu=100m --request memory=6Gi
+      --env OMP_WAIT_POLICY=PASSIVE --env KMP_BLOCKTIME=0
+      --env AUDIOCPP_CONFIG_BASE64=${env.AUDIOCPP_HIGGS_CONFIG}
+      --volume hostpath:/srv/ai/models:/opt/ai/models:ro
+      --volume hostpath:/srv/ai/audio/voices:/var/lib/audio-cpp/voices
+      -- 'printf %s "$AUDIOCPP_CONFIG_BASE64" | base64 -d > /tmp/audio.json &&
+      exec audiocpp_server --config /tmp/audio.json --host 0.0.0.0 --port 8080 --ui'
+    cmdStop: kubeswap delete --namespace ai-backends --model audiocpp_auto --wait
+    proxy: http://127.0.0.1:${PORT}
+  chatterbox-turbo:
+    name: Chatterbox Turbo Q8_0
+    description: On-demand offline speech synthesis and voice cloning; independent GPU backend
+    checkEndpoint: /health
+    ttl: 900
+    capabilities:
+      in: [text, audio]
+      out: [audio]
+      disableAuto: true
+    cmd: >-
+      kubeswap serve --namespace ai-backends --model chatterbox-turbo
+      --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
+      --image ghcr.io/mostlygeek/llama-swap:unified-vulkan-269@sha256:bcb532139b072e4c34ba1dece004db1c5c25cbffd8d099fa26d92caa29edc2a3
+      --command /bin/sh --command -c
+      --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
+      --request cpu=100m --request memory=3Gi
+      --env OMP_WAIT_POLICY=PASSIVE --env KMP_BLOCKTIME=0
+      --env AUDIOCPP_CONFIG_BASE64=${env.AUDIOCPP_CHATTERBOX_CONFIG}
+      --volume hostpath:/srv/ai/models:/opt/ai/models:ro
+      --volume hostpath:/srv/ai/audio/voices:/var/lib/audio-cpp/voices
+      -- 'printf %s "$AUDIOCPP_CONFIG_BASE64" | base64 -d > /tmp/audio.json &&
+      exec audiocpp_server --config /tmp/audio.json --host 0.0.0.0 --port 8080 --ui'
+    cmdStop: kubeswap delete --namespace ai-backends --model chatterbox-turbo --wait
+    proxy: http://127.0.0.1:${PORT}
   d3-mini:
     name: d3-mini Q8_0 Decision Model
     description: Always-on text decision classifier via /v1/systemone; Vulkan, 16K single-batch context, low-idle settings

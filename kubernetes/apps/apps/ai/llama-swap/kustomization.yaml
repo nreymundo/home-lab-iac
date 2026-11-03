@@ -13,6 +13,8 @@ configMapGenerator:
     files:
       - config.yaml
       - start.py
+      - audio-higgs.json
+      - audio-chatterbox.json
     options:
       annotations:
         kustomize.toolkit.fluxcd.io/substitute: disabled

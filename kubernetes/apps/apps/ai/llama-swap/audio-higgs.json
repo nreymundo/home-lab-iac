@@ -1,0 +1,18 @@
+{
+  "host": "0.0.0.0",
+  "backend": "vulkan",
+  "threads": 8,
+  "lazy_load": false,
+  "idle_unload_ms": 0,
+  "max_loaded_models": 1,
+  "voice_dir": "/var/lib/audio-cpp/voices",
+  "models": [
+    {
+      "id": "higgs-audio-tts",
+      "family": "higgs_audio_tts",
+      "path": "/opt/ai/models/Higgs-Audio-v3-TTS-4B-GGUF/higgs-audio-v3-tts-4b-q8_0.gguf",
+      "task": "tts",
+      "mode": "streaming"
+    }
+  ]
+}

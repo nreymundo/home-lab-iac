@@ -1,0 +1,18 @@
+{
+  "host": "0.0.0.0",
+  "backend": "vulkan",
+  "threads": 8,
+  "lazy_load": false,
+  "idle_unload_ms": 0,
+  "max_loaded_models": 1,
+  "voice_dir": "/var/lib/audio-cpp/voices",
+  "models": [
+    {
+      "id": "chatterbox-turbo",
+      "family": "chatterbox_turbo",
+      "path": "/opt/ai/models/Chatterbox-Turbo-GGUF/chatterbox-turbo-q8_0.gguf",
+      "task": "tts",
+      "mode": "offline"
+    }
+  ]
+}
