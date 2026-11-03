@@ -195,10 +195,6 @@ spec:
                 icon: kopia.png
                 description: "Backup software"
                 href: https://kopia.lan.${CLUSTER_DOMAIN}
-            - Llama Swap:
-                icon: ollama.png
-                description: "LLM model hot-swapping proxy"
-                href: https://llama.lan.${CLUSTER_DOMAIN}
             # - NetBird:
             #     icon: netbird.png
             #     description: "Zero-trust network access"
@@ -355,6 +351,10 @@ spec:
                 icon: litlellm.png
                 description: "LLM gateway"
                 href: https://litellm.lan.${CLUSTER_DOMAIN}/ui
+            - Llama Swap:
+                icon: ollama.png
+                description: "Kubernetes model router on steadfast"
+                href: https://llama.lan.${CLUSTER_DOMAIN}
             - Longhorn:
                 icon: longhorn.png
                 description: "Storage management"

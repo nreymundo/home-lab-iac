@@ -5,6 +5,7 @@ components:
   - ../../../../components/bjw-s-defaults
 resources:
   - helmrelease.yaml
+  - ingress.yaml
   - rbac.yaml
 configMapGenerator:
   - name: llama-swap-config

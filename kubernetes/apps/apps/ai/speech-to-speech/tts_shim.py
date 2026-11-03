@@ -12,7 +12,7 @@ import os
 import http.client
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-UPSTREAM_HOST = os.environ.get("UPSTREAM_HOST", "llama-swap.external-proxy.svc.cluster.local")
+UPSTREAM_HOST = os.environ.get("UPSTREAM_HOST", "llama-swap.ai.svc.cluster.local")
 UPSTREAM_PORT = int(os.environ.get("UPSTREAM_PORT", "8080"))
 API_KEY = os.environ.get("LLAMA_SWAP_API_KEY", "")
 
