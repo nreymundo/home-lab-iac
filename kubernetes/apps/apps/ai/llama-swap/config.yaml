@@ -83,6 +83,7 @@ models:
       in: [text, image]
       out: [image]
       disableAuto: true
+    # The shell forwards SIGTERM: Python as PID 1 otherwise waits for the pod's forced kill.
     cmd: >-
       python3 /etc/llama-swap/comfyui.py ${PORT}
       --namespace ai-backends --model comfyui_auto
@@ -109,8 +110,9 @@ models:
       if [ -d /opt/ComfyUI/custom_nodes/ComfyUI-AMDGPUMonitor ]; then
       mv /opt/ComfyUI/custom_nodes/ComfyUI-AMDGPUMonitor /opt/ComfyUI/custom_nodes/ComfyUI-AMDGPUMonitor.disabled; fi &&
       mkdir -p /tmp/comfyui-api && printf %s "$COMFYUI_MODELS_BASE64" | base64 -d > /tmp/comfyui-api/models.yaml &&
-      cd /opt/ComfyUI && exec python main.py --listen 0.0.0.0 --port 8000 --output-directory /root/comfy-outputs
-      --lowvram --disable-smart-memory --cache-none --disable-mmap --bf16-vae --disable-pinned-memory'
+      cd /opt/ComfyUI && { python main.py --listen 0.0.0.0 --port 8000 --output-directory /root/comfy-outputs
+      --lowvram --disable-smart-memory --cache-none --disable-mmap --bf16-vae --disable-pinned-memory &
+      pid=$!; trap "kill -TERM $pid; wait $pid" TERM INT; wait "$pid"; }'
     cmdStop: /bin/kill -TERM ${PID}
     # kubeswap v269's HTTP proxy cannot upgrade WebSockets; its generated Service can.
     proxy: http://comfyui-auto-06978d6a-svc.ai-backends.svc.cluster.local:8000

@@ -13,6 +13,12 @@ server {
         return 200 'ok';
     }
 
+    # LiteLLM polls discovery; advertising the models.yaml registry must not load the GPU backend.
+    location = /v1/models {
+        default_type application/json;
+        return 200 '{"object":"list","data":[{"id":"qwen-image-2.1-turbo","object":"model","created":0,"owned_by":"comfyui"}]}';
+    }
+
     location / {
         proxy_pass http://llama-swap.ai.svc.cluster.local:8080/comfyui/;
         proxy_http_version 1.1;
