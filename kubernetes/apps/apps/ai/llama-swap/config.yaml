@@ -24,6 +24,9 @@ groups:
       - d3-mini
       - audiocpp_auto
       - whisper/large-v3-turbo-q5_0
+      - unsloth/gemma-4-e4b-it-qat
+      - unsloth/gemma-4-12b-it-qat-camera
+      - unsloth/qwen3.8-27b
   chatterbox-on-demand:
     swap: false
     exclusive: false
@@ -60,6 +63,9 @@ hooks:
       - d3-mini
       - audiocpp_auto
       - whisper/large-v3-turbo-q5_0
+      - unsloth/gemma-4-e4b-it-qat
+      - unsloth/gemma-4-12b-it-qat-camera
+      - unsloth/qwen3.8-27b
 models:
   audiocpp_auto:
     name: Higgs TTS 3 4B Q8_0
@@ -455,4 +461,106 @@ models:
       --parallel 1 --batch-size 1024 --ubatch-size 512 -ngl 999 -fa on --device Vulkan0 --cache-ram 0 --metrics
       --no-webui --sleep-idle-seconds 30
     cmdStop: kubeswap delete --namespace ai-backends --model adilkairolla/zeta-2.1 --wait 60s
+    proxy: http://127.0.0.1:${PORT}
+  unsloth/gemma-4-e4b-it-qat:
+    name: Gemma 4 E4B QAT UD Q4_K_XL
+    description: Gemma 4 E4B QAT for Home Assistant and n8n automation; reasoning disabled
+    capabilities:
+      in:
+        - text
+      out:
+        - text
+      tools: true
+      context: 65536
+    cmd: >-
+      kubeswap serve --namespace ai-backends --model unsloth/gemma-4-e4b-it-qat --listen '127.0.0.1:${PORT}' --port
+      8080 --startup-timeout 480s --grace 30s --strict --image docker.io/kyuz0/amd-strix-halo-toolboxes:vulkan-radv@sha256:132730e57ecd96d33411f9b625565350ca2f68f0363ae0c7f4926ccd43d4a2fc
+      --command /usr/bin/llama-server --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
+      --request cpu=100m --request memory=5Gi --volume hostpath:/srv/ai/models:/opt/ai/models:ro -- --alias unsloth/gemma-4-e4b-it-qat
+      --host 0.0.0.0 --port 8080 -m /opt/ai/models/unsloth/gemma4/e4b/gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf --jinja
+      --reasoning off -ngl 999 -fa on --ctx-size 65536 --n-predict 2048 --parallel 2 --batch-size 2048 --ubatch-size
+      512 --cache-type-k q8_0 --cache-type-v q8_0 --temp 0.2 --top-p 0.8 --top-k 20 --min-p 0 --presence-penalty
+      0.0 --repeat-penalty 1.0 --metrics --cache-ram 0 --device Vulkan0
+    cmdStop: kubeswap delete --namespace ai-backends --model unsloth/gemma-4-e4b-it-qat --wait 60s
+    proxy: http://127.0.0.1:${PORT}
+  unsloth/gemma-4-12b-it-qat-camera:
+    name: Gemma 4 12B QAT Camera UD Q4_K_XL
+    description: Gemma 4 12B QAT for Frigate camera and general multimodal analysis; reasoning disabled
+    capabilities:
+      in:
+        - text
+        - image
+      out:
+        - text
+      tools: true
+      context: 32768
+    cmd: >-
+      kubeswap serve --namespace ai-backends --model unsloth/gemma-4-12b-it-qat-camera --listen '127.0.0.1:${PORT}'
+      --port 8080 --startup-timeout 480s --grace 30s --strict --image docker.io/kyuz0/amd-strix-halo-toolboxes:vulkan-radv@sha256:132730e57ecd96d33411f9b625565350ca2f68f0363ae0c7f4926ccd43d4a2fc
+      --command /usr/bin/llama-server --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
+      --request cpu=100m --request memory=8Gi --volume hostpath:/srv/ai/models:/opt/ai/models:ro -- --alias unsloth/gemma-4-12b-it-qat-camera
+      --host 0.0.0.0 --port 8080 -m /opt/ai/models/unsloth/gemma4/12b/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf --mmproj
+      /opt/ai/models/unsloth/gemma4/12b/mmproj-BF16.gguf --jinja --reasoning off -ngl 999 -fa on --ctx-size 32768
+      --n-predict 2048 --parallel 1 --batch-size 2048 --ubatch-size 512 --cache-type-k q8_0 --cache-type-v q8_0
+      --image-max-tokens 560 --temp 0.2 --top-p 0.8 --top-k 20 --min-p 0 --presence-penalty 0.0 --repeat-penalty
+      1.0 --metrics --cache-ram 0 --no-mmproj-offload --device Vulkan0
+    cmdStop: kubeswap delete --namespace ai-backends --model unsloth/gemma-4-12b-it-qat-camera --wait 60s
+    proxy: http://127.0.0.1:${PORT}
+  unsloth/qwen3.8-27b:
+    useModelName: qwen3.8-27b-unsloth
+    filters:
+      setParams:
+        reasoning_effort?: medium
+        max_tokens?: 8192
+      setParamsByID:
+        unsloth/qwen3.8-27b-documents:
+          reasoning_effort: none
+          temperature: 0.7
+          top_p: 0.8
+          top_k: 20
+          min_p: 0.0
+          presence_penalty: 1.5
+          repeat_penalty: 1.0
+          max_tokens?: 4096
+        unsloth/qwen3.8-27b-coding:
+          reasoning_effort: medium
+          temperature: 1.0
+          top_p: 0.95
+          top_k: 20
+          min_p: 0.0
+          presence_penalty: 0.0
+          repeat_penalty: 1.0
+          max_tokens?: 8192
+        unsloth/qwen3.8-27b-analysis:
+          reasoning_effort: xhigh
+          temperature: 1.0
+          top_p: 0.95
+          top_k: 20
+          min_p: 0.0
+          presence_penalty: 0.0
+          repeat_penalty: 1.0
+          max_tokens?: 8192
+    name: Unsloth Qwen3.8 27B Q4_K_M - Shared 3-Slot Workhorse
+    description: Primary always-on multimodal model for chat, tools, coding, documents and analysis; 3 concurrent
+      slots, 393216-token unified KV pool, 262144-token per-request cap, MTP enabled, low-idle settings
+    capabilities:
+      in:
+        - text
+        - image
+      out:
+        - text
+      tools: true
+      context: 262144
+    cmd: >-
+      kubeswap serve --namespace ai-backends --model unsloth/qwen3.8-27b --listen '127.0.0.1:${PORT}' --port 8080
+      --startup-timeout 480s --grace 30s --strict --image docker.io/kyuz0/amd-strix-halo-toolboxes:vulkan-radv@sha256:132730e57ecd96d33411f9b625565350ca2f68f0363ae0c7f4926ccd43d4a2fc
+      --command /usr/bin/llama-server --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
+      --request cpu=100m --request memory=18Gi --volume hostpath:/srv/ai/models:/opt/ai/models:ro -- --alias qwen3.8-27b-unsloth
+      --host 0.0.0.0 --port 8080 -m /opt/ai/models/unsloth/Qwen3.8/27b/Qwen3.8-27B-UD-Q4_K_M.gguf --mmproj /opt/ai/models/unsloth/Qwen3.8/27b/mmproj-F16.gguf
+      --jinja --ctx-size 393216 --parallel 3 --kv-unified --kv-unified-per-slot 262144 --n-predict 8192 --batch-size
+      2048 --ubatch-size 512 --cache-type-k q8_0 --cache-type-v q8_0 --cache-ram 0 --cache-reuse 256 --no-mmproj-offload
+      -ngl 999 -fa on --device Vulkan0 --image-max-tokens 1120 --spec-type draft-mtp --spec-draft-n-max 3 --reasoning
+      auto --reasoning-effort medium --reasoning-preserve --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty
+      0.0 --repeat-penalty 1.0 --metrics --no-webui
+    cmdStop: kubeswap delete --namespace ai-backends --model unsloth/qwen3.8-27b --wait 60s
     proxy: http://127.0.0.1:${PORT}
