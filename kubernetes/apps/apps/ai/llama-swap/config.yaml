@@ -21,12 +21,38 @@ groups:
     members:
       - majentik/qwen3-embedding-4b
       - qwen/qwen3-reranker-0.6b
+      - d3-mini
 hooks:
   on_startup:
     preload:
       - majentik/qwen3-embedding-4b
       - qwen/qwen3-reranker-0.6b
+      - d3-mini
 models:
+  d3-mini:
+    name: d3-mini Q8_0 Decision Model
+    description: Always-on text decision classifier via /v1/systemone; Vulkan, 16K single-batch context, low-idle settings
+    ttl: 0
+    capabilities:
+      in: [text]
+      out: [decisions]
+      tools: false
+      context: 16384
+      disableAuto: true
+    cmd: >-
+      kubeswap serve --namespace ai-backends --model d3-mini
+      --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
+      --image docker.io/kyuz0/amd-strix-halo-toolboxes:vulkan-radv@sha256:132730e57ecd96d33411f9b625565350ca2f68f0363ae0c7f4926ccd43d4a2fc
+      --command /usr/bin/llama-server
+      --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
+      --request cpu=100m --request memory=6Gi
+      --volume hostpath:/srv/ai/models:/opt/ai/models:ro
+      -- --alias d3-mini --host 0.0.0.0 --port 8080
+      -m /opt/ai/models/ggml-org/d3-mini/vllm-d3-mini-Q8_0.gguf
+      --ctx-size 16384 --batch-size 16384 --ubatch-size 16384 --parallel 1
+      -ngl 999 -fa on --device Vulkan0 --cache-ram 0 --poll 0 --poll-batch 0 --metrics --no-webui
+    cmdStop: kubeswap delete --namespace ai-backends --model d3-mini --wait
+    proxy: http://127.0.0.1:${PORT}
   majentik/qwen3-embedding-4b:
     name: Qwen3 Embedding 4B Q4_K_M
     description: Qwen3 4B embedding model for GPU-backed test embeddings
