@@ -48,6 +48,7 @@ resources:
   - ../apps/ai/litellm
   - ../apps/ai/llama-swap
   - ../apps/ai/comfyui
+  - ../apps/ai/audiomuse
   - ../apps/ai/open-webui
   - ../apps/security/frigate
   - ../apps/immich
