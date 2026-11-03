@@ -10,7 +10,13 @@ configMapGenerator:
   - name: comfyui-config
     namespace: ai
     files:
-      - start.py
       - models.yaml
+  - name: comfyui-proxy-config
+    namespace: ai
+    files:
+      - default.conf.template
+    options:
+      annotations:
+        kustomize.toolkit.fluxcd.io/substitute: disabled
 generatorOptions:
   disableNameSuffixHash: true

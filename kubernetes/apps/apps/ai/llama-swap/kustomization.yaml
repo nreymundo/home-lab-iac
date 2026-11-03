@@ -13,6 +13,7 @@ configMapGenerator:
     files:
       - config.yaml
       - start.py
+      - comfyui.py
       - audio-higgs.json
       - audio-chatterbox.json
     options:

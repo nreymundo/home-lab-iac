@@ -33,6 +33,12 @@ groups:
     persistent: false
     members:
       - chatterbox-turbo
+  comfyui-on-demand:
+    swap: false
+    exclusive: false
+    persistent: false
+    members:
+      - comfyui_auto
   on-demand:
     swap: true
     exclusive: false
@@ -67,6 +73,46 @@ hooks:
       - unsloth/gemma-4-12b-it-qat-camera
       - unsloth/qwen3.8-27b
 models:
+  comfyui_auto:
+    name: ComfyUI Qwen Image
+    description: On-demand image generation and editing; independent queue-aware GPU backend
+    checkEndpoint: /health
+    ttl: 60
+    unlisted: true
+    capabilities:
+      in: [text, image]
+      out: [image]
+      disableAuto: true
+    cmd: >-
+      python3 /etc/llama-swap/comfyui.py ${PORT}
+      --namespace ai-backends --model comfyui_auto
+      --listen 127.0.0.1:${PORT} --port 8000 --startup-timeout 480s --grace 60s --strict
+      --health-path /system_stats --probe-timeout 10s --proxy-response-timeout 0s
+      --image docker.io/library/comfyui-qwen-image:0.40.0-rocm10.1@sha256:7e97034c9a803c1d4efd40f469a7411f91ecdc80afe09ded348976b3b232f315
+      --command /bin/bash --command -lc
+      --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
+      --request cpu=100m --request memory=4Gi
+      --env HOME=/root --env HF_HOME=/root/comfy-models/.cache/huggingface
+      --env HF_XET_HIGH_PERFORMANCE=1 --env MCP_ENABLED=false
+      --env COMFY_BASE_URL=http://127.0.0.1:8000 --env MODELS_FILE=/tmp/comfyui-api/models.yaml
+      --env WORKFLOWS_DIR=/opt/comfy-workflows --env OUTPUT_DIR=/root/comfy-outputs/api
+      --env MAX_CONCURRENCY=1 --env JOB_TIMEOUT=900 --env AUTO_SPLIT_NEGATIVE=false
+      --env TORCH_BLAS_PREFER_HIPBLASLT=1 --env TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1
+      --env PYTHONUNBUFFERED=1 --env COMFYUI_MODELS_BASE64=${env.COMFYUI_MODELS_BASE64}
+      --volume hostpath:/srv/ai/models/comfyui:/root/comfy-models
+      --volume hostpath:/srv/ai/containers/comfyui/output:/root/comfy-outputs
+      --volume hostpath:/srv/ai/containers/comfyui/cache:/root/.cache
+      --volume hostpath:/srv/ai/containers/comfyui/input:/opt/ComfyUI/input
+      --volume hostpath:/srv/ai/containers/comfyui/user:/opt/ComfyUI/user
+      --volume hostpath:/srv/ai/containers/comfyui/workflows/api:/opt/comfy-workflows
+      -- 'source /etc/profile.d/01-rocm-envs.sh && /opt/set_extra_paths.sh &&
+      if [ -d /opt/ComfyUI/custom_nodes/ComfyUI-AMDGPUMonitor ]; then
+      mv /opt/ComfyUI/custom_nodes/ComfyUI-AMDGPUMonitor /opt/ComfyUI/custom_nodes/ComfyUI-AMDGPUMonitor.disabled; fi &&
+      mkdir -p /tmp/comfyui-api && printf %s "$COMFYUI_MODELS_BASE64" | base64 -d > /tmp/comfyui-api/models.yaml &&
+      cd /opt/ComfyUI && exec python main.py --listen 0.0.0.0 --port 8000 --output-directory /root/comfy-outputs
+      --lowvram --disable-smart-memory --cache-none --disable-mmap --bf16-vae --disable-pinned-memory'
+    cmdStop: /bin/kill -TERM ${PID}
+    proxy: http://127.0.0.1:${PORT}
   audiocpp_auto:
     name: Higgs TTS 3 4B Q8_0
     description: Boson AI multilingual speech and voice cloning; native audio.cpp, resident low-idle backend

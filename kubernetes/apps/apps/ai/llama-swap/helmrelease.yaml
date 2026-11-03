@@ -73,6 +73,12 @@ spec:
           http:
             port: 8080
     persistence:
+      comfyui-config:
+        type: configMap
+        name: comfyui-config
+        globalMounts:
+          - path: /etc/comfyui-api
+            readOnly: true
       config:
         type: configMap
         name: llama-swap-config

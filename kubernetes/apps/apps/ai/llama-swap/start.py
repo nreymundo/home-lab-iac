@@ -12,4 +12,5 @@ os.environ["LLAMA_SWAP_API_KEY"] = password
 for model in ("higgs", "chatterbox"):
     config = Path(f"/etc/llama-swap/audio-{model}.json").read_bytes()
     os.environ[f"AUDIOCPP_{model.upper()}_CONFIG"] = base64.b64encode(config).decode()
+os.environ["COMFYUI_MODELS_BASE64"] = base64.b64encode(Path("/etc/comfyui-api/models.yaml").read_bytes()).decode()
 os.execvp("llama-swap", ["llama-swap", "-config", "/etc/llama-swap/config.yaml", "-listen", "0.0.0.0:8080"])
