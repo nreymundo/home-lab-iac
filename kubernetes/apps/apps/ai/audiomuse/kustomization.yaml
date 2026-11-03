@@ -5,6 +5,7 @@ components:
   - ../../../../components/bjw-s-defaults
 resources:
   - helmrelease.yaml
+  - ingress.yaml
   - cnpg-cluster.yaml
   - audiomuse-db-secrets.sops.yaml
   - audiomuse-secrets.sops.yaml

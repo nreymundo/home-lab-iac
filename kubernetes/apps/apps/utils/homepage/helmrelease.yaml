@@ -159,10 +159,6 @@ spec:
 
       services:
         - Local Services:
-            - AudioMuse AI:
-                icon: audiomuse-ai.png
-                description: "AI-powered music analysis and playlist generation"
-                href: https://audiomuse.lan.${CLUSTER_DOMAIN}
             - Code Server:
                 icon: code-server.png
                 description: "Development VM IDE"
@@ -259,6 +255,10 @@ spec:
                 icon: audiobookshelf.png
                 description: "Audiobook server"
                 href: https://audiobooks.lan.${CLUSTER_DOMAIN}
+            - AudioMuse AI:
+                icon: audiomuse-ai.png
+                description: "AI-powered music analysis and playlist generation"
+                href: https://audiomuse.lan.${CLUSTER_DOMAIN}
             - Authentik:
                 icon: authentik.png
                 description: "SSO"
