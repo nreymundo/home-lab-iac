@@ -163,10 +163,6 @@ spec:
                 icon: audiomuse-ai.png
                 description: "AI-powered music analysis and playlist generation"
                 href: https://audiomuse.lan.${CLUSTER_DOMAIN}
-            - Audio.cpp:
-                icon: "https://api.iconify.design/mdi/waveform.svg?color=%23ffffff"
-                description: "Text-to-speech and voice-cloning UI"
-                href: https://llama.lan.${CLUSTER_DOMAIN}/audiocpp/
             - Code Server:
                 icon: code-server.png
                 description: "Development VM IDE"
@@ -259,6 +255,10 @@ spec:
                 icon: air-trail.png
                 description: "Flight history tracker"
                 href: https://airtrail.lan.${CLUSTER_DOMAIN}
+            - Audio.cpp:
+                icon: "https://api.iconify.design/mdi/waveform.svg?color=%23ffffff"
+                description: "GPU speech and voice cloning on steadfast"
+                href: https://llama.lan.${CLUSTER_DOMAIN}/audiocpp/
             - Audiobookshelf:
                 icon: audiobookshelf.png
                 description: "Audiobook server"
