@@ -12,5 +12,8 @@ configMapGenerator:
     files:
       - config.yaml
       - start.py
+    options:
+      annotations:
+        kustomize.toolkit.fluxcd.io/substitute: disabled
 generatorOptions:
   disableNameSuffixHash: true

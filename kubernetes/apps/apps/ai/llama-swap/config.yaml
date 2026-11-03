@@ -35,7 +35,7 @@ models:
       context: 16384
     cmd: >-
       kubeswap serve --namespace ai-backends --model majentik/qwen3-embedding-4b
-      --listen 127.0.0.1:$${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
+      --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
       --image ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:421137599beb2135a9e1d664fa8991a3f4f5f953440a9d7622c7a61b63185fe8
       --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
       --request cpu=100m --request memory=3Gi
@@ -45,7 +45,7 @@ models:
       --embedding --pooling last --ctx-size 16384 --batch-size 2048 --ubatch-size 512
       --parallel 1 --device Vulkan0 -ngl 999 --cache-ram 0 --metrics --no-webui
     cmdStop: kubeswap delete --namespace ai-backends --model majentik/qwen3-embedding-4b --wait
-    proxy: http://127.0.0.1:$${PORT}
+    proxy: http://127.0.0.1:${PORT}
   qwen/qwen3-reranker-0.6b:
     name: Qwen3 Reranker 0.6B Q4_K_M
     description: Qwen3 0.6B reranker model for GPU-backed reranking
@@ -55,7 +55,7 @@ models:
       context: 8192
     cmd: >-
       kubeswap serve --namespace ai-backends --model qwen/qwen3-reranker-0.6b
-      --listen 127.0.0.1:$${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
+      --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
       --image ghcr.io/ggml-org/llama.cpp:server-vulkan@sha256:421137599beb2135a9e1d664fa8991a3f4f5f953440a9d7622c7a61b63185fe8
       --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
       --request cpu=100m --request memory=1Gi
@@ -65,4 +65,4 @@ models:
       --embedding --reranking --pooling rank --ctx-size 32768 --batch-size 16384 --ubatch-size 16384
       --parallel 2 --device Vulkan0 -ngl 999 --cache-ram 0 --metrics --no-webui
     cmdStop: kubeswap delete --namespace ai-backends --model qwen/qwen3-reranker-0.6b --wait
-    proxy: http://127.0.0.1:$${PORT}
+    proxy: http://127.0.0.1:${PORT}
