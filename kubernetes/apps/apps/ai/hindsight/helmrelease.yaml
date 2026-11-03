@@ -11,7 +11,7 @@ spec:
   values:
     controllers:
       api:
-        replicas: 0
+        replicas: 1
         containers:
           api:
             image:
@@ -114,7 +114,7 @@ spec:
                 memory: 1Gi
 
       worker:
-        replicas: 0
+        replicas: 1
         containers:
           worker:
             image:
@@ -226,7 +226,7 @@ spec:
                 memory: 1Gi
 
       control-plane:
-        replicas: 0
+        replicas: 1
         containers:
           control-plane:
             image:
