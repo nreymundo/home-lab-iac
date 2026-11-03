@@ -167,10 +167,6 @@ spec:
                 icon: code-server.png
                 description: "Development VM IDE"
                 href: https://dev.lan.${CLUSTER_DOMAIN}
-            - ComfyUI:
-                icon: comfyui.png
-                description: "AI image generation workflow UI"
-                href: https://comfyui.lan.${CLUSTER_DOMAIN}
             - EMQX:
                 icon: emqx.png
                 description: "MQTT broker"
@@ -283,6 +279,10 @@ spec:
                 icon: https://assets.web.${CLUSTER_DOMAIN}/icons/camofox.svg
                 description: "Interactive Camofox browser"
                 href: https://browser.lan.${CLUSTER_DOMAIN}/desktop.html
+            - ComfyUI:
+                icon: comfyui.png
+                description: "AI image generation workflow UI"
+                href: https://comfyui.lan.${CLUSTER_DOMAIN}
             - Dawarich:
                 icon: dawarich.png
                 description: "Location history tracker"

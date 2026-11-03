@@ -5,6 +5,7 @@ components:
   - ../../../../components/bjw-s-defaults
 resources:
   - helmrelease.yaml
+  - ingress.yaml
 configMapGenerator:
   - name: comfyui-config
     namespace: ai

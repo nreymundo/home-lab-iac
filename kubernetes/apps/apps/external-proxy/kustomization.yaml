@@ -15,7 +15,6 @@ resources:
   - z2m.yaml
   - omada.yaml
   - kopia.yaml
-  - comfyui.yaml
   - audiomuse.yaml
   - syncthing.yaml
   - dev.yaml

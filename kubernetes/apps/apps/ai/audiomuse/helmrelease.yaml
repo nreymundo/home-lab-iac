@@ -1,0 +1,247 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: audiomuse
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        kubernetes.io/hostname: steadfast
+      securityContext:
+        supplementalGroups:
+          - 44
+          - 991
+    controllers:
+      main:
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        pod:
+          terminationGracePeriodSeconds: 120
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=neptunehub/audiomuse-ai registryUrl=https://ghcr.io
+              repository: ghcr.io/neptunehub/audiomuse-ai
+              tag: 3.6.0@sha256:58d7517724a9ea3eb63fb6c2df76e0f223d2e6092cd60714d4e0bad8d4418ca4
+            env:
+              SERVICE_TYPE: flask
+              TZ: Europe/Berlin
+              POSTGRES_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: audiomuse-db-secrets
+                    key: username
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: audiomuse-db-secrets
+                    key: password
+              POSTGRES_DB: audiomusedb
+              POSTGRES_HOST: audiomuse-pg-rw
+              POSTGRES_PORT: '5432'
+              TEMP_DIR: /app/temp_audio
+              AUTH_ENABLED: 'true'
+              JWT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: audiomuse-secrets
+                    key: JWT_SECRET
+              LYRICS_VAD_THRESHOLD: '0.1'
+              VAD_VOICE_RECOGNITION: '5'
+              LYRICS_API_ENABLE: 'true'
+              LYRICS_API_1_URL_TEMPLATE: https://lrclib.net/api/get
+              LYRICS_API_1_ARTIST_PARAM: artist_name
+              LYRICS_API_1_TITLE_PARAM: track_name
+              LYRICS_API_1_LYRICS_FIELD: plainLyrics
+            resources:
+              requests:
+                cpu: 100m
+                memory: 1Gi
+            ports:
+              - name: http
+                containerPort: 8000
+            probes:
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 8000
+                  timeoutSeconds: 5
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 8000
+                  timeoutSeconds: 5
+                  periodSeconds: 30
+                  failureThreshold: 6
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: 8000
+                  timeoutSeconds: 5
+                  periodSeconds: 10
+                  failureThreshold: 90
+      worker:
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        pod:
+          terminationGracePeriodSeconds: 120
+          hostIPC: true
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=schaka/audiomuse-ai-rocm registryUrl=https://ghcr.io
+              repository: ghcr.io/schaka/audiomuse-ai-rocm
+              tag: 3.6.0-gfx1151@sha256:7fa2e7946a71f8fc0b94affad561e3e45dc7e028864b9170aa7f7b9f636a22fb
+            env:
+              SERVICE_TYPE: worker
+              TZ: Europe/Berlin
+              POSTGRES_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: audiomuse-db-secrets
+                    key: username
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: audiomuse-db-secrets
+                    key: password
+              POSTGRES_DB: audiomusedb
+              POSTGRES_HOST: audiomuse-pg-rw
+              POSTGRES_PORT: '5432'
+              TEMP_DIR: /app/temp_audio
+              JWT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: audiomuse-secrets
+                    key: JWT_SECRET
+              MIGRAPHX_GPU_COMPILE_PARALLEL: '8'
+              USE_GPU_CLUSTERING: 'false'
+              PER_SONG_MODEL_RELOAD: 'true'
+              LYRICS_VAD_THRESHOLD: '0.1'
+              VAD_VOICE_RECOGNITION: '5'
+              LYRICS_API_ENABLE: 'true'
+              LYRICS_API_1_URL_TEMPLATE: https://lrclib.net/api/get
+              LYRICS_API_1_ARTIST_PARAM: artist_name
+              LYRICS_API_1_TITLE_PARAM: track_name
+              LYRICS_API_1_LYRICS_FIELD: plainLyrics
+            resources:
+              requests:
+                cpu: 100m
+                memory: 2Gi
+                devic.es/amd-gpu: 1
+              limits:
+                devic.es/amd-gpu: 1
+            securityContext:
+              seccompProfile:
+                type: Unconfined
+            probes:
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - /usr/bin/supervisorctl -c /etc/supervisor/conf.d/supervisord.conf status queue-worker-default
+                        queue-worker-high queue-maintenance
+                  timeoutSeconds: 10
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - /usr/bin/supervisorctl -c /etc/supervisor/conf.d/supervisord.conf status queue-worker-default
+                        queue-worker-high queue-maintenance
+                  timeoutSeconds: 10
+                  periodSeconds: 30
+                  failureThreshold: 6
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /bin/sh
+                      - -c
+                      - /usr/bin/supervisorctl -c /etc/supervisor/conf.d/supervisord.conf status queue-worker-default
+                        queue-worker-high queue-maintenance
+                  timeoutSeconds: 10
+                  periodSeconds: 10
+                  failureThreshold: 90
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8000
+    persistence:
+      main-0:
+        type: hostPath
+        hostPath: /srv/ai/containers/audiomuse/temp/flask
+        hostPathType: Directory
+        advancedMounts:
+          main:
+            main:
+              - path: /app/temp_audio
+      main-1:
+        type: hostPath
+        hostPath: /srv/ai/containers/audiomuse/plugins/flask
+        hostPathType: Directory
+        advancedMounts:
+          main:
+            main:
+              - path: /app/plugin/installed
+      worker-0:
+        type: hostPath
+        hostPath: /srv/ai/containers/audiomuse/temp/worker
+        hostPathType: Directory
+        advancedMounts:
+          worker:
+            main:
+              - path: /app/temp_audio
+      worker-1:
+        type: hostPath
+        hostPath: /srv/ai/containers/audiomuse/plugins/worker
+        hostPathType: Directory
+        advancedMounts:
+          worker:
+            main:
+              - path: /app/plugin/installed
+      worker-2:
+        type: hostPath
+        hostPath: /srv/ai/containers/audiomuse/cache/migraphx
+        hostPathType: Directory
+        advancedMounts:
+          worker:
+            main:
+              - path: /app/.cache/migraphx
+      worker-3:
+        type: hostPath
+        hostPath: /srv/ai/containers/audiomuse/cache/miopen
+        hostPathType: Directory
+        advancedMounts:
+          worker:
+            main:
+              - path: /app/.cache/miopen

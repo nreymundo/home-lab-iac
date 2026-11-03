@@ -169,7 +169,7 @@ data:
           # Generic OpenAI-compatible images; avoid GPT Image parameter assumptions.
           model: hosted_vllm/qwen-image-2.1-turbo
           custom_llm_provider: hosted_vllm
-          api_base: http://comfyui.external-proxy.svc.cluster.local:8188/v1
+          api_base: http://comfyui.ai.svc.cluster.local:8188/v1
           # ComfyUI is internal; client authentication stays at LiteLLM.
           api_key: unused
           input_cost_per_token: 0.0
