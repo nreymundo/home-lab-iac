@@ -9,11 +9,6 @@ resource "local_file" "ansible_inventory" {
 
   lifecycle {
     precondition {
-      condition     = length(local.k3s.nodes) > 0
-      error_message = "At least one node must be defined in local.k3s.nodes."
-    }
-
-    precondition {
       condition     = local.k3s.ip_prefix_len >= 8 && local.k3s.ip_prefix_len <= 30
       error_message = "local.k3s.ip_prefix_len must be between /8 and /30."
     }

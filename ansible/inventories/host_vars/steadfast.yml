@@ -1,4 +1,7 @@
 ---
+common_apparmor_disabled_profiles:
+  - wg-quick
+  - wg
 common_apparmor_containerd_stacked_signals: true
 
 common_kernel_params_add:
