@@ -1,16 +1,18 @@
 locals {
   vm_definition = [{
-    name            = "vm-dev"
-    target_node     = "pve3"
-    vmid            = 252
-    template_name   = "ubuntu-26.04-base"
-    ci_user         = "dev"
-    ansible_user    = "dev"
-    ip_address      = "192.168.10.101"
-    vm_cores        = 8
-    vm_memory_mb    = 12288
-    vm_balloon_mb   = 8192
-    vm_disk_size_gb = 256
-    proxmox_tags    = ["development"]
+    name               = "vm-dev"
+    target_node        = "pve1"
+    vmid               = 252
+    template_name      = "ubuntu-26.04-base"
+    ci_user            = "dev"
+    ansible_user       = "dev"
+    ip_address         = "192.168.10.101"
+    vm_cores           = 8
+    vm_memory_mb       = 12288
+    vm_balloon_mb      = 8192
+    vm_disk_size_gb    = 256
+    start_at_node_boot = false
+    vm_state           = "stopped"
+    proxmox_tags       = ["development"]
   }]
 }

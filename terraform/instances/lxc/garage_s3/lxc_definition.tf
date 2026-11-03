@@ -2,7 +2,7 @@ locals {
   garage_s3 = {
     name            = "ct-garage-s3"
     hostname        = "ct-garage-s3"
-    target_node     = "pve3"
+    target_node     = "pve1"
     vmid            = 401
     ip_address      = "192.168.10.71"
     ansible_user    = "root"

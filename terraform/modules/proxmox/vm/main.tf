@@ -103,7 +103,8 @@ resource "proxmox_vm_qemu" "this" {
   }
 
   boot               = "order=scsi0"
-  start_at_node_boot = true
+  start_at_node_boot = local.normalized_vms[count.index].start_at_node_boot
+  vm_state           = local.normalized_vms[count.index].vm_state
   agent              = 1
   tags               = join(";", local.normalized_vms[count.index].proxmox_tags)
   machine            = try(local.normalized_vms[count.index].machine, null)

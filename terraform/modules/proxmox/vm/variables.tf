@@ -33,6 +33,8 @@ variable "vms" {
     vm_balloon_mb               = number
     ballooning_enabled          = optional(bool)
     vm_disk_size_gb             = number
+    start_at_node_boot          = optional(bool, true)
+    vm_state                    = optional(string, "running")
     storage_pool                = optional(string, "ssd-zfs")
     secondary_disk_enabled      = optional(bool, false)
     secondary_disk_storage_pool = optional(string)

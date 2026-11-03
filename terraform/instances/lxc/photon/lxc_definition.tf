@@ -2,7 +2,7 @@ locals {
   photon = {
     name            = "ct-photon"
     hostname        = "ct-photon"
-    target_node     = "pve3"
+    target_node     = "pve2"
     vmid            = 402
     ip_address      = "192.168.10.72"
     ansible_user    = "root"
