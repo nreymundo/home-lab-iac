@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mostlygeek/llama-swap/v269/config-schema.json
 apiKeys:
   - "${env.LLAMA_SWAP_API_KEY}"
 healthCheckTimeout: 500
@@ -20,13 +21,18 @@ groups:
     persistent: true
     members:
       - majentik/qwen3-embedding-4b
-      - qwen/qwen3-reranker-0.6b
       - d3-mini
       - audiocpp_auto
       - whisper/large-v3-turbo-q5_0
       - unsloth/gemma-4-e4b-it-qat
       - unsloth/gemma-4-12b-it-qat-camera
       - unsloth/qwen3.8-27b
+  reranker-on-demand:
+    swap: false
+    exclusive: false
+    persistent: false
+    members:
+      - qwen/qwen3-reranker-0.6b
   chatterbox-on-demand:
     swap: false
     exclusive: false
@@ -65,7 +71,6 @@ hooks:
   on_startup:
     preload:
       - majentik/qwen3-embedding-4b
-      - qwen/qwen3-reranker-0.6b
       - d3-mini
       - audiocpp_auto
       - whisper/large-v3-turbo-q5_0
@@ -206,12 +211,14 @@ models:
       -- --alias qwen3-embedding-4b --host 0.0.0.0 --port 8080
       -m /opt/ai/models/majentik/qwen3-emb-4b-Q4_K_M.gguf
       --embedding --pooling last --ctx-size 16384 --batch-size 2048 --ubatch-size 512
-      --parallel 1 --device Vulkan0 -ngl 999 --cache-ram 0 --metrics --no-webui
+      --parallel 1 --device Vulkan0 -ngl 999 --cache-type-k q8_0 --cache-type-v q8_0
+      --cache-ram 0 --metrics --no-webui
     cmdStop: kubeswap delete --namespace ai-backends --model majentik/qwen3-embedding-4b --wait 60s
     proxy: http://127.0.0.1:${PORT}
   qwen/qwen3-reranker-0.6b:
     name: Qwen3 Reranker 0.6B Q4_K_M
     description: Qwen3 0.6B reranker model for GPU-backed reranking
+    ttl: 900
     capabilities:
       in: [text]
       reranker: true
