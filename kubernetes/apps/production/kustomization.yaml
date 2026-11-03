@@ -46,6 +46,7 @@ resources:
   - ../apps/ai/vane
   - ../apps/ai/speech-to-speech
   - ../apps/ai/litellm
+  - ../apps/ai/llama-swap
   - ../apps/ai/open-webui
   - ../apps/security/frigate
   - ../apps/immich
