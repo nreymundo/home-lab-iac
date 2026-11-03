@@ -1,0 +1,44 @@
+---
+default_model: qwen-image-2.1-turbo
+models:
+  qwen-image-2.1-turbo:
+    workflow: qwen-image-2.1-turbo.json
+    description: Qwen Image 2.1 Turbo BF16 generation and reference-image editing
+    mode: image
+    capabilities:
+      - text-to-image
+      - image-to-image
+    output_node: "461"
+    timeout: 900
+    references:
+      aggregator: "474"
+      images: [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10]
+      image_keys:
+        - images.image_1
+        - images.image_2
+        - images.image_3
+        - images.image_4
+        - images.image_5
+        - images.image_6
+        - images.image_7
+        - images.image_8
+        - images.image_9
+        - images.image_10
+    defaults:
+      negative_prompt: ""
+      cfg: 1
+      sampler_name: euler
+      width: 1024
+      height: 1024
+    bindings:
+      filename_prefix: 461.inputs.filename_prefix
+      prompt: 474.inputs.prompt
+      seed: 488.inputs.noise_seed
+      cfg: 489.inputs.cfg
+      sampler_name: 487.inputs.sampler_name
+      width: 456.inputs.width
+      height: 456.inputs.height
+      use_custom_size: 468.inputs.switch
+    aliases:
+      - qwen-image
+      - qwen-image-edit

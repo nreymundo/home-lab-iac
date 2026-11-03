@@ -1,0 +1,149 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: comfyui
+  namespace: ai
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        kubernetes.io/hostname: steadfast
+      securityContext:
+        supplementalGroups: [44, 991]
+    controllers:
+      main:
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          terminationGracePeriodSeconds: 60
+        containers:
+          main:
+            image:
+              # Archived custom image, preloaded into steadfast's containerd.
+              # renovate: datasource=docker depName=library/comfyui-qwen-image registryUrl=https://docker.io
+              repository: docker.io/library/comfyui-qwen-image
+              tag: 0.40.0-rocm10.1@sha256:7e97034c9a803c1d4efd40f469a7411f91ecdc80afe09ded348976b3b232f315
+              pullPolicy: Never
+            securityContext:
+              runAsUser: 0
+              runAsGroup: 0
+              seccompProfile:
+                type: Unconfined
+            command: [/bin/bash, -lc]
+            args:
+              - >-
+                source /etc/profile.d/01-rocm-envs.sh &&
+                /opt/set_extra_paths.sh &&
+                if [ -d /opt/ComfyUI/custom_nodes/ComfyUI-AMDGPUMonitor ]; then
+                mv /opt/ComfyUI/custom_nodes/ComfyUI-AMDGPUMonitor
+                /opt/ComfyUI/custom_nodes/ComfyUI-AMDGPUMonitor.disabled; fi &&
+                exec python /etc/comfyui-api/start.py
+                --listen 0.0.0.0 --port 8000 --output-directory /root/comfy-outputs
+                --lowvram --disable-smart-memory --cache-none --disable-mmap --bf16-vae --disable-pinned-memory
+            env:
+              HOME: /root
+              HF_HOME: /root/comfy-models/.cache/huggingface
+              HF_XET_HIGH_PERFORMANCE: "1"
+              MCP_ENABLED: "false"
+              COMFY_BASE_URL: http://127.0.0.1:8000
+              MODELS_FILE: /etc/comfyui-api/models.yaml
+              WORKFLOWS_DIR: /opt/comfy-workflows
+              OUTPUT_DIR: /root/comfy-outputs/api
+              MAX_CONCURRENCY: "1"
+              JOB_TIMEOUT: "900"
+              AUTO_SPLIT_NEGATIVE: "false"
+              TORCH_BLAS_PREFER_HIPBLASLT: "1"
+              TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL: "1"
+              PYTHONUNBUFFERED: "1"
+            ports:
+              - name: http
+                containerPort: 8000
+            probes:
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /system_stats
+                    port: 8000
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /system_stats
+                    port: 8000
+                  timeoutSeconds: 10
+                  failureThreshold: 6
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /system_stats
+                    port: 8000
+                  periodSeconds: 5
+                  failureThreshold: 120
+            resources:
+              requests:
+                cpu: 100m
+                memory: 4Gi
+                devic.es/amd-gpu: 1
+              limits:
+                devic.es/amd-gpu: 1
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8188
+            targetPort: 8000
+    persistence:
+      config:
+        type: configMap
+        name: comfyui-config
+        globalMounts:
+          - path: /etc/comfyui-api
+            readOnly: true
+      models:
+        type: hostPath
+        hostPath: /srv/ai/models/comfyui
+        hostPathType: Directory
+        globalMounts:
+          - path: /root/comfy-models
+      output:
+        type: hostPath
+        hostPath: /srv/ai/containers/comfyui/output
+        hostPathType: Directory
+        globalMounts:
+          - path: /root/comfy-outputs
+      cache:
+        type: hostPath
+        hostPath: /srv/ai/containers/comfyui/cache
+        hostPathType: Directory
+        globalMounts:
+          - path: /root/.cache
+      input:
+        type: hostPath
+        hostPath: /srv/ai/containers/comfyui/input
+        hostPathType: Directory
+        globalMounts:
+          - path: /opt/ComfyUI/input
+      user:
+        type: hostPath
+        hostPath: /srv/ai/containers/comfyui/user
+        hostPathType: Directory
+        globalMounts:
+          - path: /opt/ComfyUI/user
+      workflows:
+        type: hostPath
+        hostPath: /srv/ai/containers/comfyui/workflows/api
+        hostPathType: Directory
+        globalMounts:
+          - path: /opt/comfy-workflows
