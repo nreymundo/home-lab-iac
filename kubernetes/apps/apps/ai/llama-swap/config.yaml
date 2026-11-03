@@ -76,7 +76,7 @@ models:
   comfyui_auto:
     name: ComfyUI Qwen Image
     description: On-demand image generation and editing; independent queue-aware GPU backend
-    checkEndpoint: /health
+    checkEndpoint: /system_stats
     ttl: 60
     unlisted: true
     capabilities:
@@ -112,7 +112,8 @@ models:
       cd /opt/ComfyUI && exec python main.py --listen 0.0.0.0 --port 8000 --output-directory /root/comfy-outputs
       --lowvram --disable-smart-memory --cache-none --disable-mmap --bf16-vae --disable-pinned-memory'
     cmdStop: /bin/kill -TERM ${PID}
-    proxy: http://127.0.0.1:${PORT}
+    # kubeswap v269's HTTP proxy cannot upgrade WebSockets; its generated Service can.
+    proxy: http://comfyui-auto-06978d6a-svc.ai-backends.svc.cluster.local:8000
   audiocpp_auto:
     name: Higgs TTS 3 4B Q8_0
     description: Boson AI multilingual speech and voice cloning; native audio.cpp, resident low-idle backend
