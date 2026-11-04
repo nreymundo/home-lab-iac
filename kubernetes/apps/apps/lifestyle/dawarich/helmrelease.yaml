@@ -119,7 +119,7 @@ spec:
               OIDC_AUTO_REGISTER: "true"
               ALLOW_EMAIL_PASSWORD_REGISTRATION: "false"
               ALLOW_EMAIL_PASSWORD_LOGIN: "false"
-              PHOTON_API_HOST: ${PHOTON_IP}:2322
+              PHOTON_API_HOST: photon.utils.svc.cluster.local:2322
               PHOTON_API_USE_HTTPS: "false"
             ports:
               - name: http
@@ -271,7 +271,7 @@ spec:
               OIDC_AUTO_REGISTER: "true"
               ALLOW_EMAIL_PASSWORD_REGISTRATION: "false"
               ALLOW_EMAIL_PASSWORD_LOGIN: "false"
-              PHOTON_API_HOST: ${PHOTON_IP}:2322
+              PHOTON_API_HOST: photon.utils.svc.cluster.local:2322
               PHOTON_API_USE_HTTPS: "false"
             ports:
               - name: metrics
