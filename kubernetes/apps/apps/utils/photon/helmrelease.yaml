@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: photon
+  namespace: utils
+spec:
+  chart:
+    spec:
+      chart: app-template
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        kubernetes.io/hostname: steadfast
+    controllers:
+      main:
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          terminationGracePeriodSeconds: 120
+        containers:
+          main:
+            image:
+              # renovate: datasource=docker depName=rtuszik/photon-docker registryUrl=https://docker.io
+              repository: docker.io/rtuszik/photon-docker
+              tag: 2.3.0@sha256:827cedf9fa3337e657611d62ada669def75dff61c56b51ae55056155d1a9b236
+            args:
+              - /photon/.venv/bin/python
+              - /etc/photon/scheduler.py
+            env:
+              IMPORT_MODE: db
+              REGION: planet
+              UPDATE_STRATEGY: PARALLEL
+              PUID: "9011"
+              PGID: "9011"
+              ENABLE_METRICS: "TRUE"
+              JAVA_PARAMS: "-Xms1G -Xmx8G"
+            ports:
+              - name: http
+                containerPort: 2322
+              - name: scheduler
+                containerPort: 2323
+            probes:
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /status
+                    port: 2322
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 1
+                memory: 8Gi
+              limits:
+                cpu: 4
+                memory: 16Gi
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 2322
+          scheduler:
+            port: 2323
+    persistence:
+      data:
+        type: hostPath
+        hostPath: /srv/photon/data
+        hostPathType: Directory
+        globalMounts:
+          - path: /photon/data
+      scheduler:
+        type: configMap
+        name: photon-scheduler
+        globalMounts:
+          - path: /etc/photon/scheduler.py
+            subPath: scheduler.py

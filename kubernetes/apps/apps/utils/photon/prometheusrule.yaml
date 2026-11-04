@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: photon
+  namespace: utils
+  labels:
+    release: observability-kube-prometheus-stack
+spec:
+  groups:
+    - name: photon
+      rules:
+        - alert: PhotonUpdateFailed
+          expr: photon_update_failed == 1 and photon_update_in_progress == 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Photon index update failed or was interrupted
+        - alert: PhotonIndexStale
+          expr: time() - photon_index_updated_timestamp_seconds > 45 * 24 * 60 * 60
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: Photon index has not been updated in 45 days
+        - alert: PhotonUpdateBackupRetained
+          expr: photon_update_backup_present == 1
+          for: 2h
+          labels:
+            severity: warning
+          annotations:
+            summary: Photon retained an index backup after an update
+        - alert: PhotonStorageLow
+          expr: photon_data_available_bytes < 500 * 1024 * 1024 * 1024
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Photon node has less than 500 GiB free
