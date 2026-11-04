@@ -833,6 +833,10 @@ data:
 
     general_settings:
       disable_env_credential_login: true
+      use_x_forwarded_for: true
+      mcp_trusted_proxy_ranges:
+        - 10.42.0.0/16
+      mcp_xff_num_trusted_hops: 1
       # Keep GitOps config authoritative; LiteLLM DB config rows otherwise override router_settings.
       store_model_in_db: false
       # Team MCP grants are ceilings; virtual keys need an explicit per-key grant.
