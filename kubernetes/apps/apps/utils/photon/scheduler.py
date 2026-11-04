@@ -19,6 +19,7 @@ MONTH = 30 * 24 * 60 * 60
 DAY = 24 * 60 * 60
 MIN_FREE = 500 * 1024**3
 logger = logging.getLogger(__name__)
+UPDATING = threading.Event()
 
 
 def mtime(path):
@@ -57,6 +58,7 @@ class Metrics(BaseHTTPRequestHandler):
             f"photon_index_updated_timestamp_seconds {index.last_updated()}\n"
             f"photon_update_attempt_timestamp_seconds {mtime(ATTEMPT)}\n"
             f"photon_update_failed {int(FAILURE.exists())}\n"
+            f"photon_update_in_progress {int(UPDATING.is_set())}\n"
             f"photon_update_backup_present {int(BACKUP.exists())}\n"
             f"photon_data_available_bytes {available_bytes()}\n"
         ).encode()
@@ -95,17 +97,21 @@ class PersistentPhotonManager(PhotonManager):
         if available_bytes() < MIN_FREE:
             logger.error("Photon update postponed: less than 500 GiB free on the node")
             return
-        ATTEMPT.touch()
-        FAILURE.touch()
-        logger.info("Running restart-safe monthly Photon update")
-        errors = UpdateErrors()
-        logging.getLogger().addHandler(errors)
+        UPDATING.set()
         try:
-            self.run_update()
+            ATTEMPT.touch()
+            FAILURE.touch()
+            logger.info("Running restart-safe monthly Photon update")
+            errors = UpdateErrors()
+            logging.getLogger().addHandler(errors)
+            try:
+                self.run_update()
+            finally:
+                logging.getLogger().removeHandler(errors)
+            if not errors.failed and not BACKUP.exists():
+                FAILURE.unlink(missing_ok=True)
         finally:
-            logging.getLogger().removeHandler(errors)
-        if not errors.failed and not BACKUP.exists():
-            FAILURE.unlink(missing_ok=True)
+            UPDATING.clear()
 
 
 if __name__ == "__main__":

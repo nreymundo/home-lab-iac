@@ -11,7 +11,7 @@ spec:
     - name: photon
       rules:
         - alert: PhotonUpdateFailed
-          expr: photon_update_failed == 1
+          expr: photon_update_failed == 1 and photon_update_in_progress == 0
           for: 15m
           labels:
             severity: warning

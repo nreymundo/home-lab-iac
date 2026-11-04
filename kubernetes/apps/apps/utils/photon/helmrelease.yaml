@@ -33,7 +33,6 @@ spec:
               IMPORT_MODE: db
               REGION: planet
               UPDATE_STRATEGY: PARALLEL
-              UPDATE_INTERVAL: 720h
               PUID: "9011"
               PGID: "9011"
               ENABLE_METRICS: "TRUE"
