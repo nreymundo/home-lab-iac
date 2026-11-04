@@ -22,6 +22,7 @@ resources:
   - ../apps/utils/homepage
   - ../apps/utils/bambuddy
   - ../apps/utils/it-tools
+  - ../apps/utils/photon
   - ../apps/utils/searxng
   - ../apps/utils/camofox
   - ../apps/lifestyle/dawarich
