@@ -27,7 +27,6 @@ that should all be run on every host.
 | `netbird.yml` | `netbird` | NetBird stack and identity bootstrap. Requires its inventory host and [SOPS secrets](secrets/README.md#netbird). |
 | `garage_lxc.yml` | `garage_lxc` | LXC hardening/bootstrap and Garage installation. Requires a manually supplied Garage configuration. |
 | `emqx_lxc.yml` | `emqx_lxc` | LXC hardening/bootstrap and the playbook's pinned EMQX package. |
-| `photon_lxc.yml` | `photon_lxc` | LXC hardening/bootstrap, Docker, and Photon. |
 | `zigbee2mqtt_lxc.yml` | `zigbee2mqtt_lxc` | LXC hardening/bootstrap, Docker, and Zigbee2MQTT. |
 | `llm_lxc.yml` | `llm_lxc` | GPU LXC runtimes and applications. Requires the passed-through devices and application data/secrets. The `llama_cpp_update` play is opt-in via its tag. |
 | `k3s_bootstrap.yml` | `k3s_server` | Explicitly initialize a fresh cluster on `k3s_bootstrap_host`, then join the remaining selected servers. Rejects existing datastore state. |
