@@ -132,16 +132,6 @@ data:
           output_cost_per_token: 0.00001
           cache_read_input_token_cost: 0.0000001
 
-      - model_name: chatgpt/gpt-6-sol
-        model_info:
-          mode: responses
-        litellm_params:
-          model: chatgpt/gpt-6-sol
-          # Shadow pricing at first-party openai/gpt-6-sol API rates ($2/$10 per M; $0.20/M cached).
-          input_cost_per_token: 0.000002
-          output_cost_per_token: 0.00001
-          cache_read_input_token_cost: 0.0000002
-
       - model_name: chatgpt/gpt-6-astra
         model_info:
           mode: responses
