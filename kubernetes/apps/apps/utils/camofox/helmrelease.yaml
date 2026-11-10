@@ -21,7 +21,7 @@ spec:
             image:
               # renovate: datasource=docker depName=jo-inc/camofox-browser registryUrl=https://ghcr.io
               repository: ghcr.io/jo-inc/camofox-browser
-              tag: 1.18.1
+              tag: 1.19.0
             env:
               TZ: Europe/Berlin
               CAMOFOX_PORT: "9377"
