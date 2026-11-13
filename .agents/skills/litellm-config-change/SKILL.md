@@ -47,9 +47,6 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
 
 - The startup hook enables virtual-key model-discovery route access, the ChatGPT
   Responses string-input normalization backport, and OpenRouter rerank support.
-  Catalog, reasoning, streaming/cache, vLLM-discovery, retry, and file-authoritative
-  router implementations remain present but their hook calls are commented out.
-  Do not restore them merely because their files still exist.
 - `cache_bypass.proxy_handler_instance` is registered independently as a callback.
   Key metadata can disable cache reads/writes or remove selected request parameters
   globally or by requested model name. Check this when diagnosing client differences.
@@ -198,7 +195,7 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
 - Git intends to own configuration (`general_settings.store_model_in_db: false`),
   while the HelmRelease also sets `STORE_MODEL_IN_DB: "True"`. Verify the installed
   version's effective precedence and DB configuration before diagnosing drift.
-  The disabled file-authority patch is not an ownership guarantee.
+  No file-authority patch overrides the installed version's behavior.
 - Read the image tag from the HelmRelease. Renovate admits stable tags only, even
   when the selected image is a manually chosen release candidate. Compare features
   with that exact build; current documentation may describe unreleased changes.
@@ -210,8 +207,8 @@ and provider credential references in the owning configuration and HelmRelease.
 Trace affected clients such as Open WebUI and Hindsight before changing shared aliases.
 
 Image updates remain manual under the LiteLLM rule in `renovate.json`. Read upstream
-release notes and verify active patches against the candidate image, including
-imports of retained modules. Rendering manifests cannot prove Python compatibility.
+release notes and verify active patches against the candidate image. Rendering
+manifests cannot prove Python compatibility.
 
 For workload changes, follow the applicable Kubernetes validation chain:
 
