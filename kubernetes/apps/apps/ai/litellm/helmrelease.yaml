@@ -25,7 +25,7 @@ spec:
             image:
               # renovate: datasource=docker depName=berriai/litellm registryUrl=https://ghcr.io
               repository: ghcr.io/berriai/litellm
-              tag: v1.108.3
+              tag: v1.109.1
             env:
               TZ: Europe/Berlin
               PYTHONPATH: /etc/litellm
@@ -328,18 +328,6 @@ spec:
                 readOnly: true
               - path: /etc/litellm/cache_bypass.py
                 subPath: cache_bypass.py
-                readOnly: true
-              - path: /etc/litellm/vllm_model_discovery.py
-                subPath: vllm_model_discovery.py
-                readOnly: true
-              - path: /etc/litellm/chatgpt_responses_streaming_patch.py
-                subPath: chatgpt_responses_streaming_patch.py
-                readOnly: true
-              - path: /etc/litellm/chatgpt_codex_catalog.py
-                subPath: chatgpt_codex_catalog.py
-                readOnly: true
-              - path: /etc/litellm/zai_coding_catalog.py
-                subPath: zai_coding_catalog.py
                 readOnly: true
               - path: /etc/litellm/litellm_startup.py
                 subPath: litellm_startup.py
