@@ -468,6 +468,8 @@ data:
         attrs:
           is_superuser: false
           parent: null
+          users:
+            - !Find [authentik_core.user, [username, !Env AK_AI_AGENT_USERNAME]]
       - model: authentik_core.group
         state: present
         identifiers:
