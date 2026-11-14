@@ -11,6 +11,7 @@ locals {
     vm_memory_mb    = 12288
     vm_balloon_mb   = 8192
     vm_disk_size_gb = 128
+    storage_pool    = "local-btrfs"
     proxmox_tags    = ["ai"]
   }]
 }
