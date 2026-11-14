@@ -34,7 +34,7 @@ spec:
           main:
             image:
               repository: git.${CLUSTER_DOMAIN}/nreymundo/personal-data-sync
-              tag: sha-f4e045611861fd0feae358847c7b96de3575b480
+              tag: sha-3faa05efeb495001272fada6263d029f1f372510
               pullPolicy: IfNotPresent
             env:
               GOOGLE_ACCOUNT_ID: acc_369793a7-710d-4680-9d81-f03c4ab0ae98
