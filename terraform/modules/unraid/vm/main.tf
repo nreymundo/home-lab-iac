@@ -89,7 +89,8 @@ resource "libvirt_domain" "this" {
       model  = { type = "virtio" }
     }]
     channels = [{
-      source = { unix = { mode = "bind" } }
+      # Libvirt supplies the guest-agent socket mode and path when the VM starts.
+      source = { unix = {} }
       target = { virt_io = { name = "org.qemu.guest_agent.0" } }
     }]
     graphics = [{

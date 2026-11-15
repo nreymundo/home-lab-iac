@@ -14,9 +14,9 @@ services:
       PGID: "100"
       S3_REGION: garage
     volumes:
-      - /mnt/cache/appdata/garage/config:/config
+      - /mnt/apps/appdata/garage/config:/config
       - /mnt/user/s3/blocks:/var/lib/garage/data
-      - /mnt/cache/appdata/garage/meta:/var/lib/garage/meta
+      - /mnt/apps/appdata/garage/meta:/var/lib/garage/meta
     labels:
       net.unraid.docker.managed: composeman
       net.unraid.docker.icon: https://raw.githubusercontent.com/junkerderprovinz/garage/main/.github/assets/icon.png
