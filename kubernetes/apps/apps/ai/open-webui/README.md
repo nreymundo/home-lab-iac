@@ -26,7 +26,7 @@
   pipe described below.
 - Hermes Agent: second OpenAI-compatible connection at
   `http://hermes.external-proxy.svc.cluster.local:8642/v1`, backed by the native gateway on
-  `vm-hermes`. Hermes runs tools on that VM and advertises its active profile as a model
+  `hermes`. Hermes runs tools on that VM and advertises its active profile as a model
   (normally `hermes-agent`). The dashboard remains on port 9119. Connection URLs and keys
   are configured through environment variables because `ENABLE_PERSISTENT_CONFIG=false`;
   Admin UI connection edits do not survive restart. `OPENAI_API_KEYS` contains the existing

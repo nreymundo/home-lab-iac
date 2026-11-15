@@ -1,7 +1,7 @@
 locals {
   vm_definition = [{
     name           = "hermes"
-    hostname       = "vm-hermes"
+    hostname       = "hermes"
     ansible_user   = "hermes"
     ip_address     = "192.168.10.100"
     vm_cores       = 4
