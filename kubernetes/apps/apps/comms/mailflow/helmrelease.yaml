@@ -54,21 +54,28 @@ spec:
         # runs SQL migrations at startup; upstream expects one writer.
         replicas: 1
         containers:
-          # nginx serving the SPA and proxying /api, /oauth, /auth/oidc, /ws
-          # and /api/ai to the backend container on localhost. Upstream's
-          # baked-in config targets Docker's embedded DNS (resolver 127.0.0.11
-          # + upstream backend:3000), so the mailflow-nginx-config ConfigMap
-          # replaces it with a static localhost upstream.
+          # Caddy (since 4.4.0; was nginx) serving the SPA and proxying /api,
+          # /oauth, /auth/oidc, /ws and /api/ai to the backend container on
+          # localhost.
           frontend:
             image:
               # renovate: datasource=docker depName=maathimself/mailflow-frontend registryUrl=https://ghcr.io
               repository: ghcr.io/maathimself/mailflow-frontend
               tag: "4.4.0"
+            env:
+              # mailflow-start builds Caddy's reverse_proxy upstream from
+              # BACKEND_HOST/BACKEND_PORT and picks the listener set from
+              # TLS_MODE (upstream #436). Its defaults are Compose-shaped —
+              # upstream hostname `backend` (unresolvable in-cluster) and
+              # self-signed TLS — while here the backend shares this pod and
+              # Traefik terminates TLS in front.
+              BACKEND_HOST: 127.0.0.1
+              TLS_MODE: "off"
             ports:
               - name: http
                 containerPort: 80
             probes:
-              # nginx itself: the SPA fallback always answers "/".
+              # the static SPA itself: "/" always answers.
               liveness:
                 enabled: true
                 custom: true
@@ -267,16 +274,6 @@ spec:
                   port: http
 
     persistence:
-      nginx-config:
-        enabled: true
-        type: configMap
-        name: mailflow-nginx-config
-        advancedMounts:
-          main:
-            frontend:
-              - path: /etc/nginx/conf.d/default.conf
-                subPath: default.conf
-                readOnly: true
       valkey-data:
         enabled: true
         type: emptyDir
