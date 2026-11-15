@@ -1,0 +1,34 @@
+secret_files:
+  - config/boot.sops.yaml
+files:
+  - {source: config/terminfo.src, target: /boot/config/terminfo.src, mode: '0600'}
+  - {secret: go, target: /boot/config/go, mode: '0600'}
+  - {secret: stop, target: /boot/config/stop, mode: '0600'}
+  - {onepassword_tag: ansible, target: /boot/config/ssh/root/authorized_keys, mode: '0600'}
+  - source: apps/garage/compose.yaml
+    target: /boot/config/plugins/compose.manager/projects/garage/compose.yaml
+    mode: '0600'
+  - content: "true"
+    target: /boot/config/plugins/compose.manager/projects/garage/autostart
+    mode: '0600'
+  - content: https://raw.githubusercontent.com/junkerderprovinz/garage/main/.github/assets/icon.png
+    target: /boot/config/plugins/compose.manager/projects/garage/icon_url
+    mode: '0600'
+  - source: apps/kopia/compose.yaml
+    target: /boot/config/plugins/compose.manager/projects/kopia/compose.yaml
+    mode: '0600'
+  - content: "true"
+    target: /boot/config/plugins/compose.manager/projects/kopia/autostart
+    mode: '0600'
+  - content: https://raw.githubusercontent.com/imagegenius/templates/main/unraid/img/kopia.png
+    target: /boot/config/plugins/compose.manager/projects/kopia/icon_url
+    mode: '0600'
+  - source: apps/syncthing/compose.yaml
+    target: /boot/config/plugins/compose.manager/projects/syncthing/compose.yaml
+    mode: '0600'
+  - content: "true"
+    target: /boot/config/plugins/compose.manager/projects/syncthing/autostart
+    mode: '0600'
+  - content: https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/syncthing-logo.png
+    target: /boot/config/plugins/compose.manager/projects/syncthing/icon_url
+    mode: '0600'

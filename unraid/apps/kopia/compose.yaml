@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+name: kopia
+services:
+  kopia:
+    image: ghcr.io/imagegenius/kopia:latest
+    container_name: kopia
+    hostname: kopia
+    network_mode: bridge
+    restart: unless-stopped
+    ports:
+      - "51515:51515"
+    environment:
+      PUID: "99"
+      PGID: "100"
+      TZ: Europe/Berlin
+      UMASK: "022"
+      KOPIA_PERSIST_CREDENTIALS_ON_CONNECT: "true"
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse:/dev/fuse:rwm
+    pids_limit: 2048
+    logging:
+      driver: json-file
+      options:
+        max-file: "1"
+        max-size: 50m
+    volumes:
+      - /mnt/cache/appdata/kopia:/config
+      - /mnt/cache/appdata/kopia/cache:/cache
+      - /mnt/user:/source
+      - /mnt/cache/appdata/kopia/backups:/backups
+    labels:
+      net.unraid.docker.managed: composeman
+      net.unraid.docker.icon: https://raw.githubusercontent.com/imagegenius/templates/main/unraid/img/kopia.png
+      net.unraid.docker.webui: "http://[IP]:[PORT:51515]/"
