@@ -269,11 +269,14 @@ Application Compose files and any necessary Dockerfiles belong together under
 `unraid/apps/<app>/`. Existing Docker containers are not adopted or migrated by
 the host-baseline commands. VM definitions remain in `terraform/instances/vm/`.
 
-Garage uses `junkerderprovinz/garage:latest` on Docker's default bridge network.
-`configure.sh apply` installs its Compose file and autostart marker; use Compose
-Manager to start and update the stack. Its web UI is on Unraid port 3909 and S3
-is on port 3900. Configuration and metadata persist under
-`/mnt/cache/appdata/garage/`; object data persists under `/mnt/user/s3/`.
+Garage uses `junkerderprovinz/garage:latest` on Unraid's existing `br0` network
+with address `192.168.10.71`. `configure.sh apply` installs its Compose file and
+autostart marker; use Compose Manager to start and update the stack. Existing
+clients use S3 on port 9000, websites on port 3902, and the admin API on port 3903.
+Configuration and metadata persist under `/mnt/cache/appdata/garage/`; object
+blocks persist under `/mnt/user/s3/blocks/`. Container mounts preserve the original
+`/var/lib/garage/meta` and `/var/lib/garage/data` paths. The existing Kubernetes
+Garage UI remains the client-facing management interface.
 
 Validate changed Unraid scripts with ShellCheck/shfmt and the applicable
 pre-commit hooks. Live plugin installation/removal is an explicit apply; test

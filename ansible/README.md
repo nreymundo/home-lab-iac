@@ -25,7 +25,6 @@ that should all be run on every host.
 | `development.yml` | `development_vms` | Development workstation tools and services. Refreshes an existing HashiCorp key before common APT tasks; see below. |
 | `hermes.yml` | `hermes_vms` | Native Hermes installation and services with the VM's host setup and tools. |
 | `netbird.yml` | `netbird` | NetBird stack and identity bootstrap. Requires its inventory host and [SOPS secrets](secrets/README.md#netbird). |
-| `garage_lxc.yml` | `garage_lxc` | LXC hardening/bootstrap and Garage installation. Requires a manually supplied Garage configuration. |
 | `emqx_lxc.yml` | `emqx_lxc` | LXC hardening/bootstrap and the playbook's pinned EMQX package. |
 | `zigbee2mqtt_lxc.yml` | `zigbee2mqtt_lxc` | LXC hardening/bootstrap, Docker, and Zigbee2MQTT. |
 | `llm_lxc.yml` | `llm_lxc` | GPU LXC runtimes and applications. Requires the passed-through devices and application data/secrets. The `llama_cpp_update` play is opt-in via its tag. |
@@ -107,7 +106,6 @@ Keep the operation's update policy in mind when rerunning a playbook.
 | Swap | `swapfile_enabled: false` skips swapfile provisioning; it does not remove active swap. New K3s enrollment separately disables swap. |
 | Cockpit | Disabling it removes previously role-managed access/packages; an installation never managed by the role is left alone. See the [role guide](roles/cockpit/README.md). |
 | Host power | Backend `none` relinquishes managed policy; kernel values may persist until reboot. See the [role guide](roles/host_power/README.md). |
-| Garage | Ansible installs the binary and unit; `/etc/garage.toml` is manually supplied. The role can select newer releases within its configured major version. |
 | llama-swap | Ansible creates the model configuration only when absent; later edits remain manual. Runs resolve the latest stable binary release. See the [role guide](roles/llama_swap/README.md). |
 | llama.cpp / whisper.cpp | Source updates are opt-in; build markers also detect relevant build-setting changes. See [LLM runtime](roles/llm_runtime/README.md) and [Whisper runtime](roles/whisper_runtime/README.md). |
 

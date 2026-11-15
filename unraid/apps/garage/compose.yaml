@@ -4,12 +4,10 @@ services:
   garage:
     image: junkerderprovinz/garage:latest
     container_name: garage
-    network_mode: bridge
     restart: unless-stopped
-    ports:
-      - "192.168.10.4:3900:3900"
-      - "192.168.10.4:3909:3909"
-      - "192.168.10.4:3902:3902"
+    networks:
+      garage_lan:
+        ipv4_address: 192.168.10.71
     environment:
       DB_ENGINE: lmdb
       PUID: "99"
@@ -17,9 +15,13 @@ services:
       S3_REGION: garage
     volumes:
       - /mnt/cache/appdata/garage/config:/config
-      - /mnt/user/s3:/data
-      - /mnt/cache/appdata/garage/meta:/data/meta
+      - /mnt/user/s3/blocks:/var/lib/garage/data
+      - /mnt/cache/appdata/garage/meta:/var/lib/garage/meta
     labels:
       net.unraid.docker.managed: composeman
       net.unraid.docker.icon: https://raw.githubusercontent.com/junkerderprovinz/garage/main/.github/assets/icon.png
       net.unraid.docker.webui: "http://[IP]:[PORT:3909]/"
+networks:
+  garage_lan:
+    external: true
+    name: br0
