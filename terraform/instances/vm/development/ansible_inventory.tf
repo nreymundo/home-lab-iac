@@ -10,11 +10,11 @@ resource "local_file" "ansible_inventory" {
         children = {
           development_vms = {
             hosts = {
-              (local.vm_definition.hostname) = {
-                ansible_host = local.vm_definition.ip_address
-                ansible_user = local.vm_definition.ansible_user
+              for vm in module.unraid_vms.vms : vm.hostname => {
+                ansible_host = vm.ip_address
+                ansible_user = vm.ansible_user
                 ansible_port = 22
-                node_os      = local.vm_definition.ansible_user
+                node_os      = vm.ansible_user
               }
             }
           }

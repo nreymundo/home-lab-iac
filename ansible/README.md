@@ -149,11 +149,7 @@ ComfyUI's task imports preserve the original sequence, including model downloads
 before the handler flush and service management in `services.yml`. Feature
 conditions remain on each task, including cleanup when an integration is disabled.
 
-## Development workstation configuration
-
-The guest hostname follows the Terraform-generated inventory name. The common
-role also keeps the existing cloud-init hosts template aligned with that name,
-so cached cloud-init user-data cannot restore the old loopback hostname on reboot.
+## Development workstation repository keys
 
 The development playbook refreshes the HashiCorp signing key before the
 `common` role's APT operations when its repository source is already

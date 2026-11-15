@@ -4,7 +4,7 @@
 # output (ansible/inventories/development.yml); this file only supplies
 # Ansible-side configuration and must not define hosts.
 
-# Preserve the dev login user carried over with the migrated guest.
+# The dev login user is created by Terraform cloud-init.
 common_user: dev
 
 # Homebrew manages the development CLI tools for the dev login user.
@@ -18,7 +18,7 @@ homebrew_brew_packages:
   - sops
   - yq
 
-# Docker: enabled, targeting the existing dev login user.
+# Docker: enabled, targeting the Terraform-created dev login user.
 docker_install_enabled: true
 docker_users:
   - dev
