@@ -1,5 +1,5 @@
-module "proxmox_vms" {
-  source = "../../../modules/proxmox/vm"
+module "unraid_vms" {
+  source = "../../../modules/unraid/vm"
 
   vms = local.vm_definition
 }
