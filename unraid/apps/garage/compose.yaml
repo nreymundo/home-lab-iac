@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+name: garage
+services:
+  garage:
+    image: junkerderprovinz/garage:latest
+    container_name: garage
+    network_mode: bridge
+    restart: unless-stopped
+    ports:
+      - "192.168.10.4:3900:3900"
+      - "192.168.10.4:3909:3909"
+      - "192.168.10.4:3902:3902"
+    environment:
+      DB_ENGINE: lmdb
+      PUID: "99"
+      PGID: "100"
+      S3_REGION: garage
+    volumes:
+      - /mnt/cache/appdata/garage/config:/config
+      - /mnt/user/s3:/data
+      - /mnt/cache/appdata/garage/meta:/data/meta
+    labels:
+      net.unraid.docker.managed: composeman
+      net.unraid.docker.icon: https://raw.githubusercontent.com/junkerderprovinz/garage/main/.github/assets/icon.png
+      net.unraid.docker.webui: "http://[IP]:[PORT:3909]/"

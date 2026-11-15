@@ -1,0 +1,105 @@
+plugins:
+  - filename: appdata.backup.plg
+    name: appdata.backup
+    source: https://raw.githubusercontent.com/Commifreak/unraid-appdata.backup/master/appdata.backup.plg
+    state: present
+  - filename: apprise.plg
+    name: apprise
+    source: https://github.com/unraid/apprise-plugin/releases/latest/download/apprise.plg
+    state: present
+  - filename: ca.turbo.plg
+    name: ca.turbo
+    source: https://raw.githubusercontent.com/Squidly271/ca.turbo/master/plugins/ca.turbo.plg
+    state: present
+  - filename: ca.update.applications.plg
+    name: ca.update.applications
+    source: https://raw.githubusercontent.com/Squidly271/ca.update.applications/master/plugins/ca.update.applications.plg
+    state: present
+  - filename: community.applications.plg
+    name: community.applications
+    source: https://raw.githubusercontent.com/unraid/community.applications/master/plugins/community.applications.plg
+    state: present
+  - filename: compose.manager.plg
+    name: compose.manager
+    source: https://raw.githubusercontent.com/mstrhakr/compose_plugin/main/compose.manager.plg
+    state: present
+  - filename: dlandon.cache.dirs.plg
+    name: dynamix.cache.dirs
+    source: https://raw.githubusercontent.com/unraid/cache_dirs/master/dlandon.cache.dirs.plg
+    state: present
+  - filename: dynamix.active.streams.plg
+    name: dynamix.active.streams
+    source: https://raw.githubusercontent.com/unraid/dynamix/master/unRAIDv6/dynamix.active.streams.plg
+    state: present
+  - filename: dynamix.local.master.plg
+    name: dynamix.local.master
+    source: https://raw.githubusercontent.com/unraid/dynamix/master/unRAIDv6/dynamix.local.master.plg
+    state: present
+  - filename: dynamix.system.buttons.plg
+    name: dynamix.system.buttons
+    source: https://raw.githubusercontent.com/unraid/dynamix/master/unRAIDv6/dynamix.system.buttons.plg
+    state: present
+  - filename: dynamix.system.info.plg
+    name: dynamix.system.info
+    source: https://raw.githubusercontent.com/unraid/dynamix/master/unRAIDv6/dynamix.system.info.plg
+    state: present
+  - filename: dynamix.system.stats.plg
+    name: dynamix.system.stats
+    source: https://raw.githubusercontent.com/unraid/dynamix/master/unRAIDv6/dynamix.system.stats.plg
+    state: present
+  - filename: dynamix.unraid.net.plg
+    name: dynamix.unraid.net
+    source: https://stable.dl.unraid.net/unraid-api/dynamix.unraid.net.plg
+    state: present
+  - filename: file.activity.plg
+    name: file.activity
+    source: https://raw.githubusercontent.com/dkaser/unraid-fileactivity/main/plugin/file.activity.plg
+    state: present
+  - filename: fix.common.problems.plg
+    name: fix.common.problems
+    source: https://raw.githubusercontent.com/unraid/fix.common.problems/master/plugins/fix.common.problems.plg
+    state: present
+  - filename: folder.view2.plg
+    name: folder.view2
+    source: https://raw.githubusercontent.com/VladoPortos/folder.view2/main/folder.view2.plg
+    state: present
+  - filename: intel-gpu-top.plg
+    name: intel-gpu-top
+    source: https://raw.githubusercontent.com/ich777/intel-gpu-top/master/intel-gpu-top.plg
+    state: present
+  - filename: open.files.plg
+    name: open.files
+    source: https://raw.githubusercontent.com/dlandon/open.files/master/open.files.plg
+    state: present
+  - filename: prometheus_node_exporter.plg
+    name: prometheus_node_exporter
+    source: https://github.com/ich777/unraid-prometheus_node_exporter/raw/master/prometheus_node_exporter.plg
+    state: present
+  - filename: prometheus_wireguard_exporter.plg
+    name: prometheus_wireguard_exporter
+    source: https://raw.githubusercontent.com/ich777/unraid-prometheus_wireguard_exporter/master/prometheus_wireguard_exporter.plg
+    state: present
+  - filename: rclone.plg
+    name: rclone
+    source: https://raw.githubusercontent.com/Waseh/rclone-unraid/master/plugin/rclone.plg
+    state: present
+  - filename: tips.and.tweaks.plg
+    name: tips.and.tweaks
+    source: https://raw.githubusercontent.com/unraid/tips.and.tweaks/master/tips.and.tweaks.plg
+    state: present
+  - filename: unassigned.devices-plus.plg
+    name: unassigned.devices-plus
+    source: https://raw.githubusercontent.com/unraid/unassigned.devices/master/unassigned.devices-plus.plg
+    state: present
+  - filename: unassigned.devices.plg
+    name: unassigned.devices
+    source: https://raw.githubusercontent.com/unraid/unassigned.devices/master/unassigned.devices.plg
+    state: present
+  - filename: user.scripts.enhanced.plg
+    name: user.scripts.enhanced
+    source: https://raw.githubusercontent.com/Kurotaku-sama/unraid.user.scripts.enhanced/main/user.scripts.enhanced.plg
+    state: present
+  - filename: user.scripts.plg
+    name: user.scripts
+    source: https://raw.githubusercontent.com/Squidly271/user.scripts/master/plugins/user.scripts.plg
+    state: present

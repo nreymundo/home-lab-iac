@@ -97,7 +97,7 @@ jobs:
             echo "checkov=false" >>"$GITHUB_OUTPUT"
           fi
 
-          if matches '^(ansible/|kubernetes/|packer/|scripts/|terraform/|\.github/workflows/ci\.yml$|\.pre-commit-config\.yaml$|\.sops\.yaml$|renovate\.json$)'; then
+          if matches '^(ansible/|kubernetes/|packer/|scripts/|terraform/|unraid/|\.github/workflows/ci\.yml$|\.pre-commit-config\.yaml$|\.sops\.yaml$|renovate\.json$)'; then
             echo "trivy=true" >>"$GITHUB_OUTPUT"
           else
             echo "trivy=false" >>"$GITHUB_OUTPUT"
@@ -121,7 +121,7 @@ jobs:
             echo "packer_fmt=false" >>"$GITHUB_OUTPUT"
           fi
 
-          if matches '^((scripts|packer|terraform)/.*\.sh$|\.github/workflows/ci\.yml$)'; then
+          if matches '^((scripts|packer|terraform|unraid)/.*\.sh$|\.github/workflows/ci\.yml$)'; then
             echo "shell=true" >>"$GITHUB_OUTPUT"
           else
             echo "shell=false" >>"$GITHUB_OUTPUT"
@@ -295,7 +295,7 @@ jobs:
       - name: Run ShellCheck on standalone scripts
         run: |
           mapfile -d '' shell_scripts < <(
-            git ls-files -z -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh'
+            git ls-files -z -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh' 'unraid/*.sh'
           )
           printf 'ShellCheck targets:\n'
           printf '  %s\n' "${shell_scripts[@]}"
@@ -325,12 +325,12 @@ jobs:
           if git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
             mapfile -d '' changed_scripts < <(
               git diff --name-only --diff-filter=d -z "$base_sha" "$head_sha" \
-                -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh'
+                -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh' 'unraid/*.sh'
             )
           else
             echo "::warning::Base commit $base_sha is unavailable; checking all standalone shell scripts"
             mapfile -d '' changed_scripts < <(
-              git ls-files -z -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh'
+              git ls-files -z -- 'scripts/*.sh' 'packer/*.sh' 'terraform/*.sh' 'unraid/*.sh'
             )
           fi
 

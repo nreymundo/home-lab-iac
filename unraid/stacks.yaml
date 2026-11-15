@@ -1,0 +1,4 @@
+---
+stacks:
+  - name: garage
+    source: apps/garage

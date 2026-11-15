@@ -65,8 +65,8 @@ The repository uses pre-commit to enforce code quality:
 | `ansible-lint` | Lint Ansible playbooks and roles |
 | `packer-fmt` | Format Packer HCL files |
 | `terraform-fmt` | Format Terraform files |
-| `shellcheck` | Lint standalone shell scripts under `scripts/`, `packer/`, and `terraform/` |
-| `shfmt` | Format shell scripts under `scripts/`, `packer/`, and `terraform/` |
+| `shellcheck` | Lint standalone shell scripts |
+| `shfmt` | Format standalone shell scripts |
 | `forbid-sensitive-files` | Block committing private key material |
 | `prevent-plaintext-k8s-secrets` | Block unencrypted Kubernetes Secret manifests |
 | `kubeconform` | Validate rendered Kubernetes manifests |
@@ -152,6 +152,7 @@ The `forbid-commit-attribution` hook runs during `git commit` as a `commit-msg` 
 | `kubernetes/components/` | Shared Kustomize components | Reusable defaults, ingress, storage, and config fragments |
 | `kubernetes/infrastructure/<category>/` | Cluster infrastructure | Core services |
 | `kubernetes/clusters/production/ks/` | Production reconciliation ordering | Numbered Flux Kustomizations; `90-storage.yaml` precedes `91-apps.yaml` |
+| `unraid/` | Unraid plugin, boot/shutdown, SSH, and Compose desired state | All Unraid-specific automation stays in `unraid/scripts/`; VM roots remain under Terraform |
 | `scripts/` | Repository helper scripts | Bootstrap and validation entrypoints |
 
 ---
@@ -214,6 +215,70 @@ The following command changes live cluster state; it is not local validation and
 ```bash
 flux reconcile kustomization flux-system --with-source
 ```
+
+### Unraid
+
+Run the management commands from a workstation with the repository's host tools
+and SSH access to the `unraid` alias. They use the existing SSH configuration;
+Unraid does not need Ansible or Python.
+
+```bash
+# Inspect desired state without modifying the host (exit 2 means drift).
+unraid/scripts/plugins.sh check
+unraid/scripts/configure.sh check
+
+# Apply changes; repeated applies must report changed=0 once converged.
+unraid/scripts/plugins.sh apply
+unraid/scripts/configure.sh apply
+
+# Scope a plugin operation when testing a specific change.
+unraid/scripts/plugins.sh check --only compose.manager
+```
+
+`unraid/plugins.yaml` is authoritative for all user-installed plugins. Applying it
+installs missing declared plugins and uninstalls user plugins absent from the
+manifest, including manually installed plugins. No `absent` entry needs to remain
+after removing a plugin from the list. Explicit `absent` entries are also supported.
+Installed declared plugins are not upgraded.
+
+Stock system plugins are excluded. Checks are read-only, and `--only` limits
+reconciliation to the matching declared or installed user plugin.
+
+`unraid/config.yaml` maps managed files to selected host paths. Boot scripts are
+SOPS-encrypted in `unraid/config/boot.sops.yaml`; the management command decrypts
+them locally and checks syntax without executing them.
+
+Root's `authorized_keys` is replaced with the public-key fields of 1Password
+`SSH Key` items tagged `ansible`, matching Ansible's SSH provisioning. Export
+`OP_SERVICE_ACCOUNT_TOKEN` and `IAC_1PASSWORD_VAULT_ID` on the controller before
+running `configure.sh`. Key lookup and validation complete before any host files
+are changed.
+
+Edit `data.go` and `data.stop` as readable shell scripts:
+
+```bash
+sops edit unraid/config/boot.sops.yaml
+```
+
+`unraid/config/terminfo.src` supplies the Kitty, Ghostty, and tmux terminal definitions.
+`configure.sh` compiles them into Unraid's system terminfo database when needed;
+the `go` script recompiles the persistent source during boot.
+
+`unraid/stacks.yaml` records the Compose Manager stack inventory.
+Application Compose files and any necessary Dockerfiles belong together under
+`unraid/apps/<app>/`. Existing Docker containers are not adopted or migrated by
+the host-baseline commands. VM definitions remain in `terraform/instances/vm/`.
+
+Garage uses `junkerderprovinz/garage:latest` on Docker's default bridge network.
+`configure.sh apply` installs its Compose file and autostart marker; use Compose
+Manager to start and update the stack. Its web UI is on Unraid port 3909 and S3
+is on port 3900. Configuration and metadata persist under
+`/mnt/cache/appdata/garage/`; object data persists under `/mnt/user/s3/`.
+
+Validate changed Unraid scripts with ShellCheck/shfmt and the applicable
+pre-commit hooks. Live plugin installation/removal is an explicit apply; test
+convergence with a subsequent check and apply, not by rebooting the server or
+running the managed boot/shutdown scripts.
 
 ---
 
