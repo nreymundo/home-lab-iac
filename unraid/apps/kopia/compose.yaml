@@ -26,10 +26,10 @@ services:
         max-file: "1"
         max-size: 50m
     volumes:
-      - /mnt/cache/appdata/kopia:/config
-      - /mnt/cache/appdata/kopia/cache:/cache
+      - /mnt/apps/appdata/kopia:/config
+      - /mnt/apps/appdata/kopia/cache:/cache
       - /mnt/user:/source
-      - /mnt/cache/appdata/kopia/backups:/backups
+      - /mnt/apps/appdata/kopia/backups:/backups
     labels:
       net.unraid.docker.managed: composeman
       net.unraid.docker.icon: https://raw.githubusercontent.com/imagegenius/templates/main/unraid/img/kopia.png

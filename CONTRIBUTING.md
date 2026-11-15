@@ -273,13 +273,13 @@ Garage uses `junkerderprovinz/garage:latest` on Unraid's existing `br0` network
 with address `192.168.10.71`. `configure.sh apply` installs its Compose file and
 autostart marker; use Compose Manager to start and update the stack. Existing
 clients use S3 on port 9000, websites on port 3902, and the admin API on port 3903.
-Configuration and metadata persist under `/mnt/cache/appdata/garage/`; object
+Configuration and metadata persist under `/mnt/apps/appdata/garage/`; object
 blocks persist under `/mnt/user/s3/blocks/`. Container mounts preserve the original
 `/var/lib/garage/meta` and `/var/lib/garage/data` paths. The existing Kubernetes
 Garage UI remains the client-facing management interface.
 
 Kopia is managed by Compose Manager from `unraid/apps/kopia/compose.yaml`.
-Its existing configuration stays at `/mnt/cache/appdata/kopia/`, with the cache
+Its existing configuration stays at `/mnt/apps/appdata/kopia/`, with the cache
 under `cache/` in the same appdata directory. The stack preserves hostname
 `kopia`, port 51515, the local-backup directory under `backups/` in the same
 appdata directory, and FUSE access. UI authentication
@@ -287,7 +287,7 @@ uses the existing `/config/htpasswd`; plaintext UI credentials are not needed in
 Compose. Start and update it through Compose Manager, not DockerMan.
 
 Syncthing is managed by Compose Manager from `unraid/apps/syncthing/compose.yaml`.
-Its existing `/mnt/cache/appdata/syncthing/` configuration preserves the device
+Its existing `/mnt/apps/appdata/syncthing/` configuration preserves the device
 identity, peers, folder paths, and index. Ports 8384/TCP, 22000/TCP, and 21027/UDP
 and the `/mnt/user:/sync/array` bind mount remain unchanged.
 
