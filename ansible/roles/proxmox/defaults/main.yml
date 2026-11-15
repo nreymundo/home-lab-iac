@@ -29,13 +29,12 @@ proxmox_extra_host_directories: []
 # Master switch for the shared Proxmox storage NFS mount.
 proxmox_unraid_nfs_enabled: false
 
-# NFS server and export. pve2 overrides the server in host_vars for its direct
-# host-only path to the Unraid VM; the export and mountpoint stay identical.
+# NFS server and export.
 proxmox_unraid_nfs_server: 192.168.10.4
 proxmox_unraid_nfs_export: /mnt/user/proxmox
 proxmox_unraid_nfs_mountpoint: /mnt/unraid/proxmox
 
-# Mount options (joined with commas). Copied from the proven PVE2 NFS mount.
+# Mount options (joined with commas).
 proxmox_unraid_nfs_options:
   - _netdev
   - noatime

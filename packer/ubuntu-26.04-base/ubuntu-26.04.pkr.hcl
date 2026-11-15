@@ -42,7 +42,6 @@ locals {
   # VM ID calculation: Ubuntu base (9010) + node number
   distro_base_id = 9010
   pve1_vm_id     = 9011 # 9010 + 1
-  pve2_vm_id     = 9012 # 9010 + 2
   pve3_vm_id     = 9013 # 9010 + 3
 }
 
@@ -103,64 +102,7 @@ source "proxmox-iso" "ubuntu-base-pve1" {
 }
 
 # ------------------------------------------------------------------------------
-# Source 2: Template on pve2
-# ------------------------------------------------------------------------------
-source "proxmox-iso" "ubuntu-base-pve2" {
-  # --- Connection Details ---
-  proxmox_url              = var.proxmox_api_url
-  username                 = var.proxmox_api_token_id
-  token                    = var.proxmox_api_token_secret
-  insecure_skip_tls_verify = true
-  node                     = "pve2"
-  task_timeout             = "20m"
-
-  # --- VM Configuration ---
-  vm_id                = local.pve2_vm_id
-  vm_name              = local.vm_name
-  template_description = "${local.template_desc_prefix} pve2 ${local.template_desc_suffix}"
-  tags                 = "packer;pve2"
-
-  # --- Common Hardware & Build Config (shared between sources) ---
-  cores           = local.cores
-  memory          = local.memory
-  scsi_controller = local.scsi_controller
-  disks {
-    disk_size    = local.disk_size
-    format       = local.disk_format
-    storage_pool = local.disk_storage_pool
-    type         = local.disk_type
-    discard      = local.disk_discard
-    ssd          = local.disk_ssd
-  }
-  network_adapters {
-    model    = local.network_model
-    bridge   = local.network_bridge
-    firewall = local.network_firewall
-  }
-  cloud_init              = true
-  cloud_init_storage_pool = local.cloud_init_storage
-  boot_iso {
-    type     = "scsi"
-    iso_file = "${var.iso_storage_pool}:iso/${var.iso_name}"
-    unmount  = true
-  }
-  boot_wait                    = local.boot_wait
-  boot_key_interval            = local.boot_key_interval
-  boot_command                 = local.boot_command
-  ssh_username                 = "ubuntu"
-  ssh_agent_auth               = true
-  ssh_disable_agent_forwarding = true
-  ssh_timeout                  = local.ssh_timeout
-  ssh_handshake_attempts       = local.ssh_handshake_attempts
-  http_directory               = local.http_directory
-  http_port_min                = local.http_port
-  http_port_max                = local.http_port
-  qemu_agent                   = true
-}
-
-
-# ------------------------------------------------------------------------------
-# Source 3: Template on pve3
+# Source 2: Template on pve3
 # ------------------------------------------------------------------------------
 source "proxmox-iso" "ubuntu-base-pve3" {
   # --- Connection Details ---
@@ -222,7 +164,6 @@ source "proxmox-iso" "ubuntu-base-pve3" {
 build {
   sources = [
     "source.proxmox-iso.ubuntu-base-pve1",
-    "source.proxmox-iso.ubuntu-base-pve2",
     "source.proxmox-iso.ubuntu-base-pve3"
   ]
 
