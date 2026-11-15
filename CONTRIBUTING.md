@@ -286,6 +286,11 @@ appdata directory, and FUSE access. UI authentication
 uses the existing `/config/htpasswd`; plaintext UI credentials are not needed in
 Compose. Start and update it through Compose Manager, not DockerMan.
 
+Syncthing is managed by Compose Manager from `unraid/apps/syncthing/compose.yaml`.
+Its existing `/mnt/user/appdata/syncthing/` configuration preserves the device
+identity, peers, folder paths, and index. Ports 8384/TCP, 22000/TCP, and 21027/UDP
+and the `/mnt/user:/sync/array` bind mount remain unchanged.
+
 Validate changed Unraid scripts with ShellCheck/shfmt and the applicable
 pre-commit hooks. Live plugin installation/removal is an explicit apply; test
 convergence with a subsequent check and apply, not by rebooting the server or

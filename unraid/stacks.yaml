@@ -4,3 +4,5 @@ stacks:
     source: apps/garage
   - name: kopia
     source: apps/kopia
+  - name: syncthing
+    source: apps/syncthing

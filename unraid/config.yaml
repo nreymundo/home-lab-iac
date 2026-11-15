@@ -23,3 +23,12 @@ files:
   - content: https://raw.githubusercontent.com/imagegenius/templates/main/unraid/img/kopia.png
     target: /boot/config/plugins/compose.manager/projects/kopia/icon_url
     mode: '0600'
+  - source: apps/syncthing/compose.yaml
+    target: /boot/config/plugins/compose.manager/projects/syncthing/compose.yaml
+    mode: '0600'
+  - content: "true"
+    target: /boot/config/plugins/compose.manager/projects/syncthing/autostart
+    mode: '0600'
+  - content: https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/syncthing-logo.png
+    target: /boot/config/plugins/compose.manager/projects/syncthing/icon_url
+    mode: '0600'

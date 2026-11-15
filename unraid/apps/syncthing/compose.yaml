@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+name: syncthing
+services:
+  syncthing:
+    image: linuxserver/syncthing:latest
+    container_name: syncthing
+    network_mode: bridge
+    restart: unless-stopped
+    ports:
+      - "8384:8384"
+      - "22000:22000"
+      - "21027:21027/udp"
+    environment:
+      PUID: "99"
+      PGID: "100"
+      TZ: Europe/Berlin
+    pids_limit: 2048
+    logging:
+      driver: json-file
+      options:
+        max-file: "1"
+        max-size: 50m
+    volumes:
+      - /mnt/user/appdata/syncthing:/config
+      - /mnt/user:/sync/array
+    labels:
+      net.unraid.docker.managed: composeman
+      net.unraid.docker.icon: https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/syncthing-logo.png
+      net.unraid.docker.webui: "http://[IP]:[PORT:8384]/"
