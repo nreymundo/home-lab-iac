@@ -151,6 +151,7 @@ changed=0
 check_file() {
   target=$1 expected=$2 mode=$3
   if [ -L "$target" ]; then echo "Refusing symlink: $target" >&2; exit 1; fi
+  if [ -e "$target" ] && [ ! -f "$target" ]; then echo "Refusing non-regular file: $target" >&2; exit 1; fi
   drift=0
   if [ ! -f "$target" ] || [ "$(sha256sum "$target" | cut -d ' ' -f 1)" != "$expected" ]; then drift=1; fi
   if [ -f "$target" ]; then
@@ -167,7 +168,7 @@ write_file() {
   trap 'rm -f "$tmp"' EXIT
   printf '%s' "$encoded" | base64 -d > "$tmp"
   chmod "$mode" "$tmp"
-  mv -f "$tmp" "$target"
+  mv -fT "$tmp" "$target"
   trap - EXIT
 }
 ''']

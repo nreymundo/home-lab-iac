@@ -87,13 +87,13 @@ plugins:
     name: tips.and.tweaks
     source: https://raw.githubusercontent.com/unraid/tips.and.tweaks/master/tips.and.tweaks.plg
     state: present
-  - filename: unassigned.devices-plus.plg
-    name: unassigned.devices-plus
-    source: https://raw.githubusercontent.com/unraid/unassigned.devices/master/unassigned.devices-plus.plg
-    state: present
   - filename: unassigned.devices.plg
     name: unassigned.devices
     source: https://raw.githubusercontent.com/unraid/unassigned.devices/master/unassigned.devices.plg
+    state: present
+  - filename: unassigned.devices-plus.plg
+    name: unassigned.devices-plus
+    source: https://raw.githubusercontent.com/unraid/unassigned.devices/master/unassigned.devices-plus.plg
     state: present
   - filename: user.scripts.enhanced.plg
     name: user.scripts.enhanced
