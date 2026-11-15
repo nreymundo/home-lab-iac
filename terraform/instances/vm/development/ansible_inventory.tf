@@ -10,11 +10,11 @@ resource "local_file" "ansible_inventory" {
         children = {
           development_vms = {
             hosts = {
-              (module.proxmox_vms.vms[0].name) = {
-                ansible_host = module.proxmox_vms.vms[0].ip_address
-                ansible_user = module.proxmox_vms.vms[0].ansible_user
+              for vm in module.unraid_vms.vms : vm.hostname => {
+                ansible_host = vm.ip_address
+                ansible_user = vm.ansible_user
                 ansible_port = 22
-                node_os      = module.proxmox_vms.vms[0].ci_user
+                node_os      = vm.ansible_user
               }
             }
           }

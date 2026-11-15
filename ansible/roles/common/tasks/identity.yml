@@ -35,6 +35,14 @@
     create: true
     mode: "0644"
 
+# Cached cloud-init user-data can still contain the guest's previous hostname.
+- name: Ensure cloud-init hosts template preserves inventory hostname
+  ansible.builtin.lineinfile:
+    path: "{{ common_cloud_hosts_template.stat.path }}"
+    regexp: "^127\\.0\\.1\\.1\\s+"
+    line: "127.0.1.1 {{ inventory_hostname }}"
+  when: common_cloud_hosts_template.stat.isreg | default(false)
+
 - name: Ensure cloud-init preserves hostname
   ansible.builtin.copy:
     content: "preserve_hostname: true\n"
