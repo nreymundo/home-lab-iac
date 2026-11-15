@@ -14,3 +14,12 @@ files:
   - content: https://raw.githubusercontent.com/junkerderprovinz/garage/main/.github/assets/icon.png
     target: /boot/config/plugins/compose.manager/projects/garage/icon_url
     mode: '0600'
+  - source: apps/kopia/compose.yaml
+    target: /boot/config/plugins/compose.manager/projects/kopia/compose.yaml
+    mode: '0600'
+  - content: "true"
+    target: /boot/config/plugins/compose.manager/projects/kopia/autostart
+    mode: '0600'
+  - content: https://raw.githubusercontent.com/imagegenius/templates/main/unraid/img/kopia.png
+    target: /boot/config/plugins/compose.manager/projects/kopia/icon_url
+    mode: '0600'

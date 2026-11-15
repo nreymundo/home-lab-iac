@@ -2,3 +2,5 @@
 stacks:
   - name: garage
     source: apps/garage
+  - name: kopia
+    source: apps/kopia
