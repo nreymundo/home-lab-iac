@@ -49,7 +49,6 @@ proxmox_kernel_params_base_remove: []
 proxmox_corefreq_enabled: false
 
 # Shared Unraid Proxmox storage mounted over NFS via roles/proxmox.
-# pve2 overrides the NFS server in its host_vars for its host-only path.
 proxmox_unraid_nfs_enabled: true
 
 # Email notifications via the PVE notification system (SMTP endpoint applied

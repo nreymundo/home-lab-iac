@@ -49,16 +49,15 @@ This role manages durable host configuration for Proxmox nodes. It is intended t
   `/mnt/unraid/proxmox` on every node when enabled.
 - `proxmox_unraid_nfs_server`, `proxmox_unraid_nfs_export`,
   `proxmox_unraid_nfs_mountpoint`: NFS endpoint and local mountpoint. The
-  server defaults to `192.168.10.4`; pve2 overrides it to `10.0.0.2` in
-  host_vars for its direct host-only path to the Unraid VM.
+  server defaults to `192.168.10.4`.
 - `proxmox_unraid_nfs_options`: list of mount options joined with commas
   (`_netdev,noatime,x-systemd.automount,x-systemd.idle-timeout=600,
-  x-systemd.mount-timeout=20s,nofail`), copied from the proven PVE2 mount.
+  x-systemd.mount-timeout=20s,nofail`).
 - `proxmox_unraid_nfs_cleanup_legacy`, `proxmox_unraid_nfs_legacy_cron_entries`,
   `proxmox_unraid_nfs_legacy_script_path`: remove the exact root cron lines and
   the `/root/mnt_unraid.sh` retry script left over from the CIFS workaround
-  (cleanup defaults to `true`). The separate `/mnt/unraid/backup` mounts on
-  pve2/pve3 are not managed by this role and are never modified.
+  (cleanup defaults to `true`). The separate `/mnt/unraid/backup` mount on
+  pve3 is not managed by this role and is never modified.
 - `proxmox_notifications_enabled`: master switch for email notifications
   (default `false`). Requires `ansible/secrets/proxmox.sops.yml` to be filled
   and encrypted first; see `ansible/secrets/README.md`.
@@ -136,6 +135,5 @@ ansible-playbook -i inventories/baremetal.yml playbooks/proxmox.yml --limit pve3
 
 The Unraid NFS mount replaces any previous CIFS mount at the same mountpoint
 after unmounting it; the mount source and fstype are asserted read-only after
-the change. On pve2 the NFS server is `10.0.0.2` (host-only path to the Unraid
-VM), while pve1/pve3 use `192.168.10.4`; the export, mountpoint, and options
-are identical on all nodes.
+the change. The NFS server is `192.168.10.4`; the export, mountpoint, and
+options are identical on all nodes.

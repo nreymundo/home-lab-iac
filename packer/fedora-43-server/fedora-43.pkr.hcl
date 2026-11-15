@@ -37,28 +37,27 @@ locals {
 
   # VM ID calculation: Fedora base (9020) + node number
   distro_base_id = 9020
-  pve2_vm_id     = 9022 # 9020 + 2
+  pve1_vm_id     = 9021 # 9020 + 1
   pve3_vm_id     = 9023 # 9020 + 3
-  # To add pve1: pve1_vm_id = 9021
 }
 
 # ------------------------------------------------------------------------------
-# Source: Template on pve2
+# Source: Template on pve1
 # ------------------------------------------------------------------------------
-source "proxmox-iso" "fedora-base-pve2" {
+source "proxmox-iso" "fedora-base-pve1" {
   # --- Connection Details ---
   proxmox_url              = var.proxmox_api_url
   username                 = var.proxmox_api_token_id
   token                    = var.proxmox_api_token_secret
   insecure_skip_tls_verify = true
-  node                     = "pve2"
+  node                     = "pve1"
   task_timeout             = "20m"
 
   # --- VM Configuration ---
-  vm_id                = local.pve2_vm_id
+  vm_id                = local.pve1_vm_id
   vm_name              = local.vm_name
-  template_description = "${local.template_desc_prefix} pve2 ${local.template_desc_suffix}"
-  tags                 = "packer;pve2"
+  template_description = "${local.template_desc_prefix} pve1 ${local.template_desc_suffix}"
+  tags                 = "packer;pve1"
 
   # --- Common Hardware & Build Config ---
   cores           = local.cores
@@ -152,7 +151,7 @@ source "proxmox-iso" "fedora-base-pve3" {
 # ------------------------------------------------------------------------------
 build {
   sources = [
-    "source.proxmox-iso.fedora-base-pve2",
+    "source.proxmox-iso.fedora-base-pve1",
     "source.proxmox-iso.fedora-base-pve3"
   ]
 

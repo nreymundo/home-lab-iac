@@ -2,7 +2,7 @@
 # Manage the shared Unraid Proxmox storage as an NFS mount with systemd
 # automounting. A previously mounted CIFS export at the same mountpoint is
 # detected and unmounted before the fstab entry is replaced. The separate
-# /mnt/unraid/backup mounts on pve2/pve3 are out of scope and never touched.
+# /mnt/unraid/backup mount on pve3 is out of scope and never touched.
 
 - name: Manage Unraid NFS storage mount
   when: proxmox_unraid_nfs_enabled | default(false) | bool
