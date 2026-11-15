@@ -279,7 +279,7 @@ blocks persist under `/mnt/user/s3/blocks/`. Container mounts preserve the origi
 Garage UI remains the client-facing management interface.
 
 Kopia is managed by Compose Manager from `unraid/apps/kopia/compose.yaml`.
-Its existing configuration stays at `/mnt/user/appdata/kopia/`, with the cache
+Its existing configuration stays at `/mnt/cache/appdata/kopia/`, with the cache
 under `cache/` in the same appdata directory. The stack preserves hostname
 `kopia`, port 51515, the local-backup directory under `backups/` in the same
 appdata directory, and FUSE access. UI authentication
@@ -287,7 +287,7 @@ uses the existing `/config/htpasswd`; plaintext UI credentials are not needed in
 Compose. Start and update it through Compose Manager, not DockerMan.
 
 Syncthing is managed by Compose Manager from `unraid/apps/syncthing/compose.yaml`.
-Its existing `/mnt/user/appdata/syncthing/` configuration preserves the device
+Its existing `/mnt/cache/appdata/syncthing/` configuration preserves the device
 identity, peers, folder paths, and index. Ports 8384/TCP, 22000/TCP, and 21027/UDP
 and the `/mnt/user:/sync/array` bind mount remain unchanged.
 

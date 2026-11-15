@@ -21,7 +21,7 @@ services:
         max-file: "1"
         max-size: 50m
     volumes:
-      - /mnt/user/appdata/syncthing:/config
+      - /mnt/cache/appdata/syncthing:/config
       - /mnt/user:/sync/array
     labels:
       net.unraid.docker.managed: composeman
