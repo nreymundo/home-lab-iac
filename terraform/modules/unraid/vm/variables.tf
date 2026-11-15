@@ -10,9 +10,6 @@ variable "vms" {
     disk_path          = string
     disk_format        = optional(string, "qcow2")
     cloudinit_path     = optional(string)
-    mac_address        = string
-    smbios_uuid        = optional(string)
-    generation_id      = optional(string)
     network_bridge     = optional(string, "br0")
     machine            = optional(string, "pc-q35-10.2")
     os_type            = optional(string, "linux")

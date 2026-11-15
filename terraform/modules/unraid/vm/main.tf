@@ -1,9 +1,21 @@
+locals {
+  vms_by_name = { for vm in var.vms : vm.name => vm }
+}
+
+resource "macaddress" "nic" {
+  for_each = local.vms_by_name
+}
+
+resource "random_uuid" "generation" {
+  for_each = local.vms_by_name
+}
+
 resource "libvirt_domain" "this" {
-  for_each = { for vm in var.vms : vm.name => vm }
+  for_each = local.vms_by_name
 
   name        = each.value.name
   type        = "kvm"
-  gen_id      = each.value.generation_id
+  gen_id      = random_uuid.generation[each.key].result
   description = "Managed by Terraform."
   memory      = each.value.vm_memory_mb * 1024
   memory_unit = "KiB"
@@ -22,16 +34,8 @@ resource "libvirt_domain" "this" {
     type_arch    = "x86_64"
     type_machine = each.value.machine
     boot_devices = [{ dev = "hd" }]
-    sm_bios      = each.value.smbios_uuid == null ? null : { mode = "sysinfo" }
   }
 
-  sys_info = each.value.smbios_uuid == null ? null : [{
-    smbios = {
-      system = {
-        entry = [{ name = "uuid", value = each.value.smbios_uuid }]
-      }
-    }
-  }]
 
   features = {
     acpi = true
@@ -80,7 +84,7 @@ resource "libvirt_domain" "this" {
       }
     ])
     interfaces = [{
-      mac    = { address = each.value.mac_address }
+      mac    = { address = lower(macaddress.nic[each.key].address) }
       source = { bridge = { bridge = each.value.network_bridge } }
       model  = { type = "virtio" }
     }]
@@ -99,5 +103,9 @@ resource "libvirt_domain" "this" {
       model = { type = "vga", vram = 16384, heads = 1, primary = "yes" }
     }]
     mem_balloon = { model = "virtio" }
+  }
+
+  lifecycle {
+    ignore_changes = [sys_info, os.sm_bios]
   }
 }
