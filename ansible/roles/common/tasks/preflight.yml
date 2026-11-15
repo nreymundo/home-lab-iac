@@ -8,6 +8,13 @@
   register: common_cloud_cfg_dir
   changed_when: false
 
+- name: Check cloud-init hosts template
+  ansible.builtin.stat:
+    path: "/etc/cloud/templates/hosts.{{ ansible_os_family | lower }}.tmpl"
+  register: common_cloud_hosts_template
+  when: common_cloud_cfg_dir.stat.isdir | default(false)
+  changed_when: false
+
 - name: Check current timezone
   ansible.builtin.command: timedatectl show -p Timezone --value
   register: common_timezone_status

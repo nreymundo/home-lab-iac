@@ -4,9 +4,9 @@ terraform {
       source  = "hashicorp/local"
       version = "~> 2.5"
     }
-    proxmox = {
-      source  = "telmate/proxmox"
-      version = "3.0.2-rc07"
+    libvirt = {
+      source  = "dmacvicar/libvirt"
+      version = "~> 0.9.6"
     }
   }
   required_version = ">= 1.10"
@@ -23,11 +23,6 @@ terraform {
   }
 }
 
-# Environment inputs:
-# - Provider auth/endpoint: PM_API_URL, PM_API_TOKEN_ID, PM_API_TOKEN_SECRET
-
-provider "proxmox" {
-  pm_tls_insecure = true
-  pm_timeout      = 600
-  pm_parallel     = 3
+provider "libvirt" {
+  uri = "qemu+sshcmd://unraid/system?proxy=native"
 }

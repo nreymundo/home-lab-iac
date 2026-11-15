@@ -1,18 +1,13 @@
 locals {
-  vm_definition = [{
-    name               = "vm-dev"
-    target_node        = "pve1"
-    vmid               = 252
-    template_name      = "ubuntu-26.04-base"
-    ci_user            = "dev"
-    ansible_user       = "dev"
-    ip_address         = "192.168.10.101"
-    vm_cores           = 8
-    vm_memory_mb       = 12288
-    vm_balloon_mb      = 8192
-    vm_disk_size_gb    = 256
-    start_at_node_boot = false
-    vm_state           = "stopped"
-    proxmox_tags       = ["development"]
-  }]
+  vm_definition = {
+    name           = "development"
+    hostname       = "development"
+    ansible_user   = "dev"
+    ip_address     = "192.168.10.101"
+    smbios_uuid    = "87dc43c0-7b18-4fd5-8505-ce37c6076b08"
+    generation_id  = "61ab8c88-df92-43c5-bffa-3f949ff3ea97"
+    cores          = 8
+    memory_kib     = 12582912
+    disk_directory = "/mnt/cache/domains/development"
+  }
 }

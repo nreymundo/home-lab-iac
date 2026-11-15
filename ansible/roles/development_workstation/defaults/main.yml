@@ -1,12 +1,12 @@
 ---
 # development_workstation role defaults.
 #
-# The login user is created by Terraform cloud-init; this role configures
-# tooling for that account and never creates users or credentials.
+# The existing login user is preserved with the migrated guest; this role
+# configures tooling for that account and never creates users or credentials.
 
 development_workstation_user: dev
 
-# Standard XDG home directories for the Terraform-created dev account,
+# Standard XDG home directories for the existing dev account,
 # mirroring the Hermes operator user layout.
 development_workstation_xdg_directories:
   - Desktop

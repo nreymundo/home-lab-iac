@@ -6,7 +6,7 @@
   "children":
     "development_vms":
       "hosts":
-        "vm-dev":
+        "development":
           "ansible_host": "192.168.10.101"
           "ansible_port": 22
           "ansible_user": "dev"
