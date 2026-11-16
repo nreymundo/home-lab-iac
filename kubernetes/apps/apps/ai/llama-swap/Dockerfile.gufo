@@ -1,4 +1,6 @@
 FROM ghcr.io/gufo-org/toolboxes/gufo-runtime:0.34.0@sha256:49b1fce40cb43e33c46d91595e300cb320cdec768fcd976f8c8da24b402fc133
 
-# Steadfast exposes its AMD devices through render GID 991.
-USER 1000:991
+# CRI uses the passwd primary GID; image group membership supplies render access.
+USER 0
+RUN sed -i 's/^render:x:107:gufo$/render:x:991:gufo/' /etc/group
+USER 1000

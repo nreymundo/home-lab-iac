@@ -491,7 +491,7 @@ models:
       kubeswap serve --namespace ai-backends --model qwen/qwen3.8-27b-uncensored
       --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
       --check-path /ready --health-path /ready --liveness-path /health
-      --image docker.io/library/gufo-qwen:0.34.0@sha256:3bc57a0dbc33a9dbfc357ee85093452a84c9a75ce1ff94c16b670c51883aebbe
+      --image docker.io/library/gufo-qwen:0.34.0-render@sha256:37ce4b14e1d8db48afd57883770c66f60d05781d3fd80af55f6f16e838c1fd87
       --command gufo --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
       --request cpu=100m --request memory=40Gi --limit memory=44Gi
       --volume hostpath:/srv/ai/models:/opt/ai/models:ro
@@ -619,7 +619,7 @@ models:
       kubeswap serve --namespace ai-backends --model unsloth/qwen3.8-27b
       --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
       --check-path /ready --health-path /ready --liveness-path /health
-      --image docker.io/library/gufo-qwen:0.34.0@sha256:3bc57a0dbc33a9dbfc357ee85093452a84c9a75ce1ff94c16b670c51883aebbe
+      --image docker.io/library/gufo-qwen:0.34.0-render@sha256:37ce4b14e1d8db48afd57883770c66f60d05781d3fd80af55f6f16e838c1fd87
       --command gufo --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
       --request cpu=100m --request memory=64Gi --limit memory=70Gi
       --volume hostpath:/srv/ai/models:/opt/ai/models:ro
