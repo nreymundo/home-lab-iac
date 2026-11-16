@@ -862,6 +862,7 @@ data:
         local/stt-fast: hosted_vllm/whisper/large-v3-turbo-q5_0
         local/stt-large: hosted_vllm/whisper/large-v3-q5_0
         local/tts: openai/higgs-audio-tts
+        remote/vision: cloud/codex-luna-low
       # Scope failover to service aliases so explicit model names stay predictable.
       fallbacks:
         - local/decision:
