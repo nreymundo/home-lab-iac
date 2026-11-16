@@ -26,7 +26,6 @@ groups:
       - whisper/large-v3-turbo-q5_0
       - unsloth/gemma-4-e4b-it-qat
       - unsloth/gemma-4-12b-it-qat-camera
-      - unsloth/qwen3.8-27b
   reranker-on-demand:
     swap: false
     exclusive: false
@@ -61,6 +60,7 @@ groups:
       - unsloth/gemma-4-31b-it-qat-doc-best
       - whisper/large-v3-q5_0
       - qwen/qwen3.8-27b-uncensored
+      - unsloth/qwen3.8-27b
   zeta-2.1-on-demand:
     swap: false
     exclusive: false
@@ -473,6 +473,8 @@ models:
   qwen/qwen3.8-27b-uncensored:
     name: Qwen3.8 27B Uncensored Q4_K_M
     description: Qwen3.8 27B uncensored GGUF; 256K context, on-demand chat and tools
+    useModelName: qwen3.8-27b-uncensored
+    checkEndpoint: /ready
     ttl: 1800
     filters:
       setParams:
@@ -486,15 +488,18 @@ models:
       tools: true
       context: 262144
     cmd: >-
-      kubeswap serve --namespace ai-backends --model qwen/qwen3.8-27b-uncensored --listen '127.0.0.1:${PORT}' --port
-      8080 --startup-timeout 480s --grace 30s --strict --image docker.io/kyuz0/amd-strix-halo-toolboxes:vulkan-radv@sha256:132730e57ecd96d33411f9b625565350ca2f68f0363ae0c7f4926ccd43d4a2fc
-      --command /usr/bin/llama-server --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
-      --request cpu=100m --request memory=17Gi --volume hostpath:/srv/ai/models:/opt/ai/models:ro -- --alias qwen3.8-27b-uncensored
-      --host 0.0.0.0 --port 8080 -m /opt/ai/models/qwen/Qwen3.8-27B-Uncensored-Q4_K_M.gguf --jinja --ctx-size 262144
-      --n-predict 8192 --parallel 1 --batch-size 2048 --ubatch-size 512 --cache-type-k q8_0 --cache-type-v q8_0
-      --cache-ram 0 --cache-reuse 256 -ngl 999 -fa on --device Vulkan0 --spec-type draft-mtp --spec-draft-n-max
-      3 --reasoning auto --reasoning-effort low --reasoning-preserve --temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0
-      --presence-penalty 0.0 --repeat-penalty 1.0 --metrics --no-webui
+      kubeswap serve --namespace ai-backends --model qwen/qwen3.8-27b-uncensored
+      --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
+      --check-path /ready --health-path /ready --liveness-path /health
+      --image docker.io/library/gufo-qwen:0.34.0@sha256:3bc57a0dbc33a9dbfc357ee85093452a84c9a75ce1ff94c16b670c51883aebbe
+      --command gufo --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
+      --request cpu=100m --request memory=40Gi --limit memory=44Gi
+      --volume hostpath:/srv/ai/models:/opt/ai/models:ro
+      -- serve llm --host 0.0.0.0 --port 8080 --served-model-name qwen3.8-27b-uncensored
+      --model /opt/ai/models/qwen/Qwen3.8-27B-Uncensored-Q4_K_M.gguf
+      --context 262144 --sessions 1 --max-tokens 8192 --cache-ram-bytes 1073741824
+      --speculative off --think auto --reasoning-effort low --preserve-thinking on
+      --temperature 0.7 --top-p 0.8 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0
     cmdStop: kubeswap delete --namespace ai-backends --model qwen/qwen3.8-27b-uncensored --wait 60s
     proxy: http://127.0.0.1:${PORT}
   adilkairolla/zeta-2.1:
@@ -564,6 +569,7 @@ models:
     proxy: http://127.0.0.1:${PORT}
   unsloth/qwen3.8-27b:
     useModelName: qwen3.8-27b-unsloth
+    checkEndpoint: /ready
     filters:
       setParams:
         reasoning_effort?: medium
@@ -596,9 +602,9 @@ models:
           presence_penalty: 0.0
           repeat_penalty: 1.0
           max_tokens?: 8192
-    name: Unsloth Qwen3.8 27B Q4_K_M - Shared 3-Slot Workhorse
-    description: Primary always-on multimodal model for chat, tools, coding, documents and analysis; 3 concurrent
-      slots, 393216-token unified KV pool, 262144-token per-request cap, MTP enabled, low-idle settings
+    name: Unsloth Qwen3.8 27B Q4_K_XL - Gufo 2-Session Workhorse
+    description: Preloaded Gufo multimodal model for chat, tools, coding, documents and analysis; 2 concurrent
+      262144-token sessions, DFlash2 enabled; swaps with other heavy on-demand models
     capabilities:
       in:
         - text
@@ -607,16 +613,23 @@ models:
         - text
       tools: true
       context: 262144
+    # Gufo v0.34.0 target/projector: ce331efc48d5722b4b8041f72793e530eae18d9b.
+    # DFlash2 draft: 2d9571f8ce46e151f61c6499c99dee6079e1d610.
     cmd: >-
-      kubeswap serve --namespace ai-backends --model unsloth/qwen3.8-27b --listen '127.0.0.1:${PORT}' --port 8080
-      --startup-timeout 480s --grace 30s --strict --image docker.io/kyuz0/amd-strix-halo-toolboxes:vulkan-radv@sha256:132730e57ecd96d33411f9b625565350ca2f68f0363ae0c7f4926ccd43d4a2fc
-      --command /usr/bin/llama-server --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
-      --request cpu=100m --request memory=18Gi --volume hostpath:/srv/ai/models:/opt/ai/models:ro -- --alias qwen3.8-27b-unsloth
-      --host 0.0.0.0 --port 8080 -m /opt/ai/models/unsloth/Qwen3.8/27b/Qwen3.8-27B-UD-Q4_K_M.gguf --mmproj /opt/ai/models/unsloth/Qwen3.8/27b/mmproj-F16.gguf
-      --jinja --ctx-size 393216 --parallel 3 --kv-unified --kv-unified-per-slot 262144 --n-predict 8192 --batch-size
-      2048 --ubatch-size 512 --cache-type-k q8_0 --cache-type-v q8_0 --cache-ram 0 --cache-reuse 256 --no-mmproj-offload
-      -ngl 999 -fa on --device Vulkan0 --image-max-tokens 1120 --spec-type draft-mtp --spec-draft-n-max 3 --reasoning
-      auto --reasoning-effort medium --reasoning-preserve --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty
-      0.0 --repeat-penalty 1.0 --metrics --no-webui
+      kubeswap serve --namespace ai-backends --model unsloth/qwen3.8-27b
+      --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
+      --check-path /ready --health-path /ready --liveness-path /health
+      --image docker.io/library/gufo-qwen:0.34.0@sha256:3bc57a0dbc33a9dbfc357ee85093452a84c9a75ce1ff94c16b670c51883aebbe
+      --command gufo --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
+      --request cpu=100m --request memory=64Gi --limit memory=70Gi
+      --volume hostpath:/srv/ai/models:/opt/ai/models:ro
+      -- serve llm --host 0.0.0.0 --port 8080 --served-model-name qwen3.8-27b-unsloth
+      --model /opt/ai/models/unsloth/Qwen3.8/27b/gufo-0.34.0/Qwen3.8-27B-UD-Q4_K_XL.gguf
+      --mmproj /opt/ai/models/unsloth/Qwen3.8/27b/gufo-0.34.0/mmproj-BF16.gguf
+      --speculative dflash2
+      --dflash-model /opt/ai/models/unsloth/Qwen3.8/27b/gufo-0.34.0/Qwen3.8-27B-DFlash2-Q4_K_M.gguf
+      --context 262144 --sessions 2 --max-tokens 8192 --cache-ram-bytes 1073741824
+      --think auto --reasoning-effort medium --preserve-thinking on
+      --temperature 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0
     cmdStop: kubeswap delete --namespace ai-backends --model unsloth/qwen3.8-27b --wait 60s
     proxy: http://127.0.0.1:${PORT}
