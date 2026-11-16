@@ -572,7 +572,7 @@ models:
     checkEndpoint: /ready
     filters:
       setParams:
-        reasoning_effort?: medium
+        reasoning_effort?: low
         max_tokens?: 8192
       setParamsByID:
         unsloth/qwen3.8-27b-documents:
