@@ -488,7 +488,7 @@ models:
       tools: true
       context: 262144
     cmd: >-
-      kubeswap serve --namespace ai-backends --model qwen/qwen3.8-27b-uncensored
+      python3 /etc/llama-swap/gufo.py ${PORT} --namespace ai-backends --model qwen/qwen3.8-27b-uncensored
       --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
       --check-path /ready --health-path /ready --liveness-path /health
       --image docker.io/library/gufo-qwen:0.34.0-render@sha256:37ce4b14e1d8db48afd57883770c66f60d05781d3fd80af55f6f16e838c1fd87
@@ -616,7 +616,7 @@ models:
     # Gufo v0.34.0 target/projector: ce331efc48d5722b4b8041f72793e530eae18d9b.
     # DFlash2 draft: 2d9571f8ce46e151f61c6499c99dee6079e1d610.
     cmd: >-
-      kubeswap serve --namespace ai-backends --model unsloth/qwen3.8-27b
+      python3 /etc/llama-swap/gufo.py ${PORT} --namespace ai-backends --model unsloth/qwen3.8-27b
       --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
       --check-path /ready --health-path /ready --liveness-path /health
       --image docker.io/library/gufo-qwen:0.34.0-render@sha256:37ce4b14e1d8db48afd57883770c66f60d05781d3fd80af55f6f16e838c1fd87
