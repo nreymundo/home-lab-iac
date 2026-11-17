@@ -25,3 +25,10 @@
 - name: Configure ASUS daemon
   ansible.builtin.include_tasks: asusd.yml
   when: headless_laptop_asusd_enabled | bool
+
+- name: Configure ASUS daemon fan curves
+  ansible.builtin.import_tasks: asusd_fan_curves.yml
+  when:
+    - headless_laptop_asusd_enabled | bool
+    - headless_laptop_asusd_fan_curve | default('') | length > 0
+  tags: [asus_fan_curve]
