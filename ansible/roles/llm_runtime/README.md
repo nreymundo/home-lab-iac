@@ -2,6 +2,10 @@
 
 Installs the ROCm userspace and builds `llama.cpp` for Strix Halo Fedora LXCs.
 
+This role builds the host binaries used in the LXC. It does not build or
+configure the Kubernetes Gufo backends; see the
+[model ownership notes](../llama_swap/README.md#kubernetes-models-and-routing).
+
 The role mirrors the important parts of the
 `kyuz0/amd-strix-halo-toolboxes` ROCm toolbox:
 

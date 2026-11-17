@@ -3,8 +3,9 @@
 Installs the newest stable `llama-swap` release from upstream GitHub and runs
 it as a systemd service in LLM LXCs.
 
-The role exposes one public OpenAI-compatible endpoint with `llama-swap` and
-lets it start `llama-server` backends on dynamic localhost ports.
+The role exposes an OpenAI-compatible endpoint on the LXC and starts local
+`llama-server`, `whisper-server`, or optional audio.cpp backends on dynamic
+localhost ports.
 
 Every run resolves the latest stable release via the GitHub releases API
 (`llama_swap_release_api_url`), selects the Linux amd64 asset matching
@@ -43,3 +44,24 @@ The bootstrap config uses the Strix Halo flags from the ROCm toolbox guidance:
 - `--no-mmap`
 - `-ngl 999`
 - `-fa 1`
+
+## Kubernetes models and routing
+
+The Kubernetes deployment is independent of this role. Its
+[llama-swap catalog](../../../kubernetes/apps/apps/ai/llama-swap/config.yaml)
+owns model files, placement, preloading, and runtime arguments;
+[LiteLLM](../../../kubernetes/apps/apps/ai/litellm/configmap.yaml) owns client
+aliases and fallback routes. Rerunning `llm_lxc.yml` changes neither catalog.
+
+- The default local Qwen workhorse is Huihui Qwen3.8 27B Abliterated
+  UD-Q4_K_XL. The Kubernetes service preloads it on `steadfast` using Gufo,
+  with BF16 vision, DFlash2, and two 262,144-token sessions. `local/chat`,
+  `local/coder`, `local/analysis`, and `local/document-analysis` use this
+  backend or its task-specific profiles.
+- The standard Unsloth Qwen3.8 27B Gufo backend remains available on demand.
+  Check the catalog for exact model IDs and pinned artifacts instead of using
+  the LXC's filename-derived model IDs.
+- `cloud/stt` routes to OpenAI transcription first and falls back to
+  `local/stt-fast` (Whisper large-v3-turbo). `local/stt-large` remains an explicit
+  local option. These local routes use Kubernetes backends on `steadfast`, not
+  the LXC's `whisper-server`.

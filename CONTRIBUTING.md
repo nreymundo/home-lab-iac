@@ -25,7 +25,7 @@ pre-commit install
 3. Run applicable pre-commit hooks: `pre-commit run --files <changed-file> [<changed-file>...]`
 4. Test locally when possible
 
-Some hooks format files or encrypt and stage `*.sops.yaml` files. Review `git diff` after running them.
+Some hooks format files or encrypt and stage `*.sops.yaml` files. Review both `git diff` and `git diff --cached` after running them.
 
 ### 3. Commit and Push
 
@@ -37,9 +37,7 @@ git push origin feature/my-change
 
 ### 4. Pull Request Review
 
-- Review requests are automatically handled through `CODEOWNERS`.
-- All PRs request review from `@nreymundo` by default.
-- If a PR is opened from a bot or machine account, this ensures the main account is still pulled in for review.
+- `.github/CODEOWNERS` names `@nreymundo` as the default code owner. GitHub can request that review when another account opens the PR; the author cannot review their own PR.
 - Pull request titles should follow the same conventional format as commit subjects.
 
 #### Pull Request Descriptions
@@ -336,6 +334,6 @@ The repository uses Renovate for dependency updates:
 
 - Package rules define automerge eligibility and minimum release age; see `renovate.json` for the current policy
 - Major updates require manual review
-- Updates are grouped by category (observability, networking)
+- Package rules group related updates, including observability, networking, and selected application stacks.
 
 See `renovate.json` for configuration details.

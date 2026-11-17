@@ -11,7 +11,7 @@ Read the repo root `AGENTS.md` and `kubernetes/AGENTS.md` first. This file only 
 - App deploy logic and manually declared app PVCs are intentionally split across the two child subtrees; changing one often requires checking the other.
 - Most app-level secrets should stay SOPS-encrypted and colocated with the app or storage object that consumes them.
 - `kubernetes/apps/storage/` owns manually declared PVC catalogs, while controller-managed storage such as `CNPG Cluster.spec.storage` remains workload-local. `kubernetes/apps/apps/storage/` is just a workload category; do not confuse the two because they have different contracts.
-- `ks/90-storage.yaml` reconciles `kubernetes/apps/storage/production` as `apps-storage`; `ks/91-apps.yaml` reconciles `kubernetes/apps/production` as `apps-manifests`, which depends on storage and Traefik configuration.
+- In `clusters/production/ks/`, `90-storage.yaml` reconciles `apps/storage/production` as `apps-storage` (depends on identity and Longhorn config). `91-apps.yaml` reconciles `apps/production` as `apps-manifests` (depends on identity, app storage, and Traefik config). These gates do not guarantee CNPG, Authentik, replicated credentials, or device-plugin readiness.
 - Both Flux Kustomizations use `prune: true`; removing an inclusion can delete its rendered resources.
 
 ## Local Anti-Patterns

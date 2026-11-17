@@ -18,7 +18,7 @@ Read the repo root `AGENTS.md` and `kubernetes/AGENTS.md` first. This file only 
 
 ## Validation
 - Before editing a shared component, inspect its downstream references in workload and infrastructure manifests.
-- Use `kubectl kustomize <consumer-path> >/dev/null` on one or more representative consumers when the change affects rendered manifests.
+- Render representative consumers and their production aggregator using `kubectl kustomize --load-restrictor=LoadRestrictionsNone <consumer-path>`; relative component paths can reach outside the consumer root.
 
 ## Notes
 - All current active consumers live under `kubernetes/apps/apps/`; search workload and infrastructure manifests before assuming a component has no wider impact.

@@ -73,43 +73,71 @@ the standard K3s `configs.docker.io.auth` block in that node's
   `/etc/rancher/k3s/registries.yaml` across runs, so the manual auth does not
   need to be reapplied after each Ansible run.
 
-## Flux Bring-Up Order
+## Bootstrap Flux and sequence recovery
 
-The numbered files in `kubernetes/clusters/production/ks` define the production
-reconciliation entrypoints. The important logical order is:
+The generated [sync manifest](../kubernetes/clusters/production/flux-system/gotk-sync.yaml)
+tracks `master` and points the root `flux-system` Kustomization at
+`./kubernetes/clusters/production`. On a fresh cluster, bootstrap Flux with
+authorized GitHub access using the repository, branch, and path from that
+manifest. Applying the generated YAML alone does not provision the Git source
+credential. `flux reconcile` is not a substitute for bootstrap.
 
-1. `cluster-identity`
-2. `infrastructure`
-3. networking, security, and automation controllers (MetalLB, Traefik,
-   external-dns, cloudflared, kube-replicator, reloader, Authentik, CrowdSec,
-   cert-manager)
-4. `longhorn-install`
-5. `longhorn-config`
-6. `cnpg-install`
-7. observability (kube-prometheus-stack, metrics-server, Loki, Alloy, Tempo,
-   OpenTelemetry Collector)
-8. node feature discovery and device plugins
-9. `apps-storage`
-10. `apps-manifests`
-
-Use `dependsOn` inside each Flux `Kustomization` as the authoritative dependency
-graph. Numeric filename order communicates intent, but some entries depend on
-later-numbered services.
-
-Useful commands:
+For the GitHub repository in the sync manifest, run the following **live**
+bootstrap from an authorized admin workstation with the new cluster selected
+and GitHub credentials supplied outside Git. For a restore, first prepare
+the recovery gates below on the tracked branch.
 
 ```bash
-flux get kustomizations
-flux get helmreleases -A
-flux reconcile kustomization flux-system --with-source
+flux bootstrap github --owner=nreymundo --repository=home-lab-iac \
+  --personal --token-auth --branch=master --path=kubernetes/clusters/production
 ```
+
+**Recovery planning (Git):** Before allowing production reconciliation, stage
+the recovery configuration. Gate `apps-storage` and `apps-manifests` with
+`spec.suspend: true` while preparing restored volumes and database definitions;
+do not remove entries from `ks/kustomization.yaml` as a pause mechanism. The
+root prunes removed entries. Authentik's database belongs to `authentik-install`,
+not the app layer; gate that install separately if restoring its database.
+
+Read [the production inclusion list](../kubernetes/clusters/production/ks/kustomization.yaml)
+and each entry's `spec.dependsOn`, `wait`, and `healthChecks`. This is a graph,
+not a serial rollout ordered by filename. Key paths are:
+
+| Reconciler | Direct dependencies |
+| --- | --- |
+| `infrastructure` (sources and namespaces) | `cluster-identity` |
+| `longhorn-config` | `cluster-identity`, `longhorn-install` |
+| `observability-kube-prometheus-stack-install` | `cluster-identity`, `longhorn-config` |
+| `cnpg-install` | `cluster-identity`, `infrastructure`, Prometheus stack install |
+| `metallb-config` | `cluster-identity`, `metallb-install`, Prometheus stack install |
+| `traefik-install` | `cluster-identity`, `metallb-config` |
+| `traefik-config` | `cluster-identity`, `traefik-install` |
+| `authentik-install` | `cluster-identity`, Prometheus stack install |
+| `authentik-config` | `cluster-identity`, `authentik-install`, `traefik-config` |
+| `apps-storage` | `cluster-identity`, `longhorn-config` |
+| `apps-manifests` | `cluster-identity`, `apps-storage`, `traefik-config` |
+
+Before releasing consumers, verify CNPG CRDs/operator, replicated Secrets, and
+any required DNS, Authentik, or GPU services separately: app Flux readiness
+does not gate all these dependencies. NetBird is intentionally excluded.
+On a fresh rebuild, Authentik also consumes the Camofox Secret replicated
+from `utils`. If workloads are gated, arrange for that app-owned Secret to
+be delivered before expecting Authentik to become ready; do not duplicate
+the credential or wait on Authentik as a prerequisite for the entire app inventory.
+
+Read-only status: `flux get sources git -A`, `flux get kustomizations -A`, and
+`flux get helmreleases -A`. Running
+`flux reconcile kustomization flux-system --with-source` deliberately applies
+committed state to the live cluster; use it only as an intended rollout step.
 
 ## Required Secrets
 
 At minimum, a rebuild needs these secret paths or live secrets available at the
 right time:
 
-- `sops-age` in `flux-system`, required for SOPS decryption.
+- Live `flux-system` Git source Secret in namespace `flux-system`, provisioned
+  by bootstrap, and `sops-age` in the same namespace, provisioned separately
+  with the matching Age private key before decrypting Flux inventories.
 - `kubernetes/clusters/production/identity/cluster-identity.sops.yaml`, used for
   `${CLUSTER_DOMAIN}` and other substitutions.
 - Longhorn S3 backup credentials:
@@ -117,6 +145,11 @@ right time:
 - CNPG S3 backup credentials:
   `kubernetes/infrastructure/database/cloudnative-pg/install/cnpg-backup-s3.sops.yaml`
 - App-specific SOPS secrets beside each app or infrastructure service.
+
+Git does not contain backup contents. Verify the external Garage S3 endpoint,
+DNS/TLS, buckets, and credentials before attempting recovery. The CNPG source
+Secret is delivered by kube-replicator; verify `cnpg-backup-s3` in the database
+namespace without printing its values.
 
 ## PVC Restore Options
 
@@ -137,36 +170,45 @@ Backups are label-driven by recurring jobs in
 
 ### Option A: Restore Before Apps Start
 
-Use this for a full rebuild.
+Use for a full rebuild. Keep the storage and workload inventories gated as
+described above so dynamic provisioning does not win the race.
 
-1. Reconcile Longhorn install/config.
-2. Verify the Garage S3 backup target and credentials work.
-3. Restore Longhorn backups as volumes before workloads mount empty claims.
-4. Create or bind PV/PVCs with the original namespace and claim names.
-5. Reconcile `apps-storage`.
-6. Reconcile `apps-manifests`.
+1. **GitOps:** Bring up Longhorn install/config and verify the Garage backup
+   target, credentials, and available restore points.
+2. **Live/manual:** Restore volumes and prebind PV/PVCs to the original
+   namespace and claim names. Match class, capacity, access mode, and restored
+   volume handle to the intended claim; confirm it binds to the restored PV.
+3. **GitOps:** Release `apps-storage` and verify claims remain correctly bound.
+4. **GitOps:** Release `apps-manifests` only after storage and database recovery
+   definitions are ready. Validate restored data before exposing traffic.
 
 ### Option B: Restore To A Temporary PVC And Copy
 
 Use this for partial or file-level recovery.
 
-1. Restore the Longhorn backup to a temporary PVC/name.
-2. Stop or suspend the consuming workload if needed.
-3. Mount both the restored PVC and target PVC into a one-shot copy pod.
-4. Copy the required data.
-5. Restart the workload and validate the application.
+1. **Live/manual:** Restore the Longhorn backup to a temporary PVC.
+2. **GitOps:** Pause the consumer so it cannot write during recovery.
+3. **Live/manual:** Mount both claims in a one-shot copy pod, copy the
+   required data with its ownership and permissions, and remove the pod.
+4. **GitOps:** Resume the consumer and validate the application.
 
 ### Option C: Replace A Damaged PVC
 
 Use this when the existing claim is unusable.
 
-1. Stop or suspend the consuming workload.
-2. Restore the backup to a new Longhorn volume.
-3. Recreate or rebind the PVC intentionally.
-4. Resume the workload and validate.
+1. **GitOps:** Pause the consumer; account for the claim's Flux owner before
+   replacing the live PVC so it is not dynamically recreated mid-restore.
+2. **Live/manual:** Restore the backup to a new Longhorn volume and prebind
+   the intended claim to it.
+3. **GitOps:** Resume inventory reconciliation and verify the claim binds to
+   the restored volume before resuming the consumer. Validate the application.
 
-Longhorn StorageClasses in this repo use `Retain`, so avoid deleting PVs unless
-you explicitly intend to preserve or discard the underlying volume.
+`longhorn-r1` and `longhorn-r2` use `Retain`; the separate `local-path` class
+uses `Delete` and is not recovered from Longhorn backups. `Retain` does not
+prevent Flux from pruning an omitted claim.
+
+External NFS content (for example, Immich and Jellyfin media mounts) is not
+part of the app PVC catalog. Restore or reconnect those exports separately.
 
 ### Full Reconstruction And `IfNotPresent`
 
@@ -183,24 +225,53 @@ for new PVCs.
 
 ## CNPG Restore Options
 
-CloudNativePG database backups use native `barmanObjectStore` configuration in
-each `Cluster`. Current database clusters include:
+The production inclusion chains contain the following CNPG clusters.
+All use native `barmanObjectStore`, `https://s3.${CLUSTER_DOMAIN}`, 21-day
+retention, and a weekly Sunday midnight `ScheduledBackup`. The bucket is
+`s3://cloudnative-pg/`; append the prefix below.
 
-- `authentik-pg` in `authentik`
-- `n8n-pg` in `automation`
-- `nextcloud-pg` in `nextcloud`
-- `paperless-pg` in `paperless`
-- `immich-pg` in `immich`
-- `litellm-pg` in `ai`
+| Namespace | Cluster | Prefix | Current backup serverName |
+| --- | --- | --- | --- |
+| `ai` | `audiomuse-pg` | `audiomuse` | `audiomuse-pg-v1` |
+| `ai` | `hindsight-pg` | `hindsight` | `hindsight-pg-v1` |
+| `ai` | `litellm-pg` | `litellm` | `litellm-pg-v1` |
+| `ai` | `open-webui-pg` | `open-webui` | `open-webui-pg-v1` |
+| `authentik` | `authentik-pg` | `authentik` | `authentik-pg-v1` |
+| `automation` | `n8n-pg` | `n8n` | `n8n-pg-v1` |
+| `comms` | `mailflow-pg` | `mailflow` | `mailflow-pg-v2` |
+| `immich` | `immich-pg` | `immich` | `immich-pg-v1` |
+| `lifestyle` | `airtrail-pg` | `airtrail` | `airtrail-pg-v4` |
+| `lifestyle` | `dawarich-pg` | `dawarich` | `dawarich-pg-v4` |
+| `lifestyle` | `sparkyfitness-pg` | `sparkyfitness` | `sparkyfitness-pg-v4` |
+| `media` | `bookorbit-pg` | `bookorbit` | `bookorbit-pg-v1` |
+| `media` | `scrob-pg` | `scrob` | `scrob-pg-v1` |
+| `nextcloud` | `nextcloud-pg` | `nextcloud` | `nextcloud-pg-v1` |
+| `paperless` | `paperless-pg` | `paperless` | `paperless-pg-v1` |
+| `reddit` | `apollo-pg` | `apollo` | `apollo-pg-v1` |
 
-Each cluster backs up to `s3://cloudnative-pg/<app>` with a `serverName` like
-`<cluster>-v1` and retention `14d`.
+Mailflow and the three lifestyle clusters already declare recovery from older
+archives. Do not replay those historical bootstrap settings blindly: confirm
+which archive holds the desired backup and WALs. The table lists write archives,
+not proof of successful backups. Authentik is defined in `authentik/install/authentik-db.yaml`
+under `kubernetes/infrastructure/security/`; the other clusters live with their
+apps (`apollo-pg` under `reddit/apollo-backend`).
+
+Immich and n8n also include `db-backup.yaml` CronJobs. They run `pg_dump`
+daily at 02:00, write custom-format dumps to NFS on `${UNRAID_IP}`, and
+prune old dumps with `find -mtime +14`. These are separate logical backups,
+not CNPG recovery sources or WAL archives. Check the NFS export and dump
+availability separately if using them for recovery.
 
 CNPG restore is not an in-place operation. Prefer creating a new restored
 Cluster, validating it, then cutting the application over or replacing the old
 cluster intentionally through GitOps.
 
 Example recovery shape matching this repository:
+
+Use this as a fragment, not a complete manifest. Copy required storage,
+PostgreSQL image/version, extensions, resources, and database credentials from
+the owning Cluster. Before cutover verify recovery and application queries,
+then update consumers and the backup schedule to target the restored cluster.
 
 ```yaml
 apiVersion: postgresql.cnpg.io/v1
@@ -241,12 +312,11 @@ For point-in-time recovery, use timezone-explicit targets. Common options are
 `targetTime`, `targetLSN`, `targetName`, `targetXID`, `targetImmediate`,
 `backupID`, `exclusive`, and `targetTLI`.
 
-If the restored cluster will also create new backups, give it a new backup
-`serverName`, such as `<cluster>-v2`. Do not write new WALs into the same archive
-prefix as the source cluster.
-
-For Immich, preserve its custom image and extension configuration when creating a
-restore cluster because the app uses VectorChord-related PostgreSQL extensions.
+If the restored cluster will write backups, give it a new, unused backup
+`serverName`. Do not write WALs into the archive used as the recovery source.
+Preserve Immich's VectorChord image and extension configuration, and Open
+WebUI's pgvector support. Database recovery does not restore the apps' separate
+file PVCs; choose compatible restore points where both stores matter.
 
 ## Validation Checklist
 

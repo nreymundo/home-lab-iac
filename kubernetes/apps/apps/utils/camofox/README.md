@@ -3,8 +3,12 @@
 Camofox runs in `utils` with one replica and a Longhorn-backed `/root/.camofox`
 volume. Profile state contains site credentials; only trusted operators should
 have access to this service. The initial limits allow two browser sessions and
-five tabs per session, with a 3Gi container memory limit. Telemetry is disabled.
+five tabs per session, with a 3Gi container memory limit. Crash reporting is disabled.
 The interactive browser uses the upstream noVNC plugin.
+
+`utils/camofox` is a 3Gi `longhorn-r2` claim in the `apps-storage` inventory,
+with the Longhorn daily and weekly backup labels. Restore the claim before
+starting the app if browser state is needed after a rebuild.
 
 ## Access
 

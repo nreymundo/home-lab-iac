@@ -1,8 +1,10 @@
 # OpenTelemetry Gateway
 
-The collector accepts authenticated OTLP telemetry from cluster workloads, LAN
-clients, and NetBird peers. It routes metrics to Prometheus, logs to Loki, and
-traces to Tempo.
+The collector accepts authenticated OTLP from cluster and allowed LAN clients.
+`observability-opentelemetry-collector-install` reconciles [install/](install/kustomization.yaml)
+after Traefik config and the Prometheus, Loki, and Tempo installs. It sends
+metrics to Prometheus's OTLP HTTP receiver, logs to the Loki gateway's OTLP
+endpoint, and traces to Tempo over OTLP/gRPC.
 
 ## Endpoints
 
@@ -10,12 +12,18 @@ traces to Tempo.
 | --- | --- | --- |
 | Cluster | OTLP/gRPC | `opentelemetry-collector.observability.svc.cluster.local:4317` |
 | Cluster | OTLP/HTTP | `http://opentelemetry-collector.observability.svc.cluster.local:4318` |
-| LAN/NetBird | OTLP/gRPC | `https://otel-grpc.lan.${CLUSTER_DOMAIN}` |
-| LAN/NetBird | OTLP/HTTP | `https://otel.lan.${CLUSTER_DOMAIN}` |
+| LAN ingress | OTLP/gRPC | `https://otel-grpc.lan.${CLUSTER_DOMAIN}` |
+| LAN ingress | OTLP/HTTP | `https://otel.lan.${CLUSTER_DOMAIN}` |
 
 Both receivers require HTTP Basic authentication. The encrypted Secret contains
 an `opencode` credential for OpenCode clients and a `systems` credential for
 other producers. Add separate users when independent revocation is required.
+
+Traefik applies `opentelemetry-allowlist` to both ingress routes and uses h2c
+between Traefik and the gRPC Service. The allowlist retains the pod CIDR for
+the historical NetBird design, but NetBird ingress is disabled in production.
+Executor uses its own `executor-otel-secret`, sourced in this install inventory
+and replicated into `ai` for its HelmRelease.
 
 ## Read Client Credentials
 
@@ -58,34 +66,12 @@ The collector removes session, message, request, trace, and span identifiers
 from metric labels to limit Prometheus cardinality. Logs and traces retain their
 correlation identifiers.
 
-## Prometheus Storage Expansion
+## Prometheus capacity
 
-The desired Prometheus volume is 100 GiB with a 30-day time limit and an 85 GiB
-size limit. Kubernetes cannot propagate a larger claim template to an existing
-StatefulSet automatically. After Flux applies the desired Prometheus resource,
-perform this one-time controlled resize:
-
-```bash
-flux suspend kustomization observability-kube-prometheus-stack-install
-
-kubectl -n observability patch prometheus observability-kube-prometh-prometheus \
-  --type merge -p '{"spec":{"paused":true}}'
-
-kubectl -n observability patch pvc \
-  prometheus-observability-kube-prometh-prometheus-db-prometheus-observability-kube-prometh-prometheus-0 \
-  --type merge -p '{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}'
-
-kubectl -n observability delete statefulset \
-  prometheus-observability-kube-prometh-prometheus --cascade=orphan
-
-kubectl -n observability patch prometheus observability-kube-prometh-prometheus \
-  --type merge -p '{"spec":{"paused":false}}'
-
-flux resume kustomization observability-kube-prometheus-stack-install
-```
-
-Confirm the PVC reports 100 GiB and Prometheus returns to ready before enabling
-additional producers.
+The [Prometheus HelmRelease](../kube-prometheus-stack/install/helmrelease.yaml)
+requests `100Gi` of storage, with `30d` time retention and an `85GiB` size
+limit. On an existing cluster, verify actual claim capacity separately from
+the desired claim template before increasing ingestion.
 
 ## Verification
 

@@ -1,16 +1,23 @@
 # NetBird Kubernetes Ingress
 
-The NetBird operator publishes the existing Traefik `ClusterIP` Service through
-an HA pool of in-cluster NetBird routing peers. The VPS NetBird Proxy can then
-target this resource for public reverse-proxy services.
+**Status: disabled in production.** The production `ks/kustomization.yaml`
+excludes `27-netbird-operator-install.yaml` and `28-netbird-config.yaml`, the
+operator declares zero replicas, `config/kustomization.yaml` includes no
+resources, and Traefik config excludes `service-netbird.yaml`. The shared
+NetBird Helm source is still included; that does not deploy the operator.
+
+The retained design uses three `production-ingress` router replicas in
+`netbird` and a `traefik-ingress` NetworkResource targeting the
+`traefik-netbird` ClusterIP Service in `traefik`. A VPS NetBird Proxy would
+target that resource, not individual apps. Re-enabling requires restoring the
+operator, router/resource and Service inclusions together with their dependencies.
 
 > [!WARNING]
 > The default `All` to `All` policy overrides the restricted ingress policy.
 > Replace every required existing connection with explicit policies before
 > removing the default policy, or existing NetBird access will break.
 
-Before Flux can reconcile the configuration, create these NetBird dashboard
-objects:
+For a future re-enable, the retained design requires these NetBird dashboard objects:
 
 1. A dedicated service user PAT with network-management access. Replace
    `NB_API_KEY` in `install/netbird-operator-api-key.sops.yaml` with it using

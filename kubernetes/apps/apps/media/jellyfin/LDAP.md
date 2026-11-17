@@ -2,6 +2,13 @@
 
 This Jellyfin deployment authenticates against the Authentik LDAP outpost running in-cluster.
 
+These settings are managed by the `jellyfin-automation` CronJob (`17 */6 * * *`)
+using [automation-config.yaml](automation-config.yaml). Both are included by the
+[Jellyfin app root](kustomization.yaml) under `apps-manifests`. The job installs
+the LDAP plugin if missing; Jellyfin must load it after restart before the job
+can configure it. The job preserves existing LDAP account links and validates
+the bind and search filters. Change managed settings in Git, not only in the UI.
+
 ## Connection Settings
 
 - LDAP server: `ak-outpost-ldap-outpost.authentik.svc.cluster.local`
@@ -9,7 +16,9 @@ This Jellyfin deployment authenticates against the Authentik LDAP outpost runnin
 - Secure LDAP: `true`
 - Skip SSL/TLS verification: `true`
 - Bind user: `cn=ldap-search,ou=users,dc=home,dc=lan`
-- Bind password: value from the `ldap-search-secret` Kubernetes secret in the `authentik` namespace
+- Bind password: `AK_LDAP_SEARCH_PASSWORD` from `ldap-search-secret`, owned
+  by Authentik and replicated by kube-replicator into `media`. The CronJob
+  reads the replica at `/ldap-credentials/AK_LDAP_SEARCH_PASSWORD`.
 
 ## Search Settings
 

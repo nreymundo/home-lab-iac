@@ -44,7 +44,7 @@ starting point is the directory of each tracked `*.pkr.hcl` file under
 `packer/`, deduplicated and then checked for local wrappers and inputs:
 
 ```bash
-find packer -type f -name '*.pkr.hcl' -printf '%h\n' | sort -u
+git ls-files -z -- 'packer/*.pkr.hcl' | xargs -0 -r dirname -z | sort -zu | tr '\0' '\n'
 ```
 
 Also inspect a changed file's ancestors and any wrapper-defined root; a root may

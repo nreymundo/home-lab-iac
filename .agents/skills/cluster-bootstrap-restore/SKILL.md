@@ -58,16 +58,14 @@ the upstream registry by default — the role no longer passes
 `--disable-default-registry-endpoint`, so no extra var is required.
 
 ```bash
-# 1. K3s bring-up: embedded registry (default on) + direct upstream fallback
-ansible-playbook ansible/playbooks/k3s_cluster.yml
+# Fresh K3s bootstrap (live); use k3s_cluster.yml for existing-cluster work.
+(cd ansible && ansible-playbook playbooks/k3s_bootstrap.yml)
 
-# 2. Bootstrap Flux and let the production root reconcile
+# After installing Flux using the production bootstrap configuration and
+# restoring its decryption key, reconcile the existing root (live).
 flux reconcile kustomization flux-system --with-source
 
-# 3. Confirm nodes are up and pulls resolve
 kubectl get nodes
-ssh k3s-node-01 'systemctl cat k3s | grep -- --embedded-registry'
-ssh k3s-node-01 'sudo k3s crictl pull ghcr.io/oras-project/oras:v1.2.3'
 ```
 
 Docker Hub node authentication is **manual** and not managed by Ansible. If
@@ -125,13 +123,11 @@ self-sufficient.
 
 ## Scenario 4: CNPG restore
 
-CloudNativePG backs up via native `barmanObjectStore` in each `Cluster` to
-`s3://cloudnative-pg/<app>` with `serverName` like `<cluster>-v1`, retention
-`14d`. Current clusters: `authentik-pg` (lives under
-`kubernetes/infrastructure/security/authentik/install/authentik-db.yaml`), and
-the per-app ones under `kubernetes/apps/apps/**/cnpg-cluster.yaml`:
-`airtrail-pg`, `dawarich-pg`, `immich-pg`, `litellm-pg`, `n8n-pg`,
-`nextcloud-pg`, `paperless-pg`.
+Read the source `Cluster` for its actual `barmanObjectStore.destinationPath`,
+`serverName`, credentials, and retention; do not infer the archive prefix
+from the app name. Authentik's source is
+`kubernetes/infrastructure/security/authentik/install/authentik-db.yaml`;
+workloads such as Immich and LiteLLM have their own `cnpg-cluster.yaml`.
 
 CNPG restore is **not in-place**. Create a new `Cluster` (e.g.
 `<app>-pg-restore`) that bootstraps from `recovery.source` referencing an

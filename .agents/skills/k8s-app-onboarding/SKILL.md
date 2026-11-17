@@ -56,10 +56,10 @@ Ask only what is not obvious from the request:
 
 Clone the closest sibling by complexity. Two good references:
 
-- Minimal HTTP app with OIDC + CNPG + manually declared PVC:
-  `kubernetes/apps/apps/utils/airtrail/`
-- Configmap-mounted patches, sidecar Valkey, initContainer install:
-  `kubernetes/apps/apps/ai/litellm/`
+- HTTP app with CNPG and a manually declared PVC: `kubernetes/apps/apps/lifestyle/airtrail/`
+  and `kubernetes/apps/storage/pvcs/lifestyle/airtrail-pvc.yaml`.
+- ConfigMap-mounted Python, Valkey controller, and Headroom sidecar:
+  `kubernetes/apps/apps/ai/litellm/`.
 
 ### Standard files
 
@@ -76,8 +76,8 @@ kubernetes/apps/apps/<category>/<app>/
 - `# renovate: datasource=docker depName=<image> registryUrl=<registry>` comment
   directly above `repository:` (required by `renovate.json` custom regex
   managers; without it the tag will not be tracked).
-- `ingress.main.annotations`:
-  - `external-dns.kubernetes.io/hostname: <app>.lan.${CLUSTER_DOMAIN}`
+- For ingress, copy the complete hostname expression from a matching sibling.
+  AirTrail, for example, uses `airtrail.lan.${CLUSTER_DOMAIN}`.
 - Homepage cards are maintained centrally in
   `kubernetes/apps/apps/utils/homepage/helmrelease.yaml` under
   `config.services`; do not add mandatory `gethomepage.dev/*` discovery
@@ -249,12 +249,9 @@ need a new `ks/*.yaml` ordering object.
 
 - **The authoritative aggregator is `kubernetes/apps/production/kustomization.yaml`,
   which lists each app directory directly** (one `resources:` entry per app,
-  e.g. `- ../apps/utils/airtrail`). Add the new app dir there.
-- A category-level `kubernetes/apps/apps/<category>/kustomization.yaml` exists
-  only for a few categories (`external-proxy`, `immich`, `nextcloud`,
-  `paperless`); most categories have none. If the target category does have
-  one, wire it there too — but never assume file presence alone makes the app
-  active.
+  e.g. `- ../apps/lifestyle/airtrail`). Follow the actual parent chain for
+  nested variants; do not add a redundant category entry for a directory
+  already included directly.
 - `kubernetes/apps/production/kustomization.yaml` reconciles via
   `ks/91-apps.yaml` (`apps-manifests`, `prune: true`).
 - Storage-side changes reconcile via `ks/90-storage.yaml` (`apps-storage`,
@@ -265,33 +262,22 @@ need a new `ks/*.yaml` ordering object.
 ## Validation (run before claiming done)
 
 ```bash
-# Render the app and its storage domain
-kubectl kustomize --load-restrictor=LoadRestrictionsNone \
-  kubernetes/apps/apps/<category>/<app> >/dev/null
-# Only when a category-level kustomization.yaml exists (most categories don't —
-# see "Flux inclusion" above):
-[ -f kubernetes/apps/apps/<category>/kustomization.yaml ] && \
+# Set APP_DIR to the actual workload root before running.
+kubectl kustomize --load-restrictor=LoadRestrictionsNone "$APP_DIR" >/dev/null
+kubectl kustomize --load-restrictor=LoadRestrictionsNone kubernetes/apps/production >/dev/null
+# If a manual PVC changed, set PVC_DOMAIN and render its domain and Flux root.
+if [[ -n ${PVC_DOMAIN:-} ]]; then
   kubectl kustomize --load-restrictor=LoadRestrictionsNone \
-    kubernetes/apps/apps/<category> >/dev/null
-kubectl kustomize --load-restrictor=LoadRestrictionsNone \
-  kubernetes/apps/production >/dev/null
-[ -n "$PVC_DOMAIN" ] && kubectl kustomize --load-restrictor=LoadRestrictionsNone \
-  kubernetes/apps/storage/pvcs/"$PVC_DOMAIN" >/dev/null
-# When Authentik install or config files changed:
-[ -d kubernetes/infrastructure/security/authentik/install ] && \
+    "kubernetes/apps/storage/pvcs/$PVC_DOMAIN" >/dev/null
   kubectl kustomize --load-restrictor=LoadRestrictionsNone \
-    kubernetes/infrastructure/security/authentik/install >/dev/null
-[ -d kubernetes/infrastructure/security/authentik/config ] && \
-  kubectl kustomize --load-restrictor=LoadRestrictionsNone \
-    kubernetes/infrastructure/security/authentik/config >/dev/null
-
-# Repo-wide manifest validation + secret/pre-commit policy
+    kubernetes/apps/storage/production >/dev/null
+fi
 scripts/kubeconform.sh
-pre-commit run --files kubernetes/apps/apps/<category>/<app>/*
-# Only when a manually declared PVC was added:
-[ -f kubernetes/apps/storage/pvcs/<domain>/<app>-pvc.yaml ] && \
-  pre-commit run --files kubernetes/apps/storage/pvcs/<domain>/<app>-pvc.yaml
 ```
+
+Also render any other changed Kustomize roots, such as Authentik install or
+config and Traefik config. Run `pre-commit run --files` with every changed
+path, including parent Kustomizations, PVCs, and Homepage configuration.
 
 `pre-commit` will auto-encrypt any new `*.sops.yaml` and stage it; review
 `git diff --cached` afterward.

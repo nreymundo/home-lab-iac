@@ -39,6 +39,11 @@ initialization and joining plays. A K3s no-op does not drain or restart a node.
 For a complete recovery, follow the
 [cluster rebuild runbook](../docs/kubernetes-bootstrap.md).
 
+The LXC playbook manages local runtimes and apps such as ComfyUI. It does not
+manage the Kubernetes llama-swap catalog or LiteLLM routing. See the
+[llama-swap role guide](roles/llama_swap/README.md#kubernetes-models-and-routing)
+to find the source of truth for each deployment.
+
 ## Inventory and configuration ownership
 
 `ansible.cfg` loads the entire `inventories/` directory and resolves roles from
@@ -48,6 +53,11 @@ For a complete recovery, follow the
   host identities. Change their owning Terraform root, not the output file.
 - `baremetal.yml` supplies manually managed hosts. `all-vms.yml`, `ubuntu.yml`,
   and `k3s-cluster.yml` assemble groups without taking over generated identities.
+- The active Proxmox hosts are `pve1` and `pve3`. The `development` and `hermes`
+  guests now run on Unraid; their Terraform roots still generate their Ansible
+  inventory, and their application playbooks are unchanged.
+- The K3s server group currently contains only bare-metal hosts: `daring`,
+  `valiant`, and `steadfast`. See the [K3s guide](../docs/k3s-provisioning.md#current-server-fleet).
 - `public-vps.yml` is the tracked group structure; public host connection details
   come from the ignored `public-vps.local.yml` overlay.
 - `inventories/group_vars/` and `inventories/host_vars/` are hand-maintained

@@ -3,9 +3,16 @@
 [Open WebUI](https://github.com/open-webui/open-webui) chat interface for AI models, served at
 `https://chat.${CLUSTER_DOMAIN}` in the `ai` namespace.
 
+The [app Kustomization](kustomization.yaml) is included by `apps/production`
+and reconciled by `apps-manifests`. Its file PVC is reconciled separately by
+`apps-storage` from `apps/storage/pvcs/ai/open-webui-pvc.yaml`; CNPG manages its
+own database claims. Restoring just the file PVC does not restore chats or functions.
+
 - Image: `ghcr.io/open-webui/open-webui` (Renovate-tracked)
-- Auth: native Authentik OIDC only (`open-webui-sso-secret` replicated from the Authentik
-  namespace; no password login, no forward-auth)
+- Auth: native Authentik OIDC only. The Authentik install owns
+  `open-webui-sso-secret`; kube-replicator delivers it to `ai`. The app uses
+  `/oauth/oidc/callback` and maps the `open_webui_role` claim to `user` or `admin`.
+  Password login and forward-auth are disabled.
 - Ingress: canonical hostname `chat.${CLUSTER_DOMAIN}` via ExternalDNS and Traefik, with the
   `traefik-open-webui-headers@kubernetescrd` security-headers middleware (STS, CSP
   frame-ancestors, nosniff, and related headers). Its Permissions Policy allows same-origin

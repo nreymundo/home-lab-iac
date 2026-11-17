@@ -324,8 +324,9 @@ Static validation must prove the complete selected branch:
 - both: prove each list independently and check for redirect loops or two
   competing session owners.
 
-The parent orchestrator owns execution of validation. When authorized, the
-read-only repository checks are:
+Run these repository checks from the root. Set `APP_DIR` to the tracked
+workload root (for example `kubernetes/apps/apps/utils/karakeep`), and pass
+the exact changed paths to the hooks, including Authentik-side files.
 
 ```bash
 kubectl kustomize --load-restrictor=LoadRestrictionsNone \
@@ -334,10 +335,10 @@ kubectl kustomize --load-restrictor=LoadRestrictionsNone \
   kubernetes/infrastructure/security/authentik/config >/dev/null
 kubectl kustomize --load-restrictor=LoadRestrictionsNone \
   kubernetes/infrastructure/networking/traefik/config >/dev/null
-kubectl kustomize --load-restrictor=LoadRestrictionsNone \
-  kubernetes/apps/apps/<category>/<app> >/dev/null
+kubectl kustomize --load-restrictor=LoadRestrictionsNone "$APP_DIR" >/dev/null
 kubectl kustomize --load-restrictor=LoadRestrictionsNone \
   kubernetes/apps/production >/dev/null
+scripts/kubeconform.sh
 pre-commit run --files <changed-file> [<changed-file>...]
 ```
 

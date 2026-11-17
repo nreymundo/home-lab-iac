@@ -5,6 +5,10 @@ Builds and installs `whisper.cpp` for STT workloads in LLM LXCs.
 The default build enables the Vulkan backend so STT can run alongside the ROCm
 `llama.cpp` runtime without changing the known-good LLM build.
 
+This build serves the LXC only. The Kubernetes Whisper deployments used by
+LiteLLM's local transcription routes have a separate
+[catalog and runtime](../llama_swap/README.md#kubernetes-models-and-routing).
+
 Important parameters:
 
 - `whisper_runtime_repo`

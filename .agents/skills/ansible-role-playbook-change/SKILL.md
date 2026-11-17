@@ -48,10 +48,11 @@ ansible/
 ```
 
 Use the [Ansible operating guide](../../../ansible/README.md) for the current
-playbook map, inventory ownership, and role organization. Inspect the selected
-playbook's role list and target groups rather than relying on a duplicated
-catalog here. `ubuntu.yml` defaults to `ubuntu_hosts`; limit it to the intended
-host or subgroup for a live run.
+playbook map, inventory ownership, and role organization. Read the selected
+playbook's roles and target groups before running it. In particular,
+`k3s_bootstrap.yml` initializes a fresh cluster; `k3s_cluster.yml` is for
+existing-cluster work. `ubuntu.yml` defaults to `ubuntu_hosts`; limit live
+runs to the intended host or subgroup.
 
 ## Source-of-truth boundaries
 

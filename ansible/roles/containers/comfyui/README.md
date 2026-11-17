@@ -128,9 +128,9 @@ curl --fail http://127.0.0.1:10050/v1/images/edits \
 ```
 
 Validate both output content and image dimensions, then compare container ID
-and GPU allocation before and after the idle timer. The timer remains enabled:
-it checks roughly every minute and restarts the container after 300 seconds
-since the last successful generation, only when running and pending queues are
-empty. Its history clears on restart, preventing repeated idle restarts until
+and GPU allocation before and after the idle timer. By default it polls every
+15 seconds and restarts the container after 60 seconds since the last successful
+generation, only when the running and pending queues are empty. History clears
+on restart, preventing repeated idle restarts until
 another successful generation. Startup health and model registration alone do
 not establish successful model inference or memory release.

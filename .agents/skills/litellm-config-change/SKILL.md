@@ -110,9 +110,10 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   cancellation do not cancel shared judging. Cached verdicts, strong detections,
   and trusted local routes need no wait. Fast PASS decisions avoid first-request
   intervention reporting; timed-out redactions can still count before a later PASS.
-  Verdicts persist in SQLite on the litellm volume
-  (`GUARDRAIL_SECRETS_JUDGE_DB`, default under /var/lib/litellm) and store only
-  SHA-256 scoped digests, never span/context text. Cache keys include detector,
+  Helm selects `GUARDRAIL_SECRETS_JUDGE_STORE: valkey` with database 1 on
+  `litellm-valkey`. The code also supports SQLite (`GUARDRAIL_SECRETS_JUDGE_DB`)
+  when configured for that backend. Verdict keys store only scoped SHA-256
+  digests, never span/context text. Cache keys include detector,
   previous/current-line context, model, endpoint and policy version; appended turns
   do not change existing line context. PASS lasts 24 hours and REDACT seven days
   (`GUARDRAIL_SECRETS_JUDGE_PASS_TTL`/`_REDACT_TTL`, seconds). Bump
@@ -122,26 +123,21 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   normalized PASS/REDACT choices are accepted; malformed answers stay undecided.
   Format detections and fingerprints are never judged. Judge failures write no verdict: the span stays
   redacted, retries back off per span, and three consecutive failures pause
-  judging globally for five minutes. A bounded 128-item queue drains at the configured
-  concurrency; queued work expires after five minutes. Cache/database entries and
-  backoff state are capped at 20,000. Request lookups are memory-only; HTTP and
-  persistence run off the event loop; the bounded request wait also yields the event loop.
-  Failed writes cannot grant a PASS. Audit lines carry judge_pass/judge_enqueued
-  and content-free judge outcomes; the guardrail registers no Prometheus metrics.
-- Reported-span persistence (`GUARDRAIL_SECRETS_REPORTS_PERSIST`, default `on`;
-  `GUARDRAIL_SECRETS_REPORTS_DB` defaults to the judge store file) backs the
-  seen-cache with a `reported_spans` SQLite table (SHA-256 digests only,
-  first/last seen and hit counts; newest 20,000 kept). The in-memory seen-cache
-  is seeded from it at startup, so error reporting fires on the first report of
-  a span and stays quiet afterwards, including across pod restarts. Escalation
-  to `guardrail_intervened` status, a WARNING-level audit line, and
+  judging for five minutes. Shared Valkey lookups, HTTP, and persistence run
+  off the event loop; the bounded request wait yields it. Failed writes
+  cannot grant a PASS. Audit lines record only content-free judge outcomes.
+- Reported-span persistence (`GUARDRAIL_SECRETS_REPORTS_PERSIST`, default `on`)
+  deduplicates reports by digest. In the deployed Valkey mode, the shared
+  first-report claim is atomic across pods and expires after 90 days. In
+  SQLite mode, `GUARDRAIL_SECRETS_REPORTS_DB` defaults to the judge DB path,
+  and the `reported_spans` table seeds the in-memory seen-cache at startup.
+  Escalation to `guardrail_intervened` status, a WARNING-level audit line, and
   `masked_entity_count` requires at least one newly reported span
   (`new_spans > 0`); re-redactions of known spans — replayed history on every
   turn — stay redacted in flight but record `success` at INFO with
-  `new_spans: 0`. Deployment reports every existing replayed span exactly once,
-  then quiet. Request handling touches memory and a pending queue only; SQLite
-  writes run off the event loop, and database failures degrade the store to
-  memory-only behavior without changing redaction.
+  `new_spans: 0`. Shared-store failures fall back to local seen state; this
+  does not disable redaction. Verify first-report behavior across replicas
+  and distinguish store failures from judge failures.
 - `router_settings.model_group_alias` maps friendly `local/*` and `cloud/*` names
   to canonical primary deployments. Service fallback chains are keyed on
   `cloud/fast`, `cloud/general`, `cloud/coder`, and `cloud/deep`; their destinations
@@ -196,9 +192,9 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   while the HelmRelease also sets `STORE_MODEL_IN_DB: "True"`. Verify the installed
   version's effective precedence and DB configuration before diagnosing drift.
   No file-authority patch overrides the installed version's behavior.
-- Read the image tag from the HelmRelease. Renovate admits stable tags only, even
-  when the selected image is a manually chosen release candidate. Compare features
-  with that exact build; current documentation may describe unreleased changes.
+- Read the image tag in `helmrelease.yaml` and verify behavior against that
+  exact build. Renovate only proposes stable `vX.Y.Z` image tags; upstream
+  documentation may describe features unavailable in the deployed build.
 
 ## Changes and validation
 

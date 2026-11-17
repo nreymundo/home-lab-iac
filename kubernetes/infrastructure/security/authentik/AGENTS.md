@@ -84,12 +84,14 @@ session-signing secret.
 
 ## Reconciliation ordering
 
-Trace the actual Flux dependencies before changing ordering. The current
-contracts are `traefik-install` → `traefik-config`, `authentik-install` →
-`authentik-config`, and `apps-manifests` waiting for `apps-storage` and
-`traefik-config`; kube-replicator must exist before a replicated native client
-Secret can arrive. Do not add a new numbered Flux Kustomization for a normal
-app or infer readiness from numeric filenames alone.
+Trace the actual Flux dependencies before changing ordering. `authentik-install`
+includes `authentik-pg` and waits on identity and the Prometheus stack, not
+directly on `cnpg-install`. `authentik-config` waits on identity, Authentik
+install, and Traefik config. `apps-manifests` does not wait on Authentik or
+kube-replicator; check the relevant Secrets and providers independently. Some
+credentials also travel in the opposite direction: Camofox owns its access
+Secret in `utils` and replicates it into `authentik` for the header mapping.
+Do not infer readiness from filenames or add a numbered reconciler for a normal app.
 
 ## SOPS And Validation
 

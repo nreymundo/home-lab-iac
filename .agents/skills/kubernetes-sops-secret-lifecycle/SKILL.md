@@ -213,9 +213,10 @@ without displaying secret values:
 - inspect `git status`, `git diff --name-only`, and redacted/metadata-only diffs;
 - verify the file is named `*.sops.yaml`/`*.sops.yml`, contains a SOPS stanza,
   and is included by the owning Kustomization;
-- run the relevant `kubectl kustomize ... >/dev/null` commands and
-  `pre-commit run --files ...`; never redirect a rendered Secret to a file for
-  inspection;
+- render the owning Kustomization and each relevant parent with output sent
+  to `/dev/null`; for example, a replicated OIDC source is rendered from
+  `kubernetes/infrastructure/security/authentik/install`. Run file-scoped
+  hooks separately and check the index for automatic staging;
 - where an integrity check is authorized, use
   `sops --decrypt <file> >/dev/null` (or an equivalent output-to-`/dev/null`
   form) and never send decrypted output to a terminal, log, artifact, or

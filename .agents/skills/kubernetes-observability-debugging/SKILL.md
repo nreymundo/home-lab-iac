@@ -46,8 +46,9 @@ kubernetes/infrastructure/observability/
   metrics-server/install/          # kube resource metrics
 ```
 
-All `install/`-only — verify whether a `config/` overlay exists before assuming
-runtime config lives elsewhere.
+Kube-prometheus-stack also has a separate `config/` Kustomization. Follow
+the relevant Flux `spec.path`; the infrastructure root does not aggregate
+the observability install and config trees.
 
 ## High-signal debugging sequence
 
@@ -89,16 +90,13 @@ provisioning, and OTel integration. When changing Grafana provisioning:
 ## Validation
 
 ```bash
-# Render. There is NO root kubernetes/infrastructure/observability/kustomization.yaml —
-# Flux reconciles each component's install dir individually, so render the
-# changed component(s) explicitly:
-kubectl kustomize kubernetes/infrastructure/observability/<component>/install >/dev/null
-# (e.g. .../loki/install, .../tempo/install, .../kube-prometheus-stack/install)
-kubectl kustomize kubernetes/infrastructure >/dev/null   # root infra kustomization exists
+# Example: render both kube-prometheus-stack roots when both are affected.
+kubectl kustomize --load-restrictor=LoadRestrictionsNone \
+  kubernetes/infrastructure/observability/kube-prometheus-stack/install >/dev/null
+kubectl kustomize --load-restrictor=LoadRestrictionsNone \
+  kubernetes/infrastructure/observability/kube-prometheus-stack/config >/dev/null
 scripts/kubeconform.sh
-# pre-commit needs explicit file paths — bash's `**` does not recurse without
-# `shopt -s globstar`, so enumerate YAML files explicitly:
-pre-commit run --files $(find kubernetes/infrastructure/observability -type f)
+# Run pre-commit with the exact changed paths, not the entire stack tree.
 
 # Live (only if reachable + intended)
 kubectl -n observability get pods

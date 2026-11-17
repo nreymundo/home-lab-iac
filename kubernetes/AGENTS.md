@@ -24,10 +24,14 @@ Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers
 
 ## Validation
 ```bash
-kubectl kustomize <path> | kubectl apply --dry-run=client -f -
+kubectl kustomize --load-restrictor=LoadRestrictionsNone <path> >/dev/null
 flux get all -A
 flux get helmreleases -A
 ```
+
+Render the actual Flux target as well as the leaf; render-only checks do not
+test Flux decryption, substitutions, dependency readiness, or chart rendering.
+The `flux get` commands are read-only live status checks, not offline validation.
 
 - Read the closer child AGENTS before editing `clusters/production`, `infrastructure`, `apps`, or `components`; those files should answer the subtree-local gotchas this parent file intentionally omits.
 - Treat `flux reconcile kustomization flux-system --with-source` as an intentional live reconciliation of committed state, not local validation.

@@ -19,13 +19,13 @@ targets. A pre-existing cordon is retained after success.
 
 | Variable | Contract |
 | --- | --- |
-| `k3s_admin_host` | Required existing inventory server for token/admin operations, even when outside `--limit`. Fleet value: `k3s-node-02`. |
-| `k3s_bootstrap_host` | First server for the explicit fresh-bootstrap playbook. Must be selected. |
+| `k3s_admin_host` | Required existing inventory server for token/admin operations, even when outside `--limit`. Production uses `daring`. |
+| `k3s_bootstrap_host` | First server for the explicit fresh-bootstrap playbook. Must be selected. Production inventory sets `daring`. |
 | `k3s_version`, architecture checksums | Pinned install/upgrade release. Reconciliation rejects an existing server at a different release. New joins must match the administrative server. |
 | `k3s_api_vip` | Existing API address and TLS SAN, `192.168.10.10`. |
 | `k3s_join_url`, `k3s_admin_api_url` | Default to `https://<VIP>:6443`; disposable clusters can supply a reachable server endpoint. |
 | `k3s_node_ip`, `k3s_iface` | Inventory IP and selected network interface. |
-| `k3s_storage_mode` | `manual` by default; existing `k3s_nodes` explicitly select `managed`. |
+| `k3s_storage_mode` | `manual` by default and on current production servers. The currently empty Terraform VM group `k3s_nodes` selects `managed`. |
 | `k3s_storage_expected_uuid`, `k3s_storage_expected_source` | Optional checks against the mounted Longhorn filesystem. |
 | `k3s_disable_multipathd` | `true`: stop/disable/mask an installed multipathd service on dedicated Longhorn hosts. |
 | `k3s_node_labels` | Apply declared label values only to the selected node; other labels remain intact. |
