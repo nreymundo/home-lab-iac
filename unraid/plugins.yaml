@@ -59,17 +59,9 @@ plugins:
     name: fix.common.problems
     source: https://raw.githubusercontent.com/unraid/fix.common.problems/master/plugins/fix.common.problems.plg
     state: present
-  - filename: folder.view2.plg
-    name: folder.view2
-    source: https://raw.githubusercontent.com/VladoPortos/folder.view2/main/folder.view2.plg
-    state: present
   - filename: intel-gpu-top.plg
     name: intel-gpu-top
     source: https://raw.githubusercontent.com/ich777/intel-gpu-top/master/intel-gpu-top.plg
-    state: present
-  - filename: open.files.plg
-    name: open.files
-    source: https://raw.githubusercontent.com/dlandon/open.files/master/open.files.plg
     state: present
   - filename: prometheus_node_exporter.plg
     name: prometheus_node_exporter
