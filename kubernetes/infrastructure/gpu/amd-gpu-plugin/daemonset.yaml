@@ -23,8 +23,16 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       priorityClassName: system-node-critical
-      nodeSelector:
-        kubernetes.io/hostname: steadfast
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - steadfast
+                      - valiant
       tolerations:
         - operator: Exists
           effect: NoExecute
