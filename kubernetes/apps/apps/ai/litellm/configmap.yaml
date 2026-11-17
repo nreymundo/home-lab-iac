@@ -246,6 +246,16 @@ data:
             - pve3
           guardrails: []
 
+      - model_name: openai/gpt-realtime-2.1-mini
+        model_info:
+          mode: realtime
+        litellm_params:
+          model: openai/gpt-realtime-2.1-mini
+          custom_llm_provider: openai
+          litellm_credential_name: openai
+          max_budget: 95.0
+          budget_duration: 30d
+
       - model_name: openai/*
         litellm_params:
           model: openai/*
@@ -847,6 +857,8 @@ data:
         cloud/general: chatgpt/gpt-6.1-terra
         cloud/general-fallback: zai-coding/glm-5.3-flash
         cloud/rerank: openrouter/voyageai/rerank-3-lite
+        cloud/stt: openai/gpt-transcribe
+        cloud/voice-realtime: openai/gpt-realtime-2.1-mini
         local/analysis: hosted_vllm/unsloth/qwen3.8-27b-analysis
         local/automation-lite: hosted_vllm/unsloth/gemma-4-e4b-it-qat
         local/camera-analysis: hosted_vllm/unsloth/gemma-4-12b-it-qat-camera
