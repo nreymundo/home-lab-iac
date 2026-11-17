@@ -474,15 +474,16 @@ models:
     cmdStop: kubeswap delete --namespace ai-backends --model whisper/large-v3-q5_0 --wait 60s
     proxy: http://127.0.0.1:${PORT}
   qwen/qwen3.8-27b-uncensored:
-    name: Qwen3.8 27B Uncensored Q4_K_M
-    description: Qwen3.8 27B uncensored GGUF; 256K context, on-demand vision, chat and tools with DFlash2
+    name: Huihui Qwen3.8 27B Abliterated UD Q4_K_XL - Gufo 2-Session
+    description: Huihui abliterated Qwen3.8 27B; on-demand vision, chat and tools with 2 concurrent
+      262144-token sessions and DFlash2; swaps with the preloaded standard workhorse
     useModelName: qwen3.8-27b-uncensored
     checkEndpoint: /ready
     ttl: 1800
     filters:
       setParams:
         reasoning_effort?: low
-        max_tokens?: 4096
+        max_tokens?: 8192
     capabilities:
       in:
         - text
@@ -491,22 +492,24 @@ models:
         - text
       tools: true
       context: 262144
+    # Huihui target: 6ec97e507adc6ebc705081539b0dea348e10949c.
+    # SHA-256: ebbc66b45cf36bf47dc052d560337ff047a8b4eef851c8919d83d623703b6aa4.
     cmd: >-
       python3 /etc/llama-swap/gufo.py ${PORT} --namespace ai-backends --model qwen/qwen3.8-27b-uncensored
       --listen 127.0.0.1:${PORT} --port 8080 --startup-timeout 480s --grace 30s --strict
       --check-path /ready --health-path /ready --liveness-path /health
       --image docker.io/library/gufo-qwen:0.34.0-render@sha256:37ce4b14e1d8db48afd57883770c66f60d05781d3fd80af55f6f16e838c1fd87
       --command gufo --gpu devic.es/amd-gpu=1 --node-selector kubernetes.io/hostname=steadfast
-      --request cpu=100m --request memory=40Gi --limit memory=44Gi
+      --request cpu=100m --request memory=64Gi --limit memory=70Gi
       --volume hostpath:/srv/ai/models:/opt/ai/models:ro
       -- serve llm --host 0.0.0.0 --port 8080 --served-model-name qwen3.8-27b-uncensored
-      --model /opt/ai/models/qwen/Qwen3.8-27B-Uncensored-Q4_K_M.gguf
+      --model /opt/ai/models/qwen/Huihui-Qwen3.8-27B-abliterated-UD-Q4_K_XL.gguf
       --mmproj /opt/ai/models/unsloth/Qwen3.8/27b/gufo-0.34.0/mmproj-BF16.gguf
       --speculative dflash2
       --dflash-model /opt/ai/models/unsloth/Qwen3.8/27b/gufo-0.34.0/Qwen3.8-27B-DFlash2-Q4_K_M.gguf
-      --context 262144 --sessions 1 --max-tokens 8192 --cache-ram-bytes 1073741824
-      --think auto --reasoning-effort low --preserve-thinking on
-      --temperature 0.7 --top-p 0.8 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0
+      --context 262144 --sessions 2 --max-tokens 8192 --cache-ram-bytes 1073741824
+      --think auto --reasoning-effort medium --preserve-thinking on
+      --temperature 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0
     cmdStop: kubeswap delete --namespace ai-backends --model qwen/qwen3.8-27b-uncensored --wait 60s
     proxy: http://127.0.0.1:${PORT}
   adilkairolla/zeta-2.1:
