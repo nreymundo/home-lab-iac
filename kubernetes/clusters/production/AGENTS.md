@@ -9,6 +9,7 @@ Read the repo root `AGENTS.md` and `kubernetes/AGENTS.md` first. This file only 
 
 ## Source Of Truth Boundaries
 - `ks/kustomization.yaml` controls inclusion, while Flux `spec.dependsOn` defines reconciliation dependencies. Numbered `ks/*.yaml` files communicate human-facing ordering intent.
+- The generated `flux-system` Git source tracks `master`; its root Kustomization prunes removed objects. A numbered file commented out of `ks/kustomization.yaml` (such as the NetBird pair) is not a deployed reconciler. Do not use removal as a temporary recovery pause.
 - Install/config pairs often appear as adjacent numbers; preserve that convention unless the dependency model itself is changing.
 - Service-specific implementation details should stay in `kubernetes/infrastructure/` or `kubernetes/apps/`; this subtree should mostly wire ordering and inclusion.
 

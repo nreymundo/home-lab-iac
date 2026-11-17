@@ -10,6 +10,7 @@ Read the repo root `AGENTS.md`, `kubernetes/AGENTS.md`, and `kubernetes/apps/AGE
 - Workload-local resources that directly travel with an app stay here.
 - Manually declared PVC catalogs stay in `kubernetes/apps/storage/`, while controller-managed storage such as `CNPG Cluster.spec.storage` remains workload-local unless a nearer child file documents an exception.
 - Shared defaults and shared ingress behavior often come from `kubernetes/components/`, so local app edits may have shared-component dependencies.
+- For database-backed apps, trace the cluster and backup schedule from the app root and verify the `cnpg-backup-s3` replica in the workload namespace; `apps-manifests` does not depend directly on `cnpg-install`.
 - Homepage cards belong directly in `utils/homepage/helmrelease.yaml` under `config.services`; do not use Homepage discovery labels or annotations. For every new card, search https://github.com/homarr-labs/dashboard-icons for an appropriate icon first.
 - For Homepage catalog changes, compare the complete card-name set before and after the edit; do not rely on manual counts. Resolve every missing or unexpected card before committing.
 

@@ -1,16 +1,16 @@
 # Packer Agent Notes
 
-Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers Packer-local editing rules.
+Read [the repository-wide rules](../AGENTS.md) first. This file covers Packer-specific editing rules.
 
 ## What This Subtree Owns
-- Each template directory is a self-contained build root with its own Packer config, variables, and helper entrypoints.
-- `packer/scripts/` owns shared helper logic used by one or more templates.
-- The output of this subtree is reusable VM templates that Terraform later clones.
+- Each template directory is a build root with its own Packer configuration, variables, and entry point. Discover roots by locating `*.pkr.hcl` files.
+- [`scripts/`](scripts/) contains shared build, answer-file generation, and provisioning helpers. Check which roots call a helper before changing it.
+- The build roots produce reusable Proxmox VM templates. Check Terraform clone consumers before changing template names, disk layouts, guest users, or cloud-init behavior.
 
 ## Source Of Truth Boundaries
-- Hand-authored template definitions live in each template root; generated autoinstall or helper-produced inputs are workflow artifacts, not ad hoc edit targets.
-- If a template-local `build.sh` prepares generated inputs first, treat that wrapper as part of the intended source-of-truth workflow rather than an optional convenience script.
-- Secrets and SSH material belong in environment variables, secret-manager-backed helper flows, or helper scripts, not inline Packer config.
+- Edit the source answer files (`http/user-data.template` or `http/ks.cfg.template`), not the generated `http/user-data` or `http/ks.cfg` files.
+- Use the template's `build.sh` for an approved build: it generates the answer file before running `packer build`.
+- Answer-file generation reads public keys from 1Password `SSH Key` items tagged `packer`. It requires `op`, `jq`, `OP_SERVICE_ACCOUNT_TOKEN`, and `IAC_1PASSWORD_VAULT_ID`. Configure Proxmox credentials through the variables documented in the template's `variables.pkr.hcl`.
 
 ## Local Anti-Patterns
 - Do not hardcode secrets, tokens, or private keys into template files.
@@ -26,5 +26,6 @@ packer fmt -check -recursive "$TEMPLATE"
 packer validate "$TEMPLATE"
 ```
 
-- Set `TEMPLATE` to each modified template root. `packer init` is required on a fresh plugin cache.
-- After changing a base template used by Terraform, call out the downstream impact on cloned node builds and any image compatibility assumptions.
+- Set `TEMPLATE` to each affected root. Run `packer init` on a fresh plugin cache and supply the root's required variables for `packer validate`.
+- To prepare an answer file without building, run `packer/scripts/generate-autoinstall.sh` from the repository root with the source and output paths under `$TEMPLATE`, using the same filenames as the build wrapper. Do not use `build.sh` as a validation command: it launches a live build.
+- For changes to a template cloned by Terraform, trace the clone setting and check the resulting guest assumptions used by Ansible.

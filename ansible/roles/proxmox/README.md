@@ -2,6 +2,8 @@
 
 This role manages durable host configuration for Proxmox nodes. It is intended to run through
 `ansible/playbooks/proxmox.yml` against the `proxmox` inventory group.
+The current inventory targets `pve1` and `pve3`; it does not include Unraid or
+the guests hosted there.
 
 ## Responsibilities
 

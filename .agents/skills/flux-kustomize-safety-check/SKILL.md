@@ -71,10 +71,10 @@ directory is active:
    under `kubernetes/apps/storage/`.
 2. For infrastructure changes, check the service's `install/` and `config/`
    Kustomizations and the shared catalog under
-   `kubernetes/infrastructure/sources/`. A `HelmRelease` must resolve its
-   `spec.chart.spec.sourceRef` to the catalog's `HelmRepository` or
-   `OCIRepository`; do not duplicate a repository definition inside a service
-   directory when the catalog already owns it.
+   `kubernetes/infrastructure/sources/`. Follow the HelmRelease's actual
+   reference: `spec.chart.spec.sourceRef` for a chart source (including
+   `HelmRepository` resources with `spec.type: oci`), or `spec.chartRef`
+   for a direct chart reference. Do not duplicate a source the catalog owns.
 3. Trace the parent production aggregators. Typical roots include
    `kubernetes/apps/production`, `kubernetes/apps/storage/production`,
    `kubernetes/infrastructure`, and the production cluster ordering layer, but

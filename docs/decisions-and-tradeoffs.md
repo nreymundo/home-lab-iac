@@ -6,7 +6,8 @@ configuration remains authoritative; issues and PRs hold implementation evidence
 ## Controls
 
 GitHub Actions runs on pull requests, `master` pushes, and manual dispatches.
-It runs the relevant hard-failing jobs based on changed paths.
+PRs and pushes select infrastructure jobs based on changed paths, including
+Markdown under those paths. Manual dispatch runs all infrastructure checks.
 
 | Control | Enforcement | Purpose |
 | --- | --- | --- |
@@ -15,8 +16,8 @@ It runs the relevant hard-failing jobs based on changed paths.
 | Secret guards | Local pre-commit | Block key material and plaintext Kubernetes Secrets; encrypt `*.sops.yaml`. |
 | Kubeconform | Local pre-commit and CI | Render and statically validate Kubernetes manifests. |
 | Trivy | Manual local hook and CI | Fail on HIGH/CRITICAL filesystem vulnerabilities and secrets. |
-| Checkov | Manual local hook and CI | Enforce Terraform and Kubernetes policy from `.checkov.yaml`. |
-| Commit messages | Commit-msg hook | Enforce the commit policy and block attribution trailers. |
+| Checkov | Path-filtered local pre-commit and CI | Enforce Terraform and Kubernetes policy from `.checkov.yaml`. |
+| Commit messages | Local commit-msg hook and CI | Enforce the commit policy and block attribution trailers. |
 
 `CONTRIBUTING.md`, `.pre-commit-config.yaml`, and `.github/workflows/ci.yml`
 are the command and configuration references.
@@ -37,7 +38,7 @@ hardening history and validation evidence.
 
 ## Terraform automation
 
-Terraform uses Terraform Cloud workspaces. Atlantis is not deployed: in this
+Terraform roots use an S3-compatible backend for remote state. Atlantis is not deployed: in this
 public repository, exposing plan output and accepting Terraform interactions
 through PR comments is not worth the added credentialed webhook service and
 attack surface, even with strong controls. Reconsider only with a tightly
@@ -49,6 +50,19 @@ and explicit apply authorization.
 A successful backup Job proves authentication and archive creation;
 `pg_restore --list` on a read-only NFS mount proves the archive is readable.
 Periodically restore into a disposable PostgreSQL instance to prove recovery.
+
+## AI gateway routing and cost
+
+Clients use stable aliases from the [LiteLLM configuration](../kubernetes/apps/apps/ai/litellm/configmap.yaml)
+rather than binding to a specific model release. `local/chat` uses the local
+Qwen workhorse. Open WebUI transcription takes a different approach: `cloud/stt`
+sends audio to OpenAI first and falls back to `local/stt-fast` (Whisper). It is
+not a local-only route. Multiple local aliases share the llama-swap backend and
+do not provide independent failover if that backend is unavailable.
+
+Subscription model entries use estimated API-equivalent prices so proxy usage
+can be compared across providers. These shadow prices are not charges from the
+subscription provider.
 
 ## Hindsight workload limits
 

@@ -3,6 +3,21 @@
 The K3s role manages Ubuntu 24.04/26.04 embedded-etcd servers. Run commands from
 `ansible/`; see the [Ubuntu guide](ubuntu-host-provisioning.md) for host setup.
 
+## Current server fleet
+
+The production embedded-etcd servers are `daring`, `valiant`, and `steadfast`,
+all in `k3s_baremetal`. The Terraform-generated `k3s_nodes` VM group is empty.
+[Cluster group variables](../ansible/inventories/group_vars/k3s_cluster.yml)
+select `daring` for administration and as the first server for a fresh bootstrap.
+Each current server uses a UUID-checked manual Longhorn mount.
+
+GPU setup has two layers: Ubuntu configures host devices and userspace, while
+the [AMD device plugin](../kubernetes/infrastructure/gpu/amd-gpu-plugin/daemonset.yaml)
+advertises `devic.es/amd-gpu` on `steadfast` and `valiant`. Its slots share a
+physical GPU and do not reserve GPU memory. AI backends with explicit node
+selectors still run on their configured host; advertising a device does not move
+them. Verify allocatable resources and an actual GPU workload after replacement.
+
 ## Join a server
 
 1. Add bare metal to hand-maintained `k3s_baremetal`. It is nested under
@@ -13,8 +28,8 @@ The K3s role manages Ubuntu 24.04/26.04 embedded-etcd servers. Run commands from
    Set `k3s_storage_mode: manual`; optionally set its expected UUID/source. The
    role validates this mount but does not format disks or edit fstab. The K3s
    service requires it at startup. Managed VMs use `secondary_disk_*` settings.
-4. Ensure the host reaches the API VIP (`192.168.10.10`) and admin server. The
-   default admin is `k3s-node-02`; admin/join URLs use the VIP. Match
+4. Ensure the host reaches the API VIP (`192.168.10.10`) and the admin server
+   (`daring` in production). Admin/join URLs use the VIP by default. Match
    `k3s_version` to the running cluster and allow required traffic per
    [SECURITY.md](../SECURITY.md).
 5. Provision the host, then check and join only that server:

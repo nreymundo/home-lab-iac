@@ -29,28 +29,24 @@ Do not use for general PR review or for hand-rolled dependency changes.
 
 ## Inputs
 
-- PR list (`gh pr list --label dependencies,renovate --state open`) or a single
-  PR number / diff.
+- PR list (`gh pr list --label dependencies --label renovate --state open`)
+  or a single PR number and diff.
 - Optional: the user's risk appetite for a specific image.
 
 ## Workflow
 
 1. Read `renovate.json` end to end before classifying anything.
-2. For each PR, identify the affected image/chart and match it to a
-   `packageRules` entry by `matchDatasources`, `matchDepNames`,
-   `matchPackageNames`, `matchPaths`, and `matchUpdateTypes`.
-3. Classify into one of:
-   - **automerge-eligible**: minor/patch/digest of a stable image, no manual
-     gate matches, `minimumReleaseAge` satisfied. This **includes Kubernetes
-     0.x minor/patch/digest** (path `kubernetes/**`, `matchCurrentVersion:
-     /^0/`) — `renovate.json:137-147` sets `automerge: true` after 5 days
-     stability.
-   - **manual**: major bump of any kind (Kubernetes majors never automerge),
-     non-Kubernetes 0.x major bumps, LiteLLM bump, or any explicit
-     `automerge: false` rule.
-   - **blocked / wrong**: PR proposes a tag that violates an `allowedVersions`
-     regex (e.g. non-semver for Jellyfin, wrong major line for Lidarr, `-rc`
-     suffix where a stable regex is enforced).
+2. For each dependency and file, evaluate all matching rules in order,
+   including datasource, dependency/package name, file path, current version,
+   and update type. Later matching rules can override earlier settings.
+3. Classify the effective result:
+   - **automerge-eligible**: automerge is enabled, the release-age requirement
+     is satisfied, and applicable PR checks pass. Kubernetes 0.x minor,
+     patch, and digest updates can qualify after five days.
+   - **manual**: automerge is not enabled or an explicit rule disables it,
+     as with Kubernetes major updates and LiteLLM image updates.
+   - **blocked / wrong**: the update is disabled or the proposed tag violates
+     an applicable constraint, such as Lidarr leaving the 3.x release line.
 4. Flag custom-regex-managed updates: `# renovate: datasource=...` comments in
    YAML, including the `-openvino` suffix manager.
 5. Note grouping: observability (`loki`, `alloy`, `kube-prometheus-stack`) and
@@ -60,14 +56,15 @@ Do not use for general PR review or for hand-rolled dependency changes.
 
 Stable-semver pinning (regex-enforced, a non-matching tag is a policy bug):
 
-- `linuxserver/jellyfin`, `linuxserver/tautulli` — `^\d+\.\d+\.\d+$`
-- `linuxserver/lidarr` — pinned to `^3\.\d+\.\d+`
+- `linuxserver/jellyfin` — `^\d{1,2}\.\d+\.\d+$`
+- `linuxserver/tautulli` — `^\d+\.\d+\.\d+$`
+- `linuxserver/lidarr` — `^3\.\d+\.\d+$`
 - `library/alpine`, `library/busybox` — `^\d+\.\d+\.\d+$`
 - `apache/tika` — `^\d+\.\d+\.\d+\.\d+$`
 - `blakeblackshear/frigate` — `^\d+\.\d+\.\d+$`
 - `fscorrupt/posterizarr` — `^\d+\.\d+\.\d+$`
-- `immich-app/immich-server` + `immich-app/immich-machine-learning` — grouped as
-  "Immich", `^v\d+\.\d+\.\d+$` (semver)
+- Immich server and machine-learning images share the `github-releases`
+  dependency `immich-app/immich` and the `^v\d+\.\d+\.\d+$` constraint.
 
 Update-type behavior:
 
@@ -79,6 +76,11 @@ Update-type behavior:
 - LiteLLM (`berriai/litellm` at `kubernetes/apps/apps/ai/litellm/helmrelease.yaml`):
   **always manual** while local monkey-patches are active. Bumping the image is
   not a routine chore here — route to `litellm-config-change`.
+- n8n main image updates are disabled; check the path-specific rule rather
+  than assuming it also disables updates to n8n backup jobs.
+- Dawarich's manual gate currently matches the old `utils/dawarich` path;
+  the tracked workload is under `lifestyle/dawarich`. Do not count that gate
+  as effective for PRs against the current HelmRelease.
 
 Custom regex managers (verify the `# renovate:` comment is present and correct):
 

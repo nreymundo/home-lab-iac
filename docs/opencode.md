@@ -1,16 +1,16 @@
 # OpenCode Resources
 
-This repository keeps only project-specific OpenCode skills in
-`.opencode/skills/`. It does not provide a project OpenCode configuration,
-agents, commands, plugins, or MCP servers.
+Repository-specific skills live in [`.agents/skills/`](../.agents/skills/),
+which OpenCode can discover from this project. The repository does not
+provide project OpenCode configuration, agents, commands, plugins, or MCP
+servers.
 
-OpenCode loads the skills when working in this repository or one of its
-subdirectories. The active OpenCode installation supplies all other behavior,
-including models, permissions, agents, and optional integrations.
+Work from the repository or one of its subdirectories. Your OpenCode
+installation supplies models, permissions, agents, and optional integrations.
 
 ## Updating Skills
 
-Add or update a skill as `.opencode/skills/<skill-name>/SKILL.md`. Each skill
-should describe when it applies and contain the repository-specific workflow it
-needs. Restart OpenCode after changing a skill so the updated instructions are
-loaded.
+Add or update `.agents/skills/<skill-name>/SKILL.md`. Include `name` and
+`description` in the front matter, and document when the skill applies and
+which repository-specific workflow to follow. Restart OpenCode to load the
+updated instructions.

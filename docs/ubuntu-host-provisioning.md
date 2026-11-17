@@ -1,7 +1,7 @@
 # Ubuntu host provisioning
 
-Use this playbook for manually installed Ubuntu Server 24.04 or 26.04 hosts:
-bare metal, Proxmox VMs and headless laptops. Commands below run from `ansible/`.
+Use `ubuntu.yml` for Ubuntu Server 24.04 or 26.04 on bare metal, headless laptops,
+and VMs. Commands below run from `ansible/`.
 
 ## Inventory and run
 
@@ -11,6 +11,10 @@ Ubuntu hosts are grouped under `ubuntu_hosts`. K3s servers also belong to
 `k3s_server`. Set host values in `inventories/host_vars/<host>.yml` and group
 defaults in `inventories/group_vars/`. See the [K3s guide](k3s-provisioning.md)
 for cluster operations.
+
+`all_vms` includes the Terraform-managed `development` and `hermes` guests on
+Unraid. Use their dedicated application playbooks for workstation tools or
+Hermes services; `ubuntu.yml` provides the common host baseline.
 
 ```sh
 ansible-inventory --graph ubuntu_hosts
@@ -64,6 +68,36 @@ See the [hardware](../ansible/roles/host_hardware/README.md),
 K3s enrollment disables active swap on a new server; existing servers are
 inspected without changing swap. Keep host setup and cluster operations as
 separate playbook runs. Package installation can start or restart services.
+
+## Current bare-metal host policy
+
+The settings below come from `inventories/host_vars/`. Hardware discovery does
+not select a power policy; describe that policy explicitly per host.
+
+| Host | Hardware and power policy |
+| --- | --- |
+| `daring` | Intel GPU tooling; sysfs `powersave` and `balance_performance`, boost enabled, 4.2 GHz ceiling on eligible CPU policies, and Powertop auto-tune. |
+| `steadfast` | AMD GPU profile with GPU and Vulkan validation; kernel TTM settings preserve a 108 GiB allowance on 4 KiB pages. Sysfs `powersave`, `power` EPP, boost disabled, `low-power` platform profile, and Powertop auto-tune. |
+| `valiant` | AMD ASUS headless laptop. The `host_power` backend is `none`; laptop policy ignores lid events, masks sleep targets, and caps charging at 60%. ASUS fan curves are managed through `asusd` rather than the legacy quiet fan policy service. |
+
+On `valiant`, Homebrew supplies `asusctl`/`asusd`. The configured
+`headless_laptop_asusd_fan_curve` applies to both CPU and GPU fans in the
+`Quiet` profile, with a 30% floor and full speed at 90 C. The fan-curve task
+does not switch profiles; the separate ASUS daemon setup selects `LowPower`
+if available, otherwise `Quiet`. After a full host run has installed and
+configured `asusd`, use:
+
+```sh
+ansible-playbook playbooks/ubuntu.yml --limit valiant --tags asus_fan_curve
+```
+
+Read back the curves with `asusctl fan-curve --mod-profile Quiet` on the host.
+The playbook runs this read probe even in check mode, so check mode for this
+host also requires an existing `asusctl`/`asusd` installation.
+
+All three hosts are K3s members with swap provisioning disabled and a manual
+Longhorn mount. See the [K3s guide](k3s-provisioning.md#current-server-fleet) for
+cluster storage and device-plugin ownership.
 
 ## Validation
 

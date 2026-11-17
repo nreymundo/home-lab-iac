@@ -1,32 +1,32 @@
 # Terraform Agent Notes
 
-Read the repo root `AGENTS.md` first for repo-wide policy. This file only covers Terraform-local editing rules.
+Read [the repository-wide rules](../AGENTS.md) first. This file covers Terraform-specific editing rules.
 
 ## What This Subtree Owns
 - `terraform/modules/` holds reusable infrastructure building blocks.
-- Concrete root modules live under both `terraform/instances/` and `terraform/cloud/`; those roots can produce downstream artifacts such as Ansible inventory or cloud-specific infrastructure state.
-- Secrets belong in the external secret-helper flows (the `hashicorp/external` data source and `terraform/scripts/` helpers), not inline Terraform values or plaintext files.
+- Concrete deployment roots live under `terraform/instances/` and `terraform/cloud/`.
+- Keep backend and provider credentials outside the repository. Preserve existing SSH public-key lookups through `hashicorp/external` and the 1Password helper in `terraform/scripts/`.
 
 ## Source Of Truth Boundaries
-- Treat Terraform roots, including cloud roots, as the source of truth for generated inventory under `ansible/inventories/`.
-- Treat Terraform Cloud workspace settings in each root module's `providers.tf` as part of the root-module contract.
-- For the K3s node fleet, prefer the current `local.k3s.nodes`-driven topology instead of reintroducing older count-based patterns.
+- Terraform roots, including cloud roots, own the Ansible inventory files they generate. Find the output path in the root's `ansible_inventory.tf`.
+- Treat the S3 backend settings and state key in each root's `providers.tf` as part of that root's contract.
+- For the K3s fleet, preserve the `local.k3s.nodes` topology instead of reintroducing count-based node definitions.
 
 ## Local Anti-Patterns
 - Do not hand-edit Terraform-generated Ansible inventory.
-- Do not move secrets into `tfvars`, plaintext files, or ad hoc environment handling when the existing module already uses the secret-helper flow.
-- Do not treat module internals as a safe place for per-instance overrides when the root module already owns that concern.
+- Do not move credentials into `tfvars` or plaintext files, or bypass the public-key helper in a root or module that uses it.
+- Do not put per-instance overrides in reusable modules; the deployment root owns them.
 - Do not change root-module outputs or inventory shape without checking downstream Ansible impact.
 
 ## Validation
 ```bash
 ROOT=terraform/instances/vm/k3s_nodes
-terraform -chdir="$ROOT" init
+terraform -chdir="$ROOT" init -backend=false
 terraform -chdir="$ROOT" fmt -check
 terraform -chdir="$ROOT" validate
-terraform -chdir="$ROOT" plan
 ```
 
-- Set `ROOT` to each modified root module, including cloud roots. `plan` requires the configured backend and provider credentials.
-- The secret-helper external data source needs its configured secret-manager client and `jq` on PATH for anything that reads data sources, plus the environment credentials that client consumes.
-- After changing Terraform that feeds Ansible, inspect the generated inventory diff and any host labels, users, or topology assumptions consumed downstream.
+- Set `ROOT` to the modified deployment root, including cloud roots. Use a fresh working directory for initialization with the backend disabled.
+- Run `plan` separately with approval and the configured backend and provider credentials. Evaluating the SSH public-key data source also requires `op`, `jq`, `OP_SERVICE_ACCOUNT_TOKEN`, and `IAC_1PASSWORD_VAULT_ID`.
+- After an approved change regenerates inventory, inspect the diff for hostnames, addresses, users, labels, and topology used by Ansible.
+- Regenerate module reference tables using the [terraform-docs workflow](../.github/workflows/terraform-docs.yml), not by hand.

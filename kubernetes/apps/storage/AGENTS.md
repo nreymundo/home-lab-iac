@@ -11,6 +11,7 @@ Read the repo root `AGENTS.md`, `kubernetes/AGENTS.md`, and `kubernetes/apps/AGE
 - Manually declared PVC ownership stays here even when the consuming workload manifest lives under `kubernetes/apps/apps/`; controller-managed storage remains with its workload.
 - Verify each PVC's `metadata.name` and namespace against every consuming workload `claimName`; filenames are not the binding contract.
 - `kustomize.toolkit.fluxcd.io/ssa: IfNotPresent` is a special create-only or migration-oriented contract, not a normal default for new PVCs.
+- Follow the domain catalog through `apps/storage/production` to `apps-storage`. Check the StorageClass reclaim policy and actual Longhorn recurring-job labels before assuming a claim is recoverable; see the [bootstrap runbook](../../../docs/kubernetes-bootstrap.md#pvc-restore-options).
 
 ## Local Anti-Patterns
 - Do not create opaque PVC names that hide the consuming workload.

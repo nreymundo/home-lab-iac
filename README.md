@@ -24,6 +24,7 @@ I'm following a lot of good practices but this will _definitely_ be more of a ba
 | [terraform/](terraform/README.md) | Reusable modules plus concrete VM, LXC, and cloud roots |
 | [ansible/](ansible/README.md) | Roles and thin playbooks that configure everything above |
 | [kubernetes/](kubernetes/README.md) | Flux-managed desired state for the cluster |
+| [unraid/](unraid/AGENTS.md) | Unraid host settings, plugins, and Compose stacks; VM definitions stay in Terraform |
 | [docs/](docs/README.md) | Decision record, runbooks, and agent workflow notes |
 
 
@@ -32,7 +33,7 @@ I'm following a lot of good practices but this will _definitely_ be more of a ba
 * **One source of truth for node topology.** Terraform generates the Ansible inventory for the K3s nodes (`terraform/instances/vm/k3s_nodes/` renders `ansible/inventories/k3s-nodes.yml`), so the fleet is defined once instead of maintained in two places.
 * **Registry peer sharing with an upstream escape hatch.** Every K3s node runs the embedded registry and serves its cached images to peer nodes over TCP `5001`, and any cache miss falls through to a direct upstream pull. The knobs live in `ansible/roles/k3s/defaults/main.yml`. I used `Harbor` for a while but the overhead and complexity it added was just not worth it for a small cluster.
 * **Layered secrets with guardrails to match.** Ansible, Packer, and Terraform retrieve secrets at runtime through read-only secret-helper flows; Kubernetes secrets are SOPS-encrypted `*.sops.yaml` files in Git; pre-commit hooks block key material and plaintext Secrets before they ever reach a commit.
-* **Path-filtered validation.** CI only runs the hard-failing jobs that match what actually changed (kubeconform, Checkov, Trivy), so a docs tweak doesn't spin up the whole gauntlet.
+* **Path-filtered validation.** CI selects checks by path. Root documentation and `docs/` changes don't trigger infrastructure jobs on their own, but Markdown edits inside an infrastructure directory can.
 
 
 ## AI review with some actual guardrails
@@ -53,6 +54,8 @@ This repo manages the n8n deployment, its secret delivery, and the network path 
 | --- | --- |
 | [docs/decisions-and-tradeoffs.md](docs/decisions-and-tradeoffs.md) | Durable control and automation decisions, and the trade-offs behind them |
 | [docs/kubernetes-bootstrap.md](docs/kubernetes-bootstrap.md) | Bootstrap and restore runbook for the Flux-managed cluster |
+| [docs/k3s-provisioning.md](docs/k3s-provisioning.md) | Provision or maintain the K3s nodes beneath Flux |
+| [docs/ubuntu-host-provisioning.md](docs/ubuntu-host-provisioning.md) | Provision Ubuntu hosts and validate the rollout |
 | [SECURITY.md](SECURITY.md) | Security practices, secrets handling, and network posture |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Workflow, validation commands, and conventions |
 | [AGENTS.md](AGENTS.md) with [docs/opencode.md](docs/opencode.md) | How AI agents are expected to behave in this repo |

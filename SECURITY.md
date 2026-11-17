@@ -6,9 +6,9 @@ Security practices and policies for the home-lab-iac repository.
 
 Sensitive data is managed per component through dedicated secret stores:
 
-- **Never commit secrets** to the repository
-- Use environment variables for local development
-- Secrets are injected at runtime via each component's secret integration
+- Never commit plaintext secrets, private keys, or access tokens.
+- Supply local credentials through the tool's runtime secret integration; do
+  not put them in tracked configuration.
 
 See [Secrets by Component](#secrets-by-component) and
 [Secret Manager for Infrastructure Automation](#secret-manager-for-infrastructure-automation)
@@ -19,19 +19,21 @@ committed SOPS-encrypted Ansible secrets.
 
 | Component | Method |
 |-----------|--------|
-| Ansible | Runtime secret helper in the `ssh_hardening` role |
+| Ansible | 1Password public-key lookups in `ssh_hardening`; SOPS for encrypted Ansible-only values |
 | Packer | Runtime secret helper via `generate-autoinstall.sh` |
 | Terraform | Runtime secret helper via `hashicorp/external` data source |
 | Kubernetes | SOPS (AGE-encrypted `*.sops.yaml` files in Git) |
+| Unraid | SOPS for boot/shutdown scripts; 1Password public-key lookups for root SSH access |
 
 ### Secret Manager for Infrastructure Automation
 
 Ansible, Packer, and Terraform retrieve secrets at runtime through read-only
 secret-helper flows backed by the configured secret manager. The local runtime
 environment must provide the required secret-manager client and its
-credentials; neither belongs in the repository. Secret lookups are explicitly
-scoped, and the existing `ansible`, `packer`, and `terraform` tags limit each
-tool's key selection.
+credentials; neither belongs in repository. Use a scoped 1Password service
+account and set `OP_SERVICE_ACCOUNT_TOKEN` and `IAC_1PASSWORD_VAULT_ID` on
+the machine running the tooling. The `ansible`, `packer`, and `terraform`
+tags scope each tool's SSH key selection.
 
 ---
 
@@ -45,9 +47,9 @@ tool's key selection.
 
 ### Ingress Security
 
-- **TLS termination**: All external traffic uses HTTPS via cert-manager
-- **Authentication**: Protected routes use Authentik middleware
-- **Rate limiting**: Crowdsec integration for threat detection
+- **TLS**: Traefik serves HTTPS using cert-manager certificates; selected public services are exposed through Cloudflare Tunnel.
+- **Authentication**: Protected routes use Authentik middleware or application-native authentication, depending on the workload.
+- **Threat blocking**: Traefik middleware chains use the CrowdSec bouncer.
 
 ### Firewall Considerations
 
@@ -83,7 +85,7 @@ The following files contain or generate sensitive data and are gitignored:
 | File/Pattern | Purpose |
 |--------------|---------|
 | `*.tfstate*` | Terraform state (contains resource details) |
-| `http/user-data` | Generated autoinstall with SSH keys |
+| `packer/**/http/user-data` | Generated autoinstall configuration containing SSH public keys |
 | `.env` | Local environment variables |
 | `*.pem`, `*.key` | Any private keys |
 
