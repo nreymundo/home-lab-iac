@@ -42,8 +42,8 @@
   (`RAG_EMBEDDING_ENGINE=openai`) with the restricted `open-webui-embedding` key, stored in
   pgvector at up to 2560 dimensions using halfvec (`PGVECTOR_USE_HALFVEC=true`) with HNSW
   indexes
-- Speech-to-text: OpenAI-compatible transcription through LiteLLM using `local/stt-large`
-  (`whisper/large-v3-q5_0`) with the restricted `open-webui-audio` key and multipart uploads
+- Speech-to-text: multipart uploads through LiteLLM using `cloud/stt` (OpenAI first,
+  then `local/stt-fast` on failure) with the restricted `open-webui-audio` key
 - Web search: SearXNG (`searxng-main.utils.svc.cluster.local:8080`)
 - Cache: ephemeral Valkey controller (`open-webui-valkey`, 6379, emptyDir) used only for
   websocket fan-out / live state coordination (`WEBSOCKET_MANAGER=redis`,

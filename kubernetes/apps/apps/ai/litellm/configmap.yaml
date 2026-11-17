@@ -1078,6 +1078,8 @@ data:
         remote/vision: cloud/codex-luna-low
       # Scope failover to service aliases so explicit model names stay predictable.
       fallbacks:
+        - cloud/stt:
+            - local/stt-fast
         - local/decision:
             - model: cloud/decision
               # Cap on the CLOUD fallback call itself, not on local/decision;
