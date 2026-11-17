@@ -623,7 +623,7 @@ data:
             - pve3
           guardrails: []
 
-      - model_name: hosted_vllm/unsloth/qwen3.8-27b-analysis
+      - model_name: hosted_vllm/qwen/qwen3.8-27b-uncensored-analysis
         model_info:
           mode: chat
           max_input_tokens: 253952
@@ -633,7 +633,7 @@ data:
           supports_reasoning: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/unsloth/qwen3.8-27b-analysis
+          model: hosted_vllm/qwen/qwen3.8-27b-uncensored-analysis
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -643,7 +643,7 @@ data:
             - pve3
           guardrails: []
 
-      - model_name: hosted_vllm/unsloth/qwen3.8-27b-documents
+      - model_name: hosted_vllm/qwen/qwen3.8-27b-uncensored-documents
         model_info:
           mode: chat
           max_input_tokens: 258048
@@ -652,7 +652,7 @@ data:
           supports_function_calling: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/unsloth/qwen3.8-27b-documents
+          model: hosted_vllm/qwen/qwen3.8-27b-uncensored-documents
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -662,7 +662,7 @@ data:
             - pve3
           guardrails: []
 
-      - model_name: hosted_vllm/unsloth/qwen3.8-27b-coding
+      - model_name: hosted_vllm/qwen/qwen3.8-27b-uncensored-coding
         model_info:
           mode: chat
           max_input_tokens: 253952
@@ -672,7 +672,7 @@ data:
           supports_reasoning: true
           supports_tool_choice: true
         litellm_params:
-          model: hosted_vllm/unsloth/qwen3.8-27b-coding
+          model: hosted_vllm/qwen/qwen3.8-27b-uncensored-coding
           custom_llm_provider: hosted_vllm
           litellm_credential_name: llama-swap
           input_cost_per_token: 0.0
@@ -1060,15 +1060,15 @@ data:
         cloud/rerank: openrouter/voyageai/rerank-3-lite
         cloud/stt: openai/gpt-transcribe
         cloud/voice-realtime: openai/gpt-realtime-2.1-mini
-        local/analysis: hosted_vllm/unsloth/qwen3.8-27b-analysis
+        local/analysis: hosted_vllm/qwen/qwen3.8-27b-uncensored-analysis
         local/automation-lite: hosted_vllm/unsloth/gemma-4-e4b-it-qat
         local/camera-analysis: hosted_vllm/unsloth/gemma-4-12b-it-qat-camera
-        local/chat: hosted_vllm/unsloth/qwen3.8-27b
-        local/coder: hosted_vllm/unsloth/qwen3.8-27b-coding
+        local/chat: hosted_vllm/qwen/qwen3.8-27b-uncensored
+        local/coder: hosted_vllm/qwen/qwen3.8-27b-uncensored-coding
         local/completions: hosted_vllm/adilkairolla/zeta-2.1
         local/decision: hosted_vllm/d3-mini
-        local/document-analysis: hosted_vllm/unsloth/qwen3.8-27b-documents
-        local/document-best: hosted_vllm/unsloth/qwen3.8-27b-analysis
+        local/document-analysis: hosted_vllm/qwen/qwen3.8-27b-uncensored-documents
+        local/document-best: hosted_vllm/qwen/qwen3.8-27b-uncensored-analysis
         local/embedding: hosted_vllm/majentik/qwen3-embedding-4b
         local/image: comfyimage/qwen-image-2.1-turbo
         local/rerank: hosted_vllm/qwen/qwen3-reranker-0.6b
