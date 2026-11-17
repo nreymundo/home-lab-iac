@@ -7,14 +7,18 @@ metadata:
 data:
   config.yaml: |
     model_list:
+      # Subscription shadow prices: OpenRouter/OpenAI Standard API rates, checked 2026-11-17.
+      # https://openrouter.ai/api/v1/models and https://developers.openai.com/api/docs/pricing
+      # USD/token estimates, not subscription charges; >272k rates apply to the entire request.
+      # Codex advertises an 872k extended budget; clients retain their own compaction policy.
       # Native cloud Jev routing; local d3-mini remains available separately.
       - model_name: cloud/codex-auto
         model_info:
           mode: responses
           # auto_router/* is unknown to LiteLLM's model catalog, so the router
-          # must declare the window itself; 272k is the common input budget
-          # across Luna and Astra, while Sol and Terra tiers declare more below.
-          max_input_tokens: 272000
+          # must declare its own window; all subscription tiers below support
+          # the same extended input budget. Client compaction defaults are separate.
+          max_input_tokens: 872000
           max_output_tokens: 128000
         litellm_params:
           model: auto_router/complexity_router
@@ -60,97 +64,274 @@ data:
       - model_name: cloud/codex-luna-low
         model_info:
           mode: responses
-          max_input_tokens: 272000
+          max_input_tokens: 872000
+          max_output_tokens: 128000
           supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
         litellm_params:
           model: chatgpt/gpt-6-luna
-          # Shadow pricing at first-party openai/gpt-6-luna API rates ($0.10/$0.50 per M; $0.01/M cached).
           input_cost_per_token: 0.0000001
           output_cost_per_token: 0.0000005
           cache_read_input_token_cost: 0.00000001
+          cache_creation_input_token_cost: 0.000000125
+          input_cost_per_token_above_272k_tokens: 0.0000002
+          output_cost_per_token_above_272k_tokens: 0.00000075
+          cache_read_input_token_cost_above_272k_tokens: 0.00000002
+          cache_creation_input_token_cost_above_272k_tokens: 0.00000025
           reasoning_effort: low
 
       - model_name: cloud/codex-terra-low
         model_info:
           mode: responses
-          max_input_tokens: 922000
+          max_input_tokens: 872000
+          max_output_tokens: 128000
           supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
         litellm_params:
           model: chatgpt/gpt-6.1-terra
-          # Shadow pricing at first-party OpenAI rates ($1/$5 per M; $0.05/M cached).
           input_cost_per_token: 0.000001
           output_cost_per_token: 0.000005
           cache_read_input_token_cost: 0.00000005
+          cache_creation_input_token_cost: 0.00000125
+          input_cost_per_token_above_272k_tokens: 0.000002
+          output_cost_per_token_above_272k_tokens: 0.0000075
+          cache_read_input_token_cost_above_272k_tokens: 0.0000001
+          cache_creation_input_token_cost_above_272k_tokens: 0.0000025
           reasoning_effort: low
 
       - model_name: cloud/codex-sol-high
         model_info:
           mode: responses
-          max_input_tokens: 500000
+          max_input_tokens: 872000
+          max_output_tokens: 128000
           supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
         litellm_params:
           model: chatgpt/gpt-6.1-sol
-          # Shadow pricing at first-party openai/gpt-6.1-sol API rates ($2/$10 per M; $0.10/M cached).
           input_cost_per_token: 0.000002
           output_cost_per_token: 0.00001
           cache_read_input_token_cost: 0.0000001
+          cache_creation_input_token_cost: 0.0000025
+          input_cost_per_token_above_272k_tokens: 0.000004
+          output_cost_per_token_above_272k_tokens: 0.000015
+          cache_read_input_token_cost_above_272k_tokens: 0.0000002
+          cache_creation_input_token_cost_above_272k_tokens: 0.000005
           reasoning_effort: high
 
       - model_name: cloud/codex-astra-high
         model_info:
           mode: responses
-          max_input_tokens: 272000
+          max_input_tokens: 872000
+          max_output_tokens: 128000
           supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
         litellm_params:
           model: chatgpt/gpt-6-astra
-          # Shadow pricing at first-party openai/gpt-6-astra API rates ($10/$50 per M; $1/M cached).
           input_cost_per_token: 0.00001
           output_cost_per_token: 0.00005
           cache_read_input_token_cost: 0.000001
+          cache_creation_input_token_cost: 0.0000125
+          input_cost_per_token_above_272k_tokens: 0.00002
+          output_cost_per_token_above_272k_tokens: 0.000075
+          cache_read_input_token_cost_above_272k_tokens: 0.000002
+          cache_creation_input_token_cost_above_272k_tokens: 0.000025
           reasoning_effort: high
 
       # Expose only ChatGPT models verified against this subscription.
+      - model_name: chatgpt/gpt-6.2-sol
+        model_info:
+          mode: responses
+          max_input_tokens: 872000
+          max_output_tokens: 128000
+          supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
+        litellm_params:
+          model: chatgpt/gpt-6.2-sol
+          input_cost_per_token: 0.000002
+          output_cost_per_token: 0.00001
+          cache_read_input_token_cost: 0.0000001
+          cache_creation_input_token_cost: 0.0000025
+          input_cost_per_token_above_272k_tokens: 0.000004
+          output_cost_per_token_above_272k_tokens: 0.000015
+          cache_read_input_token_cost_above_272k_tokens: 0.0000002
+          cache_creation_input_token_cost_above_272k_tokens: 0.000005
+
+      - model_name: chatgpt/gpt-6.2-astra
+        model_info:
+          mode: responses
+          max_input_tokens: 872000
+          max_output_tokens: 128000
+          supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
+        litellm_params:
+          model: chatgpt/gpt-6.2-astra
+          input_cost_per_token: 0.000008
+          output_cost_per_token: 0.00004
+          cache_read_input_token_cost: 0.0000004
+          cache_creation_input_token_cost: 0.00001
+          input_cost_per_token_above_272k_tokens: 0.000016
+          output_cost_per_token_above_272k_tokens: 0.00006
+          cache_read_input_token_cost_above_272k_tokens: 0.0000008
+          cache_creation_input_token_cost_above_272k_tokens: 0.00002
+
       - model_name: chatgpt/gpt-6.1-terra
         model_info:
           mode: responses
-          max_input_tokens: 922000
+          max_input_tokens: 872000
+          max_output_tokens: 128000
           supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
         litellm_params:
           model: chatgpt/gpt-6.1-terra
-          # Shadow pricing at first-party OpenAI rates ($1/$5 per M; $0.05/M cached).
           input_cost_per_token: 0.000001
           output_cost_per_token: 0.000005
           cache_read_input_token_cost: 0.00000005
+          cache_creation_input_token_cost: 0.00000125
+          input_cost_per_token_above_272k_tokens: 0.000002
+          output_cost_per_token_above_272k_tokens: 0.0000075
+          cache_read_input_token_cost_above_272k_tokens: 0.0000001
+          cache_creation_input_token_cost_above_272k_tokens: 0.0000025
 
       - model_name: chatgpt/gpt-6.1-sol
         model_info:
           mode: responses
+          max_input_tokens: 872000
+          max_output_tokens: 128000
+          supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
         litellm_params:
           model: chatgpt/gpt-6.1-sol
-          # Shadow pricing at first-party openai/gpt-6.1-sol API rates ($2/$10 per M; $0.10/M cached).
           input_cost_per_token: 0.000002
           output_cost_per_token: 0.00001
           cache_read_input_token_cost: 0.0000001
+          cache_creation_input_token_cost: 0.0000025
+          input_cost_per_token_above_272k_tokens: 0.000004
+          output_cost_per_token_above_272k_tokens: 0.000015
+          cache_read_input_token_cost_above_272k_tokens: 0.0000002
+          cache_creation_input_token_cost_above_272k_tokens: 0.000005
 
       - model_name: chatgpt/gpt-6-astra
         model_info:
           mode: responses
+          max_input_tokens: 872000
+          max_output_tokens: 128000
+          supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
         litellm_params:
           model: chatgpt/gpt-6-astra
-          # Shadow pricing at first-party openai/gpt-6-astra API rates ($10/$50 per M; $1/M cached).
           input_cost_per_token: 0.00001
           output_cost_per_token: 0.00005
           cache_read_input_token_cost: 0.000001
+          cache_creation_input_token_cost: 0.0000125
+          input_cost_per_token_above_272k_tokens: 0.00002
+          output_cost_per_token_above_272k_tokens: 0.000075
+          cache_read_input_token_cost_above_272k_tokens: 0.000002
+          cache_creation_input_token_cost_above_272k_tokens: 0.000025
+
+      - model_name: chatgpt/gpt-6-sol
+        model_info:
+          mode: responses
+          max_input_tokens: 872000
+          max_output_tokens: 128000
+          supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
+        litellm_params:
+          model: chatgpt/gpt-6-sol
+          input_cost_per_token: 0.000002
+          output_cost_per_token: 0.00001
+          cache_read_input_token_cost: 0.0000002
+          cache_creation_input_token_cost: 0.0000025
+          input_cost_per_token_above_272k_tokens: 0.000004
+          output_cost_per_token_above_272k_tokens: 0.000015
+          cache_read_input_token_cost_above_272k_tokens: 0.0000004
+          cache_creation_input_token_cost_above_272k_tokens: 0.000005
 
       - model_name: chatgpt/gpt-6-luna
         model_info:
           mode: responses
+          max_input_tokens: 872000
+          max_output_tokens: 128000
+          supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
         litellm_params:
           model: chatgpt/gpt-6-luna
-          # Shadow pricing at first-party openai/gpt-6-luna API rates ($0.10/$0.50 per M; $0.01/M cached).
           input_cost_per_token: 0.0000001
           output_cost_per_token: 0.0000005
           cache_read_input_token_cost: 0.00000001
+          cache_creation_input_token_cost: 0.000000125
+          input_cost_per_token_above_272k_tokens: 0.0000002
+          output_cost_per_token_above_272k_tokens: 0.00000075
+          cache_read_input_token_cost_above_272k_tokens: 0.00000002
+          cache_creation_input_token_cost_above_272k_tokens: 0.00000025
+
+
+      - model_name: chatgpt/gpt-5.6-sol
+        model_info:
+          mode: responses
+          max_input_tokens: 872000
+          max_output_tokens: 128000
+          supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
+        litellm_params:
+          model: chatgpt/gpt-5.6-sol
+          input_cost_per_token: 0.000004
+          output_cost_per_token: 0.00002
+          cache_read_input_token_cost: 0.0000004
+          cache_creation_input_token_cost: 0.000005
+          input_cost_per_token_above_272k_tokens: 0.000008
+          output_cost_per_token_above_272k_tokens: 0.00003
+          cache_read_input_token_cost_above_272k_tokens: 0.0000008
+          cache_creation_input_token_cost_above_272k_tokens: 0.00001
+
+      - model_name: chatgpt/gpt-5.6-terra
+        model_info:
+          mode: responses
+          max_input_tokens: 872000
+          max_output_tokens: 128000
+          supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
+        litellm_params:
+          model: chatgpt/gpt-5.6-terra
+          input_cost_per_token: 0.000002
+          output_cost_per_token: 0.000012
+          cache_read_input_token_cost: 0.0000002
+          cache_creation_input_token_cost: 0.0000025
+          input_cost_per_token_above_272k_tokens: 0.000004
+          output_cost_per_token_above_272k_tokens: 0.000018
+          cache_read_input_token_cost_above_272k_tokens: 0.0000004
+          cache_creation_input_token_cost_above_272k_tokens: 0.000005
+
+      - model_name: chatgpt/gpt-5.6-luna
+        model_info:
+          mode: responses
+          max_input_tokens: 872000
+          max_output_tokens: 128000
+          supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
+        litellm_params:
+          model: chatgpt/gpt-5.6-luna
+          input_cost_per_token: 0.0000002
+          output_cost_per_token: 0.0000012
+          cache_read_input_token_cost: 0.00000002
+          cache_creation_input_token_cost: 0.00000025
+          input_cost_per_token_above_272k_tokens: 0.0000004
+          output_cost_per_token_above_272k_tokens: 0.0000018
+          cache_read_input_token_cost_above_272k_tokens: 0.00000004
+          cache_creation_input_token_cost_above_272k_tokens: 0.0000005
 
       - model_name: comfyimage/qwen-image-2.1-turbo
         model_info:
