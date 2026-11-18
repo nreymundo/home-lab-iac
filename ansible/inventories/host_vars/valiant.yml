@@ -52,8 +52,8 @@ common_kernel_params_add: [crashkernel=0]
 headless_laptop_battery_charge_limit: 60
 headless_laptop_asus_quiet_fan_policy_enabled: false
 headless_laptop_asusd_enabled: true
-# Quiet profile: 30% floor, ramping to full speed at 90 C.
-headless_laptop_asusd_fan_curve: '30c:77,45c:77,55c:89,65c:115,72c:153,78c:191,85c:230,90c:255'
+# Quiet profile: 25% idle floor, with the existing ramp from 55 C.
+headless_laptop_asusd_fan_curve: '30c:64,45c:64,55c:89,65c:115,72c:153,78c:191,85c:230,90c:255'
 host_hardware_extra_packages: [nvtop]
 common_extra_packages:
   # System diagnostics
