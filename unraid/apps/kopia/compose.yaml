@@ -7,6 +7,17 @@ services:
     hostname: kopia
     network_mode: bridge
     restart: unless-stopped
+    healthcheck:
+      # The unauthenticated status request checks HTTP liveness, not repository health.
+      test:
+        - CMD-SHELL
+        - >-
+          code=$$(curl -sS --max-time 4 -o /dev/null -w '%{http_code}'
+          http://127.0.0.1:51515/api/v1/repo/status) && [ "$$code" = 401 ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     ports:
       - "51515:51515"
     environment:
