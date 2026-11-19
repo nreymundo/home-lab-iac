@@ -61,7 +61,7 @@ spec:
             image:
               # renovate: datasource=docker depName=maathimself/mailflow-frontend registryUrl=https://ghcr.io
               repository: ghcr.io/maathimself/mailflow-frontend
-              tag: "4.4.0"
+              tag: "4.5.0"
             env:
               # mailflow-start builds Caddy's reverse_proxy upstream from
               # BACKEND_HOST/BACKEND_PORT and picks the listener set from
@@ -121,7 +121,7 @@ spec:
             image:
               # renovate: datasource=docker depName=maathimself/mailflow-backend registryUrl=https://ghcr.io
               repository: ghcr.io/maathimself/mailflow-backend
-              tag: "4.4.0"
+              tag: "4.5.0"
             env:
               TZ: Europe/Berlin
               NODE_ENV: production
