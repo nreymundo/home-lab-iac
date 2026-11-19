@@ -2646,7 +2646,7 @@ data:
                   path: /spec/loadBalancerSourceRanges
                   value:
                     - "${OPNSENSE_IP}/32"
-                    - "192.168.10.72/32"
+                    - "${JELLYFIN_IP}/32"
                 - op: add
                   path: /spec/externalTrafficPolicy
                   value: Local
