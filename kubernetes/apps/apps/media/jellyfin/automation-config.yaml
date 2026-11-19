@@ -20,7 +20,7 @@ data:
   ldap.json: |
     {
       "pluginId": "958aad6637844d2ab89aa7b6fab6e25c",
-      "LdapServer": "ak-outpost-ldap-outpost.authentik.svc.cluster.local",
+      "LdapServer": "ldap.lan.${CLUSTER_DOMAIN}",
       "LdapPort": 636,
       "UseSsl": true,
       "UseStartTls": false,
