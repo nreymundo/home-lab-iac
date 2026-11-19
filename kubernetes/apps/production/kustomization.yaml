@@ -45,7 +45,6 @@ resources:
   - ../apps/ai/sillytavern
   - ../apps/ai/hindsight
   - ../apps/ai/vane
-  - ../apps/ai/speech-to-speech
   - ../apps/ai/litellm
   - ../apps/ai/llama-swap
   - ../apps/ai/comfyui
