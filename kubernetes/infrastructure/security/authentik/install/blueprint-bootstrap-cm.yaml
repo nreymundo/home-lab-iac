@@ -2641,11 +2641,12 @@ data:
                 - op: add
                   path: /spec/loadBalancerIP
                   value: "${LDAP_LB_IP}"
-                # Restrict exposure to the OPNsense router only.
+                # Allow the router and the Jellyfin container on Unraid.
                 - op: add
                   path: /spec/loadBalancerSourceRanges
                   value:
                     - "${OPNSENSE_IP}/32"
+                    - "192.168.10.72/32"
                 - op: add
                   path: /spec/externalTrafficPolicy
                   value: Local
