@@ -2,6 +2,8 @@
 stacks:
   - name: garage
     source: apps/garage
+  - name: jellyfin
+    source: apps/jellyfin
   - name: kopia
     source: apps/kopia
   - name: syncthing

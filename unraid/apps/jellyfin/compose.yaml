@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+name: jellyfin
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:10.11.11
+    container_name: jellyfin
+    restart: unless-stopped
+    networks:
+      lan:
+        ipv4_address: 192.168.10.72
+    environment:
+      PUID: "99"
+      PGID: "100"
+      TZ: Europe/Berlin
+      LIBVA_DRIVER_NAME: iHD
+      JELLYFIN_CACHE_DIR: /config/cache
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - /mnt/apps/appdata/jellyfin:/config
+      - /mnt/user/media:/data
+    tmpfs:
+      - /transcode:size=1g,uid=99,gid=100
+    labels:
+      net.unraid.docker.managed: composeman
+      net.unraid.docker.icon: https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/jellyfin-logo.png
+      net.unraid.docker.webui: "http://[IP]:[PORT:8096]/"
+networks:
+  lan:
+    external: true
+    name: br0
