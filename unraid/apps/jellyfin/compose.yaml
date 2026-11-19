@@ -5,6 +5,12 @@ services:
     image: lscr.io/linuxserver/jellyfin:10.11.11
     container_name: jellyfin
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--max-time", "4", "-o", "/dev/null", "http://127.0.0.1:8096/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       lan:
         ipv4_address: 192.168.10.72

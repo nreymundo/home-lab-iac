@@ -4,7 +4,6 @@ resources:
   - audiobookshelf-pvc.yaml
   - bazarr-pvc.yaml
   - komga-pvc.yaml
-  - jellyfin-pvc.yaml
   - lidarr-pvc.yaml
   - lidatube-pvc.yaml
   - plex-pvc.yaml

@@ -175,6 +175,10 @@ spec:
                 icon: home-assistant.png
                 description: "Home automation server"
                 href: http://home.${CLUSTER_DOMAIN}
+            - Jellyfin:
+                icon: jellyfin.png
+                description: "Media server"
+                href: https://jellyfin.${CLUSTER_DOMAIN}
             - JetKVM:
                 icon: jetkvm.png
                 description: "IP KVM"
@@ -327,10 +331,6 @@ spec:
                 icon: it-tools.png
                 description: "Handy tools for developers"
                 href: https://tools.lan.${CLUSTER_DOMAIN}
-            - Jellyfin:
-                icon: jellyfin.png
-                description: "Media server"
-                href: https://jellyfin.${CLUSTER_DOMAIN}
             - Karakeep:
                 icon: karakeep.png
                 description: "Self-hosted bookmark manager"

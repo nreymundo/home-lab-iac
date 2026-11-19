@@ -1,6 +1,6 @@
 # Jellyfin LDAP Configuration
 
-This Jellyfin deployment authenticates against the Authentik LDAP outpost running in-cluster.
+Jellyfin runs on Unraid and authenticates against the in-cluster Authentik LDAP outpost via its LAN endpoint.
 
 These settings are managed by the `jellyfin-automation` CronJob (`17 */6 * * *`)
 using [automation-config.yaml](automation-config.yaml). Both are included by the
@@ -11,7 +11,7 @@ the bind and search filters. Change managed settings in Git, not only in the UI.
 
 ## Connection Settings
 
-- LDAP server: `ak-outpost-ldap-outpost.authentik.svc.cluster.local`
+- LDAP server: `ldap.lan.${CLUSTER_DOMAIN}`
 - Port: `636`
 - Secure LDAP: `true`
 - Skip SSL/TLS verification: `true`
