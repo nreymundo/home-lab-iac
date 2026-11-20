@@ -6,7 +6,6 @@ resources:
   - komga-pvc.yaml
   - lidarr-pvc.yaml
   - lidatube-pvc.yaml
-  - plex-pvc.yaml
   - plex-media-enrichment-pvc.yaml
   - prowlarr-pvc.yaml
   - radarr-pvc.yaml
