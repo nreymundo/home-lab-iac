@@ -2,7 +2,7 @@
 name: jellyfin
 services:
   jellyfin:
-    image: lscr.io/linuxserver/jellyfin:10.11.11
+    image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
     restart: unless-stopped
     healthcheck:
