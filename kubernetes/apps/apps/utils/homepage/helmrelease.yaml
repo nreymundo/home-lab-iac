@@ -212,6 +212,10 @@ spec:
                 #   type: pihole
                 #   url: https://192.168.10.2
                 #   version: 6
+            - Plex:
+                icon: plex.png
+                description: "Media server"
+                href: https://plex.${CLUSTER_DOMAIN}
             - Proxmox:
                 icon: proxmox.png
                 description: "Proxmox Virtual Environment"
@@ -393,10 +397,6 @@ spec:
                 icon: https://i.imgur.com/mowFxHj.png
                 description: "AI tagging and OCR assistant"
                 href: https://paperless-gpt.lan.${CLUSTER_DOMAIN}
-            - Plex:
-                icon: plex.png
-                description: "Media server"
-                href: https://plex.${CLUSTER_DOMAIN}
             - Prometheus:
                 icon: prometheus.png
                 description: "Metrics"
