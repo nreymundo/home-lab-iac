@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+name: plex
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:1.43.5
+    container_name: plex
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--max-time", "4", "-o", "/dev/null", "http://127.0.0.1:32400/identity"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      lan:
+        ipv4_address: 192.168.10.73
+    environment:
+      PUID: "99"
+      PGID: "100"
+      TZ: Europe/Berlin
+      LIBVA_DRIVER_NAME: iHD
+      VERSION: docker
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - /mnt/apps/appdata/plex:/config
+      - /mnt/user/media:/mnt/smb/unraid/media
+      - /mnt/apps/appdata/plex-transcode:/transcode
+    labels:
+      net.unraid.docker.managed: composeman
+      net.unraid.docker.icon: https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/plex-logo.png
+      net.unraid.docker.webui: "http://[IP]:[PORT:32400]/web/"
+networks:
+  lan:
+    external: true
+    name: br0

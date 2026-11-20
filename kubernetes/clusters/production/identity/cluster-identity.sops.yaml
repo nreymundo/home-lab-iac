@@ -32,6 +32,7 @@ data:
     ESPHOME_BUILDER_LB_IP: ENC[AES256_GCM,data:MydLieHVrWajkWZ1w2M=,iv:upMp6Lg7WMKXSLQ84s+Bn20oAZM+ZWXMQhVCSdAhqBY=,tag:1iLvA+bZK4IOVLHUXViYGw==,type:str]
     DEV_VM_IP: ENC[AES256_GCM,data:zi/fPuR0d/zK94f0p0g=,iv:JQ/clpEdpviyuzUTGvF+7HTuYrk7NlIL+cMvzGxZ034=,tag:v6BbU+4WewLN3pE9I+C8UA==,type:str]
     JELLYFIN_IP: ENC[AES256_GCM,data:7Nd+yy3QJlF3cODu8w==,iv:eGDUPtJFHmiUndJQh+nuEiu8+WTuBzTPyw8x1NhzX3E=,tag:W76KObzCrUkxD8tBoW/Svg==,type:str]
+    PLEX_IP: ENC[AES256_GCM,data:R1gqhUCnKAo49e/bVg==,iv:AbfRpiJ/vSA5BAQWuKT5RsPAhu3OC+4VxSYtp1EPyQI=,tag:7CRyUGEF4HZtLVL8xQILow==,type:str]
 sops:
     age:
         - enc: |
@@ -44,6 +45,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1ejjf4e7dnkc0tmwmyuyr9k5cl8sz9g0rpj4gnywk26x56jut6ygqph0x4h
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-11-19T19:42:14Z"
-    mac: ENC[AES256_GCM,data:PfhCfZqOQQ51IxBYA2U9wh/sm89PWAE05haNHPtTmbC0LNfcNV0OScsC6bmlxh+uuItBpY5UTFLa8RGEjzg1uc0Xv9FlpMCnU1cEeRE+qSm3HSR1yNxW5Eo93tHgsIC1YdqsKmyW4/ncG9oXRBwYsQ0wUz+yV9spbWTqbCnxCXs=,iv:lBsya1gq6aJIZXKbi4Blwq71NWXAHwqXAUygJQyG7o8=,tag:fMFAEVbOXzDBU6atbopFVA==,type:str]
+    lastmodified: "2026-11-20T21:00:25Z"
+    mac: ENC[AES256_GCM,data:2mcmb6SPRG4HFXGGy9fXz5MOb2oM40t/uHsR4+ixKh9FZI3rDR+o2oXM9lHfm5TY0FTZ0ewgzKgBr6x7Xsb7xP6KIG6J9Ok61IjkEmLDGYKP3gHXhz6s/jAQN23TZEo/p+cU1Y1/KuKHMpBi3qBaDroSH7tJI3LfavJxZjY3Q98=,iv:o8F6R1ncFn6yHDH/LyCEh5JULTL2qBXLwPhy7tEG5aY=,tag:Y05G6YpzerOD432MqNUyvg==,type:str]
     version: 3.13.3

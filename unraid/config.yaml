@@ -32,6 +32,15 @@ files:
   - content: https://raw.githubusercontent.com/imagegenius/templates/main/unraid/img/kopia.png
     target: /boot/config/plugins/compose.manager/projects/kopia/icon_url
     mode: '0600'
+  - source: apps/plex/compose.yaml
+    target: /boot/config/plugins/compose.manager/projects/plex/compose.yaml
+    mode: '0600'
+  - content: "true"
+    target: /boot/config/plugins/compose.manager/projects/plex/autostart
+    mode: '0600'
+  - content: https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/plex-logo.png
+    target: /boot/config/plugins/compose.manager/projects/plex/icon_url
+    mode: '0600'
   - source: apps/syncthing/compose.yaml
     target: /boot/config/plugins/compose.manager/projects/syncthing/compose.yaml
     mode: '0600'

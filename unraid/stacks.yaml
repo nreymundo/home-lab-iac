@@ -6,5 +6,7 @@ stacks:
     source: apps/jellyfin
   - name: kopia
     source: apps/kopia
+  - name: plex
+    source: apps/plex
   - name: syncthing
     source: apps/syncthing
