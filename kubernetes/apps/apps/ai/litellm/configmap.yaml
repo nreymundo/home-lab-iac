@@ -22,15 +22,15 @@ data:
           max_output_tokens: 128000
         litellm_params:
           model: auto_router/complexity_router
-          complexity_router_default_model: cloud/codex-astra-high
+          complexity_router_default_model: cloud/codex-astra-medium
           complexity_router_config:
             tiers:
               SIMPLE:
-                model_name: cloud/codex-luna-low
+                model_name: cloud/codex-luna-medium
                 litellm_params:
-                  reasoning_effort: low
+                  reasoning_effort: medium
               MEDIUM:
-                model_name: cloud/codex-terra-low
+                model_name: cloud/codex-sol-low
                 litellm_params:
                   reasoning_effort: low
               COMPLEX:
@@ -38,9 +38,9 @@ data:
                 litellm_params:
                   reasoning_effort: high
               REASONING:
-                model_name: cloud/codex-astra-high
+                model_name: cloud/codex-astra-medium
                 litellm_params:
-                  reasoning_effort: high
+                  reasoning_effort: medium
             classifier_type: oss_classifier
             opensource_classifier_config:
               provider: jev
@@ -61,6 +61,27 @@ data:
 
       # Each tier resolves to a deployment with its own default reasoning effort.
       # Direct calls use defaults; auto routes enforce the tier-level effort above.
+      - model_name: cloud/codex-luna-medium
+        model_info:
+          mode: responses
+          max_input_tokens: 872000
+          max_output_tokens: 128000
+          supports_vision: true
+          supports_reasoning: true
+          supports_function_calling: true
+        litellm_params:
+          model: chatgpt/gpt-6-luna
+          input_cost_per_token: 0.0000001
+          output_cost_per_token: 0.0000005
+          cache_read_input_token_cost: 0.00000001
+          cache_creation_input_token_cost: 0.000000125
+          input_cost_per_token_above_272k_tokens: 0.0000002
+          output_cost_per_token_above_272k_tokens: 0.00000075
+          cache_read_input_token_cost_above_272k_tokens: 0.00000002
+          cache_creation_input_token_cost_above_272k_tokens: 0.00000025
+          reasoning_effort: medium
+
+      # Keep the standalone vision route at low effort.
       - model_name: cloud/codex-luna-low
         model_info:
           mode: responses
@@ -81,7 +102,7 @@ data:
           cache_creation_input_token_cost_above_272k_tokens: 0.00000025
           reasoning_effort: low
 
-      - model_name: cloud/codex-terra-low
+      - model_name: cloud/codex-sol-low
         model_info:
           mode: responses
           max_input_tokens: 872000
@@ -90,15 +111,15 @@ data:
           supports_reasoning: true
           supports_function_calling: true
         litellm_params:
-          model: chatgpt/gpt-6.1-terra
-          input_cost_per_token: 0.000001
-          output_cost_per_token: 0.000005
-          cache_read_input_token_cost: 0.00000005
-          cache_creation_input_token_cost: 0.00000125
-          input_cost_per_token_above_272k_tokens: 0.000002
-          output_cost_per_token_above_272k_tokens: 0.0000075
-          cache_read_input_token_cost_above_272k_tokens: 0.0000001
-          cache_creation_input_token_cost_above_272k_tokens: 0.0000025
+          model: chatgpt/gpt-6.2-sol
+          input_cost_per_token: 0.000002
+          output_cost_per_token: 0.00001
+          cache_read_input_token_cost: 0.0000001
+          cache_creation_input_token_cost: 0.0000025
+          input_cost_per_token_above_272k_tokens: 0.000004
+          output_cost_per_token_above_272k_tokens: 0.000015
+          cache_read_input_token_cost_above_272k_tokens: 0.0000002
+          cache_creation_input_token_cost_above_272k_tokens: 0.000005
           reasoning_effort: low
 
       - model_name: cloud/codex-sol-high
@@ -110,7 +131,7 @@ data:
           supports_reasoning: true
           supports_function_calling: true
         litellm_params:
-          model: chatgpt/gpt-6.1-sol
+          model: chatgpt/gpt-6.2-sol
           input_cost_per_token: 0.000002
           output_cost_per_token: 0.00001
           cache_read_input_token_cost: 0.0000001
@@ -121,7 +142,7 @@ data:
           cache_creation_input_token_cost_above_272k_tokens: 0.000005
           reasoning_effort: high
 
-      - model_name: cloud/codex-astra-high
+      - model_name: cloud/codex-astra-medium
         model_info:
           mode: responses
           max_input_tokens: 872000
@@ -130,16 +151,16 @@ data:
           supports_reasoning: true
           supports_function_calling: true
         litellm_params:
-          model: chatgpt/gpt-6-astra
-          input_cost_per_token: 0.00001
-          output_cost_per_token: 0.00005
-          cache_read_input_token_cost: 0.000001
-          cache_creation_input_token_cost: 0.0000125
-          input_cost_per_token_above_272k_tokens: 0.00002
-          output_cost_per_token_above_272k_tokens: 0.000075
-          cache_read_input_token_cost_above_272k_tokens: 0.000002
-          cache_creation_input_token_cost_above_272k_tokens: 0.000025
-          reasoning_effort: high
+          model: chatgpt/gpt-6.2-astra
+          input_cost_per_token: 0.000008
+          output_cost_per_token: 0.00004
+          cache_read_input_token_cost: 0.0000004
+          cache_creation_input_token_cost: 0.00001
+          input_cost_per_token_above_272k_tokens: 0.000016
+          output_cost_per_token_above_272k_tokens: 0.00006
+          cache_read_input_token_cost_above_272k_tokens: 0.0000008
+          cache_creation_input_token_cost_above_272k_tokens: 0.00002
+          reasoning_effort: medium
 
       # Expose only ChatGPT models verified against this subscription.
       - model_name: chatgpt/gpt-6.2-sol
@@ -1104,13 +1125,17 @@ data:
         - cloud/codex-luna-low:
             - model: cloud/fast-fallback
               reasoning_effort: low
-        - cloud/codex-terra-low:
+        - cloud/codex-luna-medium:
+            - model: cloud/fast-fallback
+              # GLM Flash has no medium setting; use its next higher effort.
+              reasoning_effort: high
+        - cloud/codex-sol-low:
             - model: cloud/fast-fallback
               reasoning_effort: low
         - cloud/codex-sol-high:
             - model: cloud/deep-fallback
               reasoning_effort: high
-        - cloud/codex-astra-high:
+        - cloud/codex-astra-medium:
             - model: cloud/deep-fallback
               reasoning_effort: high
         - cloud/fast:
