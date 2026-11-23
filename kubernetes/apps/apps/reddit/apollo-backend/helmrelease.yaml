@@ -18,7 +18,7 @@ spec:
             image:
               # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: sha-0cc2cc42930bf489e7581a03c29712341c0da529
+              tag: sha-42a1fef576a8a16c5beca9bbd6097ebd6e62ba1e
             args:
               - api
             envFrom:
@@ -78,7 +78,7 @@ spec:
             image:
               # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: sha-0cc2cc42930bf489e7581a03c29712341c0da529
+              tag: sha-42a1fef576a8a16c5beca9bbd6097ebd6e62ba1e
             args:
               - scheduler
             envFrom:
@@ -103,7 +103,7 @@ spec:
             image:
               # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: sha-0cc2cc42930bf489e7581a03c29712341c0da529
+              tag: sha-42a1fef576a8a16c5beca9bbd6097ebd6e62ba1e
             args:
               - worker
               - --queue
@@ -132,7 +132,7 @@ spec:
             image:
               # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: sha-0cc2cc42930bf489e7581a03c29712341c0da529
+              tag: sha-42a1fef576a8a16c5beca9bbd6097ebd6e62ba1e
             args:
               - worker
               - --queue
@@ -161,7 +161,7 @@ spec:
             image:
               # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: sha-0cc2cc42930bf489e7581a03c29712341c0da529
+              tag: sha-42a1fef576a8a16c5beca9bbd6097ebd6e62ba1e
             args:
               - worker
               - --queue
@@ -190,7 +190,7 @@ spec:
             image:
               # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: sha-0cc2cc42930bf489e7581a03c29712341c0da529
+              tag: sha-42a1fef576a8a16c5beca9bbd6097ebd6e62ba1e
             args:
               - worker
               - --queue
@@ -219,7 +219,7 @@ spec:
             image:
               # renovate-apollo-backend: branch=main
               repository: ghcr.io/apollo-reborn/apollo-backend
-              tag: sha-0cc2cc42930bf489e7581a03c29712341c0da529
+              tag: sha-42a1fef576a8a16c5beca9bbd6097ebd6e62ba1e
             args:
               - worker
               - --queue
