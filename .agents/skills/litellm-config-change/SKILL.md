@@ -147,8 +147,8 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   canonical model names and local routes have no configured failover. Verify source
   and destination alias resolution on image updates.
 - `cloud/codex-auto` is an opt-in native `auto_router/complexity_router` deployment,
-  configured entirely in `configmap.yaml`. Its four tiers select Luna/low,
-  Luna/high, Sol/high, and Astra/high through dedicated `cloud/codex-*-*`
+  configured entirely in `configmap.yaml`. Its four tiers select Luna/medium,
+  GPT-6.2 Sol/low, GPT-6.2 Sol/high, and GPT-6.2 Astra/medium through dedicated `cloud/codex-*-*`
   deployments. These deployment names carry reasoning defaults; they are not
   `model_group_alias` entries. Native per-tier `litellm_params` pin effort on auto
   routes; ingress normalization also protects retained decisions and classifier
@@ -156,9 +156,9 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   to the presets still allow caller overrides.
   Jev uses `classifier_type: oss_classifier` with the existing
   `openrouter/~typesafe/jev-latest` decision deployment, without a new credential or
-  custom routing engine. Classification failure selects Astra/high; inference
+  custom routing engine. Classification failure selects GPT-6.2 Astra/medium; inference
   failures use per-tier fallback chains to the existing fast/deep fallback aliases,
-  with explicit fallback effort parameters to preserve the selected level.
+  with explicit efforts. GLM fallbacks use `high` for `medium` tiers.
   `classification_mode: user_turn` retains the choice through tool continuations
   only when the client supplies a stable session identifier (for example
   `metadata.session_id`); a new human ask reclassifies. `session_affinity` remains
