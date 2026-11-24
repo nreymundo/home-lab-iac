@@ -170,19 +170,17 @@ is not evidence that its patch is enabled; inspect the actual startup hook.
   `cloud/decision` remains a direct Jev alias; other existing cloud/local routes
   do not opt into auto routing.
 - `cloud/glm-auto` uses the same native Jev classifier and user-turn policy. Its
-  tiers are GLM-5.3-Flash/low, Flash/high, GLM-5.3/high, and GLM-5.3/max,
+  tiers are GLM-5.3-Flash/low, Flash/high, GLM-5.4/high, and GLM-5.4/max,
   through `cloud/glm-flash-low`, `cloud/glm-flash-high`, `cloud/glm-high`, and
   `cloud/glm-max`. They reuse the `zai-coding` credential and provider parameters;
   `low`, `high`, and `max` are the supported effort values. Classification failure
   selects GLM/high, while each tier's inference fallback is `cloud/coder-fallback`
   (the independent ChatGPT subscription). Switching between GLM models does not
-  replenish their shared Coding Plan quota. Flash tiers advertise vision support;
-  main GLM tiers explicitly do not. Native modality routing only searches higher
-  tiers, so `cloud/glm-auto` also falls back to `cloud/glm-flash-high` when routing
-  fails before a tier is dispatched. With a failed classifier, native modality
-  handling has no decided tier and instead selects the first compatible tier,
-  Flash/low. Validate both image paths and their enforced effort: a classified
-  text-only tier falls back to Flash/high; classifier failure uses Flash/low.
+  replenish their shared Coding Plan quota. All four tiers advertise image
+  support, so classified image requests can stay on their selected tier.
+  `cloud/glm-flash-high` remains the fallback for routing failures before
+  dispatch. Validate image routing and enforced effort for classified requests
+  and classifier failures.
   Auto-route effort ownership and stable-session requirements match
   `cloud/codex-auto`.
 - Local model entries share the llama-swap credential/backend. Another local model
