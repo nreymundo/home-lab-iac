@@ -871,6 +871,37 @@ data:
             - zai
             - coding-plan
 
+      - model_name: zai-coding/glm-5.4
+        model_info:
+          mode: chat
+          max_input_tokens: 1000000
+          max_output_tokens: 128000
+          supports_reasoning: true
+          supports_function_calling: true
+          supports_tool_choice: true
+          supports_image_input: true
+          supports_vision: true
+          supports_response_schema: true
+          supports_prompt_caching: true
+          reasoning_options:
+            - type: effort
+              values:
+                - low
+                - high
+                - max
+          default_reasoning_effort: high
+        litellm_params:
+          model: zai/glm-5.4
+          reasoning_effort: high
+          custom_llm_provider: zai
+          litellm_credential_name: zai-coding
+          allowed_openai_params:
+            - reasoning_effort
+            - response_format
+          tags:
+            - zai
+            - coding-plan
+
       - model_name: zai-coding/glm-5.3
         model_info:
           mode: chat
