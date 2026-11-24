@@ -725,7 +725,7 @@ data:
           mode: chat
           # auto_router/* is unknown to LiteLLM's model catalog, so the router
           # must declare the window itself; 1M is the floor across members
-          # (glm-5.3 1,000,000 / glm-5.3-flash 1,048,576).
+          # (glm-5.4 1,000,000 / glm-5.3-flash 1,048,576).
           max_input_tokens: 1000000
           max_output_tokens: 128000
         litellm_params:
@@ -826,7 +826,13 @@ data:
       - model_name: cloud/glm-high
         model_info:
           mode: chat
-          supports_vision: false
+          max_input_tokens: 1000000
+          max_output_tokens: 128000
+          input_modalities:
+            - text
+            - image
+          supports_image_input: true
+          supports_vision: true
           supports_response_schema: true
           reasoning_options:
             - type: effort
@@ -836,7 +842,7 @@ data:
                 - max
           default_reasoning_effort: high
         litellm_params:
-          model: zai/glm-5.3
+          model: zai/glm-5.4
           reasoning_effort: high
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
@@ -850,7 +856,13 @@ data:
       - model_name: cloud/glm-max
         model_info:
           mode: chat
-          supports_vision: false
+          max_input_tokens: 1000000
+          max_output_tokens: 128000
+          input_modalities:
+            - text
+            - image
+          supports_image_input: true
+          supports_vision: true
           supports_response_schema: true
           reasoning_options:
             - type: effort
@@ -860,7 +872,7 @@ data:
                 - max
           default_reasoning_effort: max
         litellm_params:
-          model: zai/glm-5.3
+          model: zai/glm-5.4
           reasoning_effort: max
           custom_llm_provider: zai
           litellm_credential_name: zai-coding
@@ -1100,10 +1112,10 @@ data:
       redis_port: 6379
       # Friendly names select primaries; cloud service aliases have explicit failover below.
       model_group_alias:
-        cloud/coder: zai-coding/glm-5.3
+        cloud/coder: zai-coding/glm-5.4
         cloud/coder-fallback: chatgpt/gpt-6.1-sol
         cloud/deep: chatgpt/gpt-6.1-sol
-        cloud/deep-fallback: zai-coding/glm-5.3
+        cloud/deep-fallback: zai-coding/glm-5.4
         cloud/decision: openrouter/~typesafe/jev-latest
         cloud/fast: chatgpt/gpt-6-luna
         cloud/fast-fallback: zai-coding/glm-5.3-flash
