@@ -29,7 +29,7 @@ spec:
               # renovate: datasource=docker depName=kasmweb/discord registryUrl=https://docker.io digest=true
               repository: kasmweb/discord
               tag: 1.19.0-rolling-weekly
-              digest: sha256:4650f309ceb288525e31db3d9ef4dd93e8af3ba0cad33d0a5b1ddfd356b17514
+              digest: sha256:2c17f28ad1f91f8d58f5f67790ced495094f5abcad8fb1b2cec9fe6617053eba
             env:
               TZ: Europe/Berlin
               VNC_PW:
