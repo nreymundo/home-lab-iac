@@ -95,6 +95,14 @@
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+\\.\\d+$/"
     },
     {
+      "description": "Keep Paperless on Gotenberg 8.x until Paperless supports Gotenberg 9",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["gotenberg/gotenberg"],
+      "matchPackageNames": ["gotenberg/gotenberg", "docker.io/gotenberg/gotenberg"],
+      "matchFileNames": ["kubernetes/apps/apps/paperless/helmrelease.yaml"],
+      "allowedVersions": "/^8\\.\\d+(\\.\\d+)?$/"
+    },
+    {
       "description": "Keep Frigate on stable semver tags",
       "matchDatasources": ["docker"],
       "matchDepNames": ["blakeblackshear/frigate"],
