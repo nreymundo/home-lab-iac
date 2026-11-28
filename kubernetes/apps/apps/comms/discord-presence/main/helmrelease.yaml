@@ -151,7 +151,7 @@ spec:
             image:
               # renovate: datasource=docker depName=nreymundo/steam-presence registryUrl=https://ghcr.io
               repository: ghcr.io/nreymundo/steam-presence
-              tag: v0.20261128.3
+              tag: v0.20261128.4
               pullPolicy: Always
             env:
               XDG_RUNTIME_DIR: /run/user/1000
