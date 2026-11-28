@@ -150,7 +150,7 @@ spec:
           steam-presence:
             image:
               repository: ghcr.io/nreymundo/steam-presence
-              tag: sha-176881e
+              tag: sha-974a446
               pullPolicy: Always
             env:
               XDG_RUNTIME_DIR: /run/user/1000
