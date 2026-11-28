@@ -32,6 +32,7 @@ spec:
               digest: sha256:2c17f28ad1f91f8d58f5f67790ced495094f5abcad8fb1b2cec9fe6617053eba
             env:
               TZ: Europe/Berlin
+              KASM_SVC_SMARTCARD: "0"
               VNC_PW:
                 valueFrom:
                   secretKeyRef:
